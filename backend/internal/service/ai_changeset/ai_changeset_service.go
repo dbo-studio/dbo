@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
@@ -24,6 +25,8 @@ type IAiChangesetService interface {
 	Review(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetReviewRequest) (*dto.AiChangesetResponse, error)
 	// EditOp replaces the definition of an op that was not applied yet and puts it back to pending.
 	EditOp(ctx context.Context, chatID, changesetID uint, position int, edited *dto.SchemaChangeOp) (*dto.AiChangesetResponse, error)
+	// Before reads the live definition of the tables the changeset changes.
+	Before(ctx context.Context, chatID, changesetID uint) (map[string]*contract.TableStructure, error)
 	Preview(ctx context.Context, chatID, changesetID uint) ([]string, error)
 	Apply(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetApplyRequest) (*dto.AiChangesetResponse, error)
 	// Describe tells the agent how the user reviewed its earlier proposals.
@@ -243,6 +246,32 @@ func changeRequest(changeset *model.AiChangeset) (*dto.SchemaChangeRequest, []*m
 		Schema:       lo.EmptyableToPtr(changeset.Schema),
 		Ops:          ops,
 	}, open, nil
+}
+
+func (s IAiChangesetServiceImpl) Before(ctx context.Context, chatID, changesetID uint) (map[string]*contract.TableStructure, error) {
+	changeset, err := s.find(ctx, chatID, changesetID)
+	if err != nil {
+		return nil, err
+	}
+
+	ops, err := decodeOps(lo.Map(changeset.Ops, func(_ model.AiChangesetOp, i int) *model.AiChangesetOp { return &changeset.Ops[i] }))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	// Tables the changeset creates have nothing to show before.
+	existing := lo.Reject(ops, func(op dto.SchemaChangeOp, _ int) bool {
+		return lo.ContainsBy(ops, func(other dto.SchemaChangeOp) bool {
+			return other.Op == dto.SchemaChangeCreateTable && other.Table == op.Table
+		})
+	})
+
+	return s.schemaService.TableStructures(ctx, &dto.SchemaChangeRequest{
+		ConnectionID: int32(changeset.ConnectionID),
+		Database:     lo.EmptyableToPtr(changeset.Database),
+		Schema:       lo.EmptyableToPtr(changeset.Schema),
+		Ops:          existing,
+	})
 }
 
 func (s IAiChangesetServiceImpl) Preview(ctx context.Context, chatID, changesetID uint) ([]string, error) {

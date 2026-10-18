@@ -54,6 +54,23 @@ export function reviewChangeset(
   return page.request.patch(`/api/ai/chats/${chatId}/changesets/${changeset.id}`, { data: { status, position } });
 }
 
+export type TableStructure = {
+  columns: Array<{ name: string; dataType: string; notNull: boolean; default?: string; isPrimaryKey: boolean }>;
+  indexes: Array<{ name: string; columns: string[]; unique: boolean }>;
+  foreignKeys: unknown[];
+};
+
+/** The live definition of the tables the changeset changes, by table name. */
+export async function changesetBefore(
+  page: Page,
+  { chatId, changeset }: ProposedChangeset,
+): Promise<Record<string, TableStructure>> {
+  const response = await page.request.get(`/api/ai/chats/${chatId}/changesets/${changeset.id}/before`);
+  expect(response.status()).toBe(200);
+
+  return ((await response.json()) as { data: Record<string, TableStructure> }).data;
+}
+
 export async function undoSql(page: Page, proposal: ProposedChangeset): Promise<string[]> {
   return (await storedChangeset(page, proposal))?.undoSql ?? [];
 }

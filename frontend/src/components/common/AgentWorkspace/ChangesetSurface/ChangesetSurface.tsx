@@ -1,8 +1,9 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { useSchemaDiagramQuery } from '@/core/diagram/useSchemaDiagramQuery';
+import api from '@/api';
 import type { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { IconButton, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import SchemaDiff from '../SchemaDiff/SchemaDiff';
 import SqlPreview from '../SqlPreview/SqlPreview';
@@ -21,10 +22,11 @@ type ChangesetSurfaceProps = {
 export default function ChangesetSurface({ review, onClose }: ChangesetSurfaceProps): JSX.Element | null {
   const [tab, setTab] = useState<'diff' | 'sql'>('diff');
   const { changeset } = review;
-  const { data: before } = useSchemaDiagramQuery({
-    connectionId: changeset?.connectionId,
-    database: changeset?.database ?? '',
-    schema: changeset?.schema ?? '',
+  const chatId = changeset?.chatId;
+  const id = changeset?.id;
+  const { data: before } = useQuery({
+    queryKey: ['ai-changeset-before', chatId, id],
+    queryFn: () => api.aiChat.getChangesetBefore({ chatId: chatId as number, id: id as number }),
     enabled: !!changeset
   });
 

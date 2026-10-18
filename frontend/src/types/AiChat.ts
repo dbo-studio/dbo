@@ -67,6 +67,13 @@ export type SchemaChangeOp = {
   onDelete?: string;
 };
 
+/** The live definition of a table a changeset changes. */
+export type TableStructure = {
+  columns: { name: string; dataType: string; notNull: boolean; default?: string; isPrimaryKey: boolean }[];
+  indexes: { name: string; columns: string[]; unique: boolean }[];
+  foreignKeys: { name: string; columns: string[]; refTable: string; refColumns: string[]; onDelete?: string }[];
+};
+
 export type AiChangesetOpStatus = 'pending' | 'accepted' | 'rejected' | 'applied' | 'failed';
 
 export type AiChangesetOp = SchemaChangeOp & {

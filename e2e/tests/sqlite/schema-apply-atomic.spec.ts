@@ -4,6 +4,7 @@ import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { clearActiveAiProfile } from "../../helpers/aiSetup";
 import {
   applyChangeset,
+  changesetBefore,
   changesetStatuses,
   proposeChangeset,
   reviewChangeset,
@@ -134,12 +135,34 @@ test.describe("Persisted changeset apply", () => {
           ]);
         });
 
+        await test.step("Before is the live definition: columns, nullability, defaults, indexes", async () => {
+          await rawRows(page, connectionId, `ALTER TABLE "${fresh}" ADD COLUMN stock INTEGER NOT NULL DEFAULT 0`);
+          await rawRows(page, connectionId, `CREATE UNIQUE INDEX "idx_stock_${suffix}" ON "${fresh}" ("stock")`);
+
+          const proposal = await proposeChangeset(page, llm, connectionId, [
+            { op: "alter_column", table: fresh, column: { name: "stock", type: "BIGINT" } },
+            { op: "create_table", table: skipped, columns: column },
+          ]);
+          const before = await changesetBefore(page, proposal);
+
+          // A table the changeset creates has no before.
+          expect(Object.keys(before)).toEqual([fresh]);
+          expect(before[fresh].columns.find((item) => item.name === "stock")).toMatchObject({
+            dataType: "INTEGER",
+            notNull: true,
+            default: "0",
+            isPrimaryKey: false,
+          });
+          expect(before[fresh].columns.find((item) => item.name === "id")?.isPrimaryKey).toBe(true);
+          expect(before[fresh].indexes).toContainEqual({ name: `idx_stock_${suffix}`, columns: ["stock"], unique: true });
+        });
+
         await test.step("Running the undo SQL takes the added column and index back", async () => {
           for (const statement of undone) {
             await rawRows(page, connectionId, statement);
           }
           const columns = await rawRows(page, connectionId, `SELECT name FROM pragma_table_info('${fresh}') ORDER BY cid`);
-          expect(columns.map(({ name }) => name)).toEqual(["id", "email"]);
+          expect(columns.map(({ name }) => name)).toEqual(["id", "email", "stock"]);
         });
       });
     } finally {

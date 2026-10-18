@@ -1,19 +1,19 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { variables } from '@/core/theme/variables';
 import { TabMode } from '@/core/enums';
-import type { DiagramGraph } from '@/core/diagram/types';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiChangeset, AiChangesetOp, SchemaChangeOp } from '@/types';
+import type { AiChangeset, AiChangesetOp, SchemaChangeOp, TableStructure } from '@/types';
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import ColumnEditor from './ColumnEditor';
+import CurrentStructure from './CurrentStructure';
 import { DiffOpStyled, DiffRowStyled, DiffTableHeaderStyled, DiffTableStyled } from './SchemaDiff.styled';
 import { diffRows } from './schemaDiffRows';
 
 type SchemaDiffProps = {
   changeset: AiChangeset;
-  before: DiagramGraph | undefined;
+  before: Record<string, TableStructure> | undefined;
   onReview: (status: 'accepted' | 'rejected', position: number) => void;
   onEdit: (position: number, op: SchemaChangeOp) => void;
 };
@@ -47,6 +47,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               </Button>
             )}
           </DiffTableHeaderStyled>
+          {before?.[table] && <CurrentStructure structure={before[table]} />}
           {ops.map((op) => (
             <DiffOpStyled
               key={op.position}
@@ -65,7 +66,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                     }}
                   />
                 ) : (
-                  diffRows(op, before).map((row) => (
+                  diffRows(op, before?.[op.table]).map((row) => (
                     <DiffRowStyled key={row.text} sign={row.sign}>
                       {row.sign} {row.text}
                     </DiffRowStyled>

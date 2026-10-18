@@ -8,9 +8,10 @@ import (
 // Compile-time assertions to guarantee PostgresRepository satisfies
 // all required repository contracts after refactors.
 var (
-	_ databaseContract.DatabaseRepository   = (*PostgresRepository)(nil)
-	_ databaseContract.AIContextRepository  = (*PostgresRepository)(nil)
-	_ databaseContract.AIMetadataRepository = (*PostgresRepository)(nil)
-	_ databaseContract.DBToolsRepository    = (*PostgresRepository)(nil)
-	_ ddl.TablePlanBuilder                  = (*PostgresRepository)(nil)
+	_ databaseContract.DatabaseRepository       = (*PostgresRepository)(nil)
+	_ databaseContract.AIContextRepository      = (*PostgresRepository)(nil)
+	_ databaseContract.AIMetadataRepository     = (*PostgresRepository)(nil)
+	_ databaseContract.DBToolsRepository        = (*PostgresRepository)(nil)
+	_ databaseContract.TableStructureRepository = (*PostgresRepository)(nil)
+	_ ddl.TablePlanBuilder                      = (*PostgresRepository)(nil)
 )

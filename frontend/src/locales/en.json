@@ -723,6 +723,7 @@
   "ai_session_error": "Error",
   "ai_plan_title": "Plan · {done}/{total} done",
   "ai_chart": "Chart",
+  "ai_changes_current": "Current structure",
   "ai_changes_title": "Schema changes",
   "ai_changes_tab_diff": "Schema diff",
   "ai_changes_tab_sql": "SQL",

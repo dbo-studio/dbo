@@ -6,9 +6,10 @@ import (
 )
 
 var (
-	_ databaseContract.DatabaseRepository   = (*MySQLRepository)(nil)
-	_ databaseContract.AIContextRepository  = (*MySQLRepository)(nil)
-	_ databaseContract.AIMetadataRepository = (*MySQLRepository)(nil)
-	_ databaseContract.DBToolsRepository    = (*MySQLRepository)(nil)
-	_ ddl.TablePlanBuilder                  = (*MySQLRepository)(nil)
+	_ databaseContract.DatabaseRepository       = (*MySQLRepository)(nil)
+	_ databaseContract.AIContextRepository      = (*MySQLRepository)(nil)
+	_ databaseContract.AIMetadataRepository     = (*MySQLRepository)(nil)
+	_ databaseContract.DBToolsRepository        = (*MySQLRepository)(nil)
+	_ databaseContract.TableStructureRepository = (*MySQLRepository)(nil)
+	_ ddl.TablePlanBuilder                      = (*MySQLRepository)(nil)
 )

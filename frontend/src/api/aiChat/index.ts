@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { AiChangeset, AiChangesetOpStatus, AiChatType, SchemaChangeOp } from '@/types';
+import type { AiChangeset, AiChangesetOpStatus, AiChatType, SchemaChangeOp, TableStructure } from '@/types';
 import type { AiChatDetailRequestType, AiChatRequestType, CreateChatRequestType } from './types';
 
 const endpoint = {
@@ -57,6 +57,17 @@ export const reviewChangeset = async (
 ): Promise<AiChangeset> => {
   return (
     await api.patch<{ data: AiChangeset }>(endpoint.changeset(changeset.chatId, changeset.id), { status, position })
+  ).data.data;
+};
+
+/** The live definition of the tables the changeset changes, by table name. */
+export const getChangesetBefore = async (
+  changeset: Pick<AiChangeset, 'chatId' | 'id'>
+): Promise<Record<string, TableStructure>> => {
+  return (
+    await api.get<{ data: Record<string, TableStructure> }>(
+      `${endpoint.changeset(changeset.chatId, changeset.id)}/before`
+    )
   ).data.data;
 };
 

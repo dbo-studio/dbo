@@ -140,6 +140,13 @@ test.describe("AI Agent Workspace changeset", () => {
           await page.getByTestId("ai-changes-tab-diff").click();
         });
 
+        await test.step("The current structure of an existing table is available, a new table has none", async () => {
+          await expect(table(posts).getByTestId("ai-diff-current")).toHaveCount(0);
+          await table(users).getByTestId("ai-diff-current").getByRole("button").click();
+          await expect(table(users).getByTestId("ai-diff-current")).toContainText("id INTEGER PRIMARY KEY");
+          await expect(table(users).getByTestId("ai-diff-current")).toContainText("email TEXT");
+        });
+
         await test.step("A pending column can be edited in place", async () => {
           const op = table(users).getByTestId("ai-diff-op");
           await op.getByTestId("ai-diff-accept").click();
