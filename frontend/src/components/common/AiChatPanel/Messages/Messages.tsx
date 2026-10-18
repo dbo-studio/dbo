@@ -19,6 +19,7 @@ import { formatMessageTime } from '../utils/messageTime';
 import AgentItemCard from './AgentItemCard/AgentItemCard';
 import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
+import { useAiSession } from '../hooks/useAiSession';
 
 export default function Messages({
   messages,
@@ -31,9 +32,8 @@ export default function Messages({
   onFeedback
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const streaming = useAiStore((state) => state.streaming);
+  const { streaming, agentItems } = useAiSession();
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
-  const agentItems = useAiStore((state) => state.agentItems);
   const selectedQuery = useAiStore((state) => state.context.selectedQuery);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
   const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);

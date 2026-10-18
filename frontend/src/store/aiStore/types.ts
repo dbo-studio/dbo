@@ -25,12 +25,27 @@ export type AiStreamingState = {
   lastRequest?: AiChatRequest;
 };
 
-export type AiStreamingSlice = {
+/** One chat's running or last turn. Chats stream independently of each other. */
+export type AiSession = {
   streaming: AiStreamingState;
-  resetStreaming: () => void;
-  setStreamingStatus: (status: AiStreamingState['status']) => void;
-  updateStreaming: (partial: Partial<AiStreamingState>) => void;
-  setLastRequest: (request: AiChatRequest | undefined) => void;
+  /** Live tool/diagram/plan/permission cards of the turn being streamed. */
+  agentItems: AiAgentItem[];
+  /** A turn finished while the user was in another chat. */
+  unseen: boolean;
+};
+
+export type AiSessionSlice = {
+  sessions: Record<number, AiSession>;
+  resetStreaming: (chatId: number) => void;
+  setStreamingStatus: (chatId: number, status: AiStreamingState['status']) => void;
+  updateStreaming: (chatId: number, partial: Partial<AiStreamingState>) => void;
+  setLastRequest: (chatId: number, request: AiChatRequest | undefined) => void;
+  markUnseen: (chatId: number, unseen: boolean) => void;
+  appendAgentItem: (chatId: number, item: AiAgentItem) => void;
+  /** Shows the agent's latest checklist, replacing the one already shown for the turn. */
+  setPlan: (chatId: number, steps: AiPlanStep[]) => void;
+  updateToolTrace: (chatId: number, id: string, partial: Partial<AiToolTrace>) => void;
+  clearAgentItems: (chatId: number) => void;
 };
 
 export type AIThread = {
@@ -50,6 +65,8 @@ export type AiChatSlice = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
   updateCurrentChat: (chat: AiChatType | undefined) => void;
+  /** Updates a chat in the list, and the open chat only if it is that one. */
+  patchChat: (chat: AiChatType) => void;
   updateChats: (chats: AiChatType[]) => void;
   addChat: (chat: AiChatType) => void;
   addMessage: (chat: AiChatType, messages: AiMessageType[]) => AiChatType;
@@ -74,13 +91,6 @@ export type AiBridgeSlice = {
 export type AiReviewDecision = 'rejected' | 'confirmed';
 
 export type AiToolSlice = {
-  /** Live tool/diagram/permission cards of the turn being streamed. */
-  agentItems: AiAgentItem[];
-  appendAgentItem: (item: AiAgentItem) => void;
-  /** Shows the agent's latest checklist, replacing the one already shown for the turn. */
-  setPlan: (steps: AiPlanStep[]) => void;
-  updateToolTrace: (id: string, partial: Partial<AiToolTrace>) => void;
-  clearAgentItems: () => void;
   reviews: Record<string, AiReviewDecision>;
   setReview: (id: string, decision: AiReviewDecision) => void;
 };

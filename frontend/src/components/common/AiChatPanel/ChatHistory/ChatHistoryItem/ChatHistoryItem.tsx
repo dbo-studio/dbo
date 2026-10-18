@@ -5,6 +5,7 @@ import type { MouseEvent } from 'react';
 import { relativeTime } from '../../utils/relativeTime';
 import { ChatHistoryItemStyled } from '../ChatHistory.styled';
 import { ChatHistoryItemProps } from '../types';
+import SessionStatusBadge from '../SessionStatusBadge';
 import { variables } from '@/core/theme/variables';
 
 const stop =
@@ -45,6 +46,7 @@ export default function ChatHistoryItem({
           </Typography>
         </Box>
       </Box>
+      <SessionStatusBadge chatId={item.id} />
       <Box className='history-actions'>
         <Tooltip title={item.pinned ? locales.ai_history_unpin : locales.ai_history_pin}>
           <span data-testid='ai-history-pin' onClick={stop(onTogglePin)}>

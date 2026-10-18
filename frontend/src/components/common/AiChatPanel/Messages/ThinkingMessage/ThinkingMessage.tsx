@@ -1,6 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
-import { useAiStore } from '@/store/aiStore/ai.store';
+import { useAiSession } from '../../hooks/useAiSession';
 import { Box, Collapse, Stack, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ export default function ThinkingMessage({
 }: ThinkingMessageProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed && !isLive);
   const [prevProps, setPrevProps] = useState({ defaultCollapsed, isLive });
-  const streaming = useAiStore((state) => state.streaming);
+  const { streaming } = useAiSession();
 
   if (prevProps.defaultCollapsed !== defaultCollapsed || prevProps.isLive !== isLive) {
     setPrevProps({ defaultCollapsed, isLive });

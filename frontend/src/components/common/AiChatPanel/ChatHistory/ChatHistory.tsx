@@ -15,6 +15,7 @@ import locales from '@/locales';
 import { tools } from '@/core/utils/tools';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { chatFileName, chatToMarkdown } from '../utils/chatExport';
+import { openChat } from '../utils/openChat';
 import type { ChatHistoryProps } from './types';
 import { variables } from '@/core/theme/variables';
 
@@ -54,7 +55,8 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
   });
 
   // The list stays mounted, so refresh it when a chat is created, switched or renamed.
-  const currentChatKey = `${currentChat?.id ?? ''}:${currentChat?.title ?? ''}`;
+  // A turn finishing in a background chat renames it too, so every title counts.
+  const currentChatKey = `${currentChat?.id ?? ''}:${chats.map((chat) => `${chat.id}:${chat.title}`).join()}`;
   useEffect(() => {
     if (variant !== 'list' || !currentConnectionId) return;
     void queryClient.invalidateQueries({ queryKey: ['aiChatHistory', currentConnectionId] });
@@ -74,17 +76,12 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
       }
 
       try {
-        const detail = await api.aiChat.getChatDetail({
-          id: item.id,
-          page: 1,
-          count: 10
-        });
-        updateCurrentChat(detail);
+        await openChat(item);
       } catch {
         /* ignored */
       }
     },
-    [addChat, chats, currentChat?.id, updateCurrentChat]
+    [addChat, chats, currentChat?.id]
   );
 
   const deleteChat = useCallback(

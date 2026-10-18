@@ -4,18 +4,11 @@ import { createAiBridgeSlice } from './slices/aiBridge.slice';
 import { createAiChatSlice } from './slices/aiChat.slice';
 import { createAiContextSlice } from './slices/aiContext.slice';
 import { createAiProviderSlice } from './slices/aiProvider.slice';
-import { createAiStreamingSlice } from './slices/aiStreaming.slice';
+import { createAiSessionSlice } from './slices/aiSession.slice';
 import { createAiToolSlice } from './slices/aiTool.slice';
-import type {
-  AiBridgeSlice,
-  AiChatSlice,
-  AiContextSlice,
-  AiProviderSlice,
-  AiStreamingSlice,
-  AiToolSlice
-} from './types';
+import type { AiBridgeSlice, AiChatSlice, AiContextSlice, AiProviderSlice, AiSessionSlice, AiToolSlice } from './types';
 
-type AiState = AiProviderSlice & AiChatSlice & AiContextSlice & AiStreamingSlice & AiBridgeSlice & AiToolSlice;
+type AiState = AiProviderSlice & AiChatSlice & AiContextSlice & AiSessionSlice & AiBridgeSlice & AiToolSlice;
 
 export const useAiStore: UseBoundStore<StoreApi<AiState>> = create<AiState>()(
   devtools(
@@ -23,7 +16,7 @@ export const useAiStore: UseBoundStore<StoreApi<AiState>> = create<AiState>()(
       ...createAiChatSlice(set, get, ...state),
       ...createAiContextSlice(set, get, ...state),
       ...createAiProviderSlice(set, get, ...state),
-      ...createAiStreamingSlice(set, get, ...state),
+      ...createAiSessionSlice(set, get, ...state),
       ...createAiBridgeSlice(set, get, ...state),
       ...createAiToolSlice(set, get, ...state)
     }),

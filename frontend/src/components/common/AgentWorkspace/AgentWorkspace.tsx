@@ -77,7 +77,8 @@ export default function AgentWorkspace(): JSX.Element {
       if (document.querySelector(OPEN_OVERLAY)) return;
 
       event.preventDefault();
-      if (useAiStore.getState().streaming.status === 'streaming') {
+      const { sessions, currentChat: openChat } = useAiStore.getState();
+      if (sessions[openChat?.id ?? 0]?.streaming.status === 'streaming') {
         handleCancel();
         return;
       }

@@ -1,5 +1,4 @@
 import type { StateCreator } from 'zustand';
-import type { AiAgentItem } from '@/types';
 import type { AiReviewDecision, AiToolSlice } from '../types';
 
 const REVIEWS_STORAGE_KEY = 'dbo:ai-reviews';
@@ -24,40 +23,6 @@ const saveReviews = (reviews: Record<string, AiReviewDecision>): void => {
 };
 
 export const createAiToolSlice: StateCreator<AiToolSlice, [['zustand/devtools', never]], [], AiToolSlice> = (set) => ({
-  agentItems: [],
-  appendAgentItem: (item) => {
-    set((state) => ({ agentItems: [...state.agentItems, item] }), undefined, 'appendAgentItem');
-  },
-  setPlan: (steps) => {
-    set(
-      (state) => {
-        const plan: AiAgentItem = { kind: 'plan', steps };
-        const shown = state.agentItems.some((item) => item.kind === 'plan');
-
-        return {
-          agentItems: shown
-            ? state.agentItems.map((item) => (item.kind === 'plan' ? plan : item))
-            : [...state.agentItems, plan]
-        };
-      },
-      undefined,
-      'setPlan'
-    );
-  },
-  updateToolTrace: (id, partial) => {
-    set(
-      (state) => ({
-        agentItems: state.agentItems.map((item) =>
-          item.kind === 'tool' && item.trace.id === id ? { ...item, trace: { ...item.trace, ...partial } } : item
-        )
-      }),
-      undefined,
-      'updateToolTrace'
-    );
-  },
-  clearAgentItems: () => {
-    set({ agentItems: [] }, undefined, 'clearAgentItems');
-  },
   reviews: loadReviews(),
   setReview: (id, decision) => {
     set(
