@@ -21,7 +21,9 @@ interface Schedule {
   enabled: boolean;
   nextRunAt: string | null;
   lastStatus: string;
+  lastError: string;
   keepLast: number;
+  passwordRemembered: boolean;
 }
 
 function label(engine: DbEngine): string {
@@ -102,6 +104,9 @@ export function defineBackupScheduleTests(engine: DbEngine): void {
               const schedule = ((await response.json()) as { data: Schedule })
                 .data;
               expect(schedule.enabled).toBe(true);
+              if (engine === "sqlite") {
+                expect(schedule.passwordRemembered).toBe(true);
+              }
               expect(
                 new Date(schedule.nextRunAt ?? "").getTime(),
               ).toBeGreaterThan(Date.now());
@@ -174,5 +179,56 @@ export function defineBackupScheduleTests(engine: DbEngine): void {
         }
       });
     });
+
+    if (engine !== "sqlite") {
+      test("a failed scheduled run is recorded and raised in the app", async ({
+        page,
+      }, testInfo) => {
+        const suffix = uniqueTestSuffix(testInfo);
+        const connectionName = `bk-sched-fail-${suffix}`;
+        const scheduleName = `broken-${suffix}`;
+
+        await withConnectionCleanup(page, connectionName, async () => {
+          await setupImportExport(page, { connectionName }, engine);
+          const connectionId = await connectionIdByName(page, connectionName);
+
+          const created = await page.request.post("/api/backup-schedules", {
+            data: {
+              connectionId,
+              name: scheduleName,
+              cadence: "daily",
+              database: `no_such_db_${suffix}`,
+              ...(engine === "postgresql" ? { schema: "public" } : {}),
+            },
+          });
+          expect(created.ok(), await created.text()).toBeTruthy();
+          const id = ((await created.json()) as { data: Schedule }).data.id;
+
+          await test.step("Run now fails and the schedule keeps the error", async () => {
+            const run = await page.request.post(
+              `/api/backup-schedules/${id}/run`,
+            );
+            const jobId = ((await run.json()) as { data: { jobId: number } })
+              .data.jobId;
+            const job = await waitForJob(page, jobId);
+            expect(job.status).toBe("failed");
+
+            const list = (await (
+              await page.request.get("/api/backup-schedules")
+            ).json()) as { data: Schedule[] };
+            const mine = list.data.find((s) => s.id === id);
+            expect(mine?.lastStatus).toBe("failed");
+            expect(mine?.lastError).not.toBe("");
+          });
+
+          await test.step("The app shows a failure toast after reload", async () => {
+            await page.reload();
+            await expect(
+              page.getByText(`Scheduled backup "${scheduleName}" failed`),
+            ).toBeVisible({ timeout: 20_000 });
+          });
+        });
+      });
+    }
   });
 }

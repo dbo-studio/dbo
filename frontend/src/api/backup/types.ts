@@ -82,4 +82,6 @@ export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 's
   lastRunAt?: string;
   lastStatus: '' | 'running' | 'completed' | 'failed';
   lastError: string;
+  /** False when a scheduled run cannot log in: the password is not stored persistently. */
+  passwordRemembered: boolean;
 };

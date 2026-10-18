@@ -56,6 +56,9 @@ type (
 		LastRunAt    *time.Time `json:"lastRunAt"`
 		LastStatus   string     `json:"lastStatus"`
 		LastError    string     `json:"lastError"`
+		// PasswordRemembered is false when a scheduled run could not log in:
+		// the connection password is only held temporarily or not at all.
+		PasswordRemembered bool `json:"passwordRemembered"`
 	}
 
 	BackupScheduleIDRequest struct {

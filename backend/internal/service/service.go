@@ -92,7 +92,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:              jobManager,
-		BackupScheduleService:   serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo),
+		BackupScheduleService:   serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, ss),
 		BackupScheduler:         serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, deps.Logger),
 		BackupService:           serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, deps.Cache),
 		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),

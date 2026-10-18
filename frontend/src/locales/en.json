@@ -791,5 +791,7 @@
   "weekday_3": "Wednesday",
   "weekday_4": "Thursday",
   "weekday_5": "Friday",
-  "weekday_6": "Saturday"
+  "weekday_6": "Saturday",
+  "backup_schedule_failure_toast": "Scheduled backup \"{name}\" failed: {error}",
+  "backup_schedule_password_warning": "Runs will fail: the password for this connection is not remembered. Reconnect with \"remember password\"."
 }

@@ -154,6 +154,10 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		return "", fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
+	if err := p.checkDiskSpace(ctx, jobData); err != nil {
+		return "", err
+	}
+
 	label := fileLabel(lo.CoalesceOrEmpty(jobData.Database, jobData.Schema, "database"))
 	stamp := time.Now().Format("20060102_150405")
 
@@ -341,4 +345,36 @@ func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.Backu
 	if status == "completed" {
 		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, schedule, time.Now())
 	}
+}
+
+// minFreeBytes is the least free space a backup needs when no earlier backup
+// gives a size to go on.
+const minFreeBytes = 64 << 20
+
+// checkDiskSpace refuses to start a backup that is likely not to fit: twice the
+// last backup's size, or 64 MiB for a first one.
+func (p *BackupProcessor) checkDiskSpace(ctx context.Context, jobData *dto.BackupJob) error {
+	free, ok := helper.FreeDiskBytes(helper.BackupDir)
+	if !ok {
+		return nil
+	}
+
+	need := uint64(minFreeBytes)
+
+	connectionID := uint(jobData.ConnectionID) //nolint:gosec // validated positive
+	if history, err := p.artifactRepo.ListByOwner(ctx, jobData.OwnerID, &connectionID); err == nil {
+		for _, a := range history {
+			if a.Status == model.BackupStatusCompleted && a.Size > 0 {
+				need = max(need, uint64(a.Size)*2) //nolint:gosec // sizes are never negative
+
+				break
+			}
+		}
+	}
+
+	if free < need {
+		return fmt.Errorf("not enough disk space for the backup: %d MiB free, need about %d MiB", free>>20, need>>20)
+	}
+
+	return nil
 }

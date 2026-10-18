@@ -10,6 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
+	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
@@ -30,14 +31,16 @@ type IBackupScheduleServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	shareRepo      repository.IConnectionShareRepo
 	scheduleRepo   repository.IBackupScheduleRepo
+	secrets        serviceSecretStore.ISecretStore
 }
 
-func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo) IBackupScheduleService {
+func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore) IBackupScheduleService {
 	return &IBackupScheduleServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
 		shareRepo:      shareRepo,
 		scheduleRepo:   scheduleRepo,
+		secrets:        secrets,
 	}
 }
 
@@ -47,7 +50,9 @@ func (s IBackupScheduleServiceImpl) List(ctx context.Context) ([]dto.BackupSched
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return lo.Map(schedules, func(sc model.BackupSchedule, _ int) dto.BackupScheduleResponse { return scheduleResponse(sc) }), nil
+	return lo.Map(schedules, func(sc model.BackupSchedule, _ int) dto.BackupScheduleResponse {
+		return s.response(ctx, sc)
+	}), nil
 }
 
 func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupScheduleRequest) (*dto.BackupScheduleResponse, error) {
@@ -84,7 +89,7 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 		return nil, apperror.InternalServerError(err)
 	}
 
-	res := scheduleResponse(*schedule)
+	res := s.response(ctx, *schedule)
 
 	return &res, nil
 }
@@ -123,7 +128,7 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 		return nil, apperror.InternalServerError(err)
 	}
 
-	res := scheduleResponse(*schedule)
+	res := s.response(ctx, *schedule)
 
 	return &res, nil
 }
@@ -200,6 +205,36 @@ func applyScheduleUpdate(s *model.BackupSchedule, req *dto.BackupScheduleUpdateR
 	s.Timezone = strings.TrimSpace(lo.FromPtrOr(req.Timezone, s.Timezone))
 	s.KeepLast = lo.FromPtrOr(req.KeepLast, s.KeepLast)
 	s.KeepDays = lo.FromPtrOr(req.KeepDays, s.KeepDays)
+}
+
+// response maps a schedule and reports whether a run can authenticate without
+// the owner present.
+func (s IBackupScheduleServiceImpl) response(ctx context.Context, sc model.BackupSchedule) dto.BackupScheduleResponse {
+	res := scheduleResponse(sc)
+	res.PasswordRemembered = s.passwordRemembered(ctx, sc)
+
+	return res
+}
+
+// passwordRemembered is true for SQLite (no password) and for connections whose
+// password is stored persistently rather than for a session.
+func (s IBackupScheduleServiceImpl) passwordRemembered(ctx context.Context, sc model.BackupSchedule) bool {
+	connection, err := s.connectionRepo.Find(ctx, int32(sc.ConnectionID))
+	if err != nil {
+		return false
+	}
+
+	if connection.ConnectionType == "sqlite" {
+		return true
+	}
+
+	if _, err := s.secrets.GetConnectionPassword(ctx, sc.OwnerID, sc.ConnectionID); err != nil {
+		return false
+	}
+
+	temporary, err := s.secrets.IsTemporaryConnectionPassword(ctx, sc.OwnerID, sc.ConnectionID)
+
+	return err == nil && !temporary
 }
 
 func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {

@@ -140,6 +140,11 @@ export default function BackupSchedules({
               {s.name} · {describe(s)}
               {!s.enabled ? ` · ${locales.backup_schedule_paused}` : ''}
             </Typography>
+            {!s.passwordRemembered && (
+              <Typography variant='caption' color='warning.main' component='p'>
+                {locales.backup_schedule_password_warning}
+              </Typography>
+            )}
             <Typography variant='caption' color={s.lastStatus === 'failed' ? 'error.main' : 'textSubdued'} noWrap>
               {s.lastStatus === 'failed'
                 ? `${locales.backup_schedule_failed}: ${s.lastError}`
