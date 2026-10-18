@@ -167,6 +167,24 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 	case contract.MaterializedViewNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
+				Title: "Edit materialized view",
+				Name:  contract.EditMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Refresh materialized view",
+				Name:  contract.RefreshMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
+				Title: "Refresh materialized view (no data)",
+				Name:  contract.RefreshMaterializedViewNoDataAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
 				Title: "Drop materialized view",
 				Name:  contract.DropMaterializedViewAction,
 				Type:  contract.TreeNodeActionTypeAction,
