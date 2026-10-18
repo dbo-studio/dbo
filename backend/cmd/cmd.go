@@ -104,6 +104,7 @@ func Execute() {
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
 		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
 		Job:          handler.NewJobHandler(appLogger, ss.JobService),
+		Backup:       handler.NewBackupHandler(appLogger, ss.BackupService),
 		AI:           handler.NewAiHandler(appLogger, ss.AiService),
 		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),

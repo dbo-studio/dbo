@@ -29,6 +29,7 @@ type Handlers struct {
 	QueryHandler *handler.QueryHandler
 	ImportExport *handler.ImportExportHandler
 	Job          *handler.JobHandler
+	Backup       *handler.BackupHandler
 	AI           *handler.AiHandler
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler

@@ -119,6 +119,12 @@ func (r *Server) routing() {
 	api.Post("/import", r.handlers.ImportExport.Start)
 	api.Post("/export", r.handlers.ImportExport.Export)
 
+	backup := api.Group("backups")
+	backup.Post("/", r.handlers.Backup.Create)
+	backup.Post("/restore", r.handlers.Backup.Restore)
+	backup.Get("/history", r.handlers.Backup.History)
+	backup.Get("/:id/download", r.handlers.Backup.Download)
+
 	job := api.Group("jobs")
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)

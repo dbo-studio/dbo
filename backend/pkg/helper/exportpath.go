@@ -6,7 +6,11 @@ import (
 	"strings"
 )
 
-const ExportDir = "exports"
+const (
+	ExportDir = "exports"
+	// BackupDir holds backup artifacts; downloads are constrained to it.
+	BackupDir = "backups"
+)
 
 var ErrExportPathOutsideRoot = errors.New("export path outside allowed directory")
 
@@ -91,4 +95,23 @@ func pathWithinRoot(absPath, root string) bool {
 	}
 
 	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+// IsReadableBackupPath reports whether filePath lies under BackupDir.
+func IsReadableBackupPath(filePath string) bool {
+	if filePath == "" {
+		return false
+	}
+
+	abs, err := filepath.Abs(filepath.Clean(filePath))
+	if err != nil {
+		return false
+	}
+
+	root, err := filepath.Abs(BackupDir)
+	if err != nil {
+		return false
+	}
+
+	return pathWithinRoot(abs, root)
 }
