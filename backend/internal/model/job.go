@@ -26,6 +26,8 @@ const (
 	// row-level import/export jobs.
 	JobTypeBackup  JobType = "backup"
 	JobTypeRestore JobType = "restore"
+	// JobTypeToolInstall downloads a native backup tool on the user's request.
+	JobTypeToolInstall JobType = "tool_install"
 )
 
 type Job struct {

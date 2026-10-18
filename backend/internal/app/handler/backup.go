@@ -89,3 +89,46 @@ func (h BackupHandler) Download(c fiber.Ctx) error {
 func (h BackupHandler) Tools(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(h.service.Tools(c)).Send(c)
 }
+
+func (h BackupHandler) ToolDownloads(c fiber.Ctx) error {
+	result, err := h.service.ToolDownloads(c)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+func (h BackupHandler) InstallTool(c fiber.Ctx) error {
+	req := new(dto.ToolInstallRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.service.InstallTool(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithMessage("Tool download started").WithData(result).Send(c)
+}
+
+func (h BackupHandler) RemoveTool(c fiber.Ctx) error {
+	req := &dto.ToolRemoveRequest{
+		Driver:  c.Params("driver"),
+		Version: c.Params("version"),
+	}
+
+	if err := h.service.RemoveTool(c, req); err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}

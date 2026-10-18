@@ -79,6 +79,34 @@ type (
 		Error  string `json:"error"`
 	}
 
+	// BackupToolDownload is a pinned tool the user can choose to download.
+	BackupToolDownload struct {
+		Driver    string   `json:"driver"`
+		Version   string   `json:"version"`
+		Tools     []string `json:"tools"`
+		URL       string   `json:"url"`
+		Size      int64    `json:"size"`
+		Installed bool     `json:"installed"`
+	}
+
+	ToolInstallRequest struct {
+		Driver  string `json:"driver"`
+		Version string `json:"version"`
+	}
+
+	ToolInstallJob struct {
+		ToolInstallRequest
+	}
+
+	ToolInstallResponse struct {
+		JobID int32 `json:"jobId"`
+	}
+
+	ToolRemoveRequest struct {
+		Driver  string
+		Version string
+	}
+
 	BackupDownloadRequest struct {
 		ID uint
 	}
@@ -98,5 +126,12 @@ func (req RestoreRequest) Validate() error {
 		validation.Field(&req.Database, validation.Required, validation.Length(1, 255)),
 		validation.Field(&req.ArtifactID, validation.Required),
 		validation.Field(&req.ConfirmName, validation.Required),
+	)
+}
+
+func (req ToolInstallRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Driver, validation.Required),
+		validation.Field(&req.Version, validation.Required),
 	)
 }

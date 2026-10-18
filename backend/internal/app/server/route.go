@@ -123,6 +123,9 @@ func (r *Server) routing() {
 	backup.Post("/", r.handlers.Backup.Create)
 	backup.Post("/restore", r.handlers.Backup.Restore)
 	backup.Get("/tools", r.handlers.Backup.Tools)
+	backup.Get("/tools/downloads", r.handlers.Backup.ToolDownloads)
+	backup.Post("/tools/install", r.handlers.Backup.InstallTool)
+	backup.Delete("/tools/:driver/:version", r.handlers.Backup.RemoveTool)
 	backup.Get("/history", r.handlers.Backup.History)
 	backup.Get("/:id/download", r.handlers.Backup.Download)
 

@@ -23,6 +23,9 @@ type IBackupService interface {
 	History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error)
 	Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error)
 	Tools(ctx context.Context) []dto.BackupTool
+	ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error)
+	InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error)
+	RemoveTool(ctx context.Context, req *dto.ToolRemoveRequest) error
 }
 
 type IBackupServiceImpl struct {
@@ -159,4 +162,51 @@ func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloa
 
 func (s IBackupServiceImpl) Tools(ctx context.Context) []dto.BackupTool {
 	return DetectTools(ctx)
+}
+
+func (s IBackupServiceImpl) ToolDownloads(_ context.Context) ([]dto.BackupToolDownload, error) {
+	downloads, err := ToolDownloads()
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return downloads, nil
+}
+
+// InstallTool queues a download of one pinned tool. Tools are host-wide, so
+// signed-in users need the admin role.
+func (s IBackupServiceImpl) InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error) {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	downloads, err := s.ToolDownloads(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !lo.ContainsBy(downloads, func(d dto.BackupToolDownload) bool {
+		return d.Driver == req.Driver && d.Version == req.Version
+	}) {
+		return nil, apperror.BadRequest(ErrToolNotInManifest)
+	}
+
+	job, err := s.jobManager.CreateJob(model.JobTypeToolInstall, helper.CtxOwnerID(ctx), helper.StructToJSON(dto.ToolInstallJob{ToolInstallRequest: *req}))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return &dto.ToolInstallResponse{JobID: int32(job.ID)}, nil
+}
+
+func (s IBackupServiceImpl) RemoveTool(ctx context.Context, req *dto.ToolRemoveRequest) error {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return err
+	}
+
+	if err := RemoveTool(req.Driver, req.Version); err != nil {
+		return apperror.NotFound(err)
+	}
+
+	return nil
 }
