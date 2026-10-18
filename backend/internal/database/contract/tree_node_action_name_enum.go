@@ -45,6 +45,8 @@ func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
 		return EditViewAction
 	case CreateMaterializedViewAction:
 		return EditMaterializedViewAction
+	case CreateSequenceAction:
+		return EditSequenceAction
 	case CreateTypeAction:
 		return EditTypeAction
 	default:

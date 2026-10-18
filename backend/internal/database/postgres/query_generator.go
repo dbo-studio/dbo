@@ -1089,6 +1089,73 @@ func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, sc
 	return enums, nil
 }
 
+type Sequence struct {
+	Name        string  `gorm:"column:name"`
+	Comment     *string `gorm:"column:comment"`
+	StartValue  string  `gorm:"column:start_value"`
+	IncrementBy string  `gorm:"column:increment_by"`
+	MinValue    string  `gorm:"column:min_value"`
+	MaxValue    string  `gorm:"column:max_value"`
+	CacheSize   string  `gorm:"column:cache_size"`
+	Cycle       bool    `gorm:"column:cycle"`
+	OwnedTable  *string `gorm:"column:owned_table"`
+	OwnedColumn *string `gorm:"column:owned_column"`
+}
+
+// sequences lists standalone sequences of a schema; identity sequences are
+// managed by their column and left out.
+func (r *PostgresRepository) sequences(ctx context.Context, database *string, schema *string, fromCache bool) ([]Sequence, error) {
+	sequences := make([]Sequence, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "sequences", lo.FromPtr(database), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &sequences); err != nil {
+			return nil, err
+		}
+
+		if len(sequences) > 0 {
+			return sequences, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			s.sequencename AS name,
+			d.description AS comment,
+			s.start_value::text AS start_value,
+			s.increment_by::text AS increment_by,
+			s.min_value::text AS min_value,
+			s.max_value::text AS max_value,
+			s.cache_size::text AS cache_size,
+			s.cycle AS cycle,
+			tc.relname AS owned_table,
+			a.attname AS owned_column
+		FROM pg_sequences s
+		JOIN pg_class c ON c.relname = s.sequencename
+			AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = s.schemaname)
+		LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
+		LEFT JOIN pg_depend dep ON dep.objid = c.oid AND dep.classid = 'pg_class'::regclass
+			AND dep.refclassid = 'pg_class'::regclass AND dep.deptype = 'a'
+		LEFT JOIN pg_class tc ON tc.oid = dep.refobjid
+		LEFT JOIN pg_attribute a ON a.attrelid = dep.refobjid AND a.attnum = dep.refobjsubid
+		WHERE s.schemaname = ?
+			AND NOT EXISTS (SELECT 1 FROM pg_depend i WHERE i.objid = c.oid AND i.deptype = 'i')
+		ORDER BY s.sequencename
+	`, lo.FromPtr(schema)).Scan(&sequences).Error
+	if err != nil {
+		return nil, err
+	}
+
+	r.updateCache(ctx, cacheKey, sequences)
+
+	return sequences, nil
+}
+
 type TableCheck struct {
 	Name       string  `gorm:"column:name"`
 	Expression string  `gorm:"column:expression"`

@@ -22,6 +22,7 @@ type TableInput struct {
 	Indexes     *dto.PostgresTableIndexParams
 	Checks      *dto.PostgresTableCheckParams
 	Triggers    *dto.PostgresTableTriggerParams
+	Sequences   *dto.PostgresTableSequenceParams
 }
 
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {

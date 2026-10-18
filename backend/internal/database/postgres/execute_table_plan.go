@@ -50,6 +50,11 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		return nil, "", err
 	}
 
+	sequences, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableSequenceParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
 	input := ddlPostgres.TableInput{
 		Schema:      node.Schema,
 		NodeTable:   node.Table,
@@ -61,6 +66,7 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		Indexes:     indexes[contract.TableIndexesTab],
 		Checks:      checks[contract.TableChecksTab],
 		Triggers:    triggers[contract.TableTriggersTab],
+		Sequences:   sequences[contract.TableSequenceTab],
 	}
 
 	return ddlPostgres.BuildTablePlan(input)

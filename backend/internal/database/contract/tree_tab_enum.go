@@ -15,6 +15,8 @@ const (
 
 	TypeTab TreeTab = "type"
 
+	SequenceTab TreeTab = "sequence"
+
 	TableTab            TreeTab = "table"
 	TableColumnsTab     TreeTab = "table_columns"
 	TableForeignKeysTab TreeTab = "table_foreign_keys"

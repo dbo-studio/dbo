@@ -105,6 +105,33 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 				},
 			},
 		)
+	case contract.SequenceContainerNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Create sequence",
+				Name:  contract.CreateSequenceAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
+			},
+		)
+	case contract.SequenceNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Edit sequence",
+				Name:  contract.EditSequenceAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Drop sequence",
+				Name:  contract.DropSequenceAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+		)
 	case contract.TypeContainerNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{

@@ -94,6 +94,7 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
 	plan = append(plan, checkStatements(input.Schema, tableName, checkRows(input), contract.CreateTableAction)...)
 	plan = append(plan, triggerStatements(input.Schema, tableName, triggerRows(input), contract.CreateTableAction)...)
+	plan = append(plan, tableSequenceStatements(input.Schema, tableName, sequenceRows(input), contract.CreateTableAction)...)
 
 	return plan, tableName, nil
 }

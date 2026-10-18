@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/samber/lo"
+
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
@@ -31,6 +33,10 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getTableTriggers(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
+	case contract.SequenceTab:
+		return r.getSequenceInfo(ctx, node)
+	case contract.TableSequenceTab:
+		return r.getTableSequences(ctx, node)
 	case contract.TypeTab:
 		return r.getTypeInfo(ctx, node)
 	case contract.MaterializedViewTab:
@@ -308,6 +314,65 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 	}
 
 	return r.base.BuildGeneralFormResponse(fields, row)
+}
+
+func sequenceRow(sequence Sequence, ownedBy any) map[string]any {
+	return map[string]any{
+		"name":         sequence.Name,
+		"comment":      sequence.Comment,
+		"start_value":  sequence.StartValue,
+		"increment_by": sequence.IncrementBy,
+		"min_value":    sequence.MinValue,
+		"max_value":    sequence.MaxValue,
+		"cache_size":   sequence.CacheSize,
+		"cycle":        sequence.Cycle,
+		"owned_by":     ownedBy,
+	}
+}
+
+func (r *PostgresRepository) getSequenceInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.SequenceContainerNodeType) {
+		sequences, err := r.sequences(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sequence := range sequences {
+			if sequence.Name == node.Table {
+				ownedBy := ""
+				if sequence.OwnedTable != nil && sequence.OwnedColumn != nil {
+					ownedBy = *sequence.OwnedTable + "." + *sequence.OwnedColumn
+				}
+
+				row = sequenceRow(sequence, ownedBy)
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.sequenceFields(nil), row)
+}
+
+func (r *PostgresRepository) getTableSequences(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		sequences, err := r.sequences(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sequence := range sequences {
+			if sequence.OwnedTable != nil && *sequence.OwnedTable == node.Table {
+				result = append(result, sequenceRow(sequence, lo.FromPtr(sequence.OwnedColumn)))
+			}
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.sequenceFields(r.tableColumnsOptions(ctx, node)))
 }
 
 func (r *PostgresRepository) getTypeInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {

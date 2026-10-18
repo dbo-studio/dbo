@@ -130,6 +130,11 @@ func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName st
 			r.ContextMenu(contract.MaterializedViewContainerNodeType),
 		},
 		{
+			"Sequences",
+			contract.SequenceContainerNodeType,
+			r.ContextMenu(contract.SequenceContainerNodeType),
+		},
+		{
 			"Types",
 			contract.TypeContainerNodeType,
 			r.ContextMenu(contract.TypeContainerNodeType),
@@ -227,6 +232,21 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 					},
 				},
 				ContextMenu: r.ContextMenu(contract.MaterializedViewNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.SequenceContainerNodeType:
+		sequences, err := r.sequences(ctx, &dbName, &schemaName, true)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, sequence := range sequences {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
+				Name:        sequence.Name,
+				Type:        contract.SequenceNodeType,
+				ContextMenu: r.ContextMenu(contract.SequenceNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

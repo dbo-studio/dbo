@@ -222,3 +222,34 @@ type PostgresTableTriggerData struct {
 	When        *string  `json:"when"`
 	Function    *string  `json:"function"`
 }
+
+type PostgresSequenceParams struct {
+	New *PostgresSequenceData `json:"new"`
+	Old *PostgresSequenceData `json:"old"`
+}
+
+type PostgresTableSequenceParams struct {
+	Columns []PostgresTableSequence `json:"columns"`
+}
+
+type PostgresTableSequence struct {
+	New     *PostgresSequenceData `json:"new"`
+	Old     *PostgresSequenceData `json:"old"`
+	Added   *bool                 `json:"added"`
+	Deleted *bool                 `json:"deleted"`
+}
+
+// PostgresSequenceData serves the standalone form and the table tab. OwnedBy
+// is "table.column" in the standalone form and a bare column of the edited
+// table in the table tab.
+type PostgresSequenceData struct {
+	Name      *string `json:"name"`
+	Comment   *string `json:"comment"`
+	Start     *string `json:"start_value"`
+	Increment *string `json:"increment_by"`
+	MinValue  *string `json:"min_value"`
+	MaxValue  *string `json:"max_value"`
+	Cache     *string `json:"cache_size"`
+	Cycle     *bool   `json:"cycle"`
+	OwnedBy   *string `json:"owned_by"`
+}

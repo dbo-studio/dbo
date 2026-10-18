@@ -161,6 +161,27 @@ func (r *PostgresRepository) triggerFunctionOptions(ctx context.Context, node co
 	return options
 }
 
+// sequenceFields builds the sequence fields. With columnOptions (table tab)
+// ownership is a column select; without (standalone) it is "table.column".
+func (r *PostgresRepository) sequenceFields(columnOptions []contract.FormFieldOption) []contract.FormField {
+	owner := contract.FormField{ID: "owned_by", Name: "Owned by (table.column)", Type: contract.FormFieldTypeText}
+	if columnOptions != nil {
+		owner = contract.FormField{ID: "owned_by", Name: "Owned by column", Type: contract.FormFieldTypeSelect, Options: columnOptions}
+	}
+
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "start_value", Name: "Start", Type: contract.FormFieldTypeText},
+		{ID: "increment_by", Name: "Increment", Type: contract.FormFieldTypeText},
+		{ID: "min_value", Name: "Min value", Type: contract.FormFieldTypeText},
+		{ID: "max_value", Name: "Max value", Type: contract.FormFieldTypeText},
+		{ID: "cache_size", Name: "Cache", Type: contract.FormFieldTypeText},
+		{ID: "cycle", Name: "Cycle", Type: contract.FormFieldTypeCheckBox},
+		owner,
+	}
+}
+
 func (r *PostgresRepository) typeFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
