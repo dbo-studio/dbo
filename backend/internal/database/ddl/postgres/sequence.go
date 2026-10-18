@@ -1,6 +1,7 @@
 package ddlPostgres
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -28,16 +29,24 @@ type SequenceInput struct {
 
 // BuildSequenceStatements plans the standalone Sequence form. Edit alters in
 // place; PostgreSQL supports every field the form exposes.
-func BuildSequenceStatements(input SequenceInput, action contract.TreeNodeActionName) []ddl.Statement {
+func BuildSequenceStatements(input SequenceInput, action contract.TreeNodeActionName) ([]ddl.Statement, error) {
 	if input.New == nil {
-		return nil
+		return nil, nil
+	}
+
+	owner, err := standaloneOwner(input.Schema, input.New.OwnedBy)
+	if err != nil {
+		return nil, err
 	}
 
 	if action == contract.CreateSequenceAction {
-		return createSequenceStatements(input.Schema, input.New, standaloneOwner(input.Schema, input.New.OwnedBy))
+		return createSequenceStatements(input.Schema, input.New, owner)
 	}
 
-	return alterSequenceStatements(input.Schema, input.Old, input.New, standaloneOwner(input.Schema, input.New.OwnedBy), standaloneOwner(input.Schema, oldOwnedBy(input.Old)))
+	// The old owner came from the catalog, so a malformed one only means "none".
+	oldOwner, _ := standaloneOwner(input.Schema, oldOwnedBy(input.Old))
+
+	return alterSequenceStatements(input.Schema, input.Old, input.New, owner, oldOwner)
 }
 
 // DropSequenceStatement is the RESTRICT drop used by the tree action.
@@ -47,7 +56,7 @@ func DropSequenceStatement(schema, name string) ddl.Statement {
 
 // tableSequenceStatements plans the table Sequence tab. OwnedBy is a column of
 // the edited table.
-func tableSequenceStatements(schema, tableName string, rows []dto.PostgresTableSequence, action contract.TreeNodeActionName) []ddl.Statement {
+func tableSequenceStatements(schema, tableName string, rows []dto.PostgresTableSequence, action contract.TreeNodeActionName) ([]ddl.Statement, error) {
 	var statements []ddl.Statement
 
 	owner := func(data *dto.PostgresSequenceData) string {
@@ -66,22 +75,38 @@ func tableSequenceStatements(schema, tableName string, rows []dto.PostgresTableS
 			}
 		case row.New == nil:
 		case action == contract.CreateTableAction || lo.FromPtr(row.Added):
-			statements = append(statements, createSequenceStatements(schema, row.New, owner(row.New))...)
+			created, err := createSequenceStatements(schema, row.New, owner(row.New))
+			if err != nil {
+				return nil, err
+			}
+
+			statements = append(statements, created...)
 		case row.Old != nil:
-			statements = append(statements, alterSequenceStatements(schema, row.Old, row.New, owner(row.New), owner(row.Old))...)
+			altered, err := alterSequenceStatements(schema, row.Old, row.New, owner(row.New), owner(row.Old))
+			if err != nil {
+				return nil, err
+			}
+
+			statements = append(statements, altered...)
 		}
 	}
 
-	return statements
+	return statements, nil
 }
 
-func standaloneOwner(schema string, ownedBy *string) string {
-	parts := strings.Split(strings.TrimSpace(lo.FromPtr(ownedBy)), ".")
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return ""
+// standaloneOwner turns "table.column" into a quoted reference; empty means no owner.
+func standaloneOwner(schema string, ownedBy *string) (string, error) {
+	raw := strings.TrimSpace(lo.FromPtr(ownedBy))
+	if raw == "" {
+		return "", nil
 	}
 
-	return quote.PostgresQualifiedTable(schema, parts[0]) + "." + quote.PostgresIdent(parts[1])
+	parts := strings.Split(raw, ".")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", fmt.Errorf("owned by must be written as table.column, got %q", raw)
+	}
+
+	return quote.PostgresQualifiedTable(schema, parts[0]) + "." + quote.PostgresIdent(parts[1]), nil
 }
 
 func oldOwnedBy(old *dto.PostgresSequenceData) *string {
@@ -92,31 +117,62 @@ func oldOwnedBy(old *dto.PostgresSequenceData) *string {
 	return old.OwnedBy
 }
 
-// sequenceNumber returns value when it is a plain integer, else empty.
-func sequenceNumber(value *string) string {
+// sequenceNumber returns value when it is a plain integer. Empty means "not
+// set"; anything else that is not an integer is an error.
+func sequenceNumber(label string, value *string) (string, error) {
 	trimmed := strings.TrimSpace(lo.FromPtr(value))
-	if _, err := strconv.ParseInt(trimmed, 10, 64); err != nil {
-		return ""
+	if trimmed == "" {
+		return "", nil
 	}
 
-	return trimmed
+	if _, err := strconv.ParseInt(trimmed, 10, 64); err != nil {
+		return "", fmt.Errorf("%s must be an integer, got %q", label, trimmed)
+	}
+
+	return trimmed, nil
 }
 
-func createSequenceStatements(schema string, seq *dto.PostgresSequenceData, owner string) []ddl.Statement {
+type sequenceOption struct{ keyword, value string }
+
+// sequenceOptions reads the numeric options of one sequence.
+func sequenceOptions(seq *dto.PostgresSequenceData) ([]sequenceOption, error) {
+	options := make([]sequenceOption, 0, 5)
+
+	for _, field := range []struct {
+		keyword, label string
+		value          *string
+	}{
+		{"INCREMENT BY", "increment", seq.Increment},
+		{"MINVALUE", "min value", seq.MinValue},
+		{"MAXVALUE", "max value", seq.MaxValue},
+		{"START WITH", "start", seq.Start},
+		{"CACHE", "cache", seq.Cache},
+	} {
+		value, err := sequenceNumber(field.label, field.value)
+		if err != nil {
+			return nil, err
+		}
+
+		options = append(options, sequenceOption{field.keyword, value})
+	}
+
+	return options, nil
+}
+
+func createSequenceStatements(schema string, seq *dto.PostgresSequenceData, owner string) ([]ddl.Statement, error) {
 	if lo.FromPtr(seq.Name) == "" {
-		return nil
+		return nil, fmt.Errorf("sequence needs a name")
+	}
+
+	options, err := sequenceOptions(seq)
+	if err != nil {
+		return nil, fmt.Errorf("sequence %q: %w", *seq.Name, err)
 	}
 
 	ref := quote.PostgresQualifiedTable(schema, *seq.Name)
 	query := "CREATE SEQUENCE " + ref
 
-	for _, option := range []struct{ keyword, value string }{
-		{"INCREMENT BY", sequenceNumber(seq.Increment)},
-		{"MINVALUE", sequenceNumber(seq.MinValue)},
-		{"MAXVALUE", sequenceNumber(seq.MaxValue)},
-		{"START WITH", sequenceNumber(seq.Start)},
-		{"CACHE", sequenceNumber(seq.Cache)},
-	} {
+	for _, option := range options {
 		if option.value != "" {
 			query += " " + option.keyword + " " + option.value
 		}
@@ -136,13 +192,23 @@ func createSequenceStatements(schema string, seq *dto.PostgresSequenceData, owne
 		statements = append(statements, ddl.Statement{SQL: "COMMENT ON SEQUENCE " + ref + " IS " + quote.PostgresLiteral(*seq.Comment), Phase: ddl.PhaseSequences})
 	}
 
-	return statements
+	return statements, nil
 }
 
-func alterSequenceStatements(schema string, old, seq *dto.PostgresSequenceData, owner, oldOwner string) []ddl.Statement {
+func alterSequenceStatements(schema string, old, seq *dto.PostgresSequenceData, owner, oldOwner string) ([]ddl.Statement, error) {
 	name := lo.FromPtr(old.Name)
 	if name == "" {
-		return nil
+		return nil, fmt.Errorf("sequence needs a name")
+	}
+
+	oldOptions, err := sequenceOptions(old)
+	if err != nil {
+		return nil, fmt.Errorf("sequence %q: %w", name, err)
+	}
+
+	newOptions, err := sequenceOptions(seq)
+	if err != nil {
+		return nil, fmt.Errorf("sequence %q: %w", name, err)
 	}
 
 	ref := quote.PostgresQualifiedTable(schema, name)
@@ -155,18 +221,9 @@ func alterSequenceStatements(schema string, old, seq *dto.PostgresSequenceData, 
 
 	var options []string
 
-	for _, option := range []struct {
-		keyword  string
-		old, new string
-	}{
-		{"INCREMENT BY", sequenceNumber(old.Increment), sequenceNumber(seq.Increment)},
-		{"MINVALUE", sequenceNumber(old.MinValue), sequenceNumber(seq.MinValue)},
-		{"MAXVALUE", sequenceNumber(old.MaxValue), sequenceNumber(seq.MaxValue)},
-		{"START WITH", sequenceNumber(old.Start), sequenceNumber(seq.Start)},
-		{"CACHE", sequenceNumber(old.Cache), sequenceNumber(seq.Cache)},
-	} {
-		if option.new != "" && option.new != option.old {
-			options = append(options, option.keyword+" "+option.new)
+	for i, option := range newOptions {
+		if option.value != "" && option.value != oldOptions[i].value {
+			options = append(options, option.keyword+" "+option.value)
 		}
 	}
 
@@ -192,5 +249,5 @@ func alterSequenceStatements(schema string, old, seq *dto.PostgresSequenceData, 
 		add("COMMENT ON SEQUENCE " + ref + " IS " + quote.PostgresLiteral(lo.FromPtr(seq.Comment)))
 	}
 
-	return statements
+	return statements, nil
 }

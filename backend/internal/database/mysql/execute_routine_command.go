@@ -41,8 +41,18 @@ func (r *MySQLRepository) handleRoutineCommands(node contract.DBNode, tabID cont
 	input := ddlMysql.RoutineInput{Database: node.Database, Procedure: procedure, Old: routine.Old, New: routine.New}
 
 	if action == contract.CreateFunctionAction || action == contract.CreateProcedureAction {
-		return ddl.Plan(ddlMysql.BuildRoutineCreate(input)).SQLs(), nil
+		statements, err := ddlMysql.BuildRoutineCreate(input)
+		if err != nil {
+			return nil, err
+		}
+
+		return ddl.Plan(statements).SQLs(), nil
 	}
 
-	return ddl.Plan(ddlMysql.BuildRoutineEdit(input)).SQLs(), nil
+	statements, err := ddlMysql.BuildRoutineEdit(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return ddl.Plan(statements).SQLs(), nil
 }

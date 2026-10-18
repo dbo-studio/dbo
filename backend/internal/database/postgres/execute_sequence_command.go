@@ -33,5 +33,10 @@ func (r *PostgresRepository) handleSequenceCommands(node contract.DBNode, tabID 
 
 	input := ddlPostgres.SequenceInput{Schema: node.Schema, Old: sequence.Old, New: sequence.New}
 
-	return ddl.Plan(ddlPostgres.BuildSequenceStatements(input, action)).SQLs(), nil
+	statements, err := ddlPostgres.BuildSequenceStatements(input, action)
+	if err != nil {
+		return nil, err
+	}
+
+	return ddl.Plan(statements).SQLs(), nil
 }

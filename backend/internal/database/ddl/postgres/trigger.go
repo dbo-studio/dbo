@@ -1,6 +1,7 @@
 package ddlPostgres
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -20,7 +21,7 @@ func triggerRows(input TableInput) []dto.PostgresTableTrigger {
 
 // triggerStatements plans the Triggers tab. Edits drop and recreate the
 // trigger; a rename or comment-only change is applied in place.
-func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger, action contract.TreeNodeActionName) []ddl.Statement {
+func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger, action contract.TreeNodeActionName) ([]ddl.Statement, error) {
 	tableRef := quote.PostgresQualifiedTable(schema, tableName)
 
 	var statements []ddl.Statement
@@ -29,10 +30,10 @@ func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger
 		statements = append(statements, ddl.Statement{SQL: sql, Phase: ddl.PhaseTriggers})
 	}
 
-	create := func(trigger *dto.PostgresTableTriggerData) {
-		query := createTriggerStatement(tableRef, trigger)
-		if query == "" {
-			return
+	create := func(trigger *dto.PostgresTableTriggerData) error {
+		query, err := createTriggerStatement(tableRef, trigger)
+		if err != nil {
+			return err
 		}
 
 		add(query)
@@ -40,6 +41,8 @@ func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger
 		if lo.FromPtr(trigger.Comment) != "" {
 			add("COMMENT ON TRIGGER " + quote.PostgresIdent(*trigger.Name) + " ON " + tableRef + " IS " + quote.PostgresLiteral(*trigger.Comment))
 		}
+
+		return nil
 	}
 
 	drop := func(name string) {
@@ -54,14 +57,18 @@ func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger
 			}
 		case trigger.New == nil:
 		case action == contract.CreateTableAction || lo.FromPtr(trigger.Added):
-			create(trigger.New)
+			if err := create(trigger.New); err != nil {
+				return nil, err
+			}
 		case trigger.Old != nil:
 			if triggerDefinitionChanged(trigger.Old, trigger.New) {
 				if lo.FromPtr(trigger.Old.Name) != "" {
 					drop(*trigger.Old.Name)
 				}
 
-				create(trigger.New)
+				if err := create(trigger.New); err != nil {
+					return nil, err
+				}
 
 				continue
 			}
@@ -78,7 +85,7 @@ func triggerStatements(schema, tableName string, rows []dto.PostgresTableTrigger
 		}
 	}
 
-	return statements
+	return statements, nil
 }
 
 func triggerDefinitionChanged(oldTrigger, newTrigger *dto.PostgresTableTriggerData) bool {
@@ -111,23 +118,36 @@ func triggerEvents(events []string) []string {
 	return result
 }
 
-func createTriggerStatement(tableRef string, trigger *dto.PostgresTableTriggerData) string {
+func createTriggerStatement(tableRef string, trigger *dto.PostgresTableTriggerData) (string, error) {
+	name := lo.FromPtr(trigger.Name)
 	timing := ddl.TriggerTiming(lo.FromPtr(trigger.Timing))
 	events := triggerEvents(trigger.Events)
 	function := qualifiedFunction(lo.FromPtr(trigger.Function))
 
-	if lo.FromPtr(trigger.Name) == "" || timing == "" || len(events) == 0 || function == "" {
-		return ""
+	switch {
+	case name == "":
+		return "", fmt.Errorf("trigger needs a name")
+	case timing == "":
+		return "", fmt.Errorf("trigger %q: timing must be BEFORE, AFTER or INSTEAD OF", name)
+	case len(events) == 0:
+		return "", fmt.Errorf("trigger %q: pick at least one event (INSERT, UPDATE, DELETE, TRUNCATE)", name)
+	case function == "":
+		return "", fmt.Errorf("trigger %q: pick the function to execute", name)
 	}
 
-	query := "CREATE TRIGGER " + quote.PostgresIdent(*trigger.Name) + " " + timing + " " + strings.Join(events, " OR ") +
+	query := "CREATE TRIGGER " + quote.PostgresIdent(name) + " " + timing + " " + strings.Join(events, " OR ") +
 		" ON " + tableRef + " FOR EACH " + orientationOrDefault(trigger.Orientation)
 
-	if when := ddl.SQLExpression(lo.FromPtr(trigger.When)); when != "" {
+	if raw := lo.FromPtr(trigger.When); strings.TrimSpace(raw) != "" {
+		when := ddl.SQLExpression(raw)
+		if when == "" {
+			return "", fmt.Errorf("trigger %q: WHEN must be a single SQL expression without ';' or comments", name)
+		}
+
 		query += " WHEN (" + when + ")"
 	}
 
-	return query + " EXECUTE FUNCTION " + function + "()"
+	return query + " EXECUTE FUNCTION " + function + "()", nil
 }
 
 // qualifiedFunction quotes a "schema.function" option value.

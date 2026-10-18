@@ -1,6 +1,8 @@
 package ddlPostgres
 
 import (
+	"fmt"
+
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/database/ddl"
@@ -17,8 +19,9 @@ func checkRows(input TableInput) []dto.PostgresTableCheck {
 }
 
 // checkStatements plans the Checks tab. Edits drop and recreate the
-// constraint; a comment-only change is applied in place.
-func checkStatements(schema, tableName string, rows []dto.PostgresTableCheck, action contract.TreeNodeActionName) []ddl.Statement {
+// constraint; a comment-only change is applied in place. Invalid rows fail the
+// plan instead of being skipped.
+func checkStatements(schema, tableName string, rows []dto.PostgresTableCheck, action contract.TreeNodeActionName) ([]ddl.Statement, error) {
 	alter := "ALTER TABLE " + quote.PostgresQualifiedTable(schema, tableName)
 
 	var statements []ddl.Statement
@@ -27,10 +30,14 @@ func checkStatements(schema, tableName string, rows []dto.PostgresTableCheck, ac
 		statements = append(statements, ddl.Statement{SQL: sql, Phase: ddl.PhaseChecks})
 	}
 
-	create := func(check *dto.PostgresTableCheckData) {
+	create := func(check *dto.PostgresTableCheckData) error {
+		if lo.FromPtr(check.Name) == "" {
+			return fmt.Errorf("check constraint needs a name")
+		}
+
 		expression := ddl.SQLExpression(lo.FromPtr(check.Expression))
-		if lo.FromPtr(check.Name) == "" || expression == "" {
-			return
+		if expression == "" {
+			return fmt.Errorf("check %q: expression must be a single SQL expression without ';' or comments", *check.Name)
 		}
 
 		add(alter + " ADD CONSTRAINT " + quote.PostgresIdent(*check.Name) + " CHECK (" + expression + ")")
@@ -38,6 +45,8 @@ func checkStatements(schema, tableName string, rows []dto.PostgresTableCheck, ac
 		if lo.FromPtr(check.Comment) != "" {
 			add(commentOnConstraintStatement(*check.Name, schema, tableName, *check.Comment).SQL)
 		}
+
+		return nil
 	}
 
 	drop := func(name string) {
@@ -52,19 +61,23 @@ func checkStatements(schema, tableName string, rows []dto.PostgresTableCheck, ac
 			}
 		case check.New == nil:
 		case action == contract.CreateTableAction || lo.FromPtr(check.Added):
-			create(check.New)
+			if err := create(check.New); err != nil {
+				return nil, err
+			}
 		case check.Old != nil:
 			if lo.FromPtr(check.Old.Name) != lo.FromPtr(check.New.Name) || !ddl.PtrStringsEqual(check.Old.Expression, check.New.Expression) {
 				if lo.FromPtr(check.Old.Name) != "" {
 					drop(*check.Old.Name)
 				}
 
-				create(check.New)
+				if err := create(check.New); err != nil {
+					return nil, err
+				}
 			} else if !ddl.PtrStringsEqual(check.Old.Comment, check.New.Comment) && lo.FromPtr(check.New.Name) != "" {
 				add(commentOnConstraintStatement(*check.New.Name, schema, tableName, lo.FromPtr(check.New.Comment)).SQL)
 			}
 		}
 	}
 
-	return statements
+	return statements, nil
 }

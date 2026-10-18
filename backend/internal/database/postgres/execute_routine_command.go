@@ -53,7 +53,12 @@ func (r *PostgresRepository) handleRoutineCommands(ctx context.Context, node con
 	input := ddlPostgres.RoutineInput{Schema: node.Schema, Procedure: procedure, Old: routine.Old, New: routine.New}
 
 	if action == contract.CreateFunctionAction || action == contract.CreateProcedureAction {
-		return ddl.Plan(ddlPostgres.BuildRoutineCreate(input)).SQLs(), nil
+		statements, err := ddlPostgres.BuildRoutineCreate(input)
+		if err != nil {
+			return nil, err
+		}
+
+		return ddl.Plan(statements).SQLs(), nil
 	}
 
 	if routine.Old == nil || lo.FromPtr(routine.Old.Name) == "" {
@@ -65,7 +70,12 @@ func (r *PostgresRepository) handleRoutineCommands(ctx context.Context, node con
 		return nil, err
 	}
 
-	return ddl.Plan(ddlPostgres.BuildRoutineEdit(input)).SQLs(), nil
+	statements, err := ddlPostgres.BuildRoutineEdit(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return ddl.Plan(statements).SQLs(), nil
 }
 
 // routineIdentity finds the identity argument list PostgreSQL needs to drop a

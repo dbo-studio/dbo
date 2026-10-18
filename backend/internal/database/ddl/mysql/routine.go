@@ -1,6 +1,7 @@
 package ddlMysql
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -22,31 +23,31 @@ func routineKind(procedure bool) string {
 }
 
 // BuildRoutineCreate plans CREATE for a new routine.
-func BuildRoutineCreate(input RoutineInput) []ddl.Statement {
-	query := createRoutine(input)
-	if query == "" {
-		return nil
+func BuildRoutineCreate(input RoutineInput) ([]ddl.Statement, error) {
+	query, err := createRoutine(input)
+	if err != nil {
+		return nil, err
 	}
 
-	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}
+	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}, nil
 }
 
 // BuildRoutineEdit plans an edit as DROP + CREATE; MySQL ALTER ROUTINE cannot
 // change the body or parameters.
-func BuildRoutineEdit(input RoutineInput) []ddl.Statement {
+func BuildRoutineEdit(input RoutineInput) ([]ddl.Statement, error) {
 	if input.Old == nil || lo.FromPtr(input.Old.Name) == "" {
-		return nil
+		return nil, fmt.Errorf("missing %s name", strings.ToLower(routineKind(input.Procedure)))
 	}
 
-	create := createRoutine(input)
-	if create == "" {
-		return nil
+	create, err := createRoutine(input)
+	if err != nil {
+		return nil, err
 	}
 
 	return []ddl.Statement{
 		BuildRoutineDrop(input.Database, *input.Old.Name, input.Procedure),
 		{SQL: create, Phase: ddl.PhaseRoutines},
-	}
+	}, nil
 }
 
 func BuildRoutineDrop(database, name string, procedure bool) ddl.Statement {
@@ -56,23 +57,31 @@ func BuildRoutineDrop(database, name string, procedure bool) ddl.Statement {
 	}
 }
 
-func createRoutine(input RoutineInput) string {
+func createRoutine(input RoutineInput) (string, error) {
 	routine := input.New
-	if routine == nil || lo.FromPtr(routine.Name) == "" || strings.TrimSpace(lo.FromPtr(routine.Body)) == "" {
-		return ""
+	kind := strings.ToLower(routineKind(input.Procedure))
+
+	if routine == nil || lo.FromPtr(routine.Name) == "" {
+		return "", fmt.Errorf("%s needs a name", kind)
+	}
+
+	name := *routine.Name
+
+	if strings.TrimSpace(lo.FromPtr(routine.Body)) == "" {
+		return "", fmt.Errorf("%s %q: body is required", kind, name)
 	}
 
 	parameters := lo.FromPtr(routine.Parameters)
 	if parameters != "" && ddl.SQLExpression(parameters) == "" {
-		return ""
+		return "", fmt.Errorf("%s %q: parameters must not contain ';' or comments", kind, name)
 	}
 
-	query := "CREATE " + routineKind(input.Procedure) + " " + quote.MysqlQualifiedTable(input.Database, *routine.Name) + "(" + parameters + ")"
+	query := "CREATE " + routineKind(input.Procedure) + " " + quote.MysqlQualifiedTable(input.Database, name) + "(" + parameters + ")"
 
 	if !input.Procedure {
 		returns := ddl.SQLExpression(lo.FromPtr(routine.Returns))
 		if returns == "" {
-			return ""
+			return "", fmt.Errorf("function %q: a return type without ';' or comments is required", name)
 		}
 
 		query += " RETURNS " + returns
@@ -86,5 +95,5 @@ func createRoutine(input RoutineInput) string {
 		query += " COMMENT " + quote.MysqlLiteral(comment)
 	}
 
-	return query + " " + strings.TrimSpace(*routine.Body)
+	return query + " " + strings.TrimSpace(*routine.Body), nil
 }

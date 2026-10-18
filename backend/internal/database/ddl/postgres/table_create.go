@@ -90,11 +90,31 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 		plan = append(plan, commentOnConstraintStatement(*key.New.Name, input.Schema, tableName, *key.New.Comment))
 	}
 
-	plan = append(plan, indexStatements(input.Schema, tableName, indexRows(input), contract.CreateTableAction)...)
+	indexStatementsPlan, err := indexStatements(input.Schema, tableName, indexRows(input), contract.CreateTableAction)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, indexStatementsPlan...)
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
-	plan = append(plan, checkStatements(input.Schema, tableName, checkRows(input), contract.CreateTableAction)...)
-	plan = append(plan, triggerStatements(input.Schema, tableName, triggerRows(input), contract.CreateTableAction)...)
-	plan = append(plan, tableSequenceStatements(input.Schema, tableName, sequenceRows(input), contract.CreateTableAction)...)
+	checkStatementsPlan, err := checkStatements(input.Schema, tableName, checkRows(input), contract.CreateTableAction)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, checkStatementsPlan...)
+	triggerStatementsPlan, err := triggerStatements(input.Schema, tableName, triggerRows(input), contract.CreateTableAction)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, triggerStatementsPlan...)
+	tableSequenceStatementsPlan, err := tableSequenceStatements(input.Schema, tableName, sequenceRows(input), contract.CreateTableAction)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, tableSequenceStatementsPlan...)
 
 	return plan, tableName, nil
 }

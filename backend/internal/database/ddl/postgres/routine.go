@@ -1,6 +1,7 @@
 package ddlPostgres
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -28,21 +29,21 @@ func (i RoutineInput) kind() string {
 }
 
 // BuildRoutineCreate plans CREATE for a new routine.
-func BuildRoutineCreate(input RoutineInput) []ddl.Statement {
-	query := createRoutine(input, "CREATE ")
-	if query == "" {
-		return nil
+func BuildRoutineCreate(input RoutineInput) ([]ddl.Statement, error) {
+	query, err := createRoutine(input, "CREATE ")
+	if err != nil {
+		return nil, err
 	}
 
-	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}
+	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}, nil
 }
 
 // BuildRoutineEdit plans an edit: CREATE OR REPLACE when the signature is
 // unchanged, otherwise DROP + CREATE (PostgreSQL cannot change a signature or
 // return type in place).
-func BuildRoutineEdit(input RoutineInput) []ddl.Statement {
+func BuildRoutineEdit(input RoutineInput) ([]ddl.Statement, error) {
 	if input.Old == nil || input.New == nil {
-		return nil
+		return nil, fmt.Errorf("missing %s definition", strings.ToLower(input.kind()))
 	}
 
 	signatureChanged := lo.FromPtr(input.Old.Name) != lo.FromPtr(input.New.Name) ||
@@ -53,25 +54,25 @@ func BuildRoutineEdit(input RoutineInput) []ddl.Statement {
 		return BuildRoutineCreateOrReplace(input)
 	}
 
-	create := createRoutine(input, "CREATE ")
-	if create == "" {
-		return nil
+	create, err := createRoutine(input, "CREATE ")
+	if err != nil {
+		return nil, err
 	}
 
 	return []ddl.Statement{
 		BuildRoutineDrop(input.Schema, lo.FromPtr(input.Old.Name), input.OldIdentity, input.Procedure),
 		{SQL: create, Phase: ddl.PhaseRoutines},
-	}
+	}, nil
 }
 
 // BuildRoutineCreateOrReplace plans CREATE OR REPLACE.
-func BuildRoutineCreateOrReplace(input RoutineInput) []ddl.Statement {
-	query := createRoutine(input, "CREATE OR REPLACE ")
-	if query == "" {
-		return nil
+func BuildRoutineCreateOrReplace(input RoutineInput) ([]ddl.Statement, error) {
+	query, err := createRoutine(input, "CREATE OR REPLACE ")
+	if err != nil {
+		return nil, err
 	}
 
-	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}
+	return []ddl.Statement{{SQL: query, Phase: ddl.PhaseRoutines}}, nil
 }
 
 // BuildRoutineDrop is a RESTRICT drop addressed by identity arguments.
@@ -84,39 +85,47 @@ func BuildRoutineDrop(schema, name, identity string, procedure bool) ddl.Stateme
 	}
 }
 
-func createRoutine(input RoutineInput, prefix string) string {
+func createRoutine(input RoutineInput, prefix string) (string, error) {
 	routine := input.New
+	kind := strings.ToLower(input.kind())
+
 	if routine == nil || lo.FromPtr(routine.Name) == "" {
-		return ""
+		return "", fmt.Errorf("%s needs a name", kind)
 	}
+
+	name := *routine.Name
 
 	language := strings.TrimSpace(lo.FromPtr(routine.Language))
 	if language == "" {
 		language = "plpgsql"
 	}
 
+	if !languagePattern.MatchString(language) {
+		return "", fmt.Errorf("%s %q: invalid language %q", kind, name, language)
+	}
+
 	body := lo.FromPtr(routine.Body)
-	if !languagePattern.MatchString(language) || strings.TrimSpace(body) == "" {
-		return ""
+	if strings.TrimSpace(body) == "" {
+		return "", fmt.Errorf("%s %q: body is required", kind, name)
 	}
 
 	parameters := lo.FromPtr(routine.Parameters)
 	if parameters != "" && ddl.SQLExpression(parameters) == "" {
-		return ""
+		return "", fmt.Errorf("%s %q: parameters must not contain ';' or comments", kind, name)
 	}
 
-	query := prefix + input.kind() + " " + quote.PostgresQualifiedTable(input.Schema, *routine.Name) + "(" + parameters + ")"
+	query := prefix + input.kind() + " " + quote.PostgresQualifiedTable(input.Schema, name) + "(" + parameters + ")"
 
 	if !input.Procedure {
 		returns := ddl.SQLExpression(lo.FromPtr(routine.Returns))
 		if returns == "" {
-			return ""
+			return "", fmt.Errorf("function %q: a return type without ';' or comments is required", name)
 		}
 
 		query += " RETURNS " + returns
 	}
 
-	return query + " LANGUAGE " + language + " AS " + dollarQuote(body)
+	return query + " LANGUAGE " + language + " AS " + dollarQuote(body), nil
 }
 
 // dollarQuote wraps body in a dollar-quote tag that does not occur inside it.
