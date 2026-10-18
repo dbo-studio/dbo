@@ -35,6 +35,11 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		return nil, "", err
 	}
 
+	indexes, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableIndexParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
 	input := ddlPostgres.TableInput{
 		Schema:      node.Schema,
 		NodeTable:   node.Table,
@@ -43,6 +48,7 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		Columns:     columns[contract.TableColumnsTab],
 		Keys:        keys[contract.TableKeysTab],
 		ForeignKeys: foreignKeys[contract.TableForeignKeysTab],
+		Indexes:     indexes[contract.TableIndexesTab],
 	}
 
 	return ddlPostgres.BuildTablePlan(input)

@@ -41,7 +41,8 @@ func isContainerSegment(segment string) bool {
 	switch databaseContract.TreeNodeType(segment) {
 	case databaseContract.TableContainerNodeType,
 		databaseContract.ViewContainerNodeType,
-		databaseContract.MaterializedViewContainerNodeType:
+		databaseContract.MaterializedViewContainerNodeType,
+		databaseContract.TypeContainerNodeType:
 		return true
 	default:
 		return false

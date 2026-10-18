@@ -11,6 +11,9 @@ const (
 	CreateTableAction            TreeNodeActionName = "createTable"
 	CreateViewAction             TreeNodeActionName = "createView"
 	CreateMaterializedViewAction TreeNodeActionName = "createMaterializedView"
+	CreateTypeAction             TreeNodeActionName = "createType"
+	EditTypeAction               TreeNodeActionName = "editType"
+	DropTypeAction               TreeNodeActionName = "dropType"
 	CreateIndexAction            TreeNodeActionName = "createIndex"
 	CreateSequenceAction         TreeNodeActionName = "createSequence"
 	DropDatabaseAction           TreeNodeActionName = "dropDatabase"
@@ -40,6 +43,8 @@ func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
 		return EditViewAction
 	case CreateMaterializedViewAction:
 		return EditMaterializedViewAction
+	case CreateTypeAction:
+		return EditTypeAction
 	default:
 		return ""
 	}

@@ -149,7 +149,13 @@ const resolveGeneralSaveKey = (tabId: string, action: string): string | null => 
     return 'general';
   }
 
-  if (tabId === 'database' || tabId === 'schema' || tabId === 'view' || tabId === 'materialized_view') {
+  if (
+    tabId === 'database' ||
+    tabId === 'schema' ||
+    tabId === 'view' ||
+    tabId === 'materialized_view' ||
+    tabId === 'type'
+  ) {
     return tabId;
   }
 

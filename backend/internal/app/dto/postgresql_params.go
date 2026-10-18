@@ -149,3 +149,36 @@ type PostgresTableKeyData struct {
 	InitiallyDeferred *bool    `json:"initially_deferred"`
 	ExcludeOperator   *string  `json:"exclude_operator"`
 }
+
+type PostgresTableIndexParams struct {
+	Columns []PostgresTableIndex `json:"columns"`
+}
+
+type PostgresTableIndex struct {
+	New     *PostgresTableIndexData `json:"new"`
+	Old     *PostgresTableIndexData `json:"old"`
+	Added   *bool                   `json:"added"`
+	Deleted *bool                   `json:"deleted"`
+}
+
+type PostgresTableIndexData struct {
+	Name    *string  `json:"name"`
+	Comment *string  `json:"comment"`
+	Unique  *bool    `json:"unique"`
+	Method  *string  `json:"method"`
+	Columns []string `json:"columns"`
+	Where   *string  `json:"where"`
+}
+
+type PostgresTypeParams struct {
+	New *PostgresTypeData `json:"new"`
+	Old *PostgresTypeData `json:"old"`
+}
+
+// PostgresTypeData describes an enum type; Values is the ordered, comma
+// separated label list.
+type PostgresTypeData struct {
+	Name    *string `json:"name"`
+	Comment *string `json:"comment"`
+	Values  *string `json:"values"`
+}

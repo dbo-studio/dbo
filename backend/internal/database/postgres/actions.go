@@ -105,6 +105,33 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 				},
 			},
 		)
+	case contract.TypeContainerNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Create enum type",
+				Name:  contract.CreateTypeAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
+			},
+		)
+	case contract.TypeNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Edit enum type",
+				Name:  contract.EditTypeAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Drop enum type",
+				Name:  contract.DropTypeAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+		)
 	case contract.TableNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{

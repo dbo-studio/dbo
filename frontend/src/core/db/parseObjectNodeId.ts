@@ -1,4 +1,4 @@
-const CONTAINER_SUFFIXES = new Set(['tableContainer', 'viewContainer', 'materializedViewContainer']);
+const CONTAINER_SUFFIXES = new Set(['tableContainer', 'viewContainer', 'materializedViewContainer', 'typeContainer']);
 
 export type ParsedObjectNodeId = {
   database?: string;

@@ -90,6 +90,7 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 		plan = append(plan, commentOnConstraintStatement(*key.New.Name, input.Schema, tableName, *key.New.Comment))
 	}
 
+	plan = append(plan, indexStatements(input.Schema, tableName, indexRows(input), contract.CreateTableAction)...)
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
 
 	return plan, tableName, nil

@@ -19,6 +19,7 @@ type TableInput struct {
 	Columns     *dto.PostgresTableColumnParams
 	Keys        *dto.PostgresTableKeyParams
 	ForeignKeys *dto.PostgresTableForeignKeyParams
+	Indexes     *dto.PostgresTableIndexParams
 }
 
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {

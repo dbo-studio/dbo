@@ -3,6 +3,7 @@ package databasePostgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -22,8 +23,12 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, node, action)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
+	case contract.TypeTab:
+		return r.getTypeInfo(ctx, node)
 	case contract.MaterializedViewTab:
 		return r.getMaterializedViewInfo(ctx, node)
 	default:
@@ -114,7 +119,7 @@ func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node con
 }
 
 func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	fields := r.tableColumnFields()
+	fields := r.tableColumnFields(ctx, node)
 	result := []map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
@@ -201,6 +206,31 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBN
 	return r.base.BuildArrayFormResponse(result, fields)
 }
 
+func (r *PostgresRepository) getTableIndexes(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.indexFields(ctx, node)
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		indexes, err := r.tableIndexes(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, index := range indexes {
+			result = append(result, map[string]any{
+				"name":    index.Name,
+				"comment": index.Comment,
+				"unique":  index.Unique,
+				"method":  index.Method,
+				"columns": index.ColumnsList,
+				"where":   index.Predicate,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, fields)
+}
+
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
 
@@ -225,6 +255,32 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 	row := map[string]any{}
 	if len(result) > 0 {
 		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
+}
+
+func (r *PostgresRepository) getTypeInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	fields := r.typeFields()
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TypeContainerNodeType) {
+		enums, err := r.enumTypes(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, enum := range enums {
+			if enum.Name == node.Table {
+				row = map[string]any{
+					"name":    enum.Name,
+					"comment": enum.Comment,
+					"values":  strings.Join(enum.Labels, ", "),
+				}
+
+				break
+			}
+		}
 	}
 
 	return r.base.BuildGeneralFormResponse(fields, row)

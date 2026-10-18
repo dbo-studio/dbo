@@ -33,7 +33,8 @@ func ResolveExecuteIdentity(
 		node.Schema = newName
 	case databaseContract.CreateTableAction, databaseContract.EditTableAction,
 		databaseContract.CreateViewAction, databaseContract.EditViewAction,
-		databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction:
+		databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction,
+		databaseContract.CreateTypeAction, databaseContract.EditTypeAction:
 		node.Table = newName
 	default:
 		return &databaseContract.ExecuteResult{}
@@ -113,6 +114,14 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 
 		return ptrName(m.Old), ptrName(m.New)
 
+	case databaseContract.CreateTypeAction, databaseContract.EditTypeAction:
+		t := decodeTab[dto.PostgresTypeParams](params, databaseContract.TypeTab, databaseContract.GeneralTab)
+		if t == nil {
+			return "", ""
+		}
+
+		return ptrName(t.Old), ptrName(t.New)
+
 	default:
 		return "", ""
 	}
@@ -153,6 +162,10 @@ func ptrName(data any) string {
 			return *v.Name
 		}
 	case *dto.PostgresViewParamsData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.PostgresTypeData:
 		if v != nil && v.Name != nil {
 			return *v.Name
 		}

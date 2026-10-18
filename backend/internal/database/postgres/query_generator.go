@@ -971,6 +971,124 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, database *string, ta
 	return keys, nil
 }
 
+type TableIndex struct {
+	Name      string  `gorm:"column:name"`
+	Comment   *string `gorm:"column:comment"`
+	Unique    bool    `gorm:"column:is_unique"`
+	Method    string  `gorm:"column:method"`
+	Columns   string  `gorm:"column:columns"`
+	Predicate *string `gorm:"column:predicate"`
+
+	ColumnsList []string `gorm:"-"`
+}
+
+// tableIndexes lists standalone indexes only; indexes backing a constraint
+// (PK / UNIQUE / EXCLUDE) belong to the Keys tab.
+func (r *PostgresRepository) tableIndexes(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableIndex, error) {
+	indexes := make([]TableIndex, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "indexes", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &indexes); err != nil {
+			return nil, err
+		}
+
+		if len(indexes) > 0 {
+			return indexes, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			ic.relname AS name,
+			d.description AS comment,
+			i.indisunique AS is_unique,
+			am.amname AS method,
+			(SELECT string_agg(pg_get_indexdef(i.indexrelid, k.n, true), E'\x1f' ORDER BY k.n)
+				FROM generate_series(1, i.indnkeyatts) AS k(n)) AS columns,
+			pg_get_expr(i.indpred, i.indrelid) AS predicate
+		FROM pg_index i
+		JOIN pg_class ic ON ic.oid = i.indexrelid
+		JOIN pg_class tc ON tc.oid = i.indrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		JOIN pg_am am ON am.oid = ic.relam
+		LEFT JOIN pg_description d ON d.objoid = ic.oid AND d.objsubid = 0
+		WHERE tc.relname = ? AND n.nspname = ?
+			AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid)
+		ORDER BY ic.relname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&indexes).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range indexes {
+		indexes[i].ColumnsList = strings.Split(indexes[i].Columns, "\x1f")
+	}
+
+	r.updateCache(ctx, cacheKey, indexes)
+
+	return indexes, nil
+}
+
+type EnumType struct {
+	Name    string   `gorm:"column:name"`
+	Comment *string  `gorm:"column:comment"`
+	Labels  []string `gorm:"-"`
+
+	LabelsJoined string `gorm:"column:labels"`
+}
+
+func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, schema *string, fromCache bool) ([]EnumType, error) {
+	enums := make([]EnumType, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "enum_types", lo.FromPtr(database), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &enums); err != nil {
+			return nil, err
+		}
+
+		if len(enums) > 0 {
+			return enums, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			t.typname AS name,
+			d.description AS comment,
+			(SELECT string_agg(e.enumlabel, E'\x1f' ORDER BY e.enumsortorder)
+				FROM pg_enum e WHERE e.enumtypid = t.oid) AS labels
+		FROM pg_type t
+		JOIN pg_namespace n ON n.oid = t.typnamespace
+		LEFT JOIN pg_description d ON d.objoid = t.oid AND d.objsubid = 0
+		WHERE t.typtype = 'e' AND n.nspname = ?
+		ORDER BY t.typname
+	`, lo.FromPtr(schema)).Scan(&enums).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range enums {
+		if enums[i].LabelsJoined != "" {
+			enums[i].Labels = strings.Split(enums[i].LabelsJoined, "\x1f")
+		}
+	}
+
+	r.updateCache(ctx, cacheKey, enums)
+
+	return enums, nil
+}
+
 type Tablespace struct {
 	Name string `gorm:"column:spcname"`
 }

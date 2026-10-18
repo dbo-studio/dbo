@@ -129,6 +129,11 @@ func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName st
 			contract.MaterializedViewContainerNodeType,
 			r.ContextMenu(contract.MaterializedViewContainerNodeType),
 		},
+		{
+			"Types",
+			contract.TypeContainerNodeType,
+			r.ContextMenu(contract.TypeContainerNodeType),
+		},
 	}
 	for _, c := range containers {
 		schemaNode.Children = append(schemaNode.Children, contract.TreeNode{
@@ -222,6 +227,21 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 					},
 				},
 				ContextMenu: r.ContextMenu(contract.MaterializedViewNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.TypeContainerNodeType:
+		enums, err := r.enumTypes(ctx, &dbName, &schemaName, true)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, enum := range enums {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, enum.Name),
+				Name:        enum.Name,
+				Type:        contract.TypeNodeType,
+				ContextMenu: r.ContextMenu(contract.TypeNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

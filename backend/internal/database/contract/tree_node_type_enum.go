@@ -10,7 +10,9 @@ const (
 	TableContainerNodeType            TreeNodeType = "tableContainer"
 	ViewContainerNodeType             TreeNodeType = "viewContainer"
 	MaterializedViewContainerNodeType TreeNodeType = "materializedViewContainer"
+	TypeContainerNodeType             TreeNodeType = "typeContainer"
 	TableNodeType                     TreeNodeType = "table"
 	ViewNodeType                      TreeNodeType = "view"
 	MaterializedViewNodeType          TreeNodeType = "materializedView"
+	TypeNodeType                      TreeNodeType = "type"
 )
