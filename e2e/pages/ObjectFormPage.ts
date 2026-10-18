@@ -79,6 +79,46 @@ export class ObjectFormPage extends BasePage {
     await this.fillTextField(this.getArrayCell(rowIndex, fieldId), value);
   }
 
+  /**
+   * Set the SQL editor (`query` field) of an array row. Uses Monaco's API: keyboard.type
+   * races with autocomplete, and select-all before focus settles leaves the old text behind.
+   */
+  async fillArrayQueryCell(rowIndex: number, fieldId: string, sql: string): Promise<void> {
+    const testId = `object-form-cell-${rowIndex}-${fieldId}`;
+    const editor = this.getArrayCell(rowIndex, fieldId).locator(".monaco-editor").first();
+    await editor.waitFor({ state: "visible", timeout: 30000 });
+
+    const applied = await this.page.evaluate(
+      ({ cellTestId, value }) => {
+        const cell = document.querySelector(`[data-testid="${cellTestId}"]`);
+        const monacoApi = (
+          window as unknown as {
+            monaco?: {
+              editor: {
+                getEditors?: () => Array<{
+                  getDomNode: () => HTMLElement | null;
+                  setValue: (v: string) => void;
+                  getValue: () => string;
+                }>;
+              };
+            };
+          }
+        ).monaco;
+        const target = monacoApi?.editor
+          ?.getEditors?.()
+          .find((candidate) => cell?.contains(candidate.getDomNode()));
+        if (!target) {
+          return false;
+        }
+        target.setValue(value);
+        return target.getValue() === value;
+      },
+      { cellTestId: testId, value: sql },
+    );
+    expect(applied, `Monaco editor in ${testId} accepts the value`).toBe(true);
+    await this.wait(300);
+  }
+
   private getCellCombobox(cell: Locator): Locator {
     return cell.getByRole("combobox");
   }

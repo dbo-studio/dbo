@@ -44,9 +44,33 @@ export class ObjectTreePage extends BasePage {
    */
   async expectNodeVisible(name: string, timeout = 15000): Promise<Locator> {
     const node = this.getTreeNode(name);
-    if (!(await node.isVisible().catch(() => false))) {
+
+    // A tree reload right after a DDL change can briefly hide the node; give it a moment before
+    // falling back to the search filter, which matches same-named containers in every database.
+    const present = await expect
+      .poll(async () => node.isVisible().catch(() => false), { timeout: 3000 })
+      .toBe(true)
+      .then(() => true)
+      .catch(() => false);
+    if (!present) {
       await this.filterTree(name);
     }
+
+    // Let the filter narrow the tree to a single match first.
+    const single = await expect
+      .poll(async () => node.count(), { timeout: Math.floor(timeout / 2) })
+      .toBe(1)
+      .then(() => true)
+      .catch(() => false);
+
+    // Container names ("Tables", "Views", ...) repeat per database. If several still match, the
+    // active node (the one the test just interacted with) is the intended target.
+    if (!single && (await node.count()) > 1) {
+      const active = node.and(this.page.locator('[data-active="true"]'));
+      await expect(active).toBeVisible({ timeout });
+      return active;
+    }
+
     await expect(node).toBeVisible({ timeout });
     return node;
   }
