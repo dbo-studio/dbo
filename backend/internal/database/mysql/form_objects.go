@@ -21,6 +21,8 @@ func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID cont
 		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, node, action)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(ctx, node, action)
 	case contract.TableIndexesTab:
 		return r.getTableIndexes(ctx, node, action)
 	case contract.ViewTab:
@@ -171,6 +173,28 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode
 	}
 
 	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getTableTriggers(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		triggers, err := r.tableTriggers(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trigger := range triggers {
+			result = append(result, map[string]any{
+				"name":   trigger.Name,
+				"timing": trigger.Timing,
+				"event":  trigger.Event,
+				"body":   trigger.Body,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.triggerFields())
 }
 
 func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {

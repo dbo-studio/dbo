@@ -40,6 +40,11 @@ func (r *MySQLRepository) BuildTablePlan(_ context.Context, nodeID string, actio
 		return nil, "", err
 	}
 
+	triggers, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableTriggerParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
 	input := ddlMysql.TableInput{
 		Database:    node.Database,
 		NodeTable:   node.Table,
@@ -49,6 +54,7 @@ func (r *MySQLRepository) BuildTablePlan(_ context.Context, nodeID string, actio
 		Keys:        keys[contract.TableKeysTab],
 		Indexes:     indexes[contract.TableIndexesTab],
 		ForeignKeys: foreignKeys[contract.TableForeignKeysTab],
+		Triggers:    triggers[contract.TableTriggersTab],
 	}
 
 	return ddlMysql.BuildTablePlan(input)

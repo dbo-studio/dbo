@@ -18,6 +18,7 @@ func (r *MySQLRepository) GetFormTabs(_ context.Context, action contract.TreeNod
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
 			{ID: contract.TableKeysTab, Name: "Keys"},
 			{ID: contract.TableIndexesTab, Name: "Indexes"},
+			{ID: contract.TableTriggersTab, Name: "Triggers"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{

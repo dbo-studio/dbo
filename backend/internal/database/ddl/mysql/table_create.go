@@ -66,6 +66,7 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan := ddl.Plan{{SQL: createQuery, Phase: ddl.PhaseTable}}
 	plan = append(plan, indexStatements(input.Database, tableName, indexRows(input), contract.CreateTableAction)...)
 	plan = append(plan, foreignKeyStatements(input.Database, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
+	plan = append(plan, triggerStatements(input.Database, tableName, triggerRows(input), contract.CreateTableAction)...)
 
 	return plan, tableName, nil
 }
