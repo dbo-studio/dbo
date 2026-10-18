@@ -4,7 +4,7 @@ import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
-import { useState, type JSX } from 'react';
+import { lazy, Suspense, useState, type JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import {
@@ -21,6 +21,9 @@ import {
   StyledTableRow
 } from './ChatDataTable.styled';
 import type { ChatDataTableProps } from '../../types';
+import { chartSeries } from '../../utils/chartSeries';
+
+const ChatChart = lazy(() => import('../ChatChart/ChatChart'));
 
 const MAX_ROWS = 10;
 const MAX_COLUMNS = 12;
@@ -89,6 +92,7 @@ export default function ChatDataTable({
     types: Record<string, string>;
   }>();
   const [isRerunning, setIsRerunning] = useState(false);
+  const [showChart, setShowChart] = useState(false);
   const rows = rerun?.rows ?? initialRows;
 
   if (rows.length === 0) {
@@ -118,11 +122,17 @@ export default function ChatDataTable({
   const columns = allColumns.slice(0, MAX_COLUMNS);
   const displayRows = rows.slice(0, MAX_ROWS);
   const truncated = rows.length > MAX_ROWS || allColumns.length > MAX_COLUMNS;
+  const series = chartSeries(rows, allColumns);
   const widths = columns.map((column) => columnWidth(column, displayRows));
   const tableWidth = widths.reduce((total, width) => total + width, 0);
 
   return (
     <ChatDataTableWrapper>
+      {series && showChart && (
+        <Suspense fallback={<CircularProgress size={16} />}>
+          <ChatChart rows={rows} series={series} />
+        </Suspense>
+      )}
       <ChatDataTableScroll>
         <StyledTable width={tableWidth}>
           <colgroup>
@@ -188,6 +198,19 @@ export default function ChatDataTable({
             <CustomIcon type='code' size='xs' />
           </IconButton>
         </Tooltip>
+        {series && (
+          <Tooltip title={locales.ai_chart}>
+            <IconButton
+              size='small'
+              color={showChart ? 'primary' : 'default'}
+              aria-pressed={showChart}
+              data-testid='ai-table-chart'
+              onClick={() => setShowChart((value) => !value)}
+            >
+              <CustomIcon type='structure' size='xs' />
+            </IconButton>
+          </Tooltip>
+        )}
         {query && (
           <Tooltip title={locales.ai_rerun}>
             <span>
