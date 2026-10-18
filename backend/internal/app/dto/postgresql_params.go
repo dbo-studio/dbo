@@ -149,3 +149,18 @@ type PostgresTableKeyData struct {
 	InitiallyDeferred *bool    `json:"initially_deferred"`
 	ExcludeOperator   *string  `json:"exclude_operator"`
 }
+
+type PostgresTableIndexParams struct {
+	Columns []PostgresTableIndex `json:"columns"`
+}
+
+type PostgresTableIndex struct {
+	New   *PostgresTableIndexData `json:"new"`
+	Added *bool                   `json:"added"`
+}
+
+type PostgresTableIndexData struct {
+	IndexName *string  `json:"index_name"`
+	Columns   []string `json:"ref_columns"`
+	Unique    *bool    `json:"unique"`
+}

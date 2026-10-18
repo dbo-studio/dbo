@@ -30,6 +30,11 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		return nil, "", err
 	}
 
+	indexes, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableIndexParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
 	foreignKeys, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableForeignKeyParams](params)
 	if err != nil {
 		return nil, "", err
@@ -42,6 +47,7 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		General:     general[contract.GeneralTab],
 		Columns:     columns[contract.TableColumnsTab],
 		Keys:        keys[contract.TableKeysTab],
+		Indexes:     indexes[contract.TableIndexesTab],
 		ForeignKeys: foreignKeys[contract.TableForeignKeysTab],
 	}
 

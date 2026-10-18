@@ -78,7 +78,13 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	policy := serviceSafemode.FromConnection(connection)
 	policy = s.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
-	if err := serviceSafemode.Enforce(policy, sqlguard.ClassDDL, req.Confirmed); err != nil {
+	// Dropping a column loses data, so it gates like DROP/TRUNCATE does.
+	class := sqlguard.ClassDDL
+	if lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeDropColumn }) {
+		class = sqlguard.ClassCatastrophicDDL
+	}
+
+	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
 		return err
 	}
 
@@ -116,9 +122,10 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	return nil
 }
 
-// buildChangeSteps folds column/FK ops that target tables created in the same
-// changeset into their CREATE TABLE, orders creates so FK targets exist first,
-// then emits edit-table steps for existing tables.
+// buildChangeSteps folds add_column/add_foreign_key ops that target tables
+// created in the same changeset into their CREATE TABLE, orders creates so FK
+// targets exist first, then emits one edit-table step per existing table (SQLite
+// recreates the table per step, so a table's edits must share a step).
 func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]changeStep, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
@@ -130,9 +137,11 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 	creates := map[string]*createSpec{}
 
 	var (
-		createOrder                []string
-		addColumns, addForeignKeys []dto.SchemaChangeOp
+		createOrder []string
+		editOrder   []string
 	)
+
+	editOps := map[string][]dto.SchemaChangeOp{}
 
 	for _, op := range req.Ops {
 		if op.Op != dto.SchemaChangeCreateTable {
@@ -150,19 +159,18 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 	for _, op := range req.Ops {
 		spec, created := creates[op.Table]
 
-		switch op.Op {
-		case dto.SchemaChangeAddColumn:
-			if created {
-				spec.columns = append(spec.columns, *op.Column)
-			} else {
-				addColumns = append(addColumns, op)
+		switch {
+		case op.Op == dto.SchemaChangeCreateTable:
+		case op.Op == dto.SchemaChangeAddColumn && created:
+			spec.columns = append(spec.columns, *op.Column)
+		case op.Op == dto.SchemaChangeAddForeignKey && created:
+			spec.fks = append(spec.fks, op)
+		default:
+			if _, seen := editOps[op.Table]; !seen {
+				editOrder = append(editOrder, op.Table)
 			}
-		case dto.SchemaChangeAddForeignKey:
-			if created {
-				spec.fks = append(spec.fks, op)
-			} else {
-				addForeignKeys = append(addForeignKeys, op)
-			}
+
+			editOps[op.Table] = append(editOps[op.Table], op)
 		}
 	}
 
@@ -187,13 +195,13 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		steps = append(steps, changeStep{nodeID: containerID, action: contract.CreateTableAction, params: params})
 	}
 
-	for _, op := range append(addColumns, addForeignKeys...) {
-		params, err := builder.edit(op)
+	for _, table := range orderEdits(editOrder, editOps) {
+		params, err := builder.edit(editOps[table])
 		if err != nil {
 			return nil, err
 		}
 
-		steps = append(steps, changeStep{nodeID: tableID(op.Table), action: contract.EditTableAction, params: params})
+		steps = append(steps, changeStep{nodeID: tableID(table), action: contract.EditTableAction, params: params})
 	}
 
 	return steps, nil
@@ -231,9 +239,19 @@ func orderCreates(order []string, creates map[string]*createSpec) []string {
 	return result
 }
 
+// orderEdits puts tables with foreign key ops last, so a key can reference a
+// column another table gains in the same changeset.
+func orderEdits(order []string, editOps map[string][]dto.SchemaChangeOp) []string {
+	hasForeignKey := func(table string) bool {
+		return lo.ContainsBy(editOps[table], func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeAddForeignKey })
+	}
+
+	return append(lo.Reject(order, func(table string, _ int) bool { return hasForeignKey(table) }), lo.Filter(order, func(table string, _ int) bool { return hasForeignKey(table) })...)
+}
+
 type paramsBuilder struct {
 	create func(spec *createSpec) ([]byte, error)
-	edit   func(op dto.SchemaChangeOp) ([]byte, error)
+	edit   func(ops []dto.SchemaChangeOp) ([]byte, error)
 }
 
 func newParamsBuilder(connectionType string) (paramsBuilder, error) {
@@ -296,15 +314,36 @@ func postgresCreateParams(spec *createSpec) ([]byte, error) {
 	})
 }
 
-func postgresEditParams(op dto.SchemaChangeOp) ([]byte, error) {
-	if op.Op == dto.SchemaChangeAddColumn {
-		return marshalTabs(map[contract.TreeTab]any{
-			contract.TableColumnsTab: dto.PostgresTableColumnParams{Columns: []dto.PostgresTableColumn{{Added: lo.ToPtr(true), New: postgresColumn(*op.Column)}}},
-		})
+func postgresEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
+	var (
+		columns []dto.PostgresTableColumn
+		indexes []dto.PostgresTableIndex
+		fks     []dto.PostgresTableForeignKey
+	)
+
+	for _, op := range ops {
+		switch op.Op {
+		case dto.SchemaChangeAddColumn:
+			columns = append(columns, dto.PostgresTableColumn{Added: lo.ToPtr(true), New: postgresColumn(*op.Column)})
+		case dto.SchemaChangeAlterColumn:
+			columns = append(columns, dto.PostgresTableColumn{New: postgresColumn(*op.Column)})
+		case dto.SchemaChangeDropColumn:
+			dropped := &dto.PostgresTableColumnData{Name: lo.ToPtr(op.ColumnName)}
+			columns = append(columns, dto.PostgresTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
+		case dto.SchemaChangeAddIndex:
+			indexes = append(indexes, dto.PostgresTableIndex{
+				Added: lo.ToPtr(true),
+				New:   &dto.PostgresTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
+			})
+		case dto.SchemaChangeAddForeignKey:
+			fks = append(fks, postgresForeignKey(op))
+		}
 	}
 
 	return marshalTabs(map[contract.TreeTab]any{
-		contract.TableForeignKeysTab: dto.PostgresTableForeignKeyParams{Columns: []dto.PostgresTableForeignKey{postgresForeignKey(op)}},
+		contract.TableColumnsTab:     dto.PostgresTableColumnParams{Columns: columns},
+		contract.TableIndexesTab:     dto.PostgresTableIndexParams{Columns: indexes},
+		contract.TableForeignKeysTab: dto.PostgresTableForeignKeyParams{Columns: fks},
 	})
 }
 
@@ -362,15 +401,36 @@ func mysqlCreateParams(spec *createSpec) ([]byte, error) {
 	})
 }
 
-func mysqlEditParams(op dto.SchemaChangeOp) ([]byte, error) {
-	if op.Op == dto.SchemaChangeAddColumn {
-		return marshalTabs(map[contract.TreeTab]any{
-			contract.TableColumnsTab: dto.MysqlTableColumnParams{Columns: []dto.MysqlTableColumn{{Added: lo.ToPtr(true), New: mysqlColumn(*op.Column)}}},
-		})
+func mysqlEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
+	var (
+		columns []dto.MysqlTableColumn
+		indexes []dto.MysqlTableIndex
+		fks     []dto.MysqlTableForeignKey
+	)
+
+	for _, op := range ops {
+		switch op.Op {
+		case dto.SchemaChangeAddColumn:
+			columns = append(columns, dto.MysqlTableColumn{Added: lo.ToPtr(true), New: mysqlColumn(*op.Column)})
+		case dto.SchemaChangeAlterColumn:
+			columns = append(columns, dto.MysqlTableColumn{New: mysqlColumn(*op.Column)})
+		case dto.SchemaChangeDropColumn:
+			dropped := &dto.MysqlTableColumnData{Name: lo.ToPtr(op.ColumnName)}
+			columns = append(columns, dto.MysqlTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
+		case dto.SchemaChangeAddIndex:
+			indexes = append(indexes, dto.MysqlTableIndex{
+				Added: lo.ToPtr(true),
+				New:   &dto.MysqlTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, NonUnique: lo.ToPtr(!op.Unique)},
+			})
+		case dto.SchemaChangeAddForeignKey:
+			fks = append(fks, mysqlForeignKey(op))
+		}
 	}
 
 	return marshalTabs(map[contract.TreeTab]any{
-		contract.TableForeignKeysTab: dto.MysqlTableForeignKeyParams{Columns: []dto.MysqlTableForeignKey{mysqlForeignKey(op)}},
+		contract.TableColumnsTab:     dto.MysqlTableColumnParams{Columns: columns},
+		contract.TableIndexesTab:     dto.MysqlTableIndexParams{Columns: indexes},
+		contract.TableForeignKeysTab: dto.MysqlTableForeignKeyParams{Columns: fks},
 	})
 }
 
@@ -414,14 +474,35 @@ func sqliteCreateParams(spec *createSpec) ([]byte, error) {
 	})
 }
 
-func sqliteEditParams(op dto.SchemaChangeOp) ([]byte, error) {
-	if op.Op == dto.SchemaChangeAddColumn {
-		return marshalTabs(map[contract.TreeTab]any{
-			contract.TableColumnsTab: dto.SQLiteTableColumnParams{Columns: []dto.SQLiteTableColumn{{Added: lo.ToPtr(true), New: sqliteColumn(*op.Column)}}},
-		})
+func sqliteEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
+	var (
+		columns []dto.SQLiteTableColumn
+		indexes []dto.SQLiteIndex
+		fks     []dto.SQLiteTableForeignKey
+	)
+
+	for _, op := range ops {
+		switch op.Op {
+		case dto.SchemaChangeAddColumn:
+			columns = append(columns, dto.SQLiteTableColumn{Added: lo.ToPtr(true), New: sqliteColumn(*op.Column)})
+		case dto.SchemaChangeAlterColumn:
+			columns = append(columns, dto.SQLiteTableColumn{New: sqliteColumn(*op.Column)})
+		case dto.SchemaChangeDropColumn:
+			dropped := &dto.SQLiteTableColumnData{Name: lo.ToPtr(op.ColumnName)}
+			columns = append(columns, dto.SQLiteTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
+		case dto.SchemaChangeAddIndex:
+			indexes = append(indexes, dto.SQLiteIndex{
+				Added: lo.ToPtr(true),
+				New:   &dto.SQLiteIndexData{Name: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
+			})
+		case dto.SchemaChangeAddForeignKey:
+			fks = append(fks, sqliteForeignKey(op))
+		}
 	}
 
 	return marshalTabs(map[contract.TreeTab]any{
-		contract.TableForeignKeysTab: dto.SQLiteTableForeignKeyParams{Columns: []dto.SQLiteTableForeignKey{sqliteForeignKey(op)}},
+		contract.TableColumnsTab:     dto.SQLiteTableColumnParams{Columns: columns},
+		contract.TableIndexesTab:     dto.SQLiteIndexParams{Indexes: indexes},
+		contract.TableForeignKeysTab: dto.SQLiteTableForeignKeyParams{Columns: fks},
 	})
 }

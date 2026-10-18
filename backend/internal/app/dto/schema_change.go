@@ -19,6 +19,9 @@ const maxIdentifierLen = 63
 const (
 	SchemaChangeCreateTable   = "create_table"
 	SchemaChangeAddColumn     = "add_column"
+	SchemaChangeAlterColumn   = "alter_column"
+	SchemaChangeDropColumn    = "drop_column"
+	SchemaChangeAddIndex      = "add_index"
 	SchemaChangeAddForeignKey = "add_foreign_key"
 )
 
@@ -42,14 +45,19 @@ type (
 	}
 
 	SchemaChangeOp struct {
-		Op         string               `json:"op"`
-		Table      string               `json:"table"`
-		Columns    []SchemaChangeColumn `json:"columns,omitempty"`
-		Column     *SchemaChangeColumn  `json:"column,omitempty"`
-		FkColumns  []string             `json:"fkColumns,omitempty"`
-		RefTable   string               `json:"refTable,omitempty"`
-		RefColumns []string             `json:"refColumns,omitempty"`
-		OnDelete   string               `json:"onDelete,omitempty"`
+		Op      string               `json:"op"`
+		Table   string               `json:"table"`
+		Columns []SchemaChangeColumn `json:"columns,omitempty"`
+		// Column is the new definition for add_column and alter_column (matched by name).
+		Column *SchemaChangeColumn `json:"column,omitempty"`
+		// ColumnName is the column removed by drop_column.
+		ColumnName   string   `json:"columnName,omitempty"`
+		IndexColumns []string `json:"indexColumns,omitempty"`
+		Unique       bool     `json:"unique,omitempty"`
+		FkColumns    []string `json:"fkColumns,omitempty"`
+		RefTable     string   `json:"refTable,omitempty"`
+		RefColumns   []string `json:"refColumns,omitempty"`
+		OnDelete     string   `json:"onDelete,omitempty"`
 	}
 
 	SchemaChangeRequest struct {
@@ -89,8 +97,10 @@ func (c SchemaChangeColumn) Validate() error {
 
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
-		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAddForeignKey)),
+		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
 		validation.Field(&op.Table, validation.Required, validation.Length(1, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.ColumnName, validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.IndexColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
 		validation.Field(&op.RefTable, validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.FkColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
 		validation.Field(&op.RefColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
@@ -111,13 +121,21 @@ func (op SchemaChangeOp) Validate() error {
 				return fmt.Errorf("%s %q: %w", op.Op, op.Table, err)
 			}
 		}
-	case SchemaChangeAddColumn:
+	case SchemaChangeAddColumn, SchemaChangeAlterColumn:
 		if op.Column == nil {
 			return fmt.Errorf("%s %q: column is required", op.Op, op.Table)
 		}
 
 		if err := op.Column.Validate(); err != nil {
 			return fmt.Errorf("%s %q: %w", op.Op, op.Table, err)
+		}
+	case SchemaChangeDropColumn:
+		if op.ColumnName == "" {
+			return fmt.Errorf("%s %q: columnName is required", op.Op, op.Table)
+		}
+	case SchemaChangeAddIndex:
+		if len(op.IndexColumns) == 0 {
+			return fmt.Errorf("%s %q: indexColumns are required", op.Op, op.Table)
 		}
 	case SchemaChangeAddForeignKey:
 		if op.RefTable == "" || len(op.FkColumns) == 0 || len(op.FkColumns) != len(op.RefColumns) {
@@ -130,10 +148,18 @@ func (op SchemaChangeOp) Validate() error {
 
 // ForeignKeyName is the deterministic constraint name used for agent-proposed
 // foreign keys, so the diagram edge id and the applied constraint agree.
-// The name includes the referenced table and is capped at 63 characters
-// (Postgres limit) with a hash suffix so truncation stays unique.
 func (op SchemaChangeOp) ForeignKeyName() string {
-	name := fmt.Sprintf("fk_%s_%s_%s", op.Table, strings.Join(op.FkColumns, "_"), op.RefTable)
+	return boundedName(fmt.Sprintf("fk_%s_%s_%s", op.Table, strings.Join(op.FkColumns, "_"), op.RefTable))
+}
+
+// IndexName is the deterministic name used for agent-proposed indexes.
+func (op SchemaChangeOp) IndexName() string {
+	return boundedName(fmt.Sprintf("idx_%s_%s", op.Table, strings.Join(op.IndexColumns, "_")))
+}
+
+// boundedName caps a generated identifier at 63 characters (Postgres limit)
+// with a hash suffix so truncation stays unique.
+func boundedName(name string) string {
 	if len(name) <= maxIdentifierLen {
 		return name
 	}

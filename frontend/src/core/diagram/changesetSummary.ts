@@ -17,6 +17,18 @@ export const summarizeChangeset = (ops: SchemaChangeOp[]): ChangesetLine[] =>
           label: locales.ai_op_add_column,
           detail: `${op.table}.${op.column?.name ?? ''} ${op.column?.type ?? ''}`.trim()
         };
+      case 'alter_column':
+        return {
+          label: locales.ai_op_alter_column,
+          detail: `${op.table}.${op.column?.name ?? ''} ${op.column?.type ?? ''}`.trim()
+        };
+      case 'drop_column':
+        return { label: locales.ai_op_drop_column, detail: `${op.table}.${op.columnName ?? ''}` };
+      case 'add_index':
+        return {
+          label: locales.ai_op_add_index,
+          detail: `${op.table}(${(op.indexColumns ?? []).join(', ')})${op.unique ? ' unique' : ''}`
+        };
       case 'add_foreign_key':
         return {
           label: locales.ai_op_add_foreign_key,

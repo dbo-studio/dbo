@@ -54,10 +54,13 @@ export type SchemaChangeColumn = {
 };
 
 export type SchemaChangeOp = {
-  op: 'create_table' | 'add_column' | 'add_foreign_key';
+  op: 'create_table' | 'add_column' | 'alter_column' | 'drop_column' | 'add_index' | 'add_foreign_key';
   table: string;
   columns?: SchemaChangeColumn[];
   column?: SchemaChangeColumn;
+  columnName?: string;
+  indexColumns?: string[];
+  unique?: boolean;
   fkColumns?: string[];
   refTable?: string;
   refColumns?: string[];

@@ -18,6 +18,7 @@ type TableInput struct {
 	General     *dto.PostgresTableParams
 	Columns     *dto.PostgresTableColumnParams
 	Keys        *dto.PostgresTableKeyParams
+	Indexes     *dto.PostgresTableIndexParams
 	ForeignKeys *dto.PostgresTableForeignKeyParams
 }
 
@@ -54,4 +55,12 @@ func foreignKeyRows(input TableInput) []dto.PostgresTableForeignKey {
 	}
 
 	return input.ForeignKeys.Columns
+}
+
+func indexRows(input TableInput) []dto.PostgresTableIndex {
+	if input.Indexes == nil {
+		return nil
+	}
+
+	return input.Indexes.Columns
 }

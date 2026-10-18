@@ -14,7 +14,8 @@ type DiagramOp struct {
 	Target string `json:"target"`
 	ID     string `json:"id"`
 	NodeID string `json:"nodeId,omitempty"`
-	Value  any    `json:"value"`
+	Value  any    `json:"value,omitempty"`
+	Patch  any    `json:"patch,omitempty"`
 }
 
 // ChangeDiagramOps maps schema change ops to diagram ops using the same node
@@ -79,6 +80,16 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 				NodeID: id,
 				Value:  column(op.Table, *op.Column),
 			})
+		case dto.SchemaChangeAlterColumn:
+			result = append(result, DiagramOp{
+				Op:     "change",
+				Target: "column",
+				ID:     op.Column.Name,
+				NodeID: id,
+				Patch:  map[string]any{"dataType": op.Column.Type, "isPrimaryKey": op.Column.Primary},
+			})
+		case dto.SchemaChangeDropColumn:
+			result = append(result, DiagramOp{Op: "remove", Target: "column", ID: op.ColumnName, NodeID: id})
 		case dto.SchemaChangeAddForeignKey:
 			targetID := nodeID(op.RefTable)
 			edgeID := contract.DiagramEdgeID(op.ForeignKeyName(), id, targetID)
