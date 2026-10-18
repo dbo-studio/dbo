@@ -233,7 +233,7 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 		return true, err
 	}
 
-	if err := dump.Run(ctx); err != nil {
+	if _, err := dump.Run(ctx); err != nil {
 		return true, err
 	}
 

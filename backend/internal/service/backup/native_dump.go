@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -26,15 +27,17 @@ var ErrNativeUnavailable = errors.New("native backup tool unavailable")
 // maxToolStderr bounds the tool output kept in an error message.
 const maxToolStderr = 500
 
-// NativeDump is a ready-to-run pg_dump or mysqldump command. The password
-// travels in Env only, never on the command line.
-type NativeDump struct {
+// NativeCommand is a ready-to-run pg_dump, mysqldump, psql or mysql command.
+// The password travels in Env only, never on the command line.
+type NativeCommand struct {
 	Tool    string
 	Version string
 	Path    string
 	Args    []string
 	Env     []string
-	secret  string
+	// StdinPath, when set, is a file fed to the tool's standard input.
+	StdinPath string
+	secret    string
 }
 
 type dumpTarget struct {
@@ -46,7 +49,7 @@ type dumpTarget struct {
 // PlanNativeDump builds the dump command for a Postgres or MySQL connection
 // from the best detected tool. database and schema come from the request; an
 // empty database falls back to the connection's own.
-func PlanNativeDump(ctx context.Context, connection *model.Connection, password, database, schema, destPath string) (*NativeDump, error) {
+func PlanNativeDump(ctx context.Context, connection *model.Connection, password, database, schema, destPath string) (*NativeCommand, error) {
 	target, err := resolveDumpTarget(connection)
 	if err != nil {
 		return nil, err
@@ -71,7 +74,13 @@ func PlanNativeDump(ctx context.Context, connection *model.Connection, password,
 		return nil, fmt.Errorf("%w: %s not found", ErrNativeUnavailable, dumpName)
 	}
 
-	dump := &NativeDump{Tool: dumpName, Version: tool.Version, Path: tool.Path, secret: password}
+	if dumpName == "pg_dump" {
+		if err := checkPgDumpVersion(connection, tool); err != nil {
+			return nil, err
+		}
+	}
+
+	dump := &NativeCommand{Tool: dumpName, Version: tool.Version, Path: tool.Path, secret: password}
 
 	if dumpName == "pg_dump" {
 		dump.Args = []string{
@@ -100,32 +109,47 @@ func PlanNativeDump(ctx context.Context, connection *model.Connection, password,
 	return dump, nil
 }
 
-// Run executes the dump. The job context cancels the process; output is
-// redacted before it reaches an error.
-func (d *NativeDump) Run(ctx context.Context) error {
+// Run executes the command and returns its redacted stderr. The job context
+// cancels the process.
+func (d *NativeCommand) Run(ctx context.Context) (string, error) {
 	var stderr bytes.Buffer
 
 	cmd := exec.CommandContext(ctx, d.Path, d.Args...) //nolint:gosec // path comes from tool detection, args are built here
 	cmd.Env = append(cmd.Environ(), d.Env...)
 	cmd.Stderr = &stderr
 
-	if err := cmd.Run(); err != nil {
-		if ctx.Err() != nil {
-			return ctx.Err()
+	if d.StdinPath != "" {
+		in, err := os.Open(d.StdinPath)
+		if err != nil {
+			return "", err
 		}
 
-		return fmt.Errorf("%s failed: %s", d.Tool, d.redact(stderr.String()))
+		defer func() { _ = in.Close() }()
+
+		cmd.Stdin = in
 	}
 
-	return nil
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+
+		return "", fmt.Errorf("%s failed: %s", d.Tool, d.redact(stderr.String()))
+	}
+
+	return d.redactAll(stderr.String()), nil
 }
 
-func (d *NativeDump) redact(output string) string {
+func (d *NativeCommand) redactAll(output string) string {
 	if d.secret != "" {
 		output = strings.ReplaceAll(output, d.secret, "***")
 	}
 
-	output = strings.TrimSpace(output)
+	return output
+}
+
+func (d *NativeCommand) redact(output string) string {
+	output = strings.TrimSpace(d.redactAll(output))
 	if len(output) > maxToolStderr {
 		output = output[len(output)-maxToolStderr:]
 	}
@@ -254,4 +278,68 @@ func mysqlSSLMode(mode string) string {
 	default:
 		return ""
 	}
+}
+
+// checkPgDumpVersion refuses a pg_dump older than the server, which pg_dump
+// itself would reject with a less helpful message.
+func checkPgDumpVersion(connection *model.Connection, tool dto.BackupTool) error {
+	server := versionPattern.FindString(lo.FromPtr(connection.Version))
+	if server == "" || compareVersions(majorOf(tool.Version), majorOf(server)) >= 0 {
+		return nil
+	}
+
+	return fmt.Errorf("pg_dump %s is older than the server (%s); install a newer pg_dump", tool.Version, server)
+}
+
+func majorOf(version string) string {
+	major, _, _ := strings.Cut(version, ".")
+
+	return major
+}
+
+// PlanNativeRestore builds the psql or mysql command that replays a plain SQL
+// artifact into database. Missing tools report ErrNativeUnavailable.
+func PlanNativeRestore(ctx context.Context, connection *model.Connection, password, database, filePath string) (*NativeCommand, error) {
+	target, err := resolveDumpTarget(connection)
+	if err != nil {
+		return nil, err
+	}
+
+	if target.needsCertFiles {
+		return nil, fmt.Errorf("%w: certificate files are not supported yet", ErrNativeUnavailable)
+	}
+
+	name := "mysql"
+	if databaseContract.IsPostgresFamily(connection.ConnectionType) {
+		name = "psql"
+	}
+
+	tool, ok := bestTool(DetectTools(ctx), name)
+	if !ok {
+		return nil, fmt.Errorf("%w: %s not found", ErrNativeUnavailable, name)
+	}
+
+	cmd := &NativeCommand{Tool: name, Version: tool.Version, Path: tool.Path, secret: password}
+
+	if name == "psql" {
+		// Errors do not stop the replay: pg_dump output can contain statements
+		// that are harmless on an existing database. The processor judges them.
+		cmd.Args = []string{
+			"--host", target.host, "--port", strconv.Itoa(int(target.port)), "--username", target.user,
+			"--dbname", database, "--no-password", "--quiet", "--file", filePath,
+		}
+		cmd.Env = []string{"PGPASSWORD=" + password, "PGSSLMODE=" + pgSSLMode(target.sslMode)}
+
+		return cmd, nil
+	}
+
+	cmd.Args = []string{"--host", target.host, "--port", strconv.Itoa(int(target.port)), "--user", target.user, "--protocol=tcp", database}
+	if mode := mysqlSSLMode(target.sslMode); mode != "" {
+		cmd.Args = append([]string{"--ssl-mode=" + mode}, cmd.Args...)
+	}
+
+	cmd.Env = []string{"MYSQL_PWD=" + password}
+	cmd.StdinPath = filePath
+
+	return cmd, nil
 }

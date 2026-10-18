@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
@@ -82,6 +83,10 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 
 	if artifact.Status != model.BackupStatusCompleted {
 		return nil, apperror.BadRequest(apperror.ErrBackupNotCompleted)
+	}
+
+	if familyOf(artifact.Driver) != familyOf(connection.ConnectionType) {
+		return nil, apperror.BadRequest(apperror.ErrRestoreDriverMismatch)
 	}
 
 	if req.ConfirmName != req.Database {
@@ -217,4 +222,17 @@ func (s IBackupServiceImpl) RemoveTool(ctx context.Context, req *dto.ToolRemoveR
 	}
 
 	return nil
+}
+
+// familyOf groups driver names that share a dump format, e.g. rds_mysql and
+// mysql.
+func familyOf(driver string) string {
+	switch {
+	case databaseContract.IsPostgresFamily(driver):
+		return databaseContract.Postgresql
+	case databaseContract.IsMysqlFamily(driver):
+		return databaseContract.Mysql
+	default:
+		return driver
+	}
 }
