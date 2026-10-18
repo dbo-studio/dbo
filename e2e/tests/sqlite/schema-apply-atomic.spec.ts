@@ -135,6 +135,21 @@ test.describe("Persisted changeset apply", () => {
           ]);
         });
 
+        await test.step("An index on a table created in the same changeset is part of its creation", async () => {
+          const folded = `${skipped}_folded`;
+          const proposal = await proposeChangeset(page, llm, connectionId, [
+            { op: "create_table", table: folded, columns: [...column, { name: "code", type: "TEXT" }] },
+            { op: "add_index", table: folded, indexColumns: ["code"], unique: true },
+          ]);
+          expect((await applyChangeset(page, proposal)).status()).toBe(200);
+          expect(await changesetStatuses(page, proposal)).toEqual(["applied", "applied"]);
+
+          const indexes = await rawRows(page, connectionId, `SELECT name, "unique" FROM pragma_index_list('${folded}')`);
+          expect(indexes).toMatchObject([{ name: `idx_${folded}_code`, unique: 1 }]);
+          // Dropping the table takes the index back too.
+          expect(await undoSql(page, proposal)).toEqual([`DROP TABLE "${folded}"`]);
+        });
+
         await test.step("Before is the live definition: columns, nullability, defaults, indexes", async () => {
           await rawRows(page, connectionId, `ALTER TABLE "${fresh}" ADD COLUMN stock INTEGER NOT NULL DEFAULT 0`);
           await rawRows(page, connectionId, `CREATE UNIQUE INDEX "idx_stock_${suffix}" ON "${fresh}" ("stock")`);

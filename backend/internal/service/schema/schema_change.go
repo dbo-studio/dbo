@@ -33,6 +33,7 @@ type createSpec struct {
 	table     string
 	columns   []dto.SchemaChangeColumn
 	fks       []dto.SchemaChangeOp
+	indexes   []dto.SchemaChangeOp
 	opIndexes []int
 }
 
@@ -139,7 +140,7 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	return result, nil
 }
 
-// buildChangeSteps folds add_column/add_foreign_key ops that target tables
+// buildChangeSteps folds add_column/add_index/add_foreign_key ops that target tables
 // created in the same changeset into their CREATE TABLE, orders creates so FK
 // targets exist first, then emits one edit-table step per existing table (SQLite
 // recreates the table per step, so a table's edits must share a step).
@@ -183,6 +184,9 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 			spec.opIndexes = append(spec.opIndexes, i)
 		case op.Op == dto.SchemaChangeAddForeignKey && created:
 			spec.fks = append(spec.fks, op)
+			spec.opIndexes = append(spec.opIndexes, i)
+		case op.Op == dto.SchemaChangeAddIndex && created:
+			spec.indexes = append(spec.indexes, op)
 			spec.opIndexes = append(spec.opIndexes, i)
 		default:
 			if _, seen := editIndexes[op.Table]; !seen {
@@ -308,6 +312,13 @@ func postgresColumn(col dto.SchemaChangeColumn) *dto.PostgresTableColumnData {
 	}
 }
 
+func postgresIndex(op dto.SchemaChangeOp) dto.PostgresTableIndex {
+	return dto.PostgresTableIndex{
+		Added: lo.ToPtr(true),
+		New:   &dto.PostgresTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
+	}
+}
+
 func postgresForeignKey(op dto.SchemaChangeOp) dto.PostgresTableForeignKey {
 	return dto.PostgresTableForeignKey{
 		Added: lo.ToPtr(true),
@@ -329,6 +340,7 @@ func postgresCreateParams(spec *createSpec) ([]byte, error) {
 	return marshalTabs(map[contract.TreeTab]any{
 		contract.GeneralTab:          dto.PostgresTableParams{New: &dto.PostgresTableParamsData{Name: lo.ToPtr(spec.table)}},
 		contract.TableColumnsTab:     dto.PostgresTableColumnParams{Columns: columns},
+		contract.TableIndexesTab:     dto.PostgresTableIndexParams{Columns: lo.Map(spec.indexes, func(op dto.SchemaChangeOp, _ int) dto.PostgresTableIndex { return postgresIndex(op) })},
 		contract.TableForeignKeysTab: dto.PostgresTableForeignKeyParams{Columns: lo.Map(spec.fks, func(op dto.SchemaChangeOp, _ int) dto.PostgresTableForeignKey { return postgresForeignKey(op) })},
 	})
 }
@@ -350,10 +362,7 @@ func postgresEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
 			dropped := &dto.PostgresTableColumnData{Name: lo.ToPtr(op.ColumnName)}
 			columns = append(columns, dto.PostgresTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
 		case dto.SchemaChangeAddIndex:
-			indexes = append(indexes, dto.PostgresTableIndex{
-				Added: lo.ToPtr(true),
-				New:   &dto.PostgresTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
-			})
+			indexes = append(indexes, postgresIndex(op))
 		case dto.SchemaChangeAddForeignKey:
 			fks = append(fks, postgresForeignKey(op))
 		}
@@ -395,6 +404,13 @@ func mysqlColumn(col dto.SchemaChangeColumn) *dto.MysqlTableColumnData {
 	}
 }
 
+func mysqlIndex(op dto.SchemaChangeOp) dto.MysqlTableIndex {
+	return dto.MysqlTableIndex{
+		Added: lo.ToPtr(true),
+		New:   &dto.MysqlTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, NonUnique: lo.ToPtr(!op.Unique)},
+	}
+}
+
 func mysqlForeignKey(op dto.SchemaChangeOp) dto.MysqlTableForeignKey {
 	return dto.MysqlTableForeignKey{
 		Added: lo.ToPtr(true),
@@ -416,6 +432,7 @@ func mysqlCreateParams(spec *createSpec) ([]byte, error) {
 	return marshalTabs(map[contract.TreeTab]any{
 		contract.GeneralTab:          dto.MysqlTableParams{New: &dto.MysqlTableParamsData{Name: lo.ToPtr(spec.table)}},
 		contract.TableColumnsTab:     dto.MysqlTableColumnParams{Columns: columns},
+		contract.TableIndexesTab:     dto.MysqlTableIndexParams{Columns: lo.Map(spec.indexes, func(op dto.SchemaChangeOp, _ int) dto.MysqlTableIndex { return mysqlIndex(op) })},
 		contract.TableForeignKeysTab: dto.MysqlTableForeignKeyParams{Columns: lo.Map(spec.fks, func(op dto.SchemaChangeOp, _ int) dto.MysqlTableForeignKey { return mysqlForeignKey(op) })},
 	})
 }
@@ -437,10 +454,7 @@ func mysqlEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
 			dropped := &dto.MysqlTableColumnData{Name: lo.ToPtr(op.ColumnName)}
 			columns = append(columns, dto.MysqlTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
 		case dto.SchemaChangeAddIndex:
-			indexes = append(indexes, dto.MysqlTableIndex{
-				Added: lo.ToPtr(true),
-				New:   &dto.MysqlTableIndexData{IndexName: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, NonUnique: lo.ToPtr(!op.Unique)},
-			})
+			indexes = append(indexes, mysqlIndex(op))
 		case dto.SchemaChangeAddForeignKey:
 			fks = append(fks, mysqlForeignKey(op))
 		}
@@ -459,6 +473,13 @@ func sqliteColumn(col dto.SchemaChangeColumn) *dto.SQLiteTableColumnData {
 		DataType: lo.ToPtr(col.Type),
 		NotNull:  lo.ToPtr(col.NotNull),
 		Default:  col.Default,
+	}
+}
+
+func sqliteIndex(op dto.SchemaChangeOp) dto.SQLiteIndex {
+	return dto.SQLiteIndex{
+		Added: lo.ToPtr(true),
+		New:   &dto.SQLiteIndexData{Name: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
 	}
 }
 
@@ -489,6 +510,7 @@ func sqliteCreateParams(spec *createSpec) ([]byte, error) {
 		contract.GeneralTab:          dto.SQLiteTableParams{New: &dto.SQLiteTableParamsData{Name: lo.ToPtr(spec.table)}},
 		contract.TableColumnsTab:     dto.SQLiteTableColumnParams{Columns: columns},
 		contract.TableKeysTab:        dto.SQLiteTableKeyParams{Keys: keys},
+		contract.TableIndexesTab:     dto.SQLiteIndexParams{Indexes: lo.Map(spec.indexes, func(op dto.SchemaChangeOp, _ int) dto.SQLiteIndex { return sqliteIndex(op) })},
 		contract.TableForeignKeysTab: dto.SQLiteTableForeignKeyParams{Columns: lo.Map(spec.fks, func(op dto.SchemaChangeOp, _ int) dto.SQLiteTableForeignKey { return sqliteForeignKey(op) })},
 	})
 }
@@ -510,10 +532,7 @@ func sqliteEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
 			dropped := &dto.SQLiteTableColumnData{Name: lo.ToPtr(op.ColumnName)}
 			columns = append(columns, dto.SQLiteTableColumn{Deleted: lo.ToPtr(true), Old: dropped, New: dropped})
 		case dto.SchemaChangeAddIndex:
-			indexes = append(indexes, dto.SQLiteIndex{
-				Added: lo.ToPtr(true),
-				New:   &dto.SQLiteIndexData{Name: lo.ToPtr(op.IndexName()), Columns: op.IndexColumns, Unique: lo.ToPtr(op.Unique)},
-			})
+			indexes = append(indexes, sqliteIndex(op))
 		case dto.SchemaChangeAddForeignKey:
 			fks = append(fks, sqliteForeignKey(op))
 		}
