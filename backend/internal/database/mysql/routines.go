@@ -8,33 +8,34 @@ import (
 
 type Routine struct {
 	Name          string `gorm:"column:ROUTINE_NAME"`
-	Returns       string `gorm:"column:RETURNS"`
+	Returns       string `gorm:"column:RETURN_TYPE"`
 	Body          string `gorm:"column:ROUTINE_DEFINITION"`
-	Deterministic bool   `gorm:"column:DETERMINISTIC"`
+	Deterministic bool   `gorm:"column:IS_DET"`
 	Comment       string `gorm:"column:ROUTINE_COMMENT"`
-	Parameters    string `gorm:"column:PARAMETERS"`
+	Parameters    string `gorm:"column:PARAM_LIST"`
 }
 
 // routines lists the stored functions or procedures of a database. Parameters
-// is rebuilt as the SQL parameter list the form edits.
+// is rebuilt as the SQL parameter list the form edits; only procedures carry a
+// mode (IN/OUT/INOUT), since CREATE FUNCTION rejects it.
 func (r *MySQLRepository) routines(ctx context.Context, database string, procedure bool) ([]Routine, error) {
 	var results []Routine
 
 	err := r.base.DB().WithContext(ctx).Raw(`
 		SELECT
 			r.ROUTINE_NAME,
-			COALESCE(r.DTD_IDENTIFIER, '') AS RETURNS,
+			COALESCE(r.DTD_IDENTIFIER, '') AS RETURN_TYPE,
 			r.ROUTINE_DEFINITION,
-			r.IS_DETERMINISTIC = 'YES' AS DETERMINISTIC,
+			r.IS_DETERMINISTIC = 'YES' AS IS_DET,
 			r.ROUTINE_COMMENT,
 			COALESCE((
 				SELECT GROUP_CONCAT(
-					CONCAT(COALESCE(CONCAT(p.PARAMETER_MODE, ' '), ''), p.PARAMETER_NAME, ' ', p.DTD_IDENTIFIER)
+					CONCAT(IF(r.ROUTINE_TYPE = 'PROCEDURE', CONCAT(p.PARAMETER_MODE, ' '), ''), p.PARAMETER_NAME, ' ', p.DTD_IDENTIFIER)
 					ORDER BY p.ORDINAL_POSITION SEPARATOR ', ')
 				FROM information_schema.PARAMETERS p
 				WHERE p.SPECIFIC_SCHEMA = r.ROUTINE_SCHEMA AND p.SPECIFIC_NAME = r.SPECIFIC_NAME
 					AND p.ROUTINE_TYPE = r.ROUTINE_TYPE AND p.ORDINAL_POSITION > 0
-			), '') AS PARAMETERS
+			), '') AS PARAM_LIST
 		FROM information_schema.ROUTINES r
 		WHERE r.ROUTINE_SCHEMA = ? AND r.ROUTINE_TYPE = ?
 		ORDER BY r.ROUTINE_NAME

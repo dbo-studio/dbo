@@ -6,15 +6,19 @@ import { useDynamicField } from '../../hooks/useDynamicField';
 import { ArrayFormContainerStyled } from './ArrayForm.styled';
 import ArrayRow from './ArrayRow';
 
-function getStableRowKey(rowKeys: WeakMap<FormFieldType[], string>, row: FormFieldType[]): string {
+function getStableRowKey(rowKeys: WeakMap<FormFieldType[], string>, row: FormFieldType[], rowIndex: number): string {
+  // Added rows are only ever appended (deleting flags them), so their index is a stable key. A key derived
+  // from the row array would change on every edit and remount the row, dropping focus from live editors.
+  if (row.some((cell) => cell.added)) {
+    return `added:${rowIndex}`;
+  }
+
   const existingKey = rowKeys.get(row);
   if (existingKey) {
     return existingKey;
   }
 
-  const key = row.some((cell) => cell.added)
-    ? crypto.randomUUID()
-    : row.map((cell) => `${cell.id}:${String(cell.originalValue ?? '')}`).join('|');
+  const key = row.map((cell) => `${cell.id}:${String(cell.originalValue ?? '')}`).join('|');
   rowKeys.set(row, key);
   return key;
 }
@@ -96,7 +100,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
               return (
                 <ArrayRow
                   rowIndex={rowIndex}
-                  key={getStableRowKey(rowKeysRef.current, row)}
+                  key={getStableRowKey(rowKeysRef.current, row, rowIndex)}
                   rows={row}
                   getDynamicFieldStateKey={getDynamicFieldStateKey}
                   getDynamicOptions={getDynamicOptions}
