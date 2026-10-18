@@ -182,6 +182,23 @@ func (r *PostgresRepository) sequenceFields(columnOptions []contract.FormFieldOp
 	}
 }
 
+func (r *PostgresRepository) routineFields(procedure bool) []contract.FormField {
+	fields := []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "language", Name: "Language", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+			{Value: "plpgsql", Label: "plpgsql"},
+			{Value: "sql", Label: "sql"},
+		}},
+		{ID: "parameters", Name: "Parameters (e.g. a integer, b text)", Type: contract.FormFieldTypeText},
+	}
+
+	if !procedure {
+		fields = append(fields, contract.FormField{ID: "returns", Name: "Returns", Type: contract.FormFieldTypeText, Required: true})
+	}
+
+	return append(fields, contract.FormField{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true})
+}
+
 func (r *PostgresRepository) typeFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},

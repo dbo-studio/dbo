@@ -108,6 +108,25 @@ func (r *MySQLRepository) triggerFields() []contract.FormField {
 	}
 }
 
+func (r *MySQLRepository) routineFields(procedure bool) []contract.FormField {
+	fields := []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "parameters", Name: "Parameters (e.g. IN a INT, OUT b INT)", Type: contract.FormFieldTypeText},
+	}
+
+	if !procedure {
+		fields = append(fields,
+			contract.FormField{ID: "returns", Name: "Returns", Type: contract.FormFieldTypeText, Required: true},
+			contract.FormField{ID: "deterministic", Name: "Deterministic", Type: contract.FormFieldTypeCheckBox},
+		)
+	}
+
+	return append(fields,
+		contract.FormField{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		contract.FormField{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true},
+	)
+}
+
 func (r *MySQLRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},

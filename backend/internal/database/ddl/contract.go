@@ -19,6 +19,7 @@ const (
 	PhaseChecks      Phase = "checks"
 	PhaseTriggers    Phase = "triggers"
 	PhaseSequences   Phase = "sequences"
+	PhaseRoutines    Phase = "routines"
 )
 
 // Statement is a single DDL statement produced by a planner.

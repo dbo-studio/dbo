@@ -13,6 +13,12 @@ const (
 	CreateMaterializedViewAction        TreeNodeActionName = "createMaterializedView"
 	RefreshMaterializedViewAction       TreeNodeActionName = "refreshMaterializedView"
 	RefreshMaterializedViewNoDataAction TreeNodeActionName = "refreshMaterializedViewNoData"
+	CreateFunctionAction                TreeNodeActionName = "createFunction"
+	EditFunctionAction                  TreeNodeActionName = "editFunction"
+	DropFunctionAction                  TreeNodeActionName = "dropFunction"
+	CreateProcedureAction               TreeNodeActionName = "createProcedure"
+	EditProcedureAction                 TreeNodeActionName = "editProcedure"
+	DropProcedureAction                 TreeNodeActionName = "dropProcedure"
 	CreateTypeAction                    TreeNodeActionName = "createType"
 	EditTypeAction                      TreeNodeActionName = "editType"
 	DropTypeAction                      TreeNodeActionName = "dropType"
@@ -45,6 +51,10 @@ func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
 		return EditViewAction
 	case CreateMaterializedViewAction:
 		return EditMaterializedViewAction
+	case CreateFunctionAction:
+		return EditFunctionAction
+	case CreateProcedureAction:
+		return EditProcedureAction
 	case CreateSequenceAction:
 		return EditSequenceAction
 	case CreateTypeAction:

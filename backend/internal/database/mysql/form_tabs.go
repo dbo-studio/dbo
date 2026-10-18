@@ -24,6 +24,14 @@ func (r *MySQLRepository) GetFormTabs(_ context.Context, action contract.TreeNod
 		return []contract.FormTab{
 			{ID: contract.ViewTab, Name: "View"},
 		}
+	case contract.CreateFunctionAction, contract.EditFunctionAction:
+		return []contract.FormTab{
+			{ID: contract.FunctionTab, Name: "Function"},
+		}
+	case contract.CreateProcedureAction, contract.EditProcedureAction:
+		return []contract.FormTab{
+			{ID: contract.ProcedureTab, Name: "Procedure"},
+		}
 	default:
 		return []contract.FormTab{}
 	}

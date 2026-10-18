@@ -33,6 +33,10 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getTableTriggers(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
+	case contract.FunctionTab:
+		return r.getRoutineInfo(ctx, node, false)
+	case contract.ProcedureTab:
+		return r.getRoutineInfo(ctx, node, true)
 	case contract.SequenceTab:
 		return r.getSequenceInfo(ctx, node)
 	case contract.TableSequenceTab:
@@ -314,6 +318,33 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 	}
 
 	return r.base.BuildGeneralFormResponse(fields, row)
+}
+
+func (r *PostgresRepository) getRoutineInfo(ctx context.Context, node contract.DBNode, procedure bool) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.FunctionContainerNodeType) && node.Table != string(contract.ProcedureContainerNodeType) {
+		routines, err := r.routines(ctx, &node.Database, &node.Schema, procedure)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, routine := range routines {
+			if routine.Name == node.Table {
+				row = map[string]any{
+					"name":       routine.Name,
+					"language":   routine.Language,
+					"parameters": routine.Parameters,
+					"returns":    routine.Returns,
+					"body":       routine.Body,
+				}
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.routineFields(procedure), row)
 }
 
 func sequenceRow(sequence Sequence, ownedBy any) map[string]any {

@@ -38,6 +38,14 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 		return []contract.FormTab{
 			{ID: contract.TypeTab, Name: "Type"},
 		}
+	case contract.CreateFunctionAction, contract.EditFunctionAction:
+		return []contract.FormTab{
+			{ID: contract.FunctionTab, Name: "Function"},
+		}
+	case contract.CreateProcedureAction, contract.EditProcedureAction:
+		return []contract.FormTab{
+			{ID: contract.ProcedureTab, Name: "Procedure"},
+		}
 	case contract.CreateSequenceAction, contract.EditSequenceAction:
 		return []contract.FormTab{
 			{ID: contract.SequenceTab, Name: "Sequence"},

@@ -3,7 +3,9 @@ const CONTAINER_SUFFIXES = new Set([
   'viewContainer',
   'materializedViewContainer',
   'typeContainer',
-  'sequenceContainer'
+  'sequenceContainer',
+  'functionContainer',
+  'procedureContainer'
 ]);
 
 export type ParsedObjectNodeId = {

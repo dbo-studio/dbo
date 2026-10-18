@@ -1089,6 +1089,47 @@ func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, sc
 	return enums, nil
 }
 
+type Routine struct {
+	Name         string `gorm:"column:name"`
+	Parameters   string `gorm:"column:parameters"`
+	IdentityArgs string `gorm:"column:identity_args"`
+	Returns      string `gorm:"column:returns"`
+	Language     string `gorm:"column:language"`
+	Body         string `gorm:"column:body"`
+}
+
+// routines lists user functions or procedures of a schema, leaving out
+// extension members and internal / C-language functions.
+func (r *PostgresRepository) routines(ctx context.Context, database *string, schema *string, procedure bool) ([]Routine, error) {
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	routines := make([]Routine, 0)
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			p.proname AS name,
+			pg_get_function_arguments(p.oid) AS parameters,
+			pg_get_function_identity_arguments(p.oid) AS identity_args,
+			CASE WHEN p.prokind = 'f' THEN pg_get_function_result(p.oid) ELSE '' END AS returns,
+			l.lanname AS language,
+			p.prosrc AS body
+		FROM pg_proc p
+		JOIN pg_namespace n ON n.oid = p.pronamespace
+		JOIN pg_language l ON l.oid = p.prolang
+		WHERE n.nspname = ? AND p.prokind = ? AND l.lanname NOT IN ('internal', 'c')
+			AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')
+		ORDER BY p.proname, p.oid
+	`, lo.FromPtr(schema), lo.Ternary(procedure, "p", "f")).Scan(&routines).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return routines, nil
+}
+
 type Sequence struct {
 	Name        string  `gorm:"column:name"`
 	Comment     *string `gorm:"column:comment"`

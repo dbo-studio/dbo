@@ -130,6 +130,16 @@ func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName st
 			r.ContextMenu(contract.MaterializedViewContainerNodeType),
 		},
 		{
+			"Functions",
+			contract.FunctionContainerNodeType,
+			r.ContextMenu(contract.FunctionContainerNodeType),
+		},
+		{
+			"Procedures",
+			contract.ProcedureContainerNodeType,
+			r.ContextMenu(contract.ProcedureContainerNodeType),
+		},
+		{
 			"Sequences",
 			contract.SequenceContainerNodeType,
 			r.ContextMenu(contract.SequenceContainerNodeType),
@@ -232,6 +242,25 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 					},
 				},
 				ContextMenu: r.ContextMenu(contract.MaterializedViewNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.FunctionContainerNodeType, contract.ProcedureContainerNodeType:
+		procedure := container == contract.ProcedureContainerNodeType
+
+		routines, err := r.routines(ctx, &dbName, &schemaName, procedure)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		nodeType := lo.Ternary(procedure, contract.ProcedureNodeType, contract.FunctionNodeType)
+
+		for _, routine := range routines {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, routine.Name),
+				Name:        routine.Name + "(" + routine.IdentityArgs + ")",
+				Type:        nodeType,
+				ContextMenu: r.ContextMenu(nodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

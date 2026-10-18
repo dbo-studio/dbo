@@ -49,6 +49,11 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 			return nil, err
 		}
 
+		routineQueries, err := r.handleRoutineCommands(ctx, node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		sequenceQueries, err := r.handleSequenceCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
@@ -76,6 +81,7 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, materializedViewQueries...)
+		queries = append(queries, routineQueries...)
 		queries = append(queries, sequenceQueries...)
 		queries = append(queries, typeQueries...)
 		queries = append(queries, schemaQueries...)

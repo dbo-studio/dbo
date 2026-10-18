@@ -43,7 +43,9 @@ func isContainerSegment(segment string) bool {
 		databaseContract.ViewContainerNodeType,
 		databaseContract.MaterializedViewContainerNodeType,
 		databaseContract.TypeContainerNodeType,
-		databaseContract.SequenceContainerNodeType:
+		databaseContract.SequenceContainerNodeType,
+		databaseContract.FunctionContainerNodeType,
+		databaseContract.ProcedureContainerNodeType:
 		return true
 	default:
 		return false
