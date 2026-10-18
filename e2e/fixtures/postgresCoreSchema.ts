@@ -25,6 +25,7 @@ export const PG_CORE_FIELDS = {
   triggerEvents: 'events',
   triggerOrientation: 'orientation',
   triggerFunction: 'function',
+  triggerWhen: 'when',
   sequenceName: 'name',
   sequenceStart: 'start_value',
   sequenceIncrement: 'increment_by',
@@ -95,3 +96,13 @@ export function postgresCoreSchemaNames(suffix: string): {
     matViewName: `mv_${suffix}`
   };
 }
+
+/** Backend rejection messages for invalid input (never a silent skip). */
+export const PG_CORE_ERRORS = {
+  unsafeWhere: /WHERE must be a single SQL expression/i,
+  unsafeCheck: /expression must be a single SQL expression/i,
+  unsafeTriggerWhen: /WHEN must be a single SQL expression/i,
+  unsafeParameters: /parameters must not contain/i,
+  badSequenceNumber: /increment must be an integer/i,
+  enumRemoval: /can only be appended/i
+} as const;

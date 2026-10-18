@@ -156,7 +156,7 @@ export async function addIndex(
   page: Page,
   tableName: string,
   indexName: string,
-  opts: { unique: boolean; column: string }
+  opts: { unique: boolean; column: string; where?: string }
 ): Promise<void> {
   const objectForm = await openEditTable(page, tableName);
   await objectForm.selectTab(T.indexes);
@@ -165,11 +165,37 @@ export async function addIndex(
   await objectForm.fillArrayCell(row, F.indexName, indexName);
   await objectForm.selectMultiSelectOptions(row, F.indexColumns, [opts.column]);
   await objectForm.toggleArrayCheckbox(row, F.indexUnique, opts.unique);
+  if (opts.where) {
+    await objectForm.fillArrayCell(row, F.indexWhere, opts.where);
+  }
 
   await objectForm.save();
   await objectForm.assertPreviewContains(opts.unique ? P.createUniqueIndex : /CREATE INDEX/i);
   await objectForm.assertPreviewContains(indexName);
+  if (opts.where) {
+    await objectForm.assertPreviewContains(new RegExp(`WHERE ${opts.where}`, 'i'));
+  }
   await objectForm.confirmExecute();
+}
+
+/** An index whose WHERE carries a statement separator must be refused, not silently dropped. */
+export async function addIndexRejected(page: Page, tableName: string, indexName: string, where: string, message: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+
+  const row = await addRow(objectForm, F.indexName);
+  await objectForm.fillArrayCell(row, F.indexName, indexName);
+  await objectForm.selectMultiSelectOptions(row, F.indexColumns, ['email']);
+  await objectForm.fillArrayCell(row, F.indexWhere, where);
+
+  await objectForm.saveExpectingError(message);
+}
+
+export async function expectIndexWhereLoaded(page: Page, tableName: string, where: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+
+  await expect(objectForm.getArrayCell(0, F.indexWhere).locator('input')).toHaveValue(where);
 }
 
 export async function expectIndexLoaded(
@@ -240,6 +266,17 @@ export async function addCheck(page: Page, tableName: string, checkName: string)
   await objectForm.confirmExecute();
 }
 
+export async function addCheckRejected(page: Page, tableName: string, checkName: string, expression: string, message: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  const row = await addRow(objectForm, F.checkName);
+  await objectForm.fillArrayCell(row, F.checkName, checkName);
+  await objectForm.fillArrayCell(row, F.checkExpression, expression);
+
+  await objectForm.saveExpectingError(message);
+}
+
 export async function expectCheckLoaded(page: Page, tableName: string, checkName: string): Promise<void> {
   const objectForm = await openEditTable(page, tableName);
   await objectForm.selectTab(T.checks);
@@ -282,6 +319,24 @@ export async function createTriggerFunction(
 
   await expandPublicContainer(page, names, 'Functions');
   await expect(tree.getTreeNode(`${functionName}()`)).toBeVisible({ timeout: 15000 });
+}
+
+/** A parameter list carrying a statement separator must be refused, not silently dropped. */
+export async function createFunctionRejected(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  functionName: string,
+  parameters: string,
+  message: RegExp
+): Promise<void> {
+  const objectForm = await openCreateForm(page, names, 'Functions', 'Create function', T.function);
+
+  await objectForm.fillGeneralField(F.routineName, functionName);
+  await objectForm.fillGeneralField(F.routineParameters, parameters);
+  await objectForm.fillGeneralField(F.routineReturns, 'integer');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN RETURN 1; END;');
+
+  await objectForm.saveExpectingError(message);
 }
 
 export async function editFunctionBody(page: Page, functionName: string): Promise<void> {
@@ -348,6 +403,27 @@ export async function addTrigger(
   await objectForm.confirmExecute();
 }
 
+export async function addTriggerRejected(
+  page: Page,
+  tableName: string,
+  triggerName: string,
+  functionName: string,
+  when: string,
+  message: RegExp
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  const row = await addRow(objectForm, F.triggerName);
+  await objectForm.fillArrayCell(row, F.triggerName, triggerName);
+  await objectForm.selectArrayCellOption(row, F.triggerTiming, 'BEFORE');
+  await objectForm.selectMultiSelectOptions(row, F.triggerEvents, ['INSERT']);
+  await objectForm.selectArrayCellOption(row, F.triggerFunction, `public.${functionName}`);
+  await objectForm.fillArrayCell(row, F.triggerWhen, when);
+
+  await objectForm.saveExpectingError(message);
+}
+
 export async function expectTriggerLoaded(page: Page, tableName: string, triggerName: string, functionName: string): Promise<void> {
   const objectForm = await openEditTable(page, tableName);
   await objectForm.selectTab(T.triggers);
@@ -380,6 +456,20 @@ export async function createSequence(
 
   await expandPublicContainer(page, names, 'Sequences');
   await expect(tree.getTreeNode(sequenceName)).toBeVisible({ timeout: 15000 });
+}
+
+export async function createSequenceRejected(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  sequenceName: string,
+  message: RegExp
+): Promise<void> {
+  const objectForm = await openCreateForm(page, names, 'Sequences', 'Create sequence', T.sequence);
+
+  await objectForm.fillGeneralField(F.sequenceName, sequenceName);
+  await objectForm.fillGeneralField(F.sequenceIncrement, 'abc');
+
+  await objectForm.saveExpectingError(message);
 }
 
 export async function editSequenceIncrement(page: Page, sequenceName: string): Promise<void> {
@@ -461,6 +551,14 @@ export async function addEnumValue(page: Page, enumName: string): Promise<void> 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.addEnumValue);
   await objectForm.confirmExecute();
+}
+
+/** PostgreSQL can only append enum labels: removing or reordering must be refused. */
+export async function editEnumValuesRejected(page: Page, enumName: string, values: string, message: RegExp): Promise<void> {
+  const objectForm = await openEditForm(page, enumName, 'Edit enum type', T.type);
+
+  await objectForm.fillGeneralField(F.typeValues, values);
+  await objectForm.saveExpectingError(message);
 }
 
 export async function expectEnumValues(page: Page, enumName: string, values: string): Promise<void> {

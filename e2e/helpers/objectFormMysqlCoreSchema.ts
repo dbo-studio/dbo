@@ -240,6 +240,54 @@ export async function createProcedure(page: Page, names: MysqlCoreNames, procedu
   await expect(tree.getTreeNode(procedureName)).toBeVisible({ timeout: 15000 });
 }
 
+/** IN / OUT parameters of a procedure round-trip through information_schema. */
+export async function createProcedureWithOutParameter(page: Page, names: MysqlCoreNames, procedureName: string): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = await openCreateRoutine(page, names, 'procedureContainer', 'Create procedure', T.procedure);
+
+  await objectForm.fillGeneralField(F.routineName, procedureName);
+  await objectForm.fillGeneralField(F.routineParameters, 'IN a INT, OUT b INT');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN SET b = a + 1; END');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/CREATE PROCEDURE[\s\S]*\(IN a INT, OUT b INT\) BEGIN SET b = a \+ 1; END/i);
+  await objectForm.confirmExecute();
+
+  await expandContainer(page, names, 'procedureContainer');
+  await expect(tree.getTreeNode(procedureName)).toBeVisible({ timeout: 15000 });
+}
+
+export async function expectOutParameterLoaded(page: Page, procedureName: string): Promise<void> {
+  const objectForm = await openEditRoutine(page, procedureName, 'Edit procedure', T.procedure);
+
+  await expect(objectForm.getGeneralField(F.routineParameters).locator('input')).toHaveValue(/IN\s+a\s+int,\s*OUT\s+b\s+int/i);
+}
+
+/** A parameter list carrying a statement separator must be refused, not silently dropped. */
+export async function createFunctionRejected(page: Page, names: MysqlCoreNames, functionName: string, message: RegExp): Promise<void> {
+  const objectForm = await openCreateRoutine(page, names, 'functionContainer', 'Create function', T.function);
+
+  await objectForm.fillGeneralField(F.routineName, functionName);
+  await objectForm.fillGeneralField(F.routineParameters, 'a INT; DROP TABLE x');
+  await objectForm.fillGeneralField(F.routineReturns, 'INT');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'RETURN a');
+
+  await objectForm.saveExpectingError(message);
+}
+
+/** A trigger with no body must be refused, not silently dropped. */
+export async function addTriggerWithoutBodyRejected(page: Page, tableName: string, triggerName: string, message: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  const row = await objectForm.addArrayRow(F.triggerName);
+  await objectForm.fillArrayCell(row, F.triggerName, triggerName);
+  await objectForm.selectArrayCellOption(row, F.triggerTiming, 'BEFORE');
+  await objectForm.selectArrayCellOption(row, F.triggerEvent, 'INSERT');
+
+  await objectForm.saveExpectingError(message);
+}
+
 export async function expectProcedureLoaded(page: Page, procedureName: string): Promise<void> {
   const objectForm = await openEditRoutine(page, procedureName, 'Edit procedure', T.procedure);
 

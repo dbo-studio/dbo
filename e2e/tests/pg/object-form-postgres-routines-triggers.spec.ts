@@ -1,9 +1,16 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { postgresCoreSchemaNames, PG_CORE_PREVIEW as P, PG_CORE_TABS as T } from "../../fixtures/postgresCoreSchema";
+import {
+  postgresCoreSchemaNames,
+  PG_CORE_ERRORS as E,
+  PG_CORE_PREVIEW as P,
+  PG_CORE_TABS as T,
+} from "../../fixtures/postgresCoreSchema";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addTrigger,
+  addTriggerRejected,
   cleanupPgCoreSchema,
+  createFunctionRejected,
   createProcedure,
   createTriggerFunction,
   dropFirstRowOfTab,
@@ -53,6 +60,32 @@ test.describe("Object Form PostgreSQL routines and triggers", () => {
 
   test("Create trigger function", async () => {
     await createTriggerFunction(page, names, names.triggerFunction);
+  });
+
+  test("Function with an unsafe parameter list is rejected", async () => {
+    await createFunctionRejected(
+      page,
+      names,
+      `${names.triggerFunction}_bad`,
+      "a integer; DROP TABLE x",
+      E.unsafeParameters,
+    );
+  });
+
+  test("Trigger with an unsafe WHEN is rejected", async () => {
+    await test.step("save is refused with a clear message", async () => {
+      await addTriggerRejected(
+        page,
+        names.usersTable,
+        `${names.triggerName}_bad`,
+        names.triggerFunction,
+        "NEW.email IS NOT NULL; DROP TABLE x",
+        E.unsafeTriggerWhen,
+      );
+    });
+    await test.step("reopen: nothing was created", async () => {
+      await expectTabEmpty(page, names.usersTable, T.triggers, "name");
+    });
   });
 
   test("Add trigger on table and load it back", async () => {

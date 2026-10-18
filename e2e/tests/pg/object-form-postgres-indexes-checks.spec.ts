@@ -1,15 +1,23 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { postgresCoreSchemaNames, PG_CORE_PREVIEW as P, PG_CORE_TABS as T } from "../../fixtures/postgresCoreSchema";
+import {
+  postgresCoreSchemaNames,
+  PG_CORE_ERRORS as E,
+  PG_CORE_PREVIEW as P,
+  PG_CORE_TABS as T,
+} from "../../fixtures/postgresCoreSchema";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addCheck,
+  addCheckRejected,
   addIndex,
+  addIndexRejected,
   changeIndexMethod,
   cleanupPgCoreSchema,
   dropFirstRowOfTab,
   editCheckExpression,
   expectCheckLoaded,
   expectIndexLoaded,
+  expectIndexWhereLoaded,
   expectTabEmpty,
   setupPgCoreSchema,
 } from "../../helpers/objectFormPostgresCoreSchema";
@@ -75,6 +83,52 @@ test.describe("Object Form PostgreSQL indexes and checks", () => {
     });
     await test.step("reopen: no indexes left", async () => {
       await expectTabEmpty(page, names.usersTable, T.indexes, "name");
+    });
+  });
+
+  test("Partial index with WHERE round-trips", async () => {
+    await test.step("add non-unique index with a WHERE predicate", async () => {
+      await addIndex(page, names.usersTable, names.indexName, {
+        unique: false,
+        column: "email",
+        where: "email IS NOT NULL",
+      });
+    });
+    await test.step("reopen: predicate is loaded from the catalog", async () => {
+      await expectIndexWhereLoaded(page, names.usersTable, /email IS NOT NULL/);
+    });
+    await test.step("drop the partial index", async () => {
+      await dropFirstRowOfTab(page, names.usersTable, T.indexes, P.dropIndex);
+    });
+  });
+
+  test("Index with an unsafe WHERE is rejected, not silently skipped", async () => {
+    await test.step("save is refused with a clear message", async () => {
+      await addIndexRejected(
+        page,
+        names.usersTable,
+        `${names.indexName}_bad`,
+        "email IS NOT NULL; DROP TABLE x",
+        E.unsafeWhere,
+      );
+    });
+    await test.step("reopen: nothing was created", async () => {
+      await expectTabEmpty(page, names.usersTable, T.indexes, "name");
+    });
+  });
+
+  test("Check with a statement separator is rejected", async () => {
+    await test.step("save is refused with a clear message", async () => {
+      await addCheckRejected(
+        page,
+        names.usersTable,
+        `${names.checkName}_bad`,
+        "length(email) > 3; DROP TABLE x",
+        E.unsafeCheck,
+      );
+    });
+    await test.step("reopen: nothing was created", async () => {
+      await expectTabEmpty(page, names.usersTable, T.checks, "name");
     });
   });
 

@@ -1,5 +1,10 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { postgresCoreSchemaNames, PG_CORE_PREVIEW as P, PG_CORE_TABS as T } from "../../fixtures/postgresCoreSchema";
+import {
+  postgresCoreSchemaNames,
+  PG_CORE_ERRORS as E,
+  PG_CORE_PREVIEW as P,
+  PG_CORE_TABS as T,
+} from "../../fixtures/postgresCoreSchema";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addEnumColumn,
@@ -8,9 +13,11 @@ import {
   cleanupPgCoreSchema,
   createEnumType,
   createSequence,
+  createSequenceRejected,
   dropEnumType,
   dropFirstRowOfTab,
   dropSequence,
+  editEnumValuesRejected,
   editSequenceIncrement,
   expectDoubleClickOpensEdit,
   expectEnumValues,
@@ -72,6 +79,10 @@ test.describe("Object Form PostgreSQL sequences and enum types", () => {
     });
   });
 
+  test("Sequence with a non-numeric increment is rejected", async () => {
+    await createSequenceRejected(page, names, `${names.sequenceName}_bad`, E.badSequenceNumber);
+  });
+
   test("Drop standalone sequence via tree", async () => {
     await dropSequence(page, names.sequenceName);
   });
@@ -105,6 +116,18 @@ test.describe("Object Form PostgreSQL sequences and enum types", () => {
       await addEnumValue(page, names.enumName);
     });
     await test.step("reopen: values keep their order", async () => {
+      await expectEnumValues(page, names.enumName, "sad, ok, happy");
+    });
+  });
+
+  test("Removing or reordering enum values is rejected", async () => {
+    await test.step("removing a label is refused", async () => {
+      await editEnumValuesRejected(page, names.enumName, "sad, happy", E.enumRemoval);
+    });
+    await test.step("reordering labels is refused", async () => {
+      await editEnumValuesRejected(page, names.enumName, "ok, sad, happy", E.enumRemoval);
+    });
+    await test.step("reopen: values are unchanged", async () => {
       await expectEnumValues(page, names.enumName, "sad, ok, happy");
     });
   });

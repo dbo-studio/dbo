@@ -1,17 +1,21 @@
 import { test, type BrowserContext, type Page } from "@playwright/test";
-import { mysqlCoreSchemaNames } from "../../fixtures/mysqlCoreSchema";
+import { mysqlCoreSchemaNames, MYSQL_CORE_ERRORS as E } from "../../fixtures/mysqlCoreSchema";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addTrigger,
+  addTriggerWithoutBodyRejected,
   cleanupMysqlCoreSchema,
   createFunction,
+  createFunctionRejected,
   createProcedure,
+  createProcedureWithOutParameter,
   dropRoutine,
   dropTrigger,
   editFunctionBody,
   editTriggerBody,
   expectFunctionLoaded,
   expectNoTriggers,
+  expectOutParameterLoaded,
   expectProcedureLoaded,
   expectTriggerLoaded,
   setupMysqlCoreSchema,
@@ -54,6 +58,15 @@ test.describe("Object Form MySQL triggers and routines", () => {
     await setupMysqlCoreSchema(page, names);
   });
 
+  test("Trigger without a body is rejected", async () => {
+    await test.step("save is refused with a clear message", async () => {
+      await addTriggerWithoutBodyRejected(page, names.usersTable, `${names.triggerName}_bad`, E.triggerBodyRequired);
+    });
+    await test.step("reopen: nothing was created", async () => {
+      await expectNoTriggers(page, names.usersTable);
+    });
+  });
+
   test("Add trigger on table and load it back", async () => {
     await test.step("add BEFORE INSERT trigger", async () => {
       await addTrigger(page, names.usersTable, names.triggerName);
@@ -93,6 +106,19 @@ test.describe("Object Form MySQL triggers and routines", () => {
     });
     await test.step("drop function via tree", async () => {
       await dropRoutine(page, names.functionName, "Drop function");
+    });
+  });
+
+  test("Function with an unsafe parameter list is rejected", async () => {
+    await createFunctionRejected(page, names, `${names.functionName}_bad`, E.unsafeParameters);
+  });
+
+  test("Procedure with IN and OUT parameters round-trips", async () => {
+    await test.step("create procedure (IN a INT, OUT b INT)", async () => {
+      await createProcedureWithOutParameter(page, names, `${names.procedureName}_out`);
+    });
+    await test.step("reopen: both parameters are loaded with their modes", async () => {
+      await expectOutParameterLoaded(page, `${names.procedureName}_out`);
     });
   });
 

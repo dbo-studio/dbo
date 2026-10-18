@@ -306,6 +306,22 @@ export class ObjectFormPage extends BasePage {
     await expect(this.previewModal).toBeVisible({ timeout: 10000 });
   }
 
+  /**
+   * Save must be rejected by the backend: the preview request fails with a message matching
+   * `message`, and no preview modal opens, so nothing can be executed.
+   */
+  async saveExpectingError(message: RegExp): Promise<void> {
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectPreview,
+      () => this.saveButton.click(),
+      API_DDL_TIMEOUT,
+    );
+    expect(response.status(), "preview of invalid input is rejected").toBeGreaterThanOrEqual(400);
+    expect(await response.text()).toMatch(message);
+    await expect(this.previewModal).toBeHidden();
+  }
+
   async assertPreviewContains(text: string | RegExp): Promise<void> {
     await expect(this.previewModal).toContainText(text, { timeout: 30000 });
   }

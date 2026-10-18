@@ -43,3 +43,9 @@ export function mysqlCoreSchemaNames(suffix: string): {
     procedureName: `proc_${suffix}`
   };
 }
+
+/** Backend rejection messages for invalid input (never a silent skip). */
+export const MYSQL_CORE_ERRORS = {
+  unsafeParameters: /parameters must not contain/i,
+  triggerBodyRequired: /body is required/i
+} as const;
