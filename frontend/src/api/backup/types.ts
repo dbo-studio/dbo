@@ -56,3 +56,30 @@ export type BackupToolDownloadType = {
   size: number;
   installed: boolean;
 };
+
+export type BackupCadenceType = 'hourly' | 'daily' | 'weekly';
+
+export type BackupScheduleRequestType = {
+  connectionId: number;
+  name: string;
+  database?: string;
+  schema?: string;
+  cadence: BackupCadenceType;
+  hour: number;
+  minute: number;
+  weekday: number;
+  timezone: string;
+  keepLast: number;
+  keepDays: number;
+};
+
+export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 'schema'> & {
+  id: number;
+  database: string;
+  schema: string;
+  enabled: boolean;
+  nextRunAt?: string;
+  lastRunAt?: string;
+  lastStatus: '' | 'running' | 'completed' | 'failed';
+  lastError: string;
+};

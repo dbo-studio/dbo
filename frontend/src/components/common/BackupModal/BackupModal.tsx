@@ -14,6 +14,7 @@ import { Box, Button, Checkbox, Chip, FormControlLabel, Typography } from '@mui/
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import BackupSchedules from './BackupSchedules';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 
 type Progress = { jobId: string; title: string };
@@ -231,6 +232,14 @@ function BackupModalBody({
               )}
             </Box>
           ))}
+
+          <BackupSchedules
+            connectionId={connection.id}
+            database={isSqlite ? '' : database}
+            schema={isPostgres ? schema : undefined}
+            canWrite={canWrite}
+            onRunStarted={(jobId) => track(jobId, locales.backup_in_progress)}
+          />
 
           <Typography variant='subtitle2' sx={{ mt: 3 }}>
             {locales.backup_tools}

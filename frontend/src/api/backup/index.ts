@@ -3,6 +3,8 @@ import type {
   BackupArtifactType,
   BackupJobResponseType,
   BackupRequestType,
+  BackupScheduleRequestType,
+  BackupScheduleType,
   BackupToolDownloadType,
   BackupToolType,
   RestoreRequestType
@@ -16,7 +18,10 @@ const endpoint = {
   download: (id: number): string => `/backups/${id}/download`,
   tools: (): string => '/backups/tools',
   toolDownloads: (): string => '/backups/tools/downloads',
-  installTool: (): string => '/backups/tools/install'
+  installTool: (): string => '/backups/tools/install',
+  schedules: (): string => '/backup-schedules',
+  schedule: (id: number): string => `/backup-schedules/${id}`,
+  runSchedule: (id: number): string => `/backup-schedules/${id}/run`
 };
 
 export const create = async (request: BackupRequestType): Promise<BackupJobResponseType> => {
@@ -60,4 +65,27 @@ export const toolDownloads = async (): Promise<BackupToolDownloadType[]> => {
 
 export const installTool = async (driver: string, version: string): Promise<BackupJobResponseType> => {
   return (await api.post<{ data: BackupJobResponseType }>(endpoint.installTool(), { driver, version })).data.data;
+};
+
+export const schedules = async (): Promise<BackupScheduleType[]> => {
+  return (await api.get<{ data: BackupScheduleType[] }>(endpoint.schedules())).data.data;
+};
+
+export const createSchedule = async (request: BackupScheduleRequestType): Promise<BackupScheduleType> => {
+  return (await api.post<{ data: BackupScheduleType }>(endpoint.schedules(), request)).data.data;
+};
+
+export const updateSchedule = async (
+  id: number,
+  patch: Partial<BackupScheduleRequestType> & { enabled?: boolean }
+): Promise<BackupScheduleType> => {
+  return (await api.patch<{ data: BackupScheduleType }>(endpoint.schedule(id), patch)).data.data;
+};
+
+export const deleteSchedule = async (id: number): Promise<void> => {
+  await api.delete(endpoint.schedule(id));
+};
+
+export const runSchedule = async (id: number): Promise<BackupJobResponseType> => {
+  return (await api.post<{ data: BackupJobResponseType }>(endpoint.runSchedule(id))).data.data;
 };
