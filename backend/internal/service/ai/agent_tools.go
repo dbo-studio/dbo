@@ -87,6 +87,20 @@ func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, chatID uint, ra
 	return s.changesetService.Create(ctx, chatID, &req)
 }
 
+// updatePlan validates the agent's checklist so it can be shown and stored.
+func updatePlan(rawArgs string) (*dto.AiPlan, error) {
+	var plan dto.AiPlan
+	if err := json.Unmarshal([]byte(rawArgs), &plan); err != nil {
+		return nil, fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	if err := plan.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid plan: %w", err)
+	}
+
+	return &plan, nil
+}
+
 // requestWrite classifies a write statement and turns it into a permission
 // request. It never executes: the user confirms via POST /query/raw, which
 // enforces Safe Mode.

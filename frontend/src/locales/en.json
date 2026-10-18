@@ -715,6 +715,7 @@
   "ai_expand_to_agent": "Expand to Agent",
   "ai_back_to_dbo": "Back to DBO",
   "ai_workspace_sessions": "Sessions",
+  "ai_plan_title": "Plan · {done}/{total} done",
   "ai_changes_title": "Schema changes",
   "ai_changes_tab_diff": "Schema diff",
   "ai_changes_tab_sql": "SQL",

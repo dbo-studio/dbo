@@ -13,6 +13,7 @@ const (
 	ToolExecuteSQL          = "execute_sql"
 	ToolProposeSchemaChange = "propose_schema_change"
 	ToolExecuteWrite        = "execute_write"
+	ToolUpdatePlan          = "update_plan"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -20,6 +21,7 @@ const (
 var agentOnlyTools = map[string]bool{
 	ToolProposeSchemaChange: true,
 	ToolExecuteWrite:        true,
+	ToolUpdatePlan:          true,
 }
 
 // AllowedTool is the server-side source of truth for which tools a chat turn
@@ -126,6 +128,24 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 			},
 			"required": []string{"ops"},
+		}),
+		functionTool(ToolUpdatePlan, "Show the user a checklist of the steps you plan to take, and keep it current as you work. "+
+			"Send the whole list every time; it replaces the previous one.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"steps": map[string]any{
+					"type": "array",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"title":  map[string]any{"type": "string"},
+							"status": map[string]any{"type": "string", "enum": []string{dto.PlanStepPending, dto.PlanStepInProgress, dto.PlanStepDone}},
+						},
+						"required": []string{"title", "status"},
+					},
+				},
+			},
+			"required": []string{"steps"},
 		}),
 		functionTool(ToolExecuteWrite, "Request running a single INSERT/UPDATE/DELETE or DDL statement. "+
 			"The statement is shown to the user and only runs if they confirm it.", shared.FunctionParameters{

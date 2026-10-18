@@ -1,4 +1,5 @@
 import type { StateCreator } from 'zustand';
+import type { AiAgentItem } from '@/types';
 import type { AiReviewDecision, AiToolSlice } from '../types';
 
 const REVIEWS_STORAGE_KEY = 'dbo:ai-reviews';
@@ -26,6 +27,22 @@ export const createAiToolSlice: StateCreator<AiToolSlice, [['zustand/devtools', 
   agentItems: [],
   appendAgentItem: (item) => {
     set((state) => ({ agentItems: [...state.agentItems, item] }), undefined, 'appendAgentItem');
+  },
+  setPlan: (steps) => {
+    set(
+      (state) => {
+        const plan: AiAgentItem = { kind: 'plan', steps };
+        const shown = state.agentItems.some((item) => item.kind === 'plan');
+
+        return {
+          agentItems: shown
+            ? state.agentItems.map((item) => (item.kind === 'plan' ? plan : item))
+            : [...state.agentItems, plan]
+        };
+      },
+      undefined,
+      'setPlan'
+    );
   },
   updateToolTrace: (id, partial) => {
     set(

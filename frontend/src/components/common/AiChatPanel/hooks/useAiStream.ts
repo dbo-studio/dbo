@@ -28,6 +28,7 @@ export const useAiStream = (): UseAiStreamReturn => {
   const updateStreaming = useAiStore((state) => state.updateStreaming);
   const setLastRequest = useAiStore((state) => state.setLastRequest);
   const appendAgentItem = useAiStore((state) => state.appendAgentItem);
+  const setPlan = useAiStore((state) => state.setPlan);
   const updateToolTrace = useAiStore((state) => state.updateToolTrace);
   const clearAgentItems = useAiStore((state) => state.clearAgentItems);
 
@@ -117,6 +118,9 @@ export const useAiStream = (): UseAiStreamReturn => {
             // Show the proposal on the matching diagram while the turn streams.
             useChangesetStore.getState().stage(event.data);
             break;
+          case 'plan_delta':
+            setPlan(event.data.steps);
+            break;
           case 'permission_request':
             appendAgentItem({ kind: 'permission', request: event.data });
             break;
@@ -165,6 +169,7 @@ export const useAiStream = (): UseAiStreamReturn => {
     [
       appendAgentItem,
       clearAgentItems,
+      setPlan,
       resetStreaming,
       setLastRequest,
       setStreamingStatus,

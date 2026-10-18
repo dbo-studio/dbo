@@ -30,6 +30,7 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 	`To design or change schema (create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
 	`To run INSERT/UPDATE/DELETE call execute_write; the user must confirm before it runs. ` +
+	`For work with several steps, call update_plan first and update it as steps finish. ` +
 	`Never claim a proposed change or write was applied — say it is waiting for the user's review.`
 
 // modeInstructions adds how the user reviewed the chat's earlier proposals in
@@ -188,6 +189,14 @@ func (s *AiServiceImpl) runToolCall(
 			result = fmt.Sprintf("Proposed %d schema change(s). They are shown to the user for review and are NOT applied yet.", len(changeset.Ops))
 			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, map[string]uint{"changesetId": changeset.ID})
 			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(changeset.ID), 10), changeset)
+			extra, event = &msg, &ev
+		}
+	case call.Name == serviceDbtools.ToolUpdatePlan:
+		var plan *dto.AiPlan
+		if plan, err = updatePlan(call.Arguments); err == nil {
+			result = "Plan updated."
+			msg := traceMessage(model.AiChatMessageTypePlan, plan)
+			ev := streamEvent("plan_delta", call.ID, plan)
 			extra, event = &msg, &ev
 		}
 	case call.Name == serviceDbtools.ToolExecuteWrite:

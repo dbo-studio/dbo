@@ -31,7 +31,7 @@ export type AiMessageType = {
 
 export type AiChatMode = 'ask' | 'agent';
 
-export type AiTraceMessageKind = 'tool' | 'diagram_diff' | 'permission';
+export type AiTraceMessageKind = 'tool' | 'diagram_diff' | 'permission' | 'plan';
 
 export type AiToolStatus = 'running' | 'done' | 'error' | 'blocked' | 'cancelled';
 
@@ -100,10 +100,16 @@ export type AiPermissionRequest = {
   decision?: 'confirmed' | 'rejected';
 };
 
+export type AiPlanStep = {
+  title: string;
+  status: 'pending' | 'in_progress' | 'done';
+};
+
 export type AiAgentItem =
   | { kind: 'tool'; trace: AiToolTrace }
   | { kind: 'diagram_diff'; changesetId: number }
-  | { kind: 'permission'; request: AiPermissionRequest };
+  | { kind: 'permission'; request: AiPermissionRequest }
+  | { kind: 'plan'; steps: AiPlanStep[] };
 
 export type AiContextType = {
   input: string;

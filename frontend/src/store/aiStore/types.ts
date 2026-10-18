@@ -4,6 +4,7 @@ import type {
   AiChatType,
   AiContextType,
   AiMessageType,
+  AiPlanStep,
   AiProviderType,
   AiToolTrace
 } from '@/types';
@@ -76,6 +77,8 @@ export type AiToolSlice = {
   /** Live tool/diagram/permission cards of the turn being streamed. */
   agentItems: AiAgentItem[];
   appendAgentItem: (item: AiAgentItem) => void;
+  /** Shows the agent's latest checklist, replacing the one already shown for the turn. */
+  setPlan: (steps: AiPlanStep[]) => void;
   updateToolTrace: (id: string, partial: Partial<AiToolTrace>) => void;
   clearAgentItems: () => void;
   reviews: Record<string, AiReviewDecision>;

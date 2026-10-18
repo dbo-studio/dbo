@@ -37,6 +37,7 @@ const (
 	AiChatMessageTypeTool        AiChatMessageType = "tool"
 	AiChatMessageTypeDiagramDiff AiChatMessageType = "diagram_diff"
 	AiChatMessageTypePermission  AiChatMessageType = "permission"
+	AiChatMessageTypePlan        AiChatMessageType = "plan"
 )
 
 // IsConversational reports whether the message is part of the model-visible
