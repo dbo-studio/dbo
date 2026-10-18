@@ -7,12 +7,15 @@ import (
 	"github.com/samber/lo"
 )
 
+// TableNodeID is the tree and diagram node id of a table.
+func TableNodeID(connectionType, database, schema, table string) string {
+	return databaseCore.FormatNodeID(connectionType, contract.DBNode{Database: database, Schema: schema, Table: table})
+}
+
 // ChangeDiagramOps maps schema change ops to diagram ops using the same node
 // and edge ids the drivers emit for GET /schema/diagram.
 func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaChangeOp) []dto.DiagramOp {
-	nodeID := func(table string) string {
-		return databaseCore.FormatNodeID(connectionType, contract.DBNode{Database: database, Schema: schema, Table: table})
-	}
+	nodeID := func(table string) string { return TableNodeID(connectionType, database, schema, table) }
 
 	fkColumns := map[string]map[string]bool{}
 

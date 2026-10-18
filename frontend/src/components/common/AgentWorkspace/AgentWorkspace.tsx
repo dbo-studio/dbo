@@ -3,8 +3,10 @@ import ChatBox from '@/components/common/AiChatPanel/ChatBox/ChatBox';
 import ChatHistory from '@/components/common/AiChatPanel/ChatHistory/ChatHistory';
 import { useAiChatController } from '@/components/common/AiChatPanel/hooks/useAiChatController';
 import Messages from '@/components/common/AiChatPanel/Messages/Messages';
+import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Typography, useMediaQuery, useTheme } from '@mui/material';
 import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
@@ -17,6 +19,8 @@ import {
   WorkspaceSessionsStyled,
   WorkspaceThreadStyled
 } from './AgentWorkspace.styled';
+import ChangesetDock from './ChangesetDock/ChangesetDock';
+import ChangesetSurface from './ChangesetSurface/ChangesetSurface';
 import WorkspaceTopBar from './WorkspaceTopBar/WorkspaceTopBar';
 
 const OPEN_OVERLAY = '.MuiModal-root:not(.MuiModal-hidden)';
@@ -30,6 +34,7 @@ export default function AgentWorkspace(): JSX.Element {
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down('md'));
   const [showSessions, setShowSessions] = useState(!isNarrow);
+  const [showChanges, setShowChanges] = useState(true);
   const rootRef = useRef<HTMLElement>(null);
 
   const {
@@ -43,6 +48,14 @@ export default function AgentWorkspace(): JSX.Element {
     handleRegenerate
   } = useAiChatController();
   const currentChat = useAiStore((state) => state.currentChat);
+  // The newest proposal of this chat that still waits for the user.
+  const openChangesetId = useChangesetStore(
+    (state) =>
+      Object.values(state.changesets)
+        .filter((changeset) => changeset.chatId === currentChat?.id && changeset.ops.some((op) => isOpen(op.status)))
+        .pop()?.id
+  );
+  const review = useChangesetReview(openChangesetId ?? 0);
   const updateUI = useSettingStore((state) => state.updateUI);
 
   const close = useCallback(() => updateUI({ agentWorkspaceOpen: false }), [updateUI]);
@@ -99,6 +112,7 @@ export default function AgentWorkspace(): JSX.Element {
               onRegenerate={() => void handleRegenerate()}
             />
             <WorkspaceComposerStyled>
+              {review.openCount > 0 && <ChangesetDock review={review} onReview={() => setShowChanges(true)} />}
               <ChatBox
                 loading={chatPending}
                 autocomplete={autocomplete}
@@ -108,6 +122,9 @@ export default function AgentWorkspace(): JSX.Element {
             </WorkspaceComposerStyled>
           </WorkspaceThreadStyled>
         </WorkspaceConversationStyled>
+        {review.openCount > 0 && showChanges && (
+          <ChangesetSurface review={review} onClose={() => setShowChanges(false)} />
+        )}
       </WorkspaceBodyStyled>
     </AgentWorkspaceStyled>
   );

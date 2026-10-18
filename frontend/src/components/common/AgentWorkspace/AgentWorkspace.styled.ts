@@ -11,6 +11,7 @@ export const AgentWorkspaceStyled = styled('section')(({ theme }) => ({
 }));
 
 export const WorkspaceBodyStyled = styled(Box)(() => ({
+  position: 'relative',
   flex: 1,
   minHeight: 0,
   display: 'flex'

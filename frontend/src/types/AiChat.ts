@@ -72,6 +72,8 @@ export type AiChangesetOpStatus = 'pending' | 'accepted' | 'rejected' | 'applied
 export type AiChangesetOp = SchemaChangeOp & {
   position: number;
   status: AiChangesetOpStatus;
+  /** Tree node id of the op's table. */
+  tableId: string;
   /** Why the op failed to apply. */
   error?: string;
 };

@@ -13,6 +13,8 @@ export type ToolCallScript = { name: string; args: Record<string, unknown> };
 export class FakeLlm {
   /** Tool names offered to the model, one entry per completion request. */
   readonly offeredTools: string[][] = [];
+  /** Text of every system message the model received, one entry per completion request. */
+  readonly systemPrompts: string[] = [];
   script: ToolCallScript | null = null;
   private server: Server | null = null;
 
@@ -33,8 +35,14 @@ export class FakeLlm {
   private handle(rawBody: string, res: ServerResponse): void {
     const body = JSON.parse(rawBody || "{}") as {
       tools?: Array<{ function?: { name?: string } }>;
-      messages?: Array<{ role: string }>;
+      messages?: Array<{ role: string; content?: unknown }>;
     };
+    this.systemPrompts.push(
+      (body.messages ?? [])
+        .filter((message) => message.role === "system")
+        .map((message) => JSON.stringify(message.content))
+        .join("\n"),
+    );
     const tools = (body.tools ?? []).map((tool) => tool.function?.name ?? "");
     if (tools.length > 0) {
       this.offeredTools.push(tools);

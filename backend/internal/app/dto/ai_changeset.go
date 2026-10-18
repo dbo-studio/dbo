@@ -13,6 +13,8 @@ type (
 		Position int    `json:"position"`
 		Status   string `json:"status"`
 		Error    string `json:"error,omitempty"`
+		// TableID is the tree node id of the op's table, to open it in the Object Form.
+		TableID string `json:"tableId"`
 		SchemaChangeOp
 	}
 

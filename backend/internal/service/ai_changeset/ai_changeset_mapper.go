@@ -48,7 +48,13 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 		Database:     changeset.Database,
 		Schema:       changeset.Schema,
 		Ops: lo.Map(rows, func(row *model.AiChangesetOp, i int) dto.AiChangesetOp {
-			return dto.AiChangesetOp{Position: row.Position, Status: string(row.Status), Error: row.Error, SchemaChangeOp: ops[i]}
+			return dto.AiChangesetOp{
+				Position:       row.Position,
+				Status:         string(row.Status),
+				Error:          row.Error,
+				TableID:        serviceSchema.TableNodeID(connectionType, changeset.Database, changeset.Schema, ops[i].Table),
+				SchemaChangeOp: ops[i],
+			}
 		}),
 		DiagramOps: serviceSchema.ChangeDiagramOps(connectionType, changeset.Database, changeset.Schema, open),
 	}, nil
