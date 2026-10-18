@@ -7,6 +7,9 @@ import (
 )
 
 const (
+	// MaxUploadSize caps one request body, and so one uploaded backup or import.
+	MaxUploadSize = 256 << 20
+
 	ExportDir = "exports"
 	// BackupDir holds backup artifacts; downloads are constrained to it.
 	BackupDir = "backups"

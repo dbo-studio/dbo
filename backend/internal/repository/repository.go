@@ -76,6 +76,7 @@ type IJobRepo interface {
 type IBackupArtifactRepo interface {
 	Create(ctx context.Context, artifact *model.BackupArtifact) error
 	FindByOwner(ctx context.Context, id uint, ownerID string) (*model.BackupArtifact, error)
+	FindByJob(ctx context.Context, jobID uint, ownerID string) (*model.BackupArtifact, error)
 	ListByOwner(ctx context.Context, ownerID string, connectionID *uint) ([]model.BackupArtifact, error)
 	// UpdateFields writes only the given columns so a late write can never
 	// clobber a concurrent change.

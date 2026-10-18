@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"mime/multipart"
 	"time"
 
 	"github.com/invopop/validation"
@@ -33,6 +34,9 @@ type (
 		// ConfirmName must repeat Database exactly; it is the typed
 		// confirmation for an action that overwrites data.
 		ConfirmName string `json:"confirmName"`
+		// SafetyBackup queues a backup of the target first; the restore only
+		// runs if that backup succeeds.
+		SafetyBackup bool `json:"safetyBackup"`
 	}
 
 	RestoreResponse struct {
@@ -42,6 +46,14 @@ type (
 	RestoreJob struct {
 		OwnerID string `json:"ownerId"`
 		RestoreRequest
+		// SafetyJobID is the backup job that must have completed first.
+		SafetyJobID uint `json:"safetyJobId"`
+	}
+
+	BackupUploadRequest struct {
+		ConnectionID int32                 `form:"connectionId"`
+		Note         string                `form:"note"`
+		File         *multipart.FileHeader `form:"file"`
 	}
 
 	BackupHistoryRequest struct {
@@ -135,5 +147,13 @@ func (req ToolInstallRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.Driver, validation.Required),
 		validation.Field(&req.Version, validation.Required),
+	)
+}
+
+func (req BackupUploadRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(0)),
+		validation.Field(&req.Note, validation.Length(0, 500)),
+		validation.Field(&req.File, validation.Required),
 	)
 }

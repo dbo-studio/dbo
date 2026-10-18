@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"net/url"
 	"strings"
 	"time"
@@ -58,9 +59,11 @@ func New(
 	return &Server{
 		app: fiber.New(fiber.Config{
 			ReadBufferSize: 32 * 1024,
-			ReadTimeout:    30 * time.Second,
-			WriteTimeout:   0,
-			IdleTimeout:    120 * time.Second,
+			// Backup uploads and imports arrive as one multipart body.
+			BodyLimit:    helper.MaxUploadSize,
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 0,
+			IdleTimeout:  120 * time.Second,
 			ErrorHandler: func(c fiber.Ctx, err error) error {
 				logger.Error(err)
 

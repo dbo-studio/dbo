@@ -132,3 +132,29 @@ func (h BackupHandler) RemoveTool(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
+
+func (h BackupHandler) Upload(c fiber.Ctx) error {
+	req := new(dto.BackupUploadRequest)
+	if err := c.Bind().Form(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	req.File = file
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.service.Upload(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

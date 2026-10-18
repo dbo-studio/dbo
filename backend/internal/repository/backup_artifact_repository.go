@@ -27,6 +27,14 @@ func (r BackupArtifactRepository) FindByOwner(ctx context.Context, id uint, owne
 	return &artifact, err
 }
 
+func (r BackupArtifactRepository) FindByJob(ctx context.Context, jobID uint, ownerID string) (*model.BackupArtifact, error) {
+	var artifact model.BackupArtifact
+
+	err := r.db.WithContext(ctx).Where("job_id = ? AND owner_id = ?", jobID, ownerID).First(&artifact).Error
+
+	return &artifact, err
+}
+
 func (r BackupArtifactRepository) ListByOwner(ctx context.Context, ownerID string, connectionID *uint) ([]model.BackupArtifact, error) {
 	var artifacts []model.BackupArtifact
 

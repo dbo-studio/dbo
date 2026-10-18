@@ -2,8 +2,15 @@ package serviceBackup
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -22,6 +29,7 @@ import (
 type IBackupService interface {
 	Create(ctx context.Context, req *dto.BackupRequest) (*dto.BackupResponse, error)
 	Restore(ctx context.Context, req *dto.RestoreRequest) (*dto.RestoreResponse, error)
+	Upload(ctx context.Context, req *dto.BackupUploadRequest) (*dto.BackupArtifactResponse, error)
 	History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error)
 	Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error)
 	Tools(ctx context.Context) []dto.BackupTool
@@ -102,9 +110,31 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 
 	s.unlockStore.ConsumeGate(ctx, ownerID, connection.ID, policy.Unlocked)
 
+	// Jobs run oldest first, so the safety backup finishes before the restore
+	// starts; the restore checks that it succeeded.
+	var safetyJobID uint
+
+	if req.SafetyBackup {
+		safety, err := s.jobManager.CreateJob(model.JobTypeBackup, ownerID, helper.StructToJSON(dto.BackupJob{
+			OwnerID: ownerID,
+			BackupRequest: dto.BackupRequest{
+				ConnectionID: req.ConnectionID,
+				Database:     req.Database,
+				Schema:       req.Schema,
+				Note:         "Safety copy before restore",
+			},
+		}))
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		safetyJobID = safety.ID
+	}
+
 	job, err := s.jobManager.CreateJob(model.JobTypeRestore, ownerID, helper.StructToJSON(dto.RestoreJob{
 		OwnerID:        ownerID,
 		RestoreRequest: *req,
+		SafetyJobID:    safetyJobID,
 	}))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -120,25 +150,7 @@ func (s IBackupServiceImpl) History(ctx context.Context, req *dto.BackupHistoryR
 	}
 
 	return lo.Map(artifacts, func(a model.BackupArtifact, _ int) dto.BackupArtifactResponse {
-		return dto.BackupArtifactResponse{
-			ID:           a.ID,
-			ConnectionID: a.ConnectionID,
-			JobID:        a.JobID,
-			Database:     a.Database,
-			Schema:       a.Schema,
-			Driver:       a.Driver,
-			Method:       string(a.Method),
-			Tool:         a.Tool,
-			ToolVersion:  a.ToolVersion,
-			Status:       string(a.Status),
-			Note:         a.Note,
-			FileName:     a.FileName,
-			Size:         a.Size,
-			Checksum:     a.Checksum,
-			Error:        a.Error,
-			StartedAt:    a.StartedAt,
-			CompletedAt:  a.CompletedAt,
-		}
+		return artifactResponse(a)
 	}), nil
 }
 
@@ -234,5 +246,122 @@ func familyOf(driver string) string {
 		return databaseContract.Mysql
 	default:
 		return driver
+	}
+}
+
+// Upload stores a backup file the user brought, so it can be restored like any
+// recorded backup. The file type must match the connection's driver.
+func (s IBackupServiceImpl) Upload(ctx context.Context, req *dto.BackupUploadRequest) (*dto.BackupArtifactResponse, error) {
+	connection, err := s.connectionRepo.Find(ctx, req.ConnectionID)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	ext := strings.ToLower(filepath.Ext(req.File.Filename))
+	if (ext != ".sql" && ext != ".sqlite") || (ext == ".sqlite") != (connection.ConnectionType == databaseContract.Sqlite) {
+		return nil, apperror.BadRequest(apperror.ErrBackupFileType)
+	}
+
+	if req.File.Size > helper.MaxUploadSize {
+		return nil, apperror.BadRequest(apperror.ErrBackupFileTooLarge)
+	}
+
+	now := time.Now()
+	artifact := &model.BackupArtifact{
+		OwnerID:      helper.CtxOwnerID(ctx),
+		ConnectionID: connection.ID,
+		Driver:       connection.ConnectionType,
+		Method:       model.BackupMethodUploaded,
+		Status:       model.BackupStatusRunning,
+		Note:         req.Note,
+		FileName:     "upload" + ext,
+		StartedAt:    now,
+	}
+
+	if err := s.artifactRepo.Create(ctx, artifact); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	// The name on disk never comes from the client.
+	if err := os.MkdirAll(helper.BackupDir, 0o755); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	path := filepath.Join(helper.BackupDir, fmt.Sprintf("%d_%s", artifact.ID, artifact.FileName))
+
+	size, checksum, err := saveUpload(req.File, path)
+	if err != nil {
+		_ = os.Remove(path)
+		_ = s.artifactRepo.UpdateFields(ctx, artifact.ID, map[string]any{"status": model.BackupStatusFailed, "error": err.Error(), "completed_at": now})
+
+		return nil, apperror.InternalServerError(err)
+	}
+
+	if err := s.artifactRepo.UpdateFields(ctx, artifact.ID, map[string]any{
+		"status": model.BackupStatusCompleted, "file_path": path, "size": size, "checksum": checksum, "completed_at": now,
+	}); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	done, err := s.artifactRepo.FindByOwner(ctx, artifact.ID, artifact.OwnerID)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	res := artifactResponse(*done)
+
+	return &res, nil
+}
+
+func saveUpload(header *multipart.FileHeader, dest string) (int64, string, error) {
+	in, err := header.Open()
+	if err != nil {
+		return 0, "", err
+	}
+
+	defer func() { _ = in.Close() }()
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return 0, "", err
+	}
+
+	h := sha256.New()
+
+	size, err := io.Copy(io.MultiWriter(out, h), io.LimitReader(in, helper.MaxUploadSize+1))
+	if closeErr := out.Close(); err == nil {
+		err = closeErr
+	}
+
+	if err != nil {
+		return 0, "", err
+	}
+
+	if size > helper.MaxUploadSize {
+		return 0, "", apperror.ErrBackupFileTooLarge
+	}
+
+	return size, hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
+	return dto.BackupArtifactResponse{
+		ID:           a.ID,
+		ConnectionID: a.ConnectionID,
+		JobID:        a.JobID,
+		Database:     a.Database,
+		Schema:       a.Schema,
+		Driver:       a.Driver,
+		Method:       string(a.Method),
+		Tool:         a.Tool,
+		ToolVersion:  a.ToolVersion,
+		Status:       string(a.Status),
+		Note:         a.Note,
+		FileName:     a.FileName,
+		Size:         a.Size,
+		Checksum:     a.Checksum,
+		Error:        a.Error,
+		StartedAt:    a.StartedAt,
+		CompletedAt:  a.CompletedAt,
 	}
 }

@@ -121,6 +121,7 @@ func (r *Server) routing() {
 
 	backup := api.Group("backups")
 	backup.Post("/", r.handlers.Backup.Create)
+	backup.Post("/upload", r.handlers.Backup.Upload)
 	backup.Post("/restore", r.handlers.Backup.Restore)
 	backup.Get("/tools", r.handlers.Backup.Tools)
 	backup.Get("/tools/downloads", r.handlers.Backup.ToolDownloads)

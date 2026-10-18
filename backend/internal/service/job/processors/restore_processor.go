@@ -65,6 +65,13 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 		return apperror.ErrBackupNotFound
 	}
 
+	if jobData.SafetyJobID > 0 {
+		safety, err := p.artifactRepo.FindByJob(ctx, jobData.SafetyJobID, jobData.OwnerID)
+		if err != nil || safety.Status != model.BackupStatusCompleted {
+			return apperror.ErrSafetyBackupFailed
+		}
+	}
+
 	if !helper.IsReadableBackupPath(artifact.FilePath) {
 		return apperror.ErrInvalidSavePath
 	}
@@ -100,6 +107,12 @@ func (p *RestoreProcessor) restoreSQLite(ctx context.Context, job *model.Job, co
 func (p *RestoreProcessor) restoreSQL(ctx context.Context, job *model.Job, connection *model.Connection, jobData *dto.RestoreJob, artifact *model.BackupArtifact) error {
 	if !strings.HasSuffix(artifact.FileName, ".sql") {
 		return errors.New("this backup is not a SQL dump")
+	}
+
+	if artifact.Method == model.BackupMethodUploaded {
+		if err := serviceBackup.ScanUploadedSQL(connection.ConnectionType, artifact.FilePath); err != nil {
+			return err
+		}
 	}
 
 	password, err := p.secrets.GetConnectionPassword(ctx, jobData.OwnerID, connection.ID)

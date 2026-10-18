@@ -19,6 +19,8 @@ const (
 	// BackupMethodNative is a dump made by pg_dump, mysqldump or SQLite's own
 	// VACUUM INTO.
 	BackupMethodNative BackupMethod = "native"
+	// BackupMethodUploaded is a file the user brought for a restore.
+	BackupMethodUploaded BackupMethod = "uploaded"
 )
 
 // BackupArtifact is one backup run and the file it produced. Rows exist for
