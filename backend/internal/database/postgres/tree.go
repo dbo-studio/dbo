@@ -260,6 +260,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, routine.Name),
 				Name:        routine.Name + "(" + routine.IdentityArgs + ")",
 				Type:        nodeType,
+				Action:      editAction(r.ContextMenu(nodeType)),
 				ContextMenu: r.ContextMenu(nodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
@@ -275,6 +276,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
 				Name:        sequence.Name,
 				Type:        contract.SequenceNodeType,
+				Action:      editAction(r.ContextMenu(contract.SequenceNodeType)),
 				ContextMenu: r.ContextMenu(contract.SequenceNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
@@ -290,6 +292,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, enum.Name),
 				Name:        enum.Name,
 				Type:        contract.TypeNodeType,
+				Action:      editAction(r.ContextMenu(contract.TypeNodeType)),
 				ContextMenu: r.ContextMenu(contract.TypeNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
@@ -299,4 +302,9 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 	}
 
 	return containerNode, nil
+}
+
+// editAction makes double-click open the node's Edit form (first menu entry).
+func editAction(menu []contract.TreeNodeAction) *contract.TreeNodeAction {
+	return lo.ToPtr(menu[0])
 }

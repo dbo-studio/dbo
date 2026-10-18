@@ -192,6 +192,7 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 				ID:          fmt.Sprintf("%s.%s", dbName, routine.Name),
 				Name:        routine.Name,
 				Type:        nodeType,
+				Action:      editAction(r.ContextMenu(nodeType)),
 				ContextMenu: r.ContextMenu(nodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
@@ -201,4 +202,9 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 	}
 
 	return containerNode, nil
+}
+
+// editAction makes double-click open the node's Edit form (first menu entry).
+func editAction(menu []contract.TreeNodeAction) *contract.TreeNodeAction {
+	return lo.ToPtr(menu[0])
 }
