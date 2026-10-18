@@ -84,10 +84,20 @@ test.describe("AI chat composer and message polish", () => {
             break;
           }
           case "diagram": {
-            const diff = {
-              changesetId: "cs-thumb",
+            const changeset = {
+              id: 9001,
+              chatId: 0,
               connectionId: 1,
-              ops: [{ op: "create_table", table: "posts", columns: [{ name: "id", type: "INTEGER", primary: true }] }],
+              ops: [
+                {
+                  op: "create_table",
+                  table: "posts",
+                  columns: [{ name: "id", type: "INTEGER", primary: true }],
+                  position: 0,
+                  status: "pending",
+                  tableId: "posts",
+                },
+              ],
               diagramOps: [
                 {
                   op: "add",
@@ -104,8 +114,8 @@ test.describe("AI chat composer and message polish", () => {
               ],
             };
             events = [
-              { type: "diagram_diff", id: diff.changesetId, data: diff },
-              done([message("diagram_diff", JSON.stringify(diff), "json")]),
+              { type: "diagram_diff", id: String(changeset.id), data: changeset },
+              done([message("diagram_diff", JSON.stringify({ changesetId: changeset.id }), "json")]),
             ];
             break;
           }
