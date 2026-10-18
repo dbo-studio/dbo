@@ -174,6 +174,8 @@ export function defineBackupUiTests(engine: DbEngine): void {
           if (engine === "sqlite") {
             cleanupImportExportSqlite(pages);
           } else {
+            // Focus can be lost after the confirm modal closes; refocus the dialog.
+            await backup.dialog.click();
             await page.keyboard.press("Escape");
             await expect(backup.dialog).toBeHidden();
             await dropTables(pages.sqlEditor, [table]);
