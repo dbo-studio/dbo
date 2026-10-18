@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { DbEngine } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
-import { BackupPage } from "../pages";
+import { BackupPage, ObjectTreePage } from "../pages";
 import {
   cleanupImportExportSqlite,
   dropTables,
@@ -110,5 +110,34 @@ export function defineBackupUiTests(engine: DbEngine): void {
         }
       });
     });
+
+    if (engine !== "sqlite") {
+      test("database tree node opens the dialog on that database", async ({
+        page,
+      }, testInfo) => {
+        const connectionName = `bk-tree-${uniqueTestSuffix(testInfo)}`;
+
+        await withConnectionCleanup(page, connectionName, async () => {
+          await setupImportExport(page, { connectionName }, engine);
+          const backup = new BackupPage(page);
+          const tree = new ObjectTreePage(page);
+
+          await test.step("Right-click the database node and pick Backup & Restore", async () => {
+            await tree.openContextMenu("default");
+            await tree.clickContextMenuAction("Backup & Restore");
+            await expect(backup.dialog).toBeVisible();
+          });
+
+          await test.step("The database field is prefilled from the node", async () => {
+            await expect(
+              page.locator('input[name="backup-database"]'),
+            ).toHaveValue("default");
+          });
+
+          await page.keyboard.press("Escape");
+          await expect(backup.dialog).toBeHidden();
+        });
+      });
+    }
   });
 }

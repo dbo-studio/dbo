@@ -3,6 +3,7 @@ import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
+import { useBackupModalStore } from '@/store/backupModal/backup.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TreeNodeType } from '@/types/Tree';
 
@@ -53,6 +54,7 @@ export function useTreeNodeMenuBuilder(
   const { prefillChat } = useAiBridge();
   const currentConnection = useCurrentConnection();
   const addDiagramTab = useTabStore((state) => state.addDiagramTab);
+  const openBackup = useBackupModalStore((state) => state.open);
 
   return (node: TreeNodeType): MenuType[] => {
     const menu: MenuType[] =
@@ -73,6 +75,14 @@ export function useTreeNodeMenuBuilder(
         action: () => {
           addDiagramTab(scope);
         },
+        closeAfterAction: true
+      });
+    }
+
+    if (node.type === 'database' && currentConnection && currentConnection.type !== 'sqlite') {
+      menu.push({
+        name: locales.backup_restore,
+        action: () => openBackup(currentConnection.id, node.name),
         closeAfterAction: true
       });
     }

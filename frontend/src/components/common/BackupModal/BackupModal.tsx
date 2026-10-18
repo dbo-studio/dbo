@@ -37,6 +37,7 @@ const defaultDatabase = (connection: ConnectionType): string =>
 
 export default function BackupModal(): JSX.Element | null {
   const connectionId = useBackupModalStore((s) => s.connectionId);
+  const database = useBackupModalStore((s) => s.database);
   const close = useBackupModalStore((s) => s.close);
   const connection = useConnectionStore((s) => s.connections?.find((c) => c.id === connectionId));
 
@@ -44,17 +45,32 @@ export default function BackupModal(): JSX.Element | null {
     return null;
   }
 
-  return <BackupModalBody key={connection.id} connection={connection} onClose={close} />;
+  return (
+    <BackupModalBody
+      key={`${connection.id}:${database ?? ''}`}
+      connection={connection}
+      database={database}
+      onClose={close}
+    />
+  );
 }
 
-function BackupModalBody({ connection, onClose }: { connection: ConnectionType; onClose: () => void }): JSX.Element {
+function BackupModalBody({
+  connection,
+  database: initialDatabase,
+  onClose
+}: {
+  connection: ConnectionType;
+  database?: string;
+  onClose: () => void;
+}): JSX.Element {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSqlite = !isPostgresDriver(connection.type) && !isMysqlDriver(connection.type);
   const isPostgres = isPostgresDriver(connection.type);
   const canWrite = (connection.access ?? 'owner') !== 'viewer';
 
-  const [database, setDatabase] = useState(() => defaultDatabase(connection));
+  const [database, setDatabase] = useState(() => initialDatabase ?? defaultDatabase(connection));
   const [schema, setSchema] = useState(isPostgres ? 'public' : '');
   const [note, setNote] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);

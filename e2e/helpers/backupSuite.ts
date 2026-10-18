@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { DbEngine } from "../fixtures/dbConfigs";
+import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import {
   type Artifact,
@@ -284,6 +284,103 @@ export function defineBackupTests(engine: DbEngine): void {
         await expectError(response, 400, "no pinned download");
       });
     });
+
+    if (engine !== "sqlite") {
+      test("backup restores into a fresh database with matching rows", async ({
+        page,
+      }, testInfo) => {
+        const suffix = uniqueTestSuffix(testInfo);
+        const connectionName = `bk-rt-${suffix}`;
+        const targetName = `bk-rt-target-${suffix}`;
+        const scratch = `e2e_rt_${suffix}`;
+        const parent = `e2e_bk_parent_${suffix}`;
+        const child = `e2e_bk_child_${suffix}`;
+
+        const tools = (await (
+          await page.request.get("/api/backups/tools")
+        ).json()) as {
+          data: Array<{ name: string; found: boolean }>;
+        };
+        const client = engine === "postgresql" ? "psql" : "mysql";
+        test.skip(
+          !tools.data.some((tool) => tool.name === client && tool.found),
+          `${client} is not installed on this host`,
+        );
+
+        await withConnectionCleanup(page, connectionName, async () => {
+          const pages = await setupImportExport(
+            page,
+            { connectionName },
+            engine,
+          );
+          await createTables(pages, parent, child);
+          const sourceId = await connectionIdByName(page, connectionName);
+
+          const raw = (query: string) =>
+            page.request.post("/api/query/raw", {
+              data: { connectionId: sourceId, query },
+            });
+          expect((await raw(`CREATE DATABASE ${scratch}`)).ok()).toBeTruthy();
+
+          const cfg = getDbConfig(engine, targetName);
+          let targetId: number | undefined;
+
+          try {
+            const created = await page.request.post("/api/connections", {
+              data: {
+                name: targetName,
+                type: engine,
+                options: {
+                  host: cfg.host,
+                  port: Number(cfg.port),
+                  username: cfg.username,
+                  password: cfg.password,
+                  database: scratch,
+                  ssl: { mode: "disable" },
+                },
+              },
+            });
+            expect(created.ok(), await created.text()).toBeTruthy();
+            targetId = await connectionIdByName(page, targetName);
+
+            const artifact = await runBackup(page, sourceId, engine);
+
+            await test.step("Restore into the fresh database", async () => {
+              const jobId = await startJob(page, "/api/backups/restore", {
+                connectionId: targetId,
+                database: scratch,
+                ...(engine === "postgresql" ? { schema: "public" } : {}),
+                artifactId: artifact.id,
+                confirmName: scratch,
+              });
+              const job = await waitForJob(page, jobId);
+              expect(job.status, job.error).toBe("completed");
+            });
+
+            await test.step("Tables and rows match the source", async () => {
+              for (const table of [parent, child]) {
+                const rows = await rawQuery(
+                  page,
+                  targetId!,
+                  `SELECT count(*) AS n FROM ${table}`,
+                );
+                expect(Number(rows[0].n)).toBe(2);
+              }
+            });
+          } finally {
+            if (targetId !== undefined) {
+              await page.request.delete(`/api/connections/${targetId}`);
+            }
+            await raw(
+              engine === "postgresql"
+                ? `DROP DATABASE IF EXISTS ${scratch} WITH (FORCE)`
+                : `DROP DATABASE IF EXISTS ${scratch}`,
+            );
+            await dropTables(pages.sqlEditor, [child, parent]);
+          }
+        });
+      });
+    }
 
     if (engine === "sqlite") {
       test("backup restores into an empty database; a non-empty one is refused", async ({
