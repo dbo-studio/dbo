@@ -739,6 +739,7 @@
   "ai_changes_close": "Close changes",
   "ai_changes_open_form": "Open in Object Form",
   "ai_changes_open_query": "Open in Query tab",
+  "ai_changes_undo": "Undo SQL",
   "ai_changes_copy": "Copy SQL",
   "ai_changes_copied": "SQL copied",
   "ai_changes_no_sql": "No SQL to run",

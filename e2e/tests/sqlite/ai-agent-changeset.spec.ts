@@ -133,7 +133,7 @@ test.describe("AI Agent Workspace changeset", () => {
 
         await test.step("The SQL tab shows what would run", async () => {
           await page.getByTestId("ai-changes-tab-sql").click();
-          const sql = page.getByTestId("ai-sql-preview");
+          const sql = page.getByTestId("ai-sql");
           await expect(sql).toContainText(`CREATE TABLE "${posts}"`);
           await expect(page.getByTestId("ai-sql-copy")).toBeEnabled();
           await expect(page.getByTestId("ai-sql-open-query")).toBeEnabled();
@@ -153,7 +153,7 @@ test.describe("AI Agent Workspace changeset", () => {
           // An edited op needs a fresh review.
           await expect(op).toHaveAttribute("data-status", "pending");
           await page.getByTestId("ai-changes-tab-sql").click();
-          await expect(page.getByTestId("ai-sql-preview")).toContainText(
+          await expect(page.getByTestId("ai-sql")).toContainText(
             "VARCHAR(20)",
           );
           await page.getByTestId("ai-changes-tab-diff").click();

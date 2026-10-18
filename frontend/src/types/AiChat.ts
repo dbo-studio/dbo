@@ -87,6 +87,8 @@ export type AiChangeset = {
   schema?: string;
   ops: AiChangesetOp[];
   diagramOps: SchemaOp[];
+  /** SQL that takes back the applied ops, when it can be derived. */
+  undoSql: string[];
 };
 
 export type AiPermissionRequest = {

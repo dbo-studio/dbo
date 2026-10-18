@@ -86,6 +86,7 @@ test.describe("AI chat composer and message polish", () => {
           case "diagram": {
             const changeset = {
               id: 9001,
+              undoSql: [],
               chatId: 0,
               connectionId: 1,
               ops: [

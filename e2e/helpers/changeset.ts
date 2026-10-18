@@ -5,7 +5,7 @@ export type ChangesetOp = Record<string, unknown>;
 
 export type ChangesetOpState = { position: number; status: string; error?: string; op: string } & ChangesetOp;
 
-export type Changeset = { id: number; connectionId: number; ops: ChangesetOpState[] };
+export type Changeset = { id: number; connectionId: number; ops: ChangesetOpState[]; undoSql: string[] };
 
 export type ProposedChangeset = { chatId: number; changeset: Changeset };
 
@@ -54,9 +54,17 @@ export function reviewChangeset(
   return page.request.patch(`/api/ai/chats/${chatId}/changesets/${changeset.id}`, { data: { status, position } });
 }
 
-export async function changesetStatuses(page: Page, { chatId, changeset }: ProposedChangeset): Promise<string[]> {
+export async function undoSql(page: Page, proposal: ProposedChangeset): Promise<string[]> {
+  return (await storedChangeset(page, proposal))?.undoSql ?? [];
+}
+
+async function storedChangeset(page: Page, { chatId, changeset }: ProposedChangeset): Promise<Changeset | undefined> {
   const response = await page.request.get(`/api/ai/chats/${chatId}/changesets`);
   const body = (await response.json()) as { data: Changeset[] };
 
-  return (body.data.find((item) => item.id === changeset.id)?.ops ?? []).map((op) => op.status);
+  return body.data.find((item) => item.id === changeset.id);
+}
+
+export async function changesetStatuses(page: Page, proposal: ProposedChangeset): Promise<string[]> {
+  return ((await storedChangeset(page, proposal))?.ops ?? []).map((op) => op.status);
 }

@@ -33,10 +33,14 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 		return nil, err
 	}
 
-	var open []dto.SchemaChangeOp
+	var open, applied []dto.SchemaChangeOp
 
 	for i, row := range rows {
-		if row.Status != model.AiChangesetOpRejected && row.Status != model.AiChangesetOpApplied {
+		switch row.Status {
+		case model.AiChangesetOpApplied:
+			applied = append(applied, ops[i])
+		case model.AiChangesetOpRejected:
+		default:
 			open = append(open, ops[i])
 		}
 	}
@@ -57,6 +61,7 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 			}
 		}),
 		DiagramOps: serviceSchema.ChangeDiagramOps(connectionType, changeset.Database, changeset.Schema, open),
+		UndoSQL:    serviceSchema.CompensatingSQL(connectionType, changeset.Database, changeset.Schema, applied),
 	}, nil
 }
 

@@ -28,6 +28,8 @@ type (
 		Schema       string          `json:"schema,omitempty"`
 		Ops          []AiChangesetOp `json:"ops"`
 		DiagramOps   []DiagramOp     `json:"diagramOps"`
+		// UndoSQL takes back the ops that were applied, when that can be derived.
+		UndoSQL []string `json:"undoSql"`
 	}
 
 	// AiChangesetReviewRequest accepts, rejects or resets one op by position,

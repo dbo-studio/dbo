@@ -7,6 +7,7 @@ import {
   changesetStatuses,
   proposeChangeset,
   reviewChangeset,
+  undoSql,
 } from "../../helpers/changeset";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
@@ -64,6 +65,7 @@ test.describe("Persisted changeset apply", () => {
         await rawRows(page, connectionId, `CREATE TABLE ${existing} (id INTEGER PRIMARY KEY)`);
 
         const column = [{ name: "id", type: "INTEGER", primary: true }];
+        let undone: string[] = [];
 
         await test.step("Proposing runs no DDL and starts every op as pending", async () => {
           const proposal = await proposeChangeset(page, llm, connectionId, [
@@ -96,6 +98,8 @@ test.describe("Persisted changeset apply", () => {
           expect(await tableCount(page, connectionId, fresh)).toBe(1);
           expect(await tableCount(page, connectionId, skipped)).toBe(0);
           expect(await changesetStatuses(page, proposal)).toEqual(["applied", "rejected"]);
+          // Only what was applied can be taken back.
+          expect(await undoSql(page, proposal)).toEqual([`DROP TABLE "${fresh}"`]);
 
           expect((await reviewChangeset(page, proposal, "rejected", 0)).status()).toBe(409);
           expect((await applyChangeset(page, proposal)).status()).toBe(400);
@@ -121,6 +125,21 @@ test.describe("Persisted changeset apply", () => {
           ]);
           const indexes = await rawRows(page, connectionId, `SELECT name FROM pragma_index_list('${fresh}')`);
           expect(indexes.map(({ name }) => name)).toEqual([`idx_${fresh}_email`]);
+
+          // Adds can be taken back; the altered and dropped columns cannot.
+          undone = await undoSql(page, proposal);
+          expect(undone).toEqual([
+            `ALTER TABLE "${fresh}" DROP COLUMN "phone"`,
+            `DROP INDEX "idx_${fresh}_email"`,
+          ]);
+        });
+
+        await test.step("Running the undo SQL takes the added column and index back", async () => {
+          for (const statement of undone) {
+            await rawRows(page, connectionId, statement);
+          }
+          const columns = await rawRows(page, connectionId, `SELECT name FROM pragma_table_info('${fresh}') ORDER BY cid`);
+          expect(columns.map(({ name }) => name)).toEqual(["id", "email"]);
         });
       });
     } finally {

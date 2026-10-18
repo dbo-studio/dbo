@@ -5,8 +5,9 @@ import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import SqlBlock from '@/components/common/SqlBlock/SqlBlock';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 import { variables } from '@/core/theme/variables';
@@ -15,6 +16,7 @@ import { variables } from '@/core/theme/variables';
 export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
   const review = useChangesetReview(changesetId);
+  const [showUndo, setShowUndo] = useState(false);
   const { changeset } = review;
   if (!changeset) return null;
 
@@ -95,7 +97,18 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
               </Button>
             </>
           )}
+          {changeset.undoSql.length > 0 && (
+            <Button
+              size='small'
+              variant='text'
+              onClick={() => setShowUndo((value) => !value)}
+              data-testid='ai-undo-toggle'
+            >
+              {locales.ai_changes_undo}
+            </Button>
+          )}
         </CardActionsStyled>
+        {showUndo && <SqlBlock queries={changeset.undoSql} testIdPrefix='ai-undo-sql' />}
       </AgentCardBodyStyled>
       <QueryPreviewModal
         open={review.previewQueries !== undefined}

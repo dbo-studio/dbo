@@ -222,6 +222,12 @@ test.describe("AI Agent Mode", () => {
           await tree.refreshExpandNode("Tables");
           await expect(tree.getTreeNode(postsTable)).toBeVisible({ timeout: 15000 });
         });
+
+        await test.step("The applied card offers SQL that takes the changes back", async () => {
+          await page.getByTestId("ai-undo-toggle").click();
+          await expect(page.getByTestId("ai-undo-sql")).toContainText(`DROP TABLE "${postsTable}"`);
+          await expect(page.getByTestId("ai-undo-sql-copy")).toBeEnabled();
+        });
       } finally {
         removeSqliteDbFile(dbPath);
         await llm.stop();
