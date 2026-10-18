@@ -6,6 +6,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceAdminUsers "github.com/dbo-studio/dbo/internal/service/admin_users"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
+	serviceAiChangeset "github.com/dbo-studio/dbo/internal/service/ai_changeset"
 	serviceAiChat "github.com/dbo-studio/dbo/internal/service/ai_chat"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
@@ -39,6 +40,7 @@ type Service struct {
 	AiService               serviceAI.IAiService
 	AiProviderService       serviceAiProvider.IAiProviderService
 	AiChatService           serviceAiChat.IAiChatService
+	AiChangesetService      serviceAiChangeset.IAiChangesetService
 	ConfigService           serviceConfig.IConfigService
 	McpService              serviceMCP.IMcpService
 	SchemaService           serviceSchema.ISchemaService
@@ -74,6 +76,8 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		deps.Config,
 		deps.Logger,
 	)
+	schemaService := serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache)
+	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService)
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
 	return &Service{
@@ -85,12 +89,13 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:              jobManager,
-		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, cm, toolRegistry, deps.Logger, deps.Cache),
+		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
 		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
+		AiChangesetService:      aiChangesetService,
 		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:              mcpService,
-		SchemaService:           serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache),
+		SchemaService:           schemaService,
 		SafeModePasswordService: safeModePasswordService,
 		AuthService:             authService,
 		AdminUsersService:       adminUsersService,

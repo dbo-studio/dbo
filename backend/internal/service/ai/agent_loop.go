@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,16 +28,24 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 	`You cannot change the database. When the user wants a change, answer with the SQL in a code block for them to review and run themselves.`
 
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
-	`To design or change schema (create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it on a diagram and applies it. ` +
+	`To design or change schema (create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
 	`To run INSERT/UPDATE/DELETE call execute_write; the user must confirm before it runs. ` +
 	`Never claim a proposed change or write was applied — say it is waiting for the user's review.`
 
-func modeInstructions(req *dto.AiChatRequest) string {
-	if req.AgentMode() {
-		return agentModeInstructions
+// modeInstructions adds how the user reviewed the chat's earlier proposals in
+// Agent mode, so the model does not repeat rejected changes or assume pending
+// ones exist.
+func (s *AiServiceImpl) modeInstructions(ctx context.Context, chatID uint, req *dto.AiChatRequest) string {
+	if !req.AgentMode() {
+		return askModeInstructions
 	}
 
-	return askModeInstructions
+	state, err := s.changesetService.Describe(ctx, chatID)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to describe changesets: %v", err))
+	}
+
+	return strings.TrimSpace(agentModeInstructions + "\n\n" + state)
 }
 
 // runAgentLoop streams the model response, executing tool calls between
@@ -47,6 +56,7 @@ func (s *AiServiceImpl) runAgentLoop(
 	ctx context.Context,
 	provider aiProvider.IAiProvider,
 	providerReq *aiProvider.ChatRequest,
+	chatID uint,
 	req *dto.AiChatRequest,
 	emitEvent func(aiProvider.StreamEvent) error,
 ) (*aiProvider.ChatResponse, []model.AiChatMessage, error) {
@@ -107,7 +117,7 @@ func (s *AiServiceImpl) runAgentLoop(
 				return nil, traces, err
 			}
 
-			result, callTraces, err := s.runToolCall(ctx, req, call, toolCtx, emitEvent)
+			result, callTraces, err := s.runToolCall(ctx, chatID, req, call, toolCtx, emitEvent)
 			traces = append(traces, callTraces...)
 
 			if err != nil {
@@ -149,6 +159,7 @@ func (s *AiServiceImpl) runAgentLoop(
 // error is only non-nil when the stream itself failed (e.g. client gone).
 func (s *AiServiceImpl) runToolCall(
 	ctx context.Context,
+	chatID uint,
 	req *dto.AiChatRequest,
 	call aiProvider.ToolCall,
 	toolCtx serviceDbtools.ToolContext,
@@ -172,11 +183,11 @@ func (s *AiServiceImpl) runToolCall(
 	case !serviceDbtools.AllowedTool(req.AgentMode(), call.Name):
 		err = blockedError{fmt.Sprintf("tool %q is not available in %s mode", call.Name, modeName(req.Mode))}
 	case call.Name == serviceDbtools.ToolProposeSchemaChange:
-		var diff *DiagramDiffData
-		if diff, err = s.proposeSchemaChange(ctx, call.Arguments, toolCtx); err == nil {
-			result = fmt.Sprintf("Proposed %d schema change(s). They are shown to the user on the diagram for review and are NOT applied yet.", len(diff.Ops))
-			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, diff)
-			ev := streamEvent("diagram_diff", diff.ChangesetID, diff)
+		var changeset *dto.AiChangesetResponse
+		if changeset, err = s.proposeSchemaChange(ctx, chatID, call.Arguments, toolCtx); err == nil {
+			result = fmt.Sprintf("Proposed %d schema change(s). They are shown to the user for review and are NOT applied yet.", len(changeset.Ops))
+			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, map[string]uint{"changesetId": changeset.ID})
+			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(changeset.ID), 10), changeset)
 			extra, event = &msg, &ev
 		}
 	case call.Name == serviceDbtools.ToolExecuteWrite:

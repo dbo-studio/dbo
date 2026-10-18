@@ -1,11 +1,4 @@
-import type {
-  AiAgentItem,
-  AiDiagramDiff,
-  AiMessageType,
-  AiPermissionRequest,
-  AiToolTrace,
-  AiTraceMessageKind
-} from '@/types';
+import type { AiAgentItem, AiMessageType, AiPermissionRequest, AiToolTrace, AiTraceMessageKind } from '@/types';
 
 const TRACE_KINDS: ReadonlySet<string> = new Set<AiTraceMessageKind>(['tool', 'diagram_diff', 'permission']);
 
@@ -19,7 +12,7 @@ export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefi
       case 'tool':
         return { kind: 'tool', trace: payload as AiToolTrace };
       case 'diagram_diff':
-        return { kind: 'diagram_diff', diff: payload as AiDiagramDiff };
+        return { kind: 'diagram_diff', changesetId: (payload as { changesetId: number }).changesetId };
       case 'permission':
         return { kind: 'permission', request: payload as AiPermissionRequest };
       default:
@@ -50,7 +43,7 @@ export const agentItemToMessage = (item: AiAgentItem): AiMessageType => {
         content: JSON.stringify(item.trace.status === 'running' ? { ...item.trace, status: 'cancelled' } : item.trace)
       };
     case 'diagram_diff':
-      return { ...base, type: 'diagram_diff', content: JSON.stringify(item.diff) };
+      return { ...base, type: 'diagram_diff', content: JSON.stringify({ changesetId: item.changesetId }) };
     case 'permission':
       return { ...base, type: 'permission', content: JSON.stringify(item.request) };
   }

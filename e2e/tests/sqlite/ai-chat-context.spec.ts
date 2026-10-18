@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { clearActiveAiProfile } from "../../helpers/aiSetup";
+import { applyChangeset, proposeChangeset } from "../../helpers/changeset";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
@@ -63,16 +64,19 @@ test.describe("AI chat context chips", () => {
         };
         const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
         // Schema apply (unlike raw SQL) invalidates the autocomplete cache the @ menu reads.
-        const created = await page.request.post("/api/schema/changes/apply", {
-          data: {
+        const created = await applyChangeset(
+          page,
+          await proposeChangeset(
+            page,
+            llm,
             connectionId,
-            ops: [usersTable, ordersTable].map((table) => ({
+            [usersTable, ordersTable].map((table) => ({
               op: "create_table",
               table,
               columns: [{ name: "id", type: "INTEGER", primary: true }],
             })),
-          },
-        });
+          ),
+        );
         expect(created.status()).toBe(200);
         // Applying a schema change invalidates the cached autocomplete the @ menu reads.
         await page.reload();

@@ -69,7 +69,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
 	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode())
-	providerReq.ModeInstructions = modeInstructions(req)
+	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -78,7 +78,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, req, emitEvent)
+	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, chat.ID, req, emitEvent)
 
 	// Persist even when the user stopped the turn so the tool cards and any
 	// pending diagram proposal survive a reload.

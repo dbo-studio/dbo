@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { AiChatType } from '@/types';
+import type { AiChangeset, AiChangesetOpStatus, AiChatType } from '@/types';
 import type { AiChatDetailRequestType, AiChatRequestType, CreateChatRequestType } from './types';
 
 const endpoint = {
@@ -9,6 +9,8 @@ const endpoint = {
   update: (chatID: string | number): string => `/ai/chats/${chatID}`,
   feedback: (chatID: string | number): string => `/ai/chats/${chatID}/feedback`,
   review: (chatID: string | number): string => `/ai/chats/${chatID}/review`,
+  changesets: (chatID: number): string => `/ai/chats/${chatID}/changesets`,
+  changeset: (chatID: number, id: number): string => `/ai/chats/${chatID}/changesets/${id}`,
   delete: (chatID: string | number): string => `/ai/chats/${chatID}`
 };
 
@@ -38,9 +40,38 @@ export const updateChat = async (
   return (await api.patch<{ data: AiChatType }>(endpoint.update(id), data)).data.data;
 };
 
-/** Persists the user's decision on a diagram_diff / permission card. */
+/** Persists the user's decision on a permission card. */
 export const reviewCard = async (chatId: string | number, data: { id: string; decision: string }): Promise<void> => {
   await api.post(endpoint.review(chatId), data);
+};
+
+export const getChangesets = async (chatId: number): Promise<AiChangeset[]> => {
+  return (await api.get<{ data: AiChangeset[] }>(endpoint.changesets(chatId))).data.data;
+};
+
+/** Accepts, rejects or resets one op, or every op not applied yet when `position` is omitted. */
+export const reviewChangeset = async (
+  changeset: AiChangeset,
+  status: Exclude<AiChangesetOpStatus, 'applied' | 'failed'>,
+  position?: number
+): Promise<AiChangeset> => {
+  return (
+    await api.patch<{ data: AiChangeset }>(endpoint.changeset(changeset.chatId, changeset.id), { status, position })
+  ).data.data;
+};
+
+/** The SQL the server would run for the ops still open. */
+export const previewChangeset = async (changeset: AiChangeset): Promise<string[]> => {
+  return (
+    await api.post<{ data: { queries: string[] } }>(`${endpoint.changeset(changeset.chatId, changeset.id)}/preview`)
+  ).data.data.queries;
+};
+
+/** Applies the ops still open under Safe Mode — call through withSafeModeRetry. */
+export const applyChangeset = async (changeset: AiChangeset, confirmed: boolean): Promise<AiChangeset> => {
+  return (
+    await api.post<{ data: AiChangeset }>(`${endpoint.changeset(changeset.chatId, changeset.id)}/apply`, { confirmed })
+  ).data.data;
 };
 
 /** Sends a rating of the newest answer, with its question and answer, to the DBO team. Nothing is kept locally. */

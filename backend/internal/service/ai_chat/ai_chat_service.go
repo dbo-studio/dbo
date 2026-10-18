@@ -125,8 +125,7 @@ func (s IAiChatServiceImpl) Delete(ctx context.Context, chatID uint) error {
 }
 
 var reviewKeys = map[model.AiChatMessageType]string{
-	model.AiChatMessageTypeDiagramDiff: "changesetId",
-	model.AiChatMessageTypePermission:  "requestId",
+	model.AiChatMessageTypePermission: "requestId",
 }
 
 // Review stores the user's decision inside the matching card message. It is

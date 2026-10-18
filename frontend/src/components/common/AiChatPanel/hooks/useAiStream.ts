@@ -2,7 +2,7 @@ import { streamChat } from '@/api/ai/streamChat';
 import type { AiStreamEvent } from '@/api/ai/streamTypes';
 import type { AiChatRequest } from '@/api/ai/types';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
+import { useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useCallback, useRef } from 'react';
 
 /** Older backends send no tool call id; fall back to the running card with that tool name. */
@@ -113,9 +113,9 @@ export const useAiStream = (): UseAiStreamReturn => {
             });
             break;
           case 'diagram_diff':
-            appendAgentItem({ kind: 'diagram_diff', diff: event.data });
+            appendAgentItem({ kind: 'diagram_diff', changesetId: event.data.id });
             // Show the proposal on the matching diagram while the turn streams.
-            useDiagramChangesetStore.getState().stage(event.data);
+            useChangesetStore.getState().stage(event.data);
             break;
           case 'permission_request':
             appendAgentItem({ kind: 'permission', request: event.data });

@@ -3,9 +3,8 @@ import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPrevie
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
-import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
+import { useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiDiagramDiff } from '@/types';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
@@ -13,46 +12,55 @@ import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 import { variables } from '@/core/theme/variables';
 
 /** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
-export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.Element {
+export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
-  const review = useChangesetReview(diff);
-  const pending = review.decision === undefined;
-  const lines = summarizeChangeset(diff.ops);
+  const review = useChangesetReview(changesetId);
+  const { changeset } = review;
+  if (!changeset) return null;
+
+  const pending = review.openCount > 0;
+  const decision = pending ? undefined : changeset.ops.some((op) => op.status === 'applied') ? 'applied' : 'rejected';
+  const lines = summarizeChangeset(changeset.ops);
 
   const openInDiagram = (): void => {
     if (pending) {
-      useDiagramChangesetStore.getState().stage(diff);
+      useChangesetStore.getState().stage(changeset);
     }
-    useTabStore.getState().addDiagramTab({ database: diff.database ?? '', schema: diff.schema ?? '' });
+    useTabStore.getState().addDiagramTab({ database: changeset.database ?? '', schema: changeset.schema ?? '' });
   };
 
   const accent =
-    review.decision === 'applied'
+    decision === 'applied'
       ? theme.palette.success.main
-      : review.decision === 'rejected'
+      : decision === 'rejected'
         ? undefined
         : theme.palette.warning.main;
 
   return (
-    <AgentCardStyled accent={accent} data-testid='ai-diagram-diff-card' data-decision={review.decision ?? 'pending'}>
+    <AgentCardStyled accent={accent} data-testid='ai-diagram-diff-card' data-decision={decision ?? 'pending'}>
       <Stack direction='row' spacing={0.75} sx={{ alignItems: 'center', px: 1, py: 0.75 }}>
         <CustomIcon type='network' size='xs' />
         <Typography variant='caption' sx={{ fontWeight: 600, flex: 1 }}>
-          {locales.ai_schema_proposal.replace('{n}', String(diff.ops.length))}
+          {locales.ai_schema_proposal.replace('{n}', String(changeset.ops.length))}
         </Typography>
         <Chip
           size='small'
           variant='outlined'
-          color={review.decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
-          label={review.decision ? locales[`ai_review_${review.decision}`] : locales.ai_review_pending}
+          color={decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
+          label={decision ? locales[`ai_review_${decision}`] : locales.ai_review_pending}
           sx={{ height: 18, fontSize: variables.fontSize.xs }}
         />
       </Stack>
       <AgentCardBodyStyled>
-        <DiagramThumbnail ops={diff.diagramOps} />
+        <DiagramThumbnail ops={changeset.diagramOps} />
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
-          {lines.map((line) => (
-            <Typography component='li' variant='caption' key={`${line.label}-${line.detail}`}>
+          {lines.map((line, index) => (
+            <Typography
+              component='li'
+              variant='caption'
+              key={`${line.label}-${line.detail}`}
+              sx={{ textDecoration: changeset.ops[index].status === 'rejected' ? 'line-through' : undefined }}
+            >
               <Box component='span' sx={{ color: 'success.main', fontWeight: 600 }}>
                 {line.label}
               </Box>{' '}
@@ -70,7 +78,7 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
                 size='small'
                 variant='text'
                 color='inherit'
-                onClick={review.reject}
+                onClick={() => void review.review('rejected')}
                 data-testid='ai-diagram-reject'
               >
                 {locales.ai_reject}

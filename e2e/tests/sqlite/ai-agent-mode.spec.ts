@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
+import { proposeChangeset, type ProposedChangeset } from "../../helpers/changeset";
+import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
@@ -17,8 +19,9 @@ import {
 
 /**
  * Agent Mode UI against a mocked NDJSON stream (no real LLM): tool cards,
- * confirm-before-write card, and the diagram_diff → preview → apply path,
- * which runs real DDL on SQLite through /api/schema/changes/apply.
+ * confirm-before-write card, and the diagram_diff → preview → apply path.
+ * The changeset itself is real (proposed through the fake LLM), so apply runs
+ * real DDL on SQLite from the stored ops.
  */
 
 type Event = Record<string, unknown>;
@@ -34,7 +37,7 @@ const traceMessage = (type: string, payload: unknown) => ({
   createdAt: new Date().toISOString(),
 });
 
-function agentTurn(connectionId: number, usersTable: string, postsTable: string): Event[] {
+function agentTurn(usersTable: string, proposal: ProposedChangeset): Event[] {
   const describe = {
     id: "call_describe",
     name: "describe_table",
@@ -43,61 +46,9 @@ function agentTurn(connectionId: number, usersTable: string, postsTable: string)
     result: `CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT)`,
     durationMs: 4,
   };
-  const ops = [
-    {
-      op: "create_table",
-      table: postsTable,
-      columns: [
-        { name: "id", type: "INTEGER", primary: true },
-        { name: "user_id", type: "INTEGER", notNull: true },
-        { name: "title", type: "TEXT" },
-      ],
-    },
-    {
-      op: "add_foreign_key",
-      table: postsTable,
-      fkColumns: ["user_id"],
-      refTable: usersTable,
-      refColumns: ["id"],
-    },
-  ];
-  const diff = {
-    changesetId: "cs-e2e",
-    connectionId,
-    ops,
-    diagramOps: [
-      {
-        op: "add",
-        target: "node",
-        id: postsTable,
-        value: {
-          id: postsTable,
-          kind: "table",
-          name: postsTable,
-          columns: [
-            { name: "id", dataType: "INTEGER", isPrimaryKey: true, isForeignKey: false },
-            { name: "user_id", dataType: "INTEGER", isPrimaryKey: false, isForeignKey: true },
-            { name: "title", dataType: "TEXT", isPrimaryKey: false, isForeignKey: false },
-          ],
-        },
-      },
-      {
-        op: "add",
-        target: "edge",
-        id: `fk:${postsTable}->${usersTable}`,
-        value: {
-          id: `fk:${postsTable}->${usersTable}`,
-          source: postsTable,
-          target: usersTable,
-          sourceColumns: ["user_id"],
-          targetColumns: ["id"],
-        },
-      },
-    ],
-  };
   const permission = {
     requestId: "perm-e2e",
-    connectionId,
+    connectionId: proposal.changeset.connectionId,
     sql: `UPDATE ${usersTable} SET email = 'x' WHERE id = 1`,
     class: "write_dml",
   };
@@ -106,18 +57,18 @@ function agentTurn(connectionId: number, usersTable: string, postsTable: string)
     { type: "status", label: "Thinking..." },
     { type: "tool_start", id: describe.id, label: describe.name, content: describe.args },
     { type: "tool_result", id: describe.id, label: describe.name, content: describe.result, durationMs: 4 },
-    { type: "diagram_diff", id: diff.changesetId, data: diff },
+    { type: "diagram_diff", id: String(proposal.changeset.id), data: proposal.changeset },
     { type: "permission_request", id: permission.requestId, data: permission },
     { type: "block_start", blockType: "explanation" },
     { type: "content_delta", content: "Proposed a posts table for your review." },
     { type: "block_end" },
     {
       type: "done",
-      chatId: 0,
+      chatId: proposal.chatId,
       title: "agent e2e",
       messages: [
         traceMessage("tool", describe),
-        traceMessage("diagram_diff", diff),
+        traceMessage("diagram_diff", { changesetId: proposal.changeset.id }),
         traceMessage("permission", permission),
         {
           role: "assistant",
@@ -150,6 +101,10 @@ test.describe("AI Agent Mode", () => {
 
     ensureSqliteDbFile(dbPath);
 
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+    let proposal: ProposedChangeset | undefined;
+
     await withConnectionCleanup(page, connectionName, async () => {
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
@@ -166,12 +121,12 @@ test.describe("AI Agent Mode", () => {
       });
 
       await page.route("**/api/ai/chat/stream", async (route) => {
-        const body = route.request().postDataJSON() as { connectionId: number; mode?: string };
+        const body = route.request().postDataJSON() as { mode?: string };
         sentModes.push(body.mode ?? "");
         await route.fulfill({
           status: 200,
           contentType: "application/x-ndjson",
-          body: ndjson(agentTurn(body.connectionId, usersTable, postsTable)),
+          body: ndjson(agentTurn(usersTable, proposal as ProposedChangeset)),
         });
       });
 
@@ -188,6 +143,23 @@ test.describe("AI Agent Mode", () => {
 
         await test.step("Switch to Agent mode and send", async () => {
           await openAssistant(page);
+          await pointProviderAtFakeLlm(page, llmUrl);
+          const connections = (await (await page.request.get("/api/connections")).json()) as {
+            data: Array<{ id: number; name: string }>;
+          };
+          const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+          proposal = await proposeChangeset(page, llm, connectionId, [
+            {
+              op: "create_table",
+              table: postsTable,
+              columns: [
+                { name: "id", type: "INTEGER", primary: true },
+                { name: "user_id", type: "INTEGER", notNull: true },
+                { name: "title", type: "TEXT" },
+              ],
+            },
+            { op: "add_foreign_key", table: postsTable, fkColumns: ["user_id"], refTable: usersTable, refColumns: ["id"] },
+          ]);
           await page.getByTestId("ai-mode-agent").click();
           await expect(page.getByTestId("ai-mode-agent")).toHaveAttribute("aria-pressed", "true");
 
@@ -234,7 +206,8 @@ test.describe("AI Agent Mode", () => {
 
           const applied = page.waitForResponse(
             (response) =>
-              new URL(response.url()).pathname.endsWith("/api/schema/changes/apply") && response.status() === 200,
+              /\/api\/ai\/chats\/\d+\/changesets\/\d+\/apply$/.test(new URL(response.url()).pathname) &&
+              response.status() === 200,
           );
           await page.getByTestId("diagram-changeset-execute").click();
           await applied;
@@ -251,6 +224,7 @@ test.describe("AI Agent Mode", () => {
         });
       } finally {
         removeSqliteDbFile(dbPath);
+        await llm.stop();
       }
     });
   });

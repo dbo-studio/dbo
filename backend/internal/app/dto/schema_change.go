@@ -68,6 +68,17 @@ type (
 		Confirmed    bool             `json:"confirmed"`
 	}
 
+	// DiagramOp mirrors the frontend SchemaOp (core/diagram/types.ts) so a
+	// proposed changeset can be overlaid on the diagram with applyOps.
+	DiagramOp struct {
+		Op     string `json:"op"`
+		Target string `json:"target"`
+		ID     string `json:"id"`
+		NodeID string `json:"nodeId,omitempty"`
+		Value  any    `json:"value,omitempty"`
+		Patch  any    `json:"patch,omitempty"`
+	}
+
 	SchemaChangePreviewResponse struct {
 		Queries []string `json:"queries"`
 	}

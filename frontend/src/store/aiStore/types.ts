@@ -69,8 +69,8 @@ export type AiBridgeSlice = {
   setBridgeRequest: (request: AiBridgeRequest | null) => void;
 };
 
-/** Outcome of a diagram changeset or permission card, keyed by changesetId / requestId. */
-export type AiReviewDecision = 'applied' | 'rejected' | 'confirmed';
+/** Outcome of a permission card, keyed by requestId. */
+export type AiReviewDecision = 'rejected' | 'confirmed';
 
 export type AiToolSlice = {
   /** Live tool/diagram/permission cards of the turn being streamed. */

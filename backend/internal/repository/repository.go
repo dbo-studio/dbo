@@ -132,6 +132,13 @@ type IAiChatRepo interface {
 	UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error)
 }
 
+type IAiChangesetRepo interface {
+	List(ctx context.Context, chatID uint) ([]model.AiChangeset, error)
+	Find(ctx context.Context, chatID, id uint) (*model.AiChangeset, error)
+	Create(ctx context.Context, changeset *model.AiChangeset) error
+	SaveOps(ctx context.Context, ops []model.AiChangesetOp) error
+}
+
 type Repository struct {
 	ConfigRepo                 IConfigRepo
 	ConnectionRepo             IConnectionRepo
@@ -144,6 +151,7 @@ type Repository struct {
 	SavedQueryRepo             ISavedQueryRepo
 	JobRepo                    IJobRepo
 	AiChatRepo                 IAiChatRepo
+	AiChangesetRepo            IAiChangesetRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -163,6 +171,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		SavedQueryRepo:             NewSavedQueryRepo(db),
 		JobRepo:                    NewJobRepo(db),
 		AiChatRepo:                 NewAiChatRepo(db),
+		AiChangesetRepo:            NewAiChangesetRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),

@@ -6,7 +6,7 @@ import PermissionCard from '../PermissionCard/PermissionCard';
 export default function AgentItemCard({ item }: { item: AiAgentItem }): JSX.Element | null {
   switch (item.kind) {
     case 'diagram_diff':
-      return <DiagramDiffCard diff={item.diff} />;
+      return <DiagramDiffCard changesetId={item.changesetId} />;
     case 'permission':
       return <PermissionCard request={item.request} />;
     default:

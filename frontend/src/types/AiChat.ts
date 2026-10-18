@@ -67,15 +67,24 @@ export type SchemaChangeOp = {
   onDelete?: string;
 };
 
-export type AiDiagramDiff = {
-  changesetId: string;
+export type AiChangesetOpStatus = 'pending' | 'accepted' | 'rejected' | 'applied' | 'failed';
+
+export type AiChangesetOp = SchemaChangeOp & {
+  position: number;
+  status: AiChangesetOpStatus;
+  /** Why the op failed to apply. */
+  error?: string;
+};
+
+/** A schema proposal stored on the server with the user's review state per op. */
+export type AiChangeset = {
+  id: number;
+  chatId: number;
   connectionId: number;
   database?: string;
   schema?: string;
-  ops: SchemaChangeOp[];
+  ops: AiChangesetOp[];
   diagramOps: SchemaOp[];
-  /** Set by the server once the user has reviewed the proposal. */
-  decision?: 'applied' | 'rejected';
 };
 
 export type AiPermissionRequest = {
@@ -91,7 +100,7 @@ export type AiPermissionRequest = {
 
 export type AiAgentItem =
   | { kind: 'tool'; trace: AiToolTrace }
-  | { kind: 'diagram_diff'; diff: AiDiagramDiff }
+  | { kind: 'diagram_diff'; changesetId: number }
   | { kind: 'permission'; request: AiPermissionRequest };
 
 export type AiContextType = {

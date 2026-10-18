@@ -7,6 +7,7 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	serviceAiChangeset "github.com/dbo-studio/dbo/internal/service/ai_changeset"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -19,33 +20,36 @@ type IAiService interface {
 }
 
 type AiServiceImpl struct {
-	connectionRepo  repository.IConnectionRepo
-	aiProviderRepo  repository.IAiProviderRepo
-	aiChatRepo      repository.IAiChatRepo
-	cm              *databaseConnection.ConnectionManager
-	toolRegistry    *serviceDbtools.Registry
-	logger          logger.Logger
-	providerFactory *aiProvider.ProviderFactory
-	cache           cache.Cache
+	connectionRepo   repository.IConnectionRepo
+	aiProviderRepo   repository.IAiProviderRepo
+	aiChatRepo       repository.IAiChatRepo
+	changesetService serviceAiChangeset.IAiChangesetService
+	cm               *databaseConnection.ConnectionManager
+	toolRegistry     *serviceDbtools.Registry
+	logger           logger.Logger
+	providerFactory  *aiProvider.ProviderFactory
+	cache            cache.Cache
 }
 
 func NewAiService(
 	connectionRepo repository.IConnectionRepo,
 	aiProviderRepo repository.IAiProviderRepo,
 	aiChatRepo repository.IAiChatRepo,
+	changesetService serviceAiChangeset.IAiChangesetService,
 	cm *databaseConnection.ConnectionManager,
 	toolRegistry *serviceDbtools.Registry,
 	appLogger logger.Logger,
 	appCache cache.Cache,
 ) IAiService {
 	return &AiServiceImpl{
-		connectionRepo:  connectionRepo,
-		aiProviderRepo:  aiProviderRepo,
-		aiChatRepo:      aiChatRepo,
-		cm:              cm,
-		toolRegistry:    toolRegistry,
-		logger:          appLogger,
-		cache:           appCache,
-		providerFactory: aiProvider.NewProviderFactory(),
+		connectionRepo:   connectionRepo,
+		aiProviderRepo:   aiProviderRepo,
+		aiChatRepo:       aiChatRepo,
+		changesetService: changesetService,
+		cm:               cm,
+		toolRegistry:     toolRegistry,
+		logger:           appLogger,
+		cache:            appCache,
+		providerFactory:  aiProvider.NewProviderFactory(),
 	}
 }

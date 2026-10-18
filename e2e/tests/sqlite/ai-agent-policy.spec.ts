@@ -3,6 +3,7 @@ import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { SAFE_MODE_PASSWORD } from "../../fixtures/safeMode";
 import { clearActiveAiProfile } from "../../helpers/aiSetup";
+import { applyChangeset, proposeChangeset } from "../../helpers/changeset";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
@@ -219,11 +220,16 @@ test.describe("AI Agent Mode policy (server side)", () => {
     const dbPath = `/tmp/dbo-e2e-safe-${suffix}.db`;
     ensureSqliteDbFile(dbPath);
 
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+
     await withConnectionCleanup(page, connectionName, async () => {
       const connectionPage = new ConnectionPage(page);
+      await clearActiveAiProfile(page);
       await connectionPage.goto();
       await connectionPage.waitForReady();
       await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+      await pointProviderAtFakeLlm(page, llmUrl);
       const connectionId = await connectionIdByName(page, connectionName);
 
       expect((await rawQuery(page, connectionId, `CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT)`)).status()).toBe(200);
@@ -252,10 +258,10 @@ test.describe("AI Agent Mode policy (server side)", () => {
         expect(await scalar(page, connectionId, `SELECT email AS v FROM ${usersTable} WHERE id = 1`)).toBe("a@x.io");
       });
 
+      const proposal = await proposeChangeset(page, llm, connectionId, ops);
+
       await test.step("Unconfirmed schema apply is refused and changes nothing", async () => {
-        const response = await page.request.post("/api/schema/changes/apply", {
-          data: { connectionId, ops },
-        });
+        const response = await applyChangeset(page, proposal);
         expect(response.status()).toBe(403);
         expect(
           await scalar(page, connectionId, `SELECT COUNT(*) AS v FROM sqlite_master WHERE name = '${newTable}'`),
@@ -266,14 +272,14 @@ test.describe("AI Agent Mode policy (server side)", () => {
         expect((await rawQuery(page, connectionId, updateSql, true)).status()).toBe(200);
         expect(await scalar(page, connectionId, `SELECT email AS v FROM ${usersTable} WHERE id = 1`)).toBe("changed");
 
-        const apply = await page.request.post("/api/schema/changes/apply", {
-          data: { connectionId, ops, confirmed: true },
-        });
+        const apply = await applyChangeset(page, proposal, true);
         expect(apply.status()).toBe(200);
         expect(
           await scalar(page, connectionId, `SELECT COUNT(*) AS v FROM sqlite_master WHERE name = '${newTable}'`),
         ).toBe(1);
       });
     });
+
+    await llm.stop();
   });
 });

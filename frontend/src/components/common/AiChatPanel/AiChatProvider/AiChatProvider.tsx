@@ -3,6 +3,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { type JSX, type ReactNode, useEffect, useRef } from 'react';
 import { useAiAutoContext } from '../hooks/useAiAutoContext';
 import { useAiChat } from '../hooks/useAiChat';
+import { useChatChangesets } from '../hooks/useChatChangesets';
 import { AiChatControllerContext } from '../hooks/useAiChatController';
 import { useRestoreChatContext } from '../hooks/useRestoreChatContext';
 
@@ -21,6 +22,7 @@ export default function AiChatProvider({ active, children }: AiChatProviderProps
   const controller = useAiChat(active);
   useAiAutoContext(active);
   useRestoreChatContext(active);
+  useChatChangesets(active);
 
   const bridgeRequest = useAiStore((state) => state.bridgeRequest);
   const setBridgeRequest = useAiStore((state) => state.setBridgeRequest);

@@ -32,6 +32,7 @@ type Handlers struct {
 	AI           *handler.AiHandler
 	AiProvider   *handler.AiProviderHandler
 	AiChat       *handler.AiChatHandler
+	AiChangeset  *handler.AiChangesetHandler
 	Mcp          *handler.McpHandler
 	Schema       *handler.SchemaHandler
 	SafeMode     *handler.SafeModeHandler

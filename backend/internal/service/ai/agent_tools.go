@@ -10,7 +10,6 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
-	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -25,17 +24,6 @@ type blockedError struct{ reason string }
 
 func (e blockedError) Error() string { return e.reason }
 func (e blockedError) Unwrap() error { return errToolBlocked }
-
-// DiagramDiffData is the payload of a diagram_diff event and of a persisted
-// diagram_diff chat message.
-type DiagramDiffData struct {
-	ChangesetID  string                    `json:"changesetId"`
-	ConnectionID int32                     `json:"connectionId"`
-	Database     string                    `json:"database,omitempty"`
-	Schema       string                    `json:"schema,omitempty"`
-	Ops          []dto.SchemaChangeOp      `json:"ops"`
-	DiagramOps   []serviceSchema.DiagramOp `json:"diagramOps"`
-}
 
 // PermissionData is the payload of a permission_request event.
 type PermissionData struct {
@@ -53,10 +41,10 @@ type proposeSchemaChangeArgs struct {
 	Ops      []dto.SchemaChangeOp `json:"ops"`
 }
 
-// proposeSchemaChange validates the model's ops and turns them into a
-// diagram changeset. It never touches the database: the user applies it via
-// POST /schema/changes/apply.
-func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (*DiagramDiffData, error) {
+// proposeSchemaChange validates the model's ops and stores them as a pending
+// changeset of the chat. It never touches the database: the user reviews the
+// changeset and applies it through the changeset endpoints.
+func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, chatID uint, rawArgs string, toolCtx serviceDbtools.ToolContext) (*dto.AiChangesetResponse, error) {
 	var args proposeSchemaChangeArgs
 	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
 		return nil, fmt.Errorf("invalid arguments: %w", err)
@@ -96,14 +84,7 @@ func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, rawArgs string,
 		return nil, fmt.Errorf("invalid ops: %w", err)
 	}
 
-	return &DiagramDiffData{
-		ChangesetID:  uuid.NewString(),
-		ConnectionID: toolCtx.ConnectionID,
-		Database:     database,
-		Schema:       schema,
-		Ops:          args.Ops,
-		DiagramOps:   serviceSchema.ChangeDiagramOps(conn.ConnectionType, database, schema, args.Ops),
-	}, nil
+	return s.changesetService.Create(ctx, chatID, &req)
 }
 
 // requestWrite classifies a write statement and turns it into a permission

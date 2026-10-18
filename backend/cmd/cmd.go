@@ -107,6 +107,7 @@ func Execute() {
 		AI:           handler.NewAiHandler(appLogger, ss.AiService),
 		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
 		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		AiChangeset:  handler.NewAiChangesetHandler(appLogger, ss.AiChangesetService),
 		Mcp:          handler.NewMcpHandler(appLogger, ss.McpService),
 		Schema:       handler.NewSchemaHandler(appLogger, ss.SchemaService),
 		SafeMode:     handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),

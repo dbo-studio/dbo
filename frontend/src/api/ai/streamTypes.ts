@@ -1,4 +1,4 @@
-import type { AiDiagramDiff, AiMessageType, AiPermissionRequest } from '@/types';
+import type { AiChangeset, AiMessageType, AiPermissionRequest } from '@/types';
 
 export type AiStreamEvent =
   | { type: 'status'; label: string }
@@ -18,7 +18,7 @@ export type AiStreamEvent =
       durationMs?: number;
       data?: { code: 'blocked'; reason: string };
     }
-  | { type: 'diagram_diff'; id: string; data: AiDiagramDiff }
+  | { type: 'diagram_diff'; id: string; data: AiChangeset }
   | { type: 'permission_request'; id: string; data: AiPermissionRequest }
   | { type: 'ping' }
   | { type: 'done'; chatId: number; title: string; messages: AiMessageType[] }

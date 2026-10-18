@@ -16,7 +16,7 @@ import (
 type ISchemaService interface {
 	Diagram(ctx context.Context, req *dto.DiagramRequest) (*contract.DiagramGraph, error)
 	PreviewChange(ctx context.Context, req *dto.SchemaChangeRequest) ([]string, error)
-	ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) error
+	ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) (*ChangeResult, error)
 }
 
 var _ ISchemaService = (*ISchemaServiceImpl)(nil)

@@ -7,20 +7,9 @@ import (
 	"github.com/samber/lo"
 )
 
-// DiagramOp mirrors the frontend SchemaOp (core/diagram/types.ts) so a
-// proposed changeset can be overlaid on the diagram with applyOps.
-type DiagramOp struct {
-	Op     string `json:"op"`
-	Target string `json:"target"`
-	ID     string `json:"id"`
-	NodeID string `json:"nodeId,omitempty"`
-	Value  any    `json:"value,omitempty"`
-	Patch  any    `json:"patch,omitempty"`
-}
-
 // ChangeDiagramOps maps schema change ops to diagram ops using the same node
 // and edge ids the drivers emit for GET /schema/diagram.
-func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaChangeOp) []DiagramOp {
+func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaChangeOp) []dto.DiagramOp {
 	nodeID := func(table string) string {
 		return databaseCore.FormatNodeID(connectionType, contract.DBNode{Database: database, Schema: schema, Table: table})
 	}
@@ -50,14 +39,14 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 		}
 	}
 
-	result := make([]DiagramOp, 0, len(ops))
+	result := make([]dto.DiagramOp, 0, len(ops))
 
 	for _, op := range ops {
 		id := nodeID(op.Table)
 
 		switch op.Op {
 		case dto.SchemaChangeCreateTable:
-			result = append(result, DiagramOp{
+			result = append(result, dto.DiagramOp{
 				Op:     "add",
 				Target: "node",
 				ID:     id,
@@ -73,7 +62,7 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 				},
 			})
 		case dto.SchemaChangeAddColumn:
-			result = append(result, DiagramOp{
+			result = append(result, dto.DiagramOp{
 				Op:     "add",
 				Target: "column",
 				ID:     op.Column.Name,
@@ -81,7 +70,7 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 				Value:  column(op.Table, *op.Column),
 			})
 		case dto.SchemaChangeAlterColumn:
-			result = append(result, DiagramOp{
+			result = append(result, dto.DiagramOp{
 				Op:     "change",
 				Target: "column",
 				ID:     op.Column.Name,
@@ -89,11 +78,11 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 				Patch:  map[string]any{"dataType": op.Column.Type, "isPrimaryKey": op.Column.Primary},
 			})
 		case dto.SchemaChangeDropColumn:
-			result = append(result, DiagramOp{Op: "remove", Target: "column", ID: op.ColumnName, NodeID: id})
+			result = append(result, dto.DiagramOp{Op: "remove", Target: "column", ID: op.ColumnName, NodeID: id})
 		case dto.SchemaChangeAddForeignKey:
 			targetID := nodeID(op.RefTable)
 			edgeID := contract.DiagramEdgeID(op.ForeignKeyName(), id, targetID)
-			result = append(result, DiagramOp{
+			result = append(result, dto.DiagramOp{
 				Op:     "add",
 				Target: "edge",
 				ID:     edgeID,

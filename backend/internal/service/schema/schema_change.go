@@ -25,12 +25,23 @@ type changeStep struct {
 	nodeID string
 	action contract.TreeNodeActionName
 	params []byte
+	// opIndexes are the request ops this step carries out.
+	opIndexes []int
 }
 
 type createSpec struct {
-	table   string
-	columns []dto.SchemaChangeColumn
-	fks     []dto.SchemaChangeOp
+	table     string
+	columns   []dto.SchemaChangeColumn
+	fks       []dto.SchemaChangeOp
+	opIndexes []int
+}
+
+// ChangeResult lists the request ops (by index) that an apply ran. When a
+// driver without transactional DDL stops on an error, Failed holds the ops of
+// the step that failed and Applied the ops of the steps before it.
+type ChangeResult struct {
+	Applied []int
+	Failed  []int
 }
 
 func (s *ISchemaServiceImpl) PreviewChange(ctx context.Context, req *dto.SchemaChangeRequest) ([]string, error) {
@@ -62,15 +73,15 @@ func (s *ISchemaServiceImpl) PreviewChange(ctx context.Context, req *dto.SchemaC
 	return queries, nil
 }
 
-func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) error {
+func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) (*ChangeResult, error) {
 	connection, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
-		return apperror.NotFound(apperror.ErrConnectionNotFound)
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
 	steps, err := buildChangeSteps(connection.ConnectionType, req)
 	if err != nil {
-		return apperror.BadRequest(err)
+		return nil, apperror.BadRequest(err)
 	}
 
 	// Enforce once for the whole changeset: a one-shot Safe Mode unlock must
@@ -85,14 +96,14 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	}
 
 	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
-		return err
+		return nil, err
 	}
 
 	s.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -106,20 +117,26 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 		})
 
 		if err := atomic.ExecuteAtomic(ctx, executeSteps); err != nil {
-			return apperror.InternalServerError(fmt.Errorf("schema change rolled back, nothing was applied: %w", err))
+			return nil, apperror.InternalServerError(fmt.Errorf("schema change rolled back, nothing was applied: %w", err))
 		}
 
-		return nil
+		return &ChangeResult{Applied: lo.FlatMap(steps, func(step changeStep, _ int) []int { return step.opIndexes })}, nil
 	}
+
+	result := &ChangeResult{}
 
 	for i, step := range steps {
 		if _, err := repo.Execute(ctx, step.nodeID, step.action, step.params); err != nil {
 			// DDL is not transactional across drivers: report what already ran.
-			return apperror.InternalServerError(fmt.Errorf("step %d of %d (%s %s) failed; %d earlier step(s) were already applied: %w", i+1, len(steps), step.action, step.nodeID, i, err))
+			result.Failed = step.opIndexes
+
+			return result, apperror.InternalServerError(fmt.Errorf("step %d of %d (%s %s) failed; %d earlier step(s) were already applied: %w", i+1, len(steps), step.action, step.nodeID, i, err))
 		}
+
+		result.Applied = append(result.Applied, step.opIndexes...)
 	}
 
-	return nil
+	return result, nil
 }
 
 // buildChangeSteps folds add_column/add_foreign_key ops that target tables
@@ -141,9 +158,9 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		editOrder   []string
 	)
 
-	editOps := map[string][]dto.SchemaChangeOp{}
+	editIndexes := map[string][]int{}
 
-	for _, op := range req.Ops {
+	for i, op := range req.Ops {
 		if op.Op != dto.SchemaChangeCreateTable {
 			continue
 		}
@@ -152,25 +169,27 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 			return nil, fmt.Errorf("table %q is created twice", op.Table)
 		}
 
-		creates[op.Table] = &createSpec{table: op.Table, columns: op.Columns}
+		creates[op.Table] = &createSpec{table: op.Table, columns: op.Columns, opIndexes: []int{i}}
 		createOrder = append(createOrder, op.Table)
 	}
 
-	for _, op := range req.Ops {
+	for i, op := range req.Ops {
 		spec, created := creates[op.Table]
 
 		switch {
 		case op.Op == dto.SchemaChangeCreateTable:
 		case op.Op == dto.SchemaChangeAddColumn && created:
 			spec.columns = append(spec.columns, *op.Column)
+			spec.opIndexes = append(spec.opIndexes, i)
 		case op.Op == dto.SchemaChangeAddForeignKey && created:
 			spec.fks = append(spec.fks, op)
+			spec.opIndexes = append(spec.opIndexes, i)
 		default:
-			if _, seen := editOps[op.Table]; !seen {
+			if _, seen := editIndexes[op.Table]; !seen {
 				editOrder = append(editOrder, op.Table)
 			}
 
-			editOps[op.Table] = append(editOps[op.Table], op)
+			editIndexes[op.Table] = append(editIndexes[op.Table], i)
 		}
 	}
 
@@ -192,16 +211,16 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 			return nil, err
 		}
 
-		steps = append(steps, changeStep{nodeID: containerID, action: contract.CreateTableAction, params: params})
+		steps = append(steps, changeStep{nodeID: containerID, action: contract.CreateTableAction, params: params, opIndexes: creates[table].opIndexes})
 	}
 
-	for _, table := range orderEdits(editOrder, editOps) {
-		params, err := builder.edit(editOps[table])
+	for _, table := range orderEdits(editOrder, editIndexes, req.Ops) {
+		params, err := builder.edit(lo.Map(editIndexes[table], func(i int, _ int) dto.SchemaChangeOp { return req.Ops[i] }))
 		if err != nil {
 			return nil, err
 		}
 
-		steps = append(steps, changeStep{nodeID: tableID(table), action: contract.EditTableAction, params: params})
+		steps = append(steps, changeStep{nodeID: tableID(table), action: contract.EditTableAction, params: params, opIndexes: editIndexes[table]})
 	}
 
 	return steps, nil
@@ -241,9 +260,9 @@ func orderCreates(order []string, creates map[string]*createSpec) []string {
 
 // orderEdits puts tables with foreign key ops last, so a key can reference a
 // column another table gains in the same changeset.
-func orderEdits(order []string, editOps map[string][]dto.SchemaChangeOp) []string {
+func orderEdits(order []string, editIndexes map[string][]int, ops []dto.SchemaChangeOp) []string {
 	hasForeignKey := func(table string) bool {
-		return lo.ContainsBy(editOps[table], func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeAddForeignKey })
+		return lo.ContainsBy(editIndexes[table], func(i int) bool { return ops[i].Op == dto.SchemaChangeAddForeignKey })
 	}
 
 	return append(lo.Reject(order, func(table string, _ int) bool { return hasForeignKey(table) }), lo.Filter(order, func(table string, _ int) bool { return hasForeignKey(table) })...)
