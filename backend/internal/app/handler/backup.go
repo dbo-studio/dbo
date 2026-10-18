@@ -85,3 +85,7 @@ func (h BackupHandler) Download(c fiber.Ctx) error {
 
 	return file.Send(c)
 }
+
+func (h BackupHandler) Tools(c fiber.Ctx) error {
+	return response.SuccessBuilder().WithData(h.service.Tools(c)).Send(c)
+}

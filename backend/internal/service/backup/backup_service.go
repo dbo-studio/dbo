@@ -22,6 +22,7 @@ type IBackupService interface {
 	Restore(ctx context.Context, req *dto.RestoreRequest) (*dto.RestoreResponse, error)
 	History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error)
 	Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error)
+	Tools(ctx context.Context) []dto.BackupTool
 }
 
 type IBackupServiceImpl struct {
@@ -154,4 +155,8 @@ func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloa
 		ContentType: "application/sql",
 		Content:     content,
 	}, nil
+}
+
+func (s IBackupServiceImpl) Tools(ctx context.Context) []dto.BackupTool {
+	return DetectTools(ctx)
 }

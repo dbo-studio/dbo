@@ -10,6 +10,9 @@ const (
 	ExportDir = "exports"
 	// BackupDir holds backup artifacts; downloads are constrained to it.
 	BackupDir = "backups"
+	// ToolsDir holds native tools DBO manages itself, one folder per driver and
+	// version.
+	ToolsDir = "data/tools"
 )
 
 var ErrExportPathOutsideRoot = errors.New("export path outside allowed directory")

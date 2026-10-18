@@ -66,6 +66,19 @@ type (
 		CompletedAt  *time.Time `json:"completedAt"`
 	}
 
+	// BackupTool is one native tool as detected on this host. Found false means
+	// it is missing.
+	BackupTool struct {
+		Driver  string `json:"driver"`
+		Name    string `json:"name"`
+		Found   bool   `json:"found"`
+		Path    string `json:"path"`
+		Version string `json:"version"`
+		// Source is "path" (system PATH) or "managed" (DBO tool directory).
+		Source string `json:"source"`
+		Error  string `json:"error"`
+	}
+
 	BackupDownloadRequest struct {
 		ID uint
 	}
