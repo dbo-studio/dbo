@@ -6,7 +6,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiChangeset, AiChangesetOp, SchemaChangeOp, TableStructure } from '@/types';
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
-import ColumnEditor from './ColumnEditor';
+import OpEditor from './OpEditor';
 import CurrentStructure from './CurrentStructure';
 import { DiffOpStyled, DiffRowStyled, DiffTableHeaderStyled, DiffTableStyled } from './SchemaDiff.styled';
 import { diffRows } from './schemaDiffRows';
@@ -57,7 +57,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 {editing === op.position ? (
-                  <ColumnEditor
+                  <OpEditor
                     op={op}
                     onCancel={() => setEditing(undefined)}
                     onSave={(edited) => {
@@ -87,7 +87,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               />
               {op.status !== 'applied' && (
                 <Stack direction='row'>
-                  {(op.op === 'add_column' || op.op === 'alter_column') && (
+                  {op.op !== 'drop_column' && (
                     <Tooltip title={locales.ai_changes_edit}>
                       <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
                         <CustomIcon type='pen' size='xs' />
