@@ -25,6 +25,10 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getTableKeys(ctx, node, action)
 	case contract.TableIndexesTab:
 		return r.getTableIndexes(ctx, node, action)
+	case contract.TableChecksTab:
+		return r.getTableChecks(ctx, node, action)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
 	case contract.TypeTab:
@@ -229,6 +233,52 @@ func (r *PostgresRepository) getTableIndexes(ctx context.Context, node contract.
 	}
 
 	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *PostgresRepository) getTableChecks(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		checks, err := r.tableChecks(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, check := range checks {
+			result = append(result, map[string]any{
+				"name":       check.Name,
+				"expression": check.Expression,
+				"comment":    check.Comment,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.checkFields())
+}
+
+func (r *PostgresRepository) getTableTriggers(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		triggers, err := r.tableTriggers(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trigger := range triggers {
+			result = append(result, map[string]any{
+				"name":        trigger.Name,
+				"comment":     trigger.Comment,
+				"timing":      trigger.Timing,
+				"events":      trigger.Events,
+				"orientation": trigger.Orientation,
+				"when":        trigger.When,
+				"function":    trigger.Function,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.triggerFields(ctx, node))
 }
 
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {

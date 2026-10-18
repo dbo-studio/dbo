@@ -1089,6 +1089,148 @@ func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, sc
 	return enums, nil
 }
 
+type TableCheck struct {
+	Name       string  `gorm:"column:name"`
+	Expression string  `gorm:"column:expression"`
+	Comment    *string `gorm:"column:comment"`
+}
+
+func (r *PostgresRepository) tableChecks(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableCheck, error) {
+	checks := make([]TableCheck, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "checks", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &checks); err != nil {
+			return nil, err
+		}
+
+		if len(checks) > 0 {
+			return checks, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT c.conname AS name, pg_get_expr(c.conbin, c.conrelid) AS expression, d.description AS comment
+		FROM pg_constraint c
+		JOIN pg_class tc ON tc.oid = c.conrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
+		WHERE c.contype = 'c' AND tc.relname = ? AND n.nspname = ?
+		ORDER BY c.conname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&checks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	r.updateCache(ctx, cacheKey, checks)
+
+	return checks, nil
+}
+
+type TableTrigger struct {
+	Name        string  `gorm:"column:name"`
+	Comment     *string `gorm:"column:comment"`
+	Timing      string  `gorm:"column:timing"`
+	Orientation string  `gorm:"column:orientation"`
+	When        *string `gorm:"column:when_expr"`
+	Function    string  `gorm:"column:function"`
+	TgType      int     `gorm:"column:tgtype"`
+
+	Events []string `gorm:"-"`
+}
+
+// triggerEvents decodes the pg_trigger.tgtype bitmask.
+func triggerEvents(tgType int) []string {
+	events := []string{}
+
+	for _, event := range []struct {
+		bit  int
+		name string
+	}{{4, "INSERT"}, {16, "UPDATE"}, {8, "DELETE"}, {32, "TRUNCATE"}} {
+		if tgType&event.bit != 0 {
+			events = append(events, event.name)
+		}
+	}
+
+	return events
+}
+
+func (r *PostgresRepository) tableTriggers(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableTrigger, error) {
+	triggers := make([]TableTrigger, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "triggers", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &triggers); err != nil {
+			return nil, err
+		}
+
+		if len(triggers) > 0 {
+			return triggers, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			t.tgname AS name,
+			d.description AS comment,
+			t.tgtype::int AS tgtype,
+			CASE WHEN t.tgtype & 64 <> 0 THEN 'INSTEAD OF' WHEN t.tgtype & 2 <> 0 THEN 'BEFORE' ELSE 'AFTER' END AS timing,
+			CASE WHEN t.tgtype & 1 <> 0 THEN 'ROW' ELSE 'STATEMENT' END AS orientation,
+			pg_get_expr(t.tgqual, t.tgrelid) AS when_expr,
+			pn.nspname || '.' || p.proname AS function
+		FROM pg_trigger t
+		JOIN pg_class tc ON tc.oid = t.tgrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		JOIN pg_proc p ON p.oid = t.tgfoid
+		JOIN pg_namespace pn ON pn.oid = p.pronamespace
+		LEFT JOIN pg_description d ON d.objoid = t.oid AND d.objsubid = 0
+		WHERE NOT t.tgisinternal AND tc.relname = ? AND n.nspname = ?
+		ORDER BY t.tgname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&triggers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range triggers {
+		triggers[i].Events = triggerEvents(triggers[i].TgType)
+	}
+
+	r.updateCache(ctx, cacheKey, triggers)
+
+	return triggers, nil
+}
+
+// triggerFunctions lists user functions returning trigger as "schema.name".
+func (r *PostgresRepository) triggerFunctions(ctx context.Context, database *string) ([]string, error) {
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	var names []string
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT n.nspname || '.' || p.proname
+		FROM pg_proc p
+		JOIN pg_namespace n ON n.oid = p.pronamespace
+		WHERE p.prorettype = 'pg_catalog.trigger'::regtype
+			AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+		ORDER BY 1
+	`).Scan(&names).Error
+
+	return names, err
+}
+
 type Tablespace struct {
 	Name string `gorm:"column:spcname"`
 }

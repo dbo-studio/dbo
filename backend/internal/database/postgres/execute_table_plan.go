@@ -40,6 +40,16 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		return nil, "", err
 	}
 
+	checks, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableCheckParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
+	triggers, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.PostgresTableTriggerParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
 	input := ddlPostgres.TableInput{
 		Schema:      node.Schema,
 		NodeTable:   node.Table,
@@ -49,6 +59,8 @@ func (r *PostgresRepository) BuildTablePlan(_ context.Context, nodeID string, ac
 		Keys:        keys[contract.TableKeysTab],
 		ForeignKeys: foreignKeys[contract.TableForeignKeysTab],
 		Indexes:     indexes[contract.TableIndexesTab],
+		Checks:      checks[contract.TableChecksTab],
+		Triggers:    triggers[contract.TableTriggersTab],
 	}
 
 	return ddlPostgres.BuildTablePlan(input)

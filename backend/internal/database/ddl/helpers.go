@@ -72,6 +72,30 @@ func PostgresIndexMethod(value string) string {
 	}
 }
 
+// TriggerTiming returns BEFORE, AFTER or INSTEAD OF, or empty.
+func TriggerTiming(value string) string {
+	switch strings.ToUpper(strings.Join(strings.Fields(value), " ")) {
+	case "BEFORE":
+		return "BEFORE"
+	case "AFTER":
+		return "AFTER"
+	case "INSTEAD OF":
+		return "INSTEAD OF"
+	default:
+		return ""
+	}
+}
+
+// TriggerEvent returns INSERT, UPDATE, DELETE or TRUNCATE, or empty.
+func TriggerEvent(value string) string {
+	switch strings.ToUpper(strings.TrimSpace(value)) {
+	case "INSERT", "UPDATE", "DELETE", "TRUNCATE":
+		return strings.ToUpper(strings.TrimSpace(value))
+	default:
+		return ""
+	}
+}
+
 // SqliteOnConflict returns a canonical ON CONFLICT action, or empty.
 func SqliteOnConflict(value string) string {
 	switch strings.ToUpper(strings.TrimSpace(value)) {

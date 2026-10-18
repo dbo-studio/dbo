@@ -182,3 +182,43 @@ type PostgresTypeData struct {
 	Comment *string `json:"comment"`
 	Values  *string `json:"values"`
 }
+
+type PostgresTableCheckParams struct {
+	Columns []PostgresTableCheck `json:"columns"`
+}
+
+type PostgresTableCheck struct {
+	New     *PostgresTableCheckData `json:"new"`
+	Old     *PostgresTableCheckData `json:"old"`
+	Added   *bool                   `json:"added"`
+	Deleted *bool                   `json:"deleted"`
+}
+
+type PostgresTableCheckData struct {
+	Name       *string `json:"name"`
+	Expression *string `json:"expression"`
+	Comment    *string `json:"comment"`
+}
+
+type PostgresTableTriggerParams struct {
+	Columns []PostgresTableTrigger `json:"columns"`
+}
+
+type PostgresTableTrigger struct {
+	New     *PostgresTableTriggerData `json:"new"`
+	Old     *PostgresTableTriggerData `json:"old"`
+	Added   *bool                     `json:"added"`
+	Deleted *bool                     `json:"deleted"`
+}
+
+// PostgresTableTriggerData.Function is "schema.function"; the function must
+// already exist and return trigger.
+type PostgresTableTriggerData struct {
+	Name        *string  `json:"name"`
+	Comment     *string  `json:"comment"`
+	Timing      *string  `json:"timing"`
+	Events      []string `json:"events"`
+	Orientation *string  `json:"orientation"`
+	When        *string  `json:"when"`
+	Function    *string  `json:"function"`
+}

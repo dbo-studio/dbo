@@ -7,7 +7,7 @@ import (
 )
 
 // Phase marks which Object Form tab a statement belongs to. Plans are always
-// assembled in phase order: table → columns → keys → indexes → foreign keys.
+// assembled in phase order: table → columns → keys → indexes → foreign keys → checks → triggers.
 type Phase string
 
 const (
@@ -16,6 +16,8 @@ const (
 	PhaseKeys        Phase = "keys"
 	PhaseIndexes     Phase = "indexes"
 	PhaseForeignKeys Phase = "foreign_keys"
+	PhaseChecks      Phase = "checks"
+	PhaseTriggers    Phase = "triggers"
 )
 
 // Statement is a single DDL statement produced by a planner.

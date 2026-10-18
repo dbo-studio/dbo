@@ -118,6 +118,49 @@ func (r *PostgresRepository) indexFields(ctx context.Context, node contract.DBNo
 	}
 }
 
+func (r *PostgresRepository) checkFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "expression", Name: "Expression", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+	}
+}
+
+func (r *PostgresRepository) triggerFields(ctx context.Context, node contract.DBNode) []contract.FormField {
+	options := func(values ...string) []contract.FormFieldOption {
+		result := make([]contract.FormFieldOption, len(values))
+		for i, value := range values {
+			result[i] = contract.FormFieldOption{Value: value, Label: value}
+		}
+
+		return result
+	}
+
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "timing", Name: "Timing", Type: contract.FormFieldTypeSelect, Options: options("BEFORE", "AFTER", "INSTEAD OF"), Required: true},
+		{ID: "events", Name: "Events", Type: contract.FormFieldTypeMultiSelect, Options: options("INSERT", "UPDATE", "DELETE", "TRUNCATE"), Required: true},
+		{ID: "orientation", Name: "For each", Type: contract.FormFieldTypeSelect, Options: options("ROW", "STATEMENT")},
+		{ID: "when", Name: "When", Type: contract.FormFieldTypeText},
+		{ID: "function", Name: "Function", Type: contract.FormFieldTypeSelect, Options: r.triggerFunctionOptions(ctx, node), Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+	}
+}
+
+func (r *PostgresRepository) triggerFunctionOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
+	functions, err := r.triggerFunctions(ctx, &node.Database)
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	options := make([]contract.FormFieldOption, len(functions))
+	for i, function := range functions {
+		options[i] = contract.FormFieldOption{Value: function, Label: function}
+	}
+
+	return options
+}
+
 func (r *PostgresRepository) typeFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},

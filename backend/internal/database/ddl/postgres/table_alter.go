@@ -64,6 +64,8 @@ func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, keyStatements(input, tableName)...)
 	plan = append(plan, indexStatements(input.Schema, tableName, indexRows(input), input.Action)...)
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), input.Action)...)
+	plan = append(plan, checkStatements(input.Schema, tableName, checkRows(input), input.Action)...)
+	plan = append(plan, triggerStatements(input.Schema, tableName, triggerRows(input), input.Action)...)
 
 	return plan, tableName, nil
 }
