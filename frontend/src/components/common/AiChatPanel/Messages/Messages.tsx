@@ -62,59 +62,71 @@ export default function Messages({
       new Set(messages.filter((message) => message.role === 'assistant' && message.model).map((m) => m.model)).size > 1,
     [messages]
   );
+  // Stays true while the user is at the bottom; only the user scrolling up ends it.
   const isNearBottomRef = useRef(true);
+  // Our own smooth scroll fires scroll events on the way; they must not read as "user scrolled up".
+  const ignoreScrollUntilRef = useRef(0);
+  // The browser also scrolls on its own when content is swapped (the viewport clamps); only a scroll that
+  // follows a wheel, touch, key or pointer action counts as the user leaving the bottom.
+  const userIntentUntilRef = useRef(0);
+  const pointerDownRef = useRef(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const markUserIntent = useCallback(() => {
+    userIntentUntilRef.current = Date.now() + 250;
+  }, []);
+
+  useEffect(() => {
+    const release = (): void => {
+      pointerDownRef.current = false;
+    };
+    window.addEventListener('pointerup', release);
+    return (): void => window.removeEventListener('pointerup', release);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
-    if (!container) return;
+    if (!container || Date.now() < ignoreScrollUntilRef.current) return;
     const threshold = 100;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-    isNearBottomRef.current = nearBottom;
-    setShowScrollButton(!nearBottom);
-  }, []);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior
-      });
+    const userScrolling = pointerDownRef.current || Date.now() < userIntentUntilRef.current;
+    // A wheel or touch scroll animates for a while; every event of it keeps the user's intent alive.
+    if (userScrolling) markUserIntent();
+    if (nearBottom) {
       isNearBottomRef.current = true;
       setShowScrollButton(false);
+    } else if (userScrolling) {
+      isNearBottomRef.current = false;
+      setShowScrollButton(true);
     }
+  }, [markUserIntent]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    isNearBottomRef.current = true;
+    if (behavior === 'smooth') ignoreScrollUntilRef.current = Date.now() + 600;
+    container.scrollTo({ top: container.scrollHeight, behavior });
   }, []);
 
-  const autoScrollToBottom = useCallback(
-    (behavior: ScrollBehavior = 'smooth') => {
-      if (!isNearBottomRef.current) return;
-      scrollToBottom(behavior);
-    },
-    [scrollToBottom]
-  );
-
+  // Sending a message always brings the conversation to the bottom, wherever the user had scrolled.
+  const lastMessage = messages[messages.length - 1];
+  const sentJustNow = lastMessage?.role === 'user' && lastMessage.isNew;
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.isNew) {
-        autoScrollToBottom();
-      }
-    }
-  }, [messages, autoScrollToBottom]);
+    if (sentJustNow) scrollToBottom();
+  }, [sentJustNow, messages.length, scrollToBottom]);
 
+  // Whatever makes the conversation taller (tokens, cards, tables) is followed while pinned to the bottom.
   useEffect(() => {
-    if (loading || streaming.status === 'streaming') {
-      autoScrollToBottom('auto');
-    }
-  }, [
-    loading,
-    streaming.status,
-    streaming.thinkingContent,
-    streaming.previewContent,
-    streaming.statusLabel,
-    agentItems,
-    autoScrollToBottom
-  ]);
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottomRef.current) scrollToBottom();
+    });
+    observer.observe(list);
+    return (): void => observer.disconnect();
+  }, [scrollToBottom]);
 
   const showEmpty = messages.length === 0 && !loading && streaming.status !== 'streaming';
   const showLoadMore = messages.filter((message) => !message.isNew).length > 10;
@@ -123,6 +135,12 @@ export default function Messages({
     <MessagesStyled
       ref={messagesContainerRef}
       onScroll={handleScroll}
+      onWheel={markUserIntent}
+      onTouchMove={markUserIntent}
+      onKeyDown={markUserIntent}
+      onPointerDown={() => {
+        pointerDownRef.current = true;
+      }}
       compact={density === 'compact'}
       data-density={density}
     >
@@ -148,7 +166,7 @@ export default function Messages({
 
       {showEmpty && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
-      <MessagesListStyled>
+      <MessagesListStyled ref={listRef}>
         {blocks.map((block) => {
           if (block.kind === 'message') {
             const { message } = block;
@@ -245,7 +263,10 @@ export default function Messages({
             size='small'
             icon={<CustomIcon type='arrowDown' size='xs' />}
             label={locales.ai_jump_to_latest}
-            onClick={() => scrollToBottom()}
+            onClick={() => {
+              scrollToBottom('smooth');
+              setShowScrollButton(false);
+            }}
             data-testid='ai-jump-to-latest'
             sx={{
               backgroundColor: 'background.paper',

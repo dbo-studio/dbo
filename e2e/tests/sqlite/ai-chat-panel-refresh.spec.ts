@@ -137,11 +137,13 @@ test.describe("AI chat panel refresh", () => {
           await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 15000 });
         }
 
-        await page.getByTestId("ai-message").first().evaluate((el) => {
-          let node: HTMLElement | null = el as HTMLElement;
-          while (node && node.scrollHeight <= node.clientHeight + 2) node = node.parentElement;
-          if (node) node.scrollTop = 0;
-        });
+        // A real scroll: a programmatic one is not the user leaving the bottom.
+        const conversation = await page.locator("[data-density]:not([data-testid])").boundingBox();
+        await page.mouse.move(
+          (conversation?.x ?? 0) + (conversation?.width ?? 0) / 2,
+          (conversation?.y ?? 0) + (conversation?.height ?? 0) / 2,
+        );
+        await page.mouse.wheel(0, -20000);
         await expect(jump).toBeVisible();
 
         await jump.click();

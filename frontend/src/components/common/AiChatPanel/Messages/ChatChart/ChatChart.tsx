@@ -27,7 +27,7 @@ export default function ChatChart({
           />
           {series.valueKeys.length > 1 && <Legend />}
           {series.valueKeys.map((key, index) => (
-            <Bar key={key} dataKey={key} fill={colors[index]} isAnimationActive={false} />
+            <Bar key={key} dataKey={key} fill={colors[index]} animationDuration={600} animationEasing='ease-out' />
           ))}
         </BarChart>
       </ResponsiveContainer>
