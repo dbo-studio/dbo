@@ -21,6 +21,10 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 			{ID: contract.TableColumnsTab, Name: "Columns"},
 			{ID: contract.TableForeignKeysTab, Name: "Foreign Keys"},
 			{ID: contract.TableKeysTab, Name: "Keys"},
+			{ID: contract.TableIndexesTab, Name: "Indexes"},
+			{ID: contract.TableChecksTab, Name: "Checks"},
+			{ID: contract.TableTriggersTab, Name: "Triggers"},
+			{ID: contract.TableSequenceTab, Name: "Sequences"},
 		}
 	case contract.CreateViewAction, contract.EditViewAction:
 		return []contract.FormTab{
@@ -29,6 +33,22 @@ func (r *PostgresRepository) GetFormTabs(_ context.Context, action contract.Tree
 	case contract.CreateMaterializedViewAction, contract.EditMaterializedViewAction:
 		return []contract.FormTab{
 			{ID: contract.MaterializedViewTab, Name: "Materialized View"},
+		}
+	case contract.CreateTypeAction, contract.EditTypeAction:
+		return []contract.FormTab{
+			{ID: contract.TypeTab, Name: "Type"},
+		}
+	case contract.CreateFunctionAction, contract.EditFunctionAction:
+		return []contract.FormTab{
+			{ID: contract.FunctionTab, Name: "Function"},
+		}
+	case contract.CreateProcedureAction, contract.EditProcedureAction:
+		return []contract.FormTab{
+			{ID: contract.ProcedureTab, Name: "Procedure"},
+		}
+	case contract.CreateSequenceAction, contract.EditSequenceAction:
+		return []contract.FormTab{
+			{ID: contract.SequenceTab, Name: "Sequence"},
 		}
 	default:
 		return []contract.FormTab{}

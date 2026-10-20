@@ -971,6 +971,374 @@ func (r *PostgresRepository) tableKeys(ctx context.Context, database *string, ta
 	return keys, nil
 }
 
+type TableIndex struct {
+	Name      string  `gorm:"column:name"`
+	Comment   *string `gorm:"column:comment"`
+	Unique    bool    `gorm:"column:is_unique"`
+	Method    string  `gorm:"column:method"`
+	Columns   string  `gorm:"column:columns"`
+	Predicate *string `gorm:"column:predicate"`
+
+	ColumnsList []string `gorm:"-"`
+}
+
+// tableIndexes lists standalone indexes only; indexes backing a constraint
+// (PK / UNIQUE / EXCLUDE) belong to the Keys tab.
+func (r *PostgresRepository) tableIndexes(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableIndex, error) {
+	indexes := make([]TableIndex, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "indexes", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &indexes); err != nil {
+			return nil, err
+		}
+
+		if len(indexes) > 0 {
+			return indexes, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			ic.relname AS name,
+			d.description AS comment,
+			i.indisunique AS is_unique,
+			am.amname AS method,
+			(SELECT string_agg(pg_get_indexdef(i.indexrelid, k.n, true), E'\x1f' ORDER BY k.n)
+				FROM generate_series(1, i.indnkeyatts) AS k(n)) AS columns,
+			pg_get_expr(i.indpred, i.indrelid) AS predicate
+		FROM pg_index i
+		JOIN pg_class ic ON ic.oid = i.indexrelid
+		JOIN pg_class tc ON tc.oid = i.indrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		JOIN pg_am am ON am.oid = ic.relam
+		LEFT JOIN pg_description d ON d.objoid = ic.oid AND d.objsubid = 0
+		WHERE tc.relname = ? AND n.nspname = ?
+			AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid)
+		ORDER BY ic.relname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&indexes).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range indexes {
+		indexes[i].ColumnsList = strings.Split(indexes[i].Columns, "\x1f")
+	}
+
+	r.updateCache(ctx, cacheKey, indexes)
+
+	return indexes, nil
+}
+
+type EnumType struct {
+	Name    string   `gorm:"column:name"`
+	Comment *string  `gorm:"column:comment"`
+	Labels  []string `gorm:"-"`
+
+	LabelsJoined string `gorm:"column:labels"`
+}
+
+func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, schema *string, fromCache bool) ([]EnumType, error) {
+	enums := make([]EnumType, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "enum_types", lo.FromPtr(database), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &enums); err != nil {
+			return nil, err
+		}
+
+		if len(enums) > 0 {
+			return enums, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			t.typname AS name,
+			d.description AS comment,
+			(SELECT string_agg(e.enumlabel, E'\x1f' ORDER BY e.enumsortorder)
+				FROM pg_enum e WHERE e.enumtypid = t.oid) AS labels
+		FROM pg_type t
+		JOIN pg_namespace n ON n.oid = t.typnamespace
+		LEFT JOIN pg_description d ON d.objoid = t.oid AND d.objsubid = 0
+		WHERE t.typtype = 'e' AND n.nspname = ?
+		ORDER BY t.typname
+	`, lo.FromPtr(schema)).Scan(&enums).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range enums {
+		if enums[i].LabelsJoined != "" {
+			enums[i].Labels = strings.Split(enums[i].LabelsJoined, "\x1f")
+		}
+	}
+
+	r.updateCache(ctx, cacheKey, enums)
+
+	return enums, nil
+}
+
+type Routine struct {
+	Name         string `gorm:"column:name"`
+	Parameters   string `gorm:"column:parameters"`
+	IdentityArgs string `gorm:"column:identity_args"`
+	Returns      string `gorm:"column:returns"`
+	Language     string `gorm:"column:language"`
+	Body         string `gorm:"column:body"`
+}
+
+// routines lists user functions or procedures of a schema, leaving out
+// extension members and internal / C-language functions.
+func (r *PostgresRepository) routines(ctx context.Context, database *string, schema *string, procedure bool) ([]Routine, error) {
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	routines := make([]Routine, 0)
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			p.proname AS name,
+			pg_get_function_arguments(p.oid) AS parameters,
+			pg_get_function_identity_arguments(p.oid) AS identity_args,
+			CASE WHEN p.prokind = 'f' THEN pg_get_function_result(p.oid) ELSE '' END AS returns,
+			l.lanname AS language,
+			p.prosrc AS body
+		FROM pg_proc p
+		JOIN pg_namespace n ON n.oid = p.pronamespace
+		JOIN pg_language l ON l.oid = p.prolang
+		WHERE n.nspname = ? AND p.prokind = ? AND l.lanname NOT IN ('internal', 'c')
+			AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')
+		ORDER BY p.proname, p.oid
+	`, lo.FromPtr(schema), lo.Ternary(procedure, "p", "f")).Scan(&routines).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return routines, nil
+}
+
+type Sequence struct {
+	Name        string  `gorm:"column:name"`
+	Comment     *string `gorm:"column:comment"`
+	StartValue  string  `gorm:"column:start_value"`
+	IncrementBy string  `gorm:"column:increment_by"`
+	MinValue    string  `gorm:"column:min_value"`
+	MaxValue    string  `gorm:"column:max_value"`
+	CacheSize   string  `gorm:"column:cache_size"`
+	Cycle       bool    `gorm:"column:cycle"`
+	OwnedTable  *string `gorm:"column:owned_table"`
+	OwnedColumn *string `gorm:"column:owned_column"`
+}
+
+// sequences lists standalone sequences of a schema; identity sequences are
+// managed by their column and left out.
+func (r *PostgresRepository) sequences(ctx context.Context, database *string, schema *string, fromCache bool) ([]Sequence, error) {
+	sequences := make([]Sequence, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "sequences", lo.FromPtr(database), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &sequences); err != nil {
+			return nil, err
+		}
+
+		if len(sequences) > 0 {
+			return sequences, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			s.sequencename AS name,
+			d.description AS comment,
+			s.start_value::text AS start_value,
+			s.increment_by::text AS increment_by,
+			s.min_value::text AS min_value,
+			s.max_value::text AS max_value,
+			s.cache_size::text AS cache_size,
+			s.cycle AS cycle,
+			tc.relname AS owned_table,
+			a.attname AS owned_column
+		FROM pg_sequences s
+		JOIN pg_class c ON c.relname = s.sequencename
+			AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = s.schemaname)
+		LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
+		LEFT JOIN pg_depend dep ON dep.objid = c.oid AND dep.classid = 'pg_class'::regclass
+			AND dep.refclassid = 'pg_class'::regclass AND dep.deptype = 'a'
+		LEFT JOIN pg_class tc ON tc.oid = dep.refobjid
+		LEFT JOIN pg_attribute a ON a.attrelid = dep.refobjid AND a.attnum = dep.refobjsubid
+		WHERE s.schemaname = ?
+			AND NOT EXISTS (SELECT 1 FROM pg_depend i WHERE i.objid = c.oid AND i.deptype = 'i')
+		ORDER BY s.sequencename
+	`, lo.FromPtr(schema)).Scan(&sequences).Error
+	if err != nil {
+		return nil, err
+	}
+
+	r.updateCache(ctx, cacheKey, sequences)
+
+	return sequences, nil
+}
+
+type TableCheck struct {
+	Name       string  `gorm:"column:name"`
+	Expression string  `gorm:"column:expression"`
+	Comment    *string `gorm:"column:comment"`
+}
+
+func (r *PostgresRepository) tableChecks(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableCheck, error) {
+	checks := make([]TableCheck, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "checks", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &checks); err != nil {
+			return nil, err
+		}
+
+		if len(checks) > 0 {
+			return checks, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT c.conname AS name, pg_get_expr(c.conbin, c.conrelid) AS expression, d.description AS comment
+		FROM pg_constraint c
+		JOIN pg_class tc ON tc.oid = c.conrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
+		WHERE c.contype = 'c' AND tc.relname = ? AND n.nspname = ?
+		ORDER BY c.conname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&checks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	r.updateCache(ctx, cacheKey, checks)
+
+	return checks, nil
+}
+
+type TableTrigger struct {
+	Name        string  `gorm:"column:name"`
+	Comment     *string `gorm:"column:comment"`
+	Timing      string  `gorm:"column:timing"`
+	Orientation string  `gorm:"column:orientation"`
+	When        *string `gorm:"column:when_expr"`
+	Function    string  `gorm:"column:function"`
+	TgType      int     `gorm:"column:tgtype"`
+
+	Events []string `gorm:"-"`
+}
+
+// triggerEvents decodes the pg_trigger.tgtype bitmask.
+func triggerEvents(tgType int) []string {
+	events := []string{}
+
+	for _, event := range []struct {
+		bit  int
+		name string
+	}{{4, "INSERT"}, {16, "UPDATE"}, {8, "DELETE"}, {32, "TRUNCATE"}} {
+		if tgType&event.bit != 0 {
+			events = append(events, event.name)
+		}
+	}
+
+	return events
+}
+
+func (r *PostgresRepository) tableTriggers(ctx context.Context, database *string, table *string, schema *string, fromCache bool) ([]TableTrigger, error) {
+	triggers := make([]TableTrigger, 0)
+	cacheKey := cache.PostgresQueryKey(r.base.Connection().ID, "triggers", lo.FromPtr(database), lo.FromPtr(table), lo.FromPtr(schema))
+
+	if fromCache {
+		if err := r.base.Cache().Get(ctx, cacheKey, &triggers); err != nil {
+			return nil, err
+		}
+
+		if len(triggers) > 0 {
+			return triggers, nil
+		}
+	}
+
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT
+			t.tgname AS name,
+			d.description AS comment,
+			t.tgtype::int AS tgtype,
+			CASE WHEN t.tgtype & 64 <> 0 THEN 'INSTEAD OF' WHEN t.tgtype & 2 <> 0 THEN 'BEFORE' ELSE 'AFTER' END AS timing,
+			CASE WHEN t.tgtype & 1 <> 0 THEN 'ROW' ELSE 'STATEMENT' END AS orientation,
+			pg_get_expr(t.tgqual, t.tgrelid) AS when_expr,
+			pn.nspname || '.' || p.proname AS function
+		FROM pg_trigger t
+		JOIN pg_class tc ON tc.oid = t.tgrelid
+		JOIN pg_namespace n ON n.oid = tc.relnamespace
+		JOIN pg_proc p ON p.oid = t.tgfoid
+		JOIN pg_namespace pn ON pn.oid = p.pronamespace
+		LEFT JOIN pg_description d ON d.objoid = t.oid AND d.objsubid = 0
+		WHERE NOT t.tgisinternal AND tc.relname = ? AND n.nspname = ?
+		ORDER BY t.tgname
+	`, lo.FromPtr(table), lo.FromPtr(schema)).Scan(&triggers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range triggers {
+		triggers[i].Events = triggerEvents(triggers[i].TgType)
+	}
+
+	r.updateCache(ctx, cacheKey, triggers)
+
+	return triggers, nil
+}
+
+// triggerFunctions lists user functions returning trigger as "schema.name".
+func (r *PostgresRepository) triggerFunctions(ctx context.Context, database *string) ([]string, error) {
+	conn, err := r.db(ctx, database)
+	if err != nil {
+		return nil, err
+	}
+
+	var names []string
+
+	err = conn.WithContext(ctx).Raw(`
+		SELECT n.nspname || '.' || p.proname
+		FROM pg_proc p
+		JOIN pg_namespace n ON n.oid = p.pronamespace
+		WHERE p.prorettype = 'pg_catalog.trigger'::regtype
+			AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+		ORDER BY 1
+	`).Scan(&names).Error
+
+	return names, err
+}
+
 type Tablespace struct {
 	Name string `gorm:"column:spcname"`
 }

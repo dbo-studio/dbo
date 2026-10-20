@@ -3,6 +3,9 @@ package databasePostgres
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/samber/lo"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -22,8 +25,24 @@ func (r *PostgresRepository) Objects(ctx context.Context, nodeID string, tabID c
 		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, node, action)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(ctx, node, action)
+	case contract.TableChecksTab:
+		return r.getTableChecks(ctx, node, action)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(ctx, node, action)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
+	case contract.FunctionTab:
+		return r.getRoutineInfo(ctx, node, false)
+	case contract.ProcedureTab:
+		return r.getRoutineInfo(ctx, node, true)
+	case contract.SequenceTab:
+		return r.getSequenceInfo(ctx, node)
+	case contract.TableSequenceTab:
+		return r.getTableSequences(ctx, node)
+	case contract.TypeTab:
+		return r.getTypeInfo(ctx, node)
 	case contract.MaterializedViewTab:
 		return r.getMaterializedViewInfo(ctx, node)
 	default:
@@ -114,7 +133,7 @@ func (r *PostgresRepository) getTableGeneralFields(ctx context.Context, node con
 }
 
 func (r *PostgresRepository) getTableColumns(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
-	fields := r.tableColumnFields()
+	fields := r.tableColumnFields(ctx, node)
 	result := []map[string]any{}
 
 	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
@@ -201,6 +220,77 @@ func (r *PostgresRepository) getTableKeys(ctx context.Context, node contract.DBN
 	return r.base.BuildArrayFormResponse(result, fields)
 }
 
+func (r *PostgresRepository) getTableIndexes(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	fields := r.indexFields(ctx, node)
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		indexes, err := r.tableIndexes(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, index := range indexes {
+			result = append(result, map[string]any{
+				"name":    index.Name,
+				"comment": index.Comment,
+				"unique":  index.Unique,
+				"method":  index.Method,
+				"columns": index.ColumnsList,
+				"where":   index.Predicate,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *PostgresRepository) getTableChecks(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		checks, err := r.tableChecks(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, check := range checks {
+			result = append(result, map[string]any{
+				"name":       check.Name,
+				"expression": check.Expression,
+				"comment":    check.Comment,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.checkFields())
+}
+
+func (r *PostgresRepository) getTableTriggers(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		triggers, err := r.tableTriggers(ctx, &node.Database, &node.Table, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trigger := range triggers {
+			result = append(result, map[string]any{
+				"name":        trigger.Name,
+				"comment":     trigger.Comment,
+				"timing":      trigger.Timing,
+				"events":      trigger.Events,
+				"orientation": trigger.Orientation,
+				"when":        trigger.When,
+				"function":    trigger.Function,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.triggerFields(ctx, node))
+}
+
 func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
 	fields := r.viewFields()
 
@@ -225,6 +315,118 @@ func (r *PostgresRepository) getViewInfo(ctx context.Context, node contract.DBNo
 	row := map[string]any{}
 	if len(result) > 0 {
 		row = result[0]
+	}
+
+	return r.base.BuildGeneralFormResponse(fields, row)
+}
+
+func (r *PostgresRepository) getRoutineInfo(ctx context.Context, node contract.DBNode, procedure bool) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.FunctionContainerNodeType) && node.Table != string(contract.ProcedureContainerNodeType) {
+		routines, err := r.routines(ctx, &node.Database, &node.Schema, procedure)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, routine := range routines {
+			if routine.Name == node.Table {
+				row = map[string]any{
+					"name":       routine.Name,
+					"language":   routine.Language,
+					"parameters": routine.Parameters,
+					"returns":    routine.Returns,
+					"body":       routine.Body,
+				}
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.routineFields(procedure), row)
+}
+
+func sequenceRow(sequence Sequence, ownedBy any) map[string]any {
+	return map[string]any{
+		"name":         sequence.Name,
+		"comment":      sequence.Comment,
+		"start_value":  sequence.StartValue,
+		"increment_by": sequence.IncrementBy,
+		"min_value":    sequence.MinValue,
+		"max_value":    sequence.MaxValue,
+		"cache_size":   sequence.CacheSize,
+		"cycle":        sequence.Cycle,
+		"owned_by":     ownedBy,
+	}
+}
+
+func (r *PostgresRepository) getSequenceInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.SequenceContainerNodeType) {
+		sequences, err := r.sequences(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sequence := range sequences {
+			if sequence.Name == node.Table {
+				ownedBy := ""
+				if sequence.OwnedTable != nil && sequence.OwnedColumn != nil {
+					ownedBy = *sequence.OwnedTable + "." + *sequence.OwnedColumn
+				}
+
+				row = sequenceRow(sequence, ownedBy)
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.sequenceFields(nil), row)
+}
+
+func (r *PostgresRepository) getTableSequences(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		sequences, err := r.sequences(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sequence := range sequences {
+			if sequence.OwnedTable != nil && *sequence.OwnedTable == node.Table {
+				result = append(result, sequenceRow(sequence, lo.FromPtr(sequence.OwnedColumn)))
+			}
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.sequenceFields(r.tableColumnsOptions(ctx, node)))
+}
+
+func (r *PostgresRepository) getTypeInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	fields := r.typeFields()
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TypeContainerNodeType) {
+		enums, err := r.enumTypes(ctx, &node.Database, &node.Schema, true)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, enum := range enums {
+			if enum.Name == node.Table {
+				row = map[string]any{
+					"name":    enum.Name,
+					"comment": enum.Comment,
+					"values":  strings.Join(enum.Labels, ", "),
+				}
+
+				break
+			}
+		}
 	}
 
 	return r.base.BuildGeneralFormResponse(fields, row)

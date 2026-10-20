@@ -115,3 +115,21 @@ type MysqlTableIndexData struct {
 	NonUnique *bool    `json:"non_unique"`
 	Collation *string  `json:"collation"`
 }
+
+type MysqlTableTriggerParams struct {
+	Columns []MysqlTableTrigger `json:"columns"`
+}
+
+type MysqlTableTrigger struct {
+	New     *MysqlTableTriggerData `json:"new"`
+	Old     *MysqlTableTriggerData `json:"old"`
+	Added   *bool                  `json:"added"`
+	Deleted *bool                  `json:"deleted"`
+}
+
+type MysqlTableTriggerData struct {
+	Name   *string `json:"name"`
+	Timing *string `json:"timing"`
+	Event  *string `json:"event"`
+	Body   *string `json:"body"`
+}

@@ -13,6 +13,13 @@ const (
 
 	MaterializedViewTab TreeTab = "materialized_view"
 
+	TypeTab TreeTab = "type"
+
+	SequenceTab TreeTab = "sequence"
+
+	FunctionTab  TreeTab = "function"
+	ProcedureTab TreeTab = "procedure"
+
 	TableTab            TreeTab = "table"
 	TableColumnsTab     TreeTab = "table_columns"
 	TableForeignKeysTab TreeTab = "table_foreign_keys"

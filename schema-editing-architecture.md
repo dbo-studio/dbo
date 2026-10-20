@@ -48,6 +48,11 @@ backend/internal/database/ddl/
     column_alter.go  # ADD / ALTER / DROP / RENAME
     key.go
     foreign_key.go
+    index.go         # CREATE / DROP INDEX (edit = drop + recreate)
+    check.go         # ADD / DROP CONSTRAINT ... CHECK
+    trigger.go       # CREATE / DROP / RENAME TRIGGER
+    sequence.go      # standalone form + table tab share one builder
+    routine.go       # functions / procedures
   mysql/
     planner.go
     field_spec.go    # field spec, AUTO_INCREMENT, ENGINE/ROW_FORMAT
@@ -57,6 +62,8 @@ backend/internal/database/ddl/
     key.go
     index.go         # CREATE / DROP INDEX (edit = drop + recreate)
     foreign_key.go
+    trigger.go       # CREATE / DROP TRIGGER (edit = drop + recreate)
+    routine.go       # functions / procedures (edit = drop + recreate)
   sqlite/
     planner.go       # composed CREATE TABLE + recreate flow
     columns.go
@@ -76,6 +83,9 @@ Plans are assembled in a fixed phase order, never in map-iteration order:
 | `keys` | — (inline) | ADD / DROP; definition edits drop + recreate |
 | `indexes` | `CREATE INDEX` after create | CREATE / DROP INDEX (edit = drop + recreate) |
 | `foreign_keys` | `ALTER TABLE ADD CONSTRAINT` after create | ADD / DROP / rename / deferrability alters; material changes drop + recreate |
+| `checks` | PG: `ADD CONSTRAINT ... CHECK` after create | ADD / DROP; expression or name change drops + recreates |
+| `triggers` | PG / MySQL: `CREATE TRIGGER` after create | PG: rename / comment in place, other changes drop + recreate; MySQL: drop + recreate |
+| `sequences` | PG: `CREATE SEQUENCE` + `OWNED BY` | `ALTER SEQUENCE` in place; DROP for deleted rows |
 
 Design decisions:
 
@@ -91,6 +101,25 @@ Design decisions:
   names → drop → rename).
 - Comments are quoted via `ddl/quote` literals; identifiers are always quoted.
   Keyword slots (ON UPDATE/ON DELETE, persistence, index ORDER) are allowlisted.
+
+## Object families outside the table form
+
+These objects have their own tree container and a single-object Object Form
+(general tab, `{new, old}` payload), handled by a `handle*Commands` function in
+the driver that delegates SQL building to the `ddl` packages where one exists:
+
+| Object | Engines | Tree container | Edit strategy |
+|--------|---------|----------------|---------------|
+| Enum type | PG | Types | rename + `ADD VALUE`; removing or reordering labels is rejected |
+| Sequence | PG | Sequences (plus table `Sequences` tab) | `ALTER SEQUENCE` in place |
+| Function / procedure | PG, MySQL | Functions, Procedures | PG: `CREATE OR REPLACE` when the signature is unchanged, else drop + create; MySQL: drop + create |
+| Materialized view | PG | Materialized Views | in-place `ALTER`; a changed query drops + recreates; `Refresh` actions (with / without data) |
+
+Drops are always `RESTRICT`. PG routines are addressed by name in the tree, so
+overloaded routines are not distinguishable yet.
+
+New action names must also be added to `sqlguard.ClassifyAction`, otherwise
+safe mode treats them as unknown.
 
 ## Adding a new schema object tab
 

@@ -70,6 +70,14 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 				},
 			},
 		)
+	case contract.FunctionContainerNodeType:
+		actions = append(actions, routineCreateAction("Create function", contract.CreateFunctionAction))
+	case contract.ProcedureContainerNodeType:
+		actions = append(actions, routineCreateAction("Create procedure", contract.CreateProcedureAction))
+	case contract.FunctionNodeType:
+		actions = append(actions, routineNodeActions("function", contract.EditFunctionAction, contract.DropFunctionAction)...)
+	case contract.ProcedureNodeType:
+		actions = append(actions, routineNodeActions("procedure", contract.EditProcedureAction, contract.DropProcedureAction)...)
 	case contract.TableNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -107,4 +115,29 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 	actions = append(actions, defaultActions...)
 
 	return actions
+}
+
+func routineCreateAction(title string, name contract.TreeNodeActionName) contract.TreeNodeAction {
+	return contract.TreeNodeAction{
+		Title:  title,
+		Name:   name,
+		Type:   contract.TreeNodeActionTypeTab,
+		Params: map[string]any{"path": "object"},
+	}
+}
+
+func routineNodeActions(kind string, edit, drop contract.TreeNodeActionName) []contract.TreeNodeAction {
+	return []contract.TreeNodeAction{
+		{
+			Title:  "Edit " + kind,
+			Name:   edit,
+			Type:   contract.TreeNodeActionTypeTab,
+			Params: map[string]any{"path": "object-detail"},
+		},
+		{
+			Title: "Drop " + kind,
+			Name:  drop,
+			Type:  contract.TreeNodeActionTypeAction,
+		},
+	}
 }

@@ -20,6 +20,7 @@ type TableInput struct {
 	Keys        *dto.MysqlTableKeyParams
 	Indexes     *dto.MysqlTableIndexParams
 	ForeignKeys *dto.MysqlTableForeignKeyParams
+	Triggers    *dto.MysqlTableTriggerParams
 }
 
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {
@@ -63,4 +64,12 @@ func foreignKeyRows(input TableInput) []dto.MysqlTableForeignKey {
 	}
 
 	return input.ForeignKeys.Columns
+}
+
+func triggerRows(input TableInput) []dto.MysqlTableTrigger {
+	if input.Triggers == nil {
+		return nil
+	}
+
+	return input.Triggers.Columns
 }

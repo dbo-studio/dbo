@@ -92,6 +92,41 @@ func (r *MySQLRepository) indexOptions(ctx context.Context, nodeID string) []con
 	}
 }
 
+func (r *MySQLRepository) triggerFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "timing", Name: "Timing", Type: contract.FormFieldTypeSelect, Required: true, Options: []contract.FormFieldOption{
+			{Value: "BEFORE", Label: "BEFORE"},
+			{Value: "AFTER", Label: "AFTER"},
+		}},
+		{ID: "event", Name: "Event", Type: contract.FormFieldTypeSelect, Required: true, Options: []contract.FormFieldOption{
+			{Value: "INSERT", Label: "INSERT"},
+			{Value: "UPDATE", Label: "UPDATE"},
+			{Value: "DELETE", Label: "DELETE"},
+		}},
+		{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true},
+	}
+}
+
+func (r *MySQLRepository) routineFields(procedure bool) []contract.FormField {
+	fields := []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "parameters", Name: "Parameters (e.g. IN a INT, OUT b INT)", Type: contract.FormFieldTypeText},
+	}
+
+	if !procedure {
+		fields = append(fields,
+			contract.FormField{ID: "returns", Name: "Returns", Type: contract.FormFieldTypeText, Required: true},
+			contract.FormField{ID: "deterministic", Name: "Deterministic", Type: contract.FormFieldTypeCheckBox},
+		)
+	}
+
+	return append(fields,
+		contract.FormField{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		contract.FormField{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true},
+	)
+}
+
 func (r *MySQLRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},

@@ -84,7 +84,8 @@ func ClassifySQL(sql string) Classification {
 func ClassifyAction(action string) Class {
 	switch action {
 	case "dropDatabase", "dropSchema", "dropTable", "dropView",
-		"dropMaterializedView", "dropIndex", "dropSequence":
+		"dropMaterializedView", "dropIndex", "dropSequence", "dropType",
+		"dropFunction", "dropProcedure":
 		if action == "dropIndex" || action == "dropSequence" {
 			return ClassDDL
 		}
@@ -93,7 +94,10 @@ func ClassifyAction(action string) Class {
 	case "createDatabase", "editDatabase", "createSchema", "editSchema",
 		"createTable", "editTable", "createView", "editView",
 		"createMaterializedView", "editMaterializedView",
-		"createIndex", "editIndex", "createSequence", "editSequence":
+		"createIndex", "editIndex", "createSequence", "editSequence",
+		"createType", "editType", "createFunction", "editFunction",
+		"createProcedure", "editProcedure",
+		"refreshMaterializedView", "refreshMaterializedViewNoData":
 		return ClassDDL
 	default:
 		return ClassUnknown

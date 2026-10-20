@@ -129,6 +129,26 @@ func buildSchema(_ context.Context, r *PostgresRepository, dbName, schemaName st
 			contract.MaterializedViewContainerNodeType,
 			r.ContextMenu(contract.MaterializedViewContainerNodeType),
 		},
+		{
+			"Functions",
+			contract.FunctionContainerNodeType,
+			r.ContextMenu(contract.FunctionContainerNodeType),
+		},
+		{
+			"Procedures",
+			contract.ProcedureContainerNodeType,
+			r.ContextMenu(contract.ProcedureContainerNodeType),
+		},
+		{
+			"Sequences",
+			contract.SequenceContainerNodeType,
+			r.ContextMenu(contract.SequenceContainerNodeType),
+		},
+		{
+			"Types",
+			contract.TypeContainerNodeType,
+			r.ContextMenu(contract.TypeContainerNodeType),
+		},
 	}
 	for _, c := range containers {
 		schemaNode.Children = append(schemaNode.Children, contract.TreeNode{
@@ -225,9 +245,66 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
+	case contract.FunctionContainerNodeType, contract.ProcedureContainerNodeType:
+		procedure := container == contract.ProcedureContainerNodeType
+
+		routines, err := r.routines(ctx, &dbName, &schemaName, procedure)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		nodeType := lo.Ternary(procedure, contract.ProcedureNodeType, contract.FunctionNodeType)
+
+		for _, routine := range routines {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, routine.Name),
+				Name:        routine.Name + "(" + routine.IdentityArgs + ")",
+				Type:        nodeType,
+				Action:      editAction(r.ContextMenu(nodeType)),
+				ContextMenu: r.ContextMenu(nodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.SequenceContainerNodeType:
+		sequences, err := r.sequences(ctx, &dbName, &schemaName, true)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, sequence := range sequences {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, sequence.Name),
+				Name:        sequence.Name,
+				Type:        contract.SequenceNodeType,
+				Action:      editAction(r.ContextMenu(contract.SequenceNodeType)),
+				ContextMenu: r.ContextMenu(contract.SequenceNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.TypeContainerNodeType:
+		enums, err := r.enumTypes(ctx, &dbName, &schemaName, true)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, enum := range enums {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, enum.Name),
+				Name:        enum.Name,
+				Type:        contract.TypeNodeType,
+				Action:      editAction(r.ContextMenu(contract.TypeNodeType)),
+				ContextMenu: r.ContextMenu(contract.TypeNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
 
 	return containerNode, nil
+}
+
+// editAction makes double-click open the node's Edit form (first menu entry).
+func editAction(menu []contract.TreeNodeAction) *contract.TreeNodeAction {
+	return lo.ToPtr(menu[0])
 }

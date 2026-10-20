@@ -43,6 +43,11 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 			return nil, err
 		}
 
+		routineQueries, err := r.handleRoutineCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		tableQueries, t, err := r.handleTableCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
@@ -54,6 +59,7 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
+		queries = append(queries, routineQueries...)
 		queries = append(queries, tableQueries...)
 	}
 

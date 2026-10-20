@@ -4,6 +4,7 @@ import (
 	"context"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 )
 
 func (r *PostgresRepository) databaseFields(ctx context.Context) []contract.FormField {
@@ -34,10 +35,10 @@ func (r *PostgresRepository) tableFields(ctx context.Context, action contract.Tr
 	}
 }
 
-func (r *PostgresRepository) tableColumnFields() []contract.FormField {
+func (r *PostgresRepository) tableColumnFields(ctx context.Context, node contract.DBNode) []contract.FormField {
 	return []contract.FormField{
 		{ID: "column_name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
-		{ID: "data_type", Name: "Data Type", Type: contract.FormFieldTypeSelect, Options: r.dataTypeOptions(), Required: true},
+		{ID: "data_type", Name: "Data Type", Type: contract.FormFieldTypeSelect, Options: r.dataTypeOptions(ctx, node), Required: true},
 		{ID: "not_null", Name: "Not Null", Type: contract.FormFieldTypeCheckBox},
 		{ID: "primary", Name: "Primary", Type: contract.FormFieldTypeCheckBox},
 		{ID: "column_default", Name: "Default", Type: contract.FormFieldTypeText},
@@ -99,6 +100,113 @@ func (r *PostgresRepository) keyFields(ctx context.Context, node contract.DBNode
 	}
 }
 
+func (r *PostgresRepository) indexFields(ctx context.Context, node contract.DBNode) []contract.FormField {
+	methods := []string{"btree", "hash", "gist", "gin", "spgist", "brin"}
+	methodOptions := make([]contract.FormFieldOption, len(methods))
+
+	for i, method := range methods {
+		methodOptions[i] = contract.FormFieldOption{Value: method, Label: method}
+	}
+
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
+		{ID: "method", Name: "Method", Type: contract.FormFieldTypeSelect, Options: methodOptions},
+		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node), Required: true},
+		{ID: "where", Name: "Where", Type: contract.FormFieldTypeText},
+	}
+}
+
+func (r *PostgresRepository) checkFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "expression", Name: "Expression", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+	}
+}
+
+func (r *PostgresRepository) triggerFields(ctx context.Context, node contract.DBNode) []contract.FormField {
+	options := func(values ...string) []contract.FormFieldOption {
+		result := make([]contract.FormFieldOption, len(values))
+		for i, value := range values {
+			result[i] = contract.FormFieldOption{Value: value, Label: value}
+		}
+
+		return result
+	}
+
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "timing", Name: "Timing", Type: contract.FormFieldTypeSelect, Options: options("BEFORE", "AFTER", "INSTEAD OF"), Required: true},
+		{ID: "events", Name: "Events", Type: contract.FormFieldTypeMultiSelect, Options: options("INSERT", "UPDATE", "DELETE", "TRUNCATE"), Required: true},
+		{ID: "orientation", Name: "For each", Type: contract.FormFieldTypeSelect, Options: options("ROW", "STATEMENT")},
+		{ID: "when", Name: "When", Type: contract.FormFieldTypeText},
+		{ID: "function", Name: "Function", Type: contract.FormFieldTypeSelect, Options: r.triggerFunctionOptions(ctx, node), Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+	}
+}
+
+func (r *PostgresRepository) triggerFunctionOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
+	functions, err := r.triggerFunctions(ctx, &node.Database)
+	if err != nil {
+		return []contract.FormFieldOption{}
+	}
+
+	options := make([]contract.FormFieldOption, len(functions))
+	for i, function := range functions {
+		options[i] = contract.FormFieldOption{Value: function, Label: function}
+	}
+
+	return options
+}
+
+// sequenceFields builds the sequence fields. With columnOptions (table tab)
+// ownership is a column select; without (standalone) it is "table.column".
+func (r *PostgresRepository) sequenceFields(columnOptions []contract.FormFieldOption) []contract.FormField {
+	owner := contract.FormField{ID: "owned_by", Name: "Owned by (table.column)", Type: contract.FormFieldTypeText}
+	if columnOptions != nil {
+		owner = contract.FormField{ID: "owned_by", Name: "Owned by column", Type: contract.FormFieldTypeSelect, Options: columnOptions}
+	}
+
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "start_value", Name: "Start", Type: contract.FormFieldTypeText},
+		{ID: "increment_by", Name: "Increment", Type: contract.FormFieldTypeText},
+		{ID: "min_value", Name: "Min value", Type: contract.FormFieldTypeText},
+		{ID: "max_value", Name: "Max value", Type: contract.FormFieldTypeText},
+		{ID: "cache_size", Name: "Cache", Type: contract.FormFieldTypeText},
+		{ID: "cycle", Name: "Cycle", Type: contract.FormFieldTypeCheckBox},
+		owner,
+	}
+}
+
+func (r *PostgresRepository) routineFields(procedure bool) []contract.FormField {
+	fields := []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "language", Name: "Language", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+			{Value: "plpgsql", Label: "plpgsql"},
+			{Value: "sql", Label: "sql"},
+		}},
+		{ID: "parameters", Name: "Parameters (e.g. a integer, b text)", Type: contract.FormFieldTypeText},
+	}
+
+	if !procedure {
+		fields = append(fields, contract.FormField{ID: "returns", Name: "Returns", Type: contract.FormFieldTypeText, Required: true})
+	}
+
+	return append(fields, contract.FormField{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true})
+}
+
+func (r *PostgresRepository) typeFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "values", Name: "Values (comma separated, in order)", Type: contract.FormFieldTypeText, Required: true},
+	}
+}
+
 func (r *PostgresRepository) viewFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
@@ -136,7 +244,24 @@ func (r *PostgresRepository) persistenceOptions(action contract.TreeNodeActionNa
 	}
 }
 
-func (r *PostgresRepository) dataTypeOptions() []contract.FormFieldOption {
+// dataTypeOptions lists built-in types plus the enum types of the node's schema.
+func (r *PostgresRepository) dataTypeOptions(ctx context.Context, node contract.DBNode) []contract.FormFieldOption {
+	options := r.builtinDataTypeOptions()
+
+	enums, err := r.enumTypes(ctx, &node.Database, &node.Schema, true)
+	if err != nil {
+		return options
+	}
+
+	for _, enum := range enums {
+		value := quote.PostgresQualifiedTable(node.Schema, enum.Name)
+		options = append(options, contract.FormFieldOption{Value: value, Label: enum.Name})
+	}
+
+	return options
+}
+
+func (r *PostgresRepository) builtinDataTypeOptions() []contract.FormFieldOption {
 	return []contract.FormFieldOption{
 		{Value: "bigint", Label: "bigint"},
 		{Value: "bigserial", Label: "bigserial"},

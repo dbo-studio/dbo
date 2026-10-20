@@ -105,6 +105,68 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 				},
 			},
 		)
+	case contract.FunctionContainerNodeType:
+		actions = append(actions, routineCreateAction("Create function", contract.CreateFunctionAction))
+	case contract.ProcedureContainerNodeType:
+		actions = append(actions, routineCreateAction("Create procedure", contract.CreateProcedureAction))
+	case contract.FunctionNodeType:
+		actions = append(actions, routineNodeActions("function", contract.EditFunctionAction, contract.DropFunctionAction)...)
+	case contract.ProcedureNodeType:
+		actions = append(actions, routineNodeActions("procedure", contract.EditProcedureAction, contract.DropProcedureAction)...)
+	case contract.SequenceContainerNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Create sequence",
+				Name:  contract.CreateSequenceAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
+			},
+		)
+	case contract.SequenceNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Edit sequence",
+				Name:  contract.EditSequenceAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Drop sequence",
+				Name:  contract.DropSequenceAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+		)
+	case contract.TypeContainerNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Create enum type",
+				Name:  contract.CreateTypeAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object",
+				},
+			},
+		)
+	case contract.TypeNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{
+				Title: "Edit enum type",
+				Name:  contract.EditTypeAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Drop enum type",
+				Name:  contract.DropTypeAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+		)
 	case contract.TableNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
@@ -140,6 +202,24 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 	case contract.MaterializedViewNodeType:
 		actions = append(actions,
 			contract.TreeNodeAction{
+				Title: "Edit materialized view",
+				Name:  contract.EditMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeTab,
+				Params: map[string]any{
+					"path": "object-detail",
+				},
+			},
+			contract.TreeNodeAction{
+				Title: "Refresh materialized view",
+				Name:  contract.RefreshMaterializedViewAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
+				Title: "Refresh materialized view (no data)",
+				Name:  contract.RefreshMaterializedViewNoDataAction,
+				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
 				Title: "Drop materialized view",
 				Name:  contract.DropMaterializedViewAction,
 				Type:  contract.TreeNodeActionTypeAction,
@@ -150,4 +230,29 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 	actions = append(actions, defaultActions...)
 
 	return actions
+}
+
+func routineCreateAction(title string, name contract.TreeNodeActionName) contract.TreeNodeAction {
+	return contract.TreeNodeAction{
+		Title:  title,
+		Name:   name,
+		Type:   contract.TreeNodeActionTypeTab,
+		Params: map[string]any{"path": "object"},
+	}
+}
+
+func routineNodeActions(kind string, edit, drop contract.TreeNodeActionName) []contract.TreeNodeAction {
+	return []contract.TreeNodeAction{
+		{
+			Title:  "Edit " + kind,
+			Name:   edit,
+			Type:   contract.TreeNodeActionTypeTab,
+			Params: map[string]any{"path": "object-detail"},
+		},
+		{
+			Title: "Drop " + kind,
+			Name:  drop,
+			Type:  contract.TreeNodeActionTypeAction,
+		},
+	}
 }

@@ -149,3 +149,107 @@ type PostgresTableKeyData struct {
 	InitiallyDeferred *bool    `json:"initially_deferred"`
 	ExcludeOperator   *string  `json:"exclude_operator"`
 }
+
+type PostgresTableIndexParams struct {
+	Columns []PostgresTableIndex `json:"columns"`
+}
+
+type PostgresTableIndex struct {
+	New     *PostgresTableIndexData `json:"new"`
+	Old     *PostgresTableIndexData `json:"old"`
+	Added   *bool                   `json:"added"`
+	Deleted *bool                   `json:"deleted"`
+}
+
+type PostgresTableIndexData struct {
+	Name    *string  `json:"name"`
+	Comment *string  `json:"comment"`
+	Unique  *bool    `json:"unique"`
+	Method  *string  `json:"method"`
+	Columns []string `json:"columns"`
+	Where   *string  `json:"where"`
+}
+
+type PostgresTypeParams struct {
+	New *PostgresTypeData `json:"new"`
+	Old *PostgresTypeData `json:"old"`
+}
+
+// PostgresTypeData describes an enum type; Values is the ordered, comma
+// separated label list.
+type PostgresTypeData struct {
+	Name    *string `json:"name"`
+	Comment *string `json:"comment"`
+	Values  *string `json:"values"`
+}
+
+type PostgresTableCheckParams struct {
+	Columns []PostgresTableCheck `json:"columns"`
+}
+
+type PostgresTableCheck struct {
+	New     *PostgresTableCheckData `json:"new"`
+	Old     *PostgresTableCheckData `json:"old"`
+	Added   *bool                   `json:"added"`
+	Deleted *bool                   `json:"deleted"`
+}
+
+type PostgresTableCheckData struct {
+	Name       *string `json:"name"`
+	Expression *string `json:"expression"`
+	Comment    *string `json:"comment"`
+}
+
+type PostgresTableTriggerParams struct {
+	Columns []PostgresTableTrigger `json:"columns"`
+}
+
+type PostgresTableTrigger struct {
+	New     *PostgresTableTriggerData `json:"new"`
+	Old     *PostgresTableTriggerData `json:"old"`
+	Added   *bool                     `json:"added"`
+	Deleted *bool                     `json:"deleted"`
+}
+
+// PostgresTableTriggerData.Function is "schema.function"; the function must
+// already exist and return trigger.
+type PostgresTableTriggerData struct {
+	Name        *string  `json:"name"`
+	Comment     *string  `json:"comment"`
+	Timing      *string  `json:"timing"`
+	Events      []string `json:"events"`
+	Orientation *string  `json:"orientation"`
+	When        *string  `json:"when"`
+	Function    *string  `json:"function"`
+}
+
+type PostgresSequenceParams struct {
+	New *PostgresSequenceData `json:"new"`
+	Old *PostgresSequenceData `json:"old"`
+}
+
+type PostgresTableSequenceParams struct {
+	Columns []PostgresTableSequence `json:"columns"`
+}
+
+type PostgresTableSequence struct {
+	New     *PostgresSequenceData `json:"new"`
+	Old     *PostgresSequenceData `json:"old"`
+	Added   *bool                 `json:"added"`
+	Deleted *bool                 `json:"deleted"`
+}
+
+// PostgresSequenceData serves the standalone form and the table tab. OwnedBy
+// is "table.column" in the standalone form and a bare column of the edited
+// table in the table tab.
+type PostgresSequenceData struct {
+	Name      *string `json:"name"`
+	Comment   *string `json:"comment"`
+	Start     *string `json:"start_value"`
+	Increment *string `json:"increment_by"`
+	MinValue  *string `json:"min_value"`
+	MaxValue  *string `json:"max_value"`
+	Cache     *string `json:"cache_size"`
+	Cycle     *bool   `json:"cycle"`
+	OwnedBy   *string `json:"owned_by"`
+}

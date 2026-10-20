@@ -108,8 +108,13 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / varchar length / key edits    |
 | Object Form PG schema    | `pg/object-form-postgres-schema-matview.spec.ts` | serial schema, matview, rename, drop schema          |
+| Object Form PG indexes/checks | `pg/object-form-postgres-indexes-checks.spec.ts` | serial: index create/method change/drop + check add/edit/drop, each reloaded from the catalog |
+| Object Form PG routines/triggers | `pg/object-form-postgres-routines-triggers.spec.ts` | serial: trigger function create/edit/drop, table trigger round-trip, procedure create/drop |
+| Object Form PG sequences/types | `pg/object-form-postgres-sequences-types.spec.ts` | serial: standalone + table-owned sequences, enum create/append/use on column, double-click opens edit |
+| Object Form PG matview edit | `pg/object-form-postgres-matview-edit.spec.ts` | serial: matview comment edit, query edit (drop+recreate), refresh with/without data, drop |
 | Object Form MySQL        | `mysql/object-form-mysql-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial ENGINE/AI, CHANGE length, index drop+recreate / keys     |
+| Object Form MySQL triggers/routines | `mysql/object-form-mysql-triggers-routines.spec.ts` | serial: table trigger add/edit/drop, function and procedure create/edit/drop |
 | Object Form SQLite       | `sqlite/object-form-sqlite-lifecycle.spec.ts` | serial: connect → tables → FK → view → edit → drop      |
 | Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit / column rename copy / keys    |
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
