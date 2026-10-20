@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { PG_CORE_FIELDS as F, PG_CORE_PREVIEW as P, PG_CORE_TABS as T } from '../fixtures/postgresCoreSchema';
-import { ConnectionPage, ObjectFormPage, ObjectTreePage } from '../pages';
+import { ConnectionPage, ObjectFormPage, ObjectTreePage, SqlEditorPage } from '../pages';
 import { API_DDL_TIMEOUT, apiRoute, waitForResponseDuring } from './network';
 import { POSTGRES_LIFECYCLE_FIELDS as LF, POSTGRES_LIFECYCLE_TABS as LT } from '../fixtures/postgresObjectFormLifecycle';
 import { createDatabase, setupPostgresConnection } from './objectFormPostgresLifecycle';
@@ -796,6 +796,297 @@ export async function expectDoubleClickOpensEdit(
   await expect(objectForm.getTab(tabId)).toBeVisible({ timeout: 30000 });
   await objectForm.waitForReady();
   await expect(objectForm.getGeneralField(fieldId).locator('input')).toHaveValue(expectedValue);
+}
+
+// ----------------------------------------------- more trigger / index / sequence cases
+
+export interface TriggerSpec {
+  name: string;
+  timing: 'BEFORE' | 'AFTER';
+  /** In canonical order: INSERT, UPDATE, DELETE, TRUNCATE. */
+  events: string[];
+  orientation: 'ROW' | 'STATEMENT';
+}
+
+/** Add several triggers in one save; rows are appended after the existing ones. */
+export async function addTriggers(page: Page, tableName: string, functionName: string, specs: TriggerSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  for (const spec of specs) {
+    const row = await addRow(objectForm, F.triggerName);
+    await objectForm.fillArrayCell(row, F.triggerName, spec.name);
+    await objectForm.selectArrayCellOption(row, F.triggerTiming, spec.timing);
+    await objectForm.selectMultiSelectOptions(row, F.triggerEvents, spec.events);
+    await objectForm.selectArrayCellOption(row, F.triggerOrientation, spec.orientation);
+    await objectForm.selectArrayCellOption(row, F.triggerFunction, `public.${functionName}`);
+  }
+
+  await objectForm.save();
+  for (const spec of specs) {
+    await objectForm.assertPreviewContains(
+      new RegExp(
+        `CREATE TRIGGER "${spec.name}" ${spec.timing} ${spec.events.join(' OR ')} ON "public"\\."${tableName}" FOR EACH ${spec.orientation}`
+      )
+    );
+  }
+  await objectForm.confirmExecute();
+}
+
+/** Rows come back ordered by trigger name, so `specs` must be sorted by name. */
+export async function expectTriggerRows(page: Page, tableName: string, functionName: string, specs: TriggerSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  for (const [row, spec] of specs.entries()) {
+    await expect(objectForm.getArrayCell(row, F.triggerName).locator('input')).toHaveValue(spec.name);
+    await expect(objectForm.getArrayCell(row, F.triggerTiming)).toContainText(spec.timing);
+    for (const event of ['INSERT', 'UPDATE', 'DELETE', 'TRUNCATE']) {
+      const cell = objectForm.getArrayCell(row, F.triggerEvents);
+      // Check absence too: a mix-up between two events would otherwise pass when both are selected.
+      if (spec.events.includes(event)) {
+        await expect(cell).toContainText(event);
+      } else {
+        await expect(cell).not.toContainText(event);
+      }
+    }
+    await expect(objectForm.getArrayCell(row, F.triggerOrientation)).toContainText(spec.orientation);
+    await expect(objectForm.getArrayCell(row, F.triggerFunction)).toContainText(functionName);
+  }
+}
+
+/** A rename plus comment is applied in place: no DROP TRIGGER. */
+export async function renameTriggerWithComment(
+  page: Page,
+  tableName: string,
+  row: number,
+  oldName: string,
+  newName: string,
+  comment: string
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  await objectForm.fillArrayCell(row, F.triggerName, newName);
+  await objectForm.fillArrayCell(row, F.triggerComment, comment);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ALTER TRIGGER "${oldName}" ON [\\s\\S]*RENAME TO "${newName}"`));
+  await objectForm.assertPreviewContains(new RegExp(`COMMENT ON TRIGGER "${newName}"[\\s\\S]*IS '${comment}'`));
+  await expect(objectForm.previewModal).not.toContainText(/DROP TRIGGER/);
+  await objectForm.confirmExecute();
+}
+
+/** Delete several rows of an array tab in one save. */
+export async function dropRowsOfTab(page: Page, tableName: string, tabId: string, rows: number[], expectedPreview: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(tabId);
+
+  for (const row of rows) {
+    await objectForm.deleteArrayRow(row);
+  }
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(expectedPreview);
+  await objectForm.confirmExecute();
+}
+
+export async function addColumn(page: Page, tableName: string, columnName: string, dataType: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+
+  const row = await addRow(objectForm, F.columnName);
+  await objectForm.fillArrayCell(row, F.columnName, columnName);
+  await objectForm.selectArrayCellOption(row, F.columnType, dataType);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ADD COLUMN "${columnName}"`, 'i'));
+  await objectForm.confirmExecute();
+}
+
+export interface IndexSpec {
+  name: string;
+  method: string;
+  columns: string[];
+  unique?: boolean;
+}
+
+/** Add several indexes in one save. */
+export async function addIndexes(page: Page, tableName: string, specs: IndexSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+
+  for (const spec of specs) {
+    const row = await addRow(objectForm, F.indexName);
+    await objectForm.fillArrayCell(row, F.indexName, spec.name);
+    await objectForm.selectArrayCellOption(row, F.indexMethod, spec.method);
+    await objectForm.selectMultiSelectOptions(row, F.indexColumns, spec.columns);
+    await objectForm.toggleArrayCheckbox(row, F.indexUnique, spec.unique ?? false);
+  }
+
+  await objectForm.save();
+  for (const spec of specs) {
+    const columns = spec.columns.map((column) => `"${column}"`).join(', ');
+    await objectForm.assertPreviewContains(
+      new RegExp(`CREATE ${spec.unique ? 'UNIQUE ' : ''}INDEX "${spec.name}" ON [\\s\\S]*USING ${spec.method} \\(${columns}\\)`)
+    );
+  }
+  await objectForm.confirmExecute();
+}
+
+/** Rows come back ordered by index name, so `specs` must be sorted by name. */
+export async function expectIndexRows(page: Page, tableName: string, specs: IndexSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+
+  for (const [row, spec] of specs.entries()) {
+    await expect(objectForm.getArrayCell(row, F.indexName).locator('input')).toHaveValue(spec.name);
+    await expect(objectForm.getArrayCell(row, F.indexMethod)).toContainText(spec.method);
+    await expect(objectForm.getArrayCell(row, F.indexUnique).locator('input[type="checkbox"]')).toBeChecked({
+      checked: spec.unique ?? false
+    });
+    for (const column of spec.columns) {
+      await expect(objectForm.getArrayCell(row, F.indexColumns)).toContainText(column);
+    }
+  }
+}
+
+/** A rename is applied in place (ALTER INDEX ... RENAME), without recreating the index. */
+export async function renameIndex(page: Page, tableName: string, row: number, oldName: string, newName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.indexes);
+
+  await objectForm.fillArrayCell(row, F.indexName, newName);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ALTER INDEX [\\s\\S]*"${oldName}" RENAME TO "${newName}"`));
+  await expect(objectForm.previewModal).not.toContainText(/DROP INDEX/);
+  await objectForm.confirmExecute();
+}
+
+export async function createSequenceWithOptions(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  sequenceName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = await openCreateForm(page, names, 'Sequences', 'Create sequence', T.sequence);
+
+  await objectForm.fillGeneralField(F.sequenceName, sequenceName);
+  await objectForm.fillGeneralField(F.sequenceStart, '1');
+  await objectForm.fillGeneralField(F.sequenceIncrement, '2');
+  await objectForm.fillGeneralField(F.sequenceMin, '1');
+  await objectForm.fillGeneralField(F.sequenceMax, '1000');
+  await objectForm.fillGeneralField(F.sequenceCache, '20');
+  await objectForm.toggleGeneralCheckbox(F.sequenceCycle, true);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/INCREMENT BY 2 MINVALUE 1 MAXVALUE 1000 START WITH 1 CACHE 20 CYCLE/);
+  await objectForm.confirmExecute();
+
+  await expandPublicContainer(page, names, 'Sequences');
+  await expect(tree.getTreeNode(sequenceName)).toBeVisible({ timeout: 15000 });
+}
+
+export async function expectSequenceOptions(
+  page: Page,
+  sequenceName: string,
+  expected: { start: string; increment: string; min: string; max: string; cache: string; cycle: boolean }
+): Promise<ObjectFormPage> {
+  const objectForm = await openEditForm(page, sequenceName, 'Edit sequence', T.sequence);
+
+  await expect(objectForm.getGeneralField(F.sequenceStart).locator('input')).toHaveValue(expected.start);
+  await expect(objectForm.getGeneralField(F.sequenceIncrement).locator('input')).toHaveValue(expected.increment);
+  await expect(objectForm.getGeneralField(F.sequenceMin).locator('input')).toHaveValue(expected.min);
+  await expect(objectForm.getGeneralField(F.sequenceMax).locator('input')).toHaveValue(expected.max);
+  await expect(objectForm.getGeneralField(F.sequenceCache).locator('input')).toHaveValue(expected.cache);
+  await expect(objectForm.getGeneralField(F.sequenceCycle).locator('input[type="checkbox"]')).toBeChecked({
+    checked: expected.cycle
+  });
+
+  return objectForm;
+}
+
+export async function editSequenceOptions(page: Page, sequenceName: string): Promise<void> {
+  const objectForm = await openEditForm(page, sequenceName, 'Edit sequence', T.sequence);
+
+  await objectForm.fillGeneralField(F.sequenceMax, '2000');
+  await objectForm.fillGeneralField(F.sequenceCache, '50');
+  await objectForm.toggleGeneralCheckbox(F.sequenceCycle, false);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/ALTER SEQUENCE[\s\S]*MAXVALUE 2000 CACHE 50 NO CYCLE/);
+  await objectForm.confirmExecute();
+}
+
+/** Set (or, with `owner` empty, clear) the standalone sequence's OWNED BY. */
+export async function setSequenceOwner(page: Page, sequenceName: string, owner: string, preview: RegExp): Promise<void> {
+  const objectForm = await openEditForm(page, sequenceName, 'Edit sequence', T.sequence);
+
+  await objectForm.fillGeneralField(F.sequenceOwnedBy, owner);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(preview);
+  await objectForm.confirmExecute();
+}
+
+export async function expectSequenceOwner(page: Page, sequenceName: string, owner: string): Promise<void> {
+  const objectForm = await openEditForm(page, sequenceName, 'Edit sequence', T.sequence);
+
+  await expect(objectForm.getGeneralField(F.sequenceOwnedBy).locator('input')).toHaveValue(owner);
+}
+
+// ------------------------------------------------------- matview owner / rename
+
+/** Roles are cluster-wide, so run them in `default` (the only database the editor picker lists). */
+export async function runSql(page: Page, sql: string): Promise<void> {
+  const sqlEditor = new SqlEditorPage(page);
+
+  await sqlEditor.open();
+  await sqlEditor.selectContext('default', 'public');
+  await sqlEditor.typeAndRun(sql);
+  await sqlEditor.expectQuerySucceeded(sql.slice(0, 12));
+}
+
+async function openEditMatView(page: Page, matViewName: string): Promise<ObjectFormPage> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = new ObjectFormPage(page);
+
+  await objectForm.closeAllWorkspaceTabs();
+  await tree.runTreeAction(matViewName, 'Edit materialized view');
+  await objectForm.ensureWorkspaceTab('Edit materialized view');
+  await expect(objectForm.getTab(T.materializedView)).toBeVisible({ timeout: 30000 });
+  await objectForm.waitForReady();
+
+  return objectForm;
+}
+
+export async function changeMatViewOwner(page: Page, matViewName: string, role: string): Promise<void> {
+  const objectForm = await openEditMatView(page, matViewName);
+
+  await objectForm.fillGeneralField(F.matViewOwner, role);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ALTER MATERIALIZED VIEW [\\s\\S]*"${matViewName}" OWNER TO "${role}"`));
+  await expect(objectForm.previewModal).not.toContainText(/DROP MATERIALIZED VIEW/);
+  await objectForm.confirmExecute();
+}
+
+export async function expectMatViewOwner(page: Page, matViewName: string, role: string): Promise<void> {
+  const objectForm = await openEditMatView(page, matViewName);
+
+  await expect(objectForm.getGeneralField(F.matViewOwner).locator('input')).toHaveValue(role);
+}
+
+export async function renameMatView(page: Page, matViewName: string, newName: string): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = await openEditMatView(page, matViewName);
+
+  await objectForm.fillGeneralField(F.matViewName, newName);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ALTER MATERIALIZED VIEW [\\s\\S]*"${matViewName}" RENAME TO "${newName}"`));
+  await expect(objectForm.previewModal).not.toContainText(/DROP MATERIALIZED VIEW/);
+  await objectForm.confirmExecute();
+
+  await tree.waitForTreeLoad();
+  await expect(tree.getTreeNode(newName)).toBeVisible({ timeout: 15000 });
 }
 
 // ---------------------------------------------------------------- cleanup

@@ -9,6 +9,7 @@ import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addTrigger,
   addTriggerRejected,
+  addTriggers,
   cleanupPgCoreSchema,
   changeFunctionSignature,
   createFunctionRejected,
@@ -17,11 +18,15 @@ import {
   createTriggerFunction,
   dropFirstRowOfTab,
   dropRoutine,
+  dropRowsOfTab,
   editFunctionBody,
   editProcedureBody,
   expectFunctionSignature,
   expectTabEmpty,
   expectTriggerLoaded,
+  expectTriggerRows,
+  renameTriggerWithComment,
+  type TriggerSpec,
   setupPgCoreSchema,
 } from "../../helpers/objectFormPostgresCoreSchema";
 import { safeDeleteConnection } from "../../helpers/safeCleanup";
@@ -108,6 +113,45 @@ test.describe("Object Form PostgreSQL routines and triggers", () => {
   test("Drop trigger", async () => {
     await test.step("delete the trigger row", async () => {
       await dropFirstRowOfTab(page, names.usersTable, T.triggers, P.dropTrigger);
+    });
+    await test.step("reopen: no triggers left", async () => {
+      await expectTabEmpty(page, names.usersTable, T.triggers, "name");
+    });
+  });
+
+  test("Trigger timings, events and orientations round-trip", async () => {
+    // Sorted by name: that is the order the catalog returns them in.
+    const specs: TriggerSpec[] = [
+      { name: `${names.triggerName}_a`, timing: "AFTER", events: ["INSERT", "UPDATE", "DELETE"], orientation: "STATEMENT" },
+      { name: `${names.triggerName}_b`, timing: "AFTER", events: ["TRUNCATE"], orientation: "STATEMENT" },
+      { name: `${names.triggerName}_c`, timing: "BEFORE", events: ["UPDATE"], orientation: "ROW" },
+      { name: `${names.triggerName}_d`, timing: "BEFORE", events: ["DELETE"], orientation: "ROW" },
+    ];
+
+    await test.step("add AFTER multi-event, AFTER TRUNCATE, BEFORE UPDATE and BEFORE DELETE triggers", async () => {
+      await addTriggers(page, names.usersTable, names.triggerFunction, specs);
+    });
+    await test.step("reopen: timing, every event and orientation are loaded", async () => {
+      await expectTriggerRows(page, names.usersTable, names.triggerFunction, specs);
+    });
+  });
+
+  test("Rename and comment a trigger in place", async () => {
+    const renamed = `${names.triggerName}_a_renamed`;
+
+    await test.step("rename + comment: no DROP TRIGGER in the preview", async () => {
+      await renameTriggerWithComment(page, names.usersTable, 0, `${names.triggerName}_a`, renamed, "audit trigger");
+    });
+    await test.step("reopen: new name and comment are loaded", async () => {
+      await expectTriggerRows(page, names.usersTable, names.triggerFunction, [
+        { name: renamed, timing: "AFTER", events: ["INSERT", "UPDATE", "DELETE"], orientation: "STATEMENT" },
+      ]);
+    });
+  });
+
+  test("Drop all triggers at once", async () => {
+    await test.step("delete the four trigger rows", async () => {
+      await dropRowsOfTab(page, names.usersTable, T.triggers, [0, 1, 2, 3], P.dropTrigger);
     });
     await test.step("reopen: no triggers left", async () => {
       await expectTabEmpty(page, names.usersTable, T.triggers, "name");

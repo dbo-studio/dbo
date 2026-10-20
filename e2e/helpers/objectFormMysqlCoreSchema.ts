@@ -148,6 +148,82 @@ export async function expectNoTriggers(page: Page, tableName: string): Promise<v
   await expect(objectForm.getArrayCell(0, F.triggerName)).toBeHidden();
 }
 
+export interface MysqlTriggerSpec {
+  name: string;
+  timing: 'BEFORE' | 'AFTER';
+  event: 'INSERT' | 'UPDATE' | 'DELETE';
+  body: string;
+}
+
+/** Add several triggers in one save; rows are appended after the existing ones. */
+export async function addTriggers(page: Page, tableName: string, specs: MysqlTriggerSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  for (const spec of specs) {
+    const row = await objectForm.addArrayRow(F.triggerName);
+    await objectForm.fillArrayCell(row, F.triggerName, spec.name);
+    await objectForm.selectArrayCellOption(row, F.triggerTiming, spec.timing);
+    await objectForm.selectArrayCellOption(row, F.triggerEvent, spec.event);
+    await objectForm.fillArrayQueryCell(row, F.triggerBody, spec.body);
+  }
+
+  await objectForm.save();
+  for (const spec of specs) {
+    await objectForm.assertPreviewContains(
+      new RegExp(`CREATE TRIGGER [\\s\\S]*\`${spec.name}\` ${spec.timing} ${spec.event} ON [\\s\\S]*FOR EACH ROW ${spec.body}`)
+    );
+  }
+  await objectForm.confirmExecute();
+}
+
+/** Rows come back ordered by trigger name, so `specs` must be sorted by name. */
+export async function expectTriggerRows(page: Page, tableName: string, specs: MysqlTriggerSpec[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  for (const [row, spec] of specs.entries()) {
+    await expect(objectForm.getArrayCell(row, F.triggerName).locator('input')).toHaveValue(spec.name);
+    await expect(objectForm.getArrayCell(row, F.triggerTiming)).toContainText(spec.timing);
+    await expect(objectForm.getArrayCell(row, F.triggerEvent)).toContainText(spec.event);
+    await expect(objectForm.getArrayCell(row, F.triggerBody)).toContainText(spec.body);
+  }
+}
+
+/** Change timing and event of one row. MySQL has no ALTER TRIGGER: the plan is DROP + CREATE. */
+export async function retargetTrigger(
+  page: Page,
+  tableName: string,
+  row: number,
+  name: string,
+  next: { timing: 'BEFORE' | 'AFTER'; event: 'INSERT' | 'UPDATE' | 'DELETE' }
+): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  await objectForm.selectArrayCellOption(row, F.triggerTiming, next.timing);
+  await objectForm.selectArrayCellOption(row, F.triggerEvent, next.event);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`DROP TRIGGER [\\s\\S]*\`${name}\``));
+  await objectForm.assertPreviewContains(new RegExp(`CREATE TRIGGER [\\s\\S]*\`${name}\` ${next.timing} ${next.event} ON`));
+  await objectForm.confirmExecute();
+}
+
+/** Delete several trigger rows in one save. */
+export async function dropTriggerRows(page: Page, tableName: string, rows: number[]): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  for (const row of rows) {
+    await objectForm.deleteArrayRow(row);
+  }
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.dropTrigger);
+  await objectForm.confirmExecute();
+}
+
 // --------------------------------------------------------------- routines
 
 async function openCreateRoutine(

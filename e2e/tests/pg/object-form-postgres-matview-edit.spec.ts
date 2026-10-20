@@ -3,11 +3,15 @@ import { postgresCoreSchemaNames } from "../../fixtures/postgresCoreSchema";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   cleanupPgCoreSchema,
+  changeMatViewOwner,
   createMatView,
   dropMatView,
   editMatViewComment,
   editMatViewQuery,
   expectMatViewComment,
+  expectMatViewOwner,
+  renameMatView,
+  runSql,
   refreshMatView,
   setupPgCoreSchema,
 } from "../../helpers/objectFormPostgresCoreSchema";
@@ -68,6 +72,7 @@ test.describe("Object Form PostgreSQL materialized view edit and refresh", () =>
     });
   });
 
+  // After refresh: the new owner role cannot read the base table, so it could not refresh.
   test("Refresh with and without data", async () => {
     await test.step("REFRESH ... WITH DATA", async () => {
       await refreshMatView(page, names.matViewName, "Refresh materialized view");
@@ -80,8 +85,29 @@ test.describe("Object Form PostgreSQL materialized view edit and refresh", () =>
     });
   });
 
+  test("Rename alters in place", async () => {
+    await renameMatView(page, names.matViewName, names.renamedMatView);
+  });
+
+  // After refresh and rename: the new owner role cannot read the base table, so it could not refresh.
+  test("Change owner alters in place", async () => {
+    await test.step("create a role (cluster-wide; dropped in the last step)", async () => {
+      await runSql(page, `CREATE ROLE ${names.roleName}`);
+    });
+    await test.step("set owner: ALTER ... OWNER TO, no recreate", async () => {
+      await changeMatViewOwner(page, names.renamedMatView, names.roleName);
+    });
+    await test.step("reopen: owner is loaded", async () => {
+      await expectMatViewOwner(page, names.renamedMatView, names.roleName);
+    });
+  });
+
   test("Drop materialized view via tree", async () => {
-    await dropMatView(page, names.matViewName);
+    await dropMatView(page, names.renamedMatView);
+  });
+
+  test("Drop the role created for the owner test", async () => {
+    await runSql(page, `DROP ROLE ${names.roleName}`);
   });
 
   test("Cleanup — drop database and connection", async () => {

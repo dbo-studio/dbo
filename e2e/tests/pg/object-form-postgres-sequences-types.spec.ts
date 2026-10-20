@@ -14,6 +14,7 @@ import {
   createEnumType,
   createSequence,
   createSequenceRejected,
+  createSequenceWithOptions,
   dropEnumType,
   dropColumnByName,
   dropEnumTypeInUse,
@@ -21,9 +22,13 @@ import {
   dropSequence,
   editEnumValuesRejected,
   editSequenceIncrement,
+  editSequenceOptions,
   expectDoubleClickOpensEdit,
   expectEnumValues,
   expectSequenceIncrement,
+  expectSequenceOptions,
+  expectSequenceOwner,
+  setSequenceOwner,
   expectTabEmpty,
   expectTableSequenceLoaded,
   setupPgCoreSchema,
@@ -87,6 +92,54 @@ test.describe("Object Form PostgreSQL sequences and enum types", () => {
 
   test("Drop standalone sequence via tree", async () => {
     await dropSequence(page, names.sequenceName);
+  });
+
+  test("Sequence min, max, cache and cycle round-trip", async () => {
+    await test.step("create with increment 2, min 1, max 1000, cache 20, cycle", async () => {
+      await createSequenceWithOptions(page, names, names.optionsSequence);
+    });
+    await test.step("reopen: every option is loaded", async () => {
+      await expectSequenceOptions(page, names.optionsSequence, {
+        start: "1", increment: "2", min: "1", max: "1000", cache: "20", cycle: true,
+      });
+    });
+    await test.step("edit max, cache and turn cycle off", async () => {
+      await editSequenceOptions(page, names.optionsSequence);
+    });
+    await test.step("reopen: edited options are loaded, others kept", async () => {
+      await expectSequenceOptions(page, names.optionsSequence, {
+        start: "1", increment: "2", min: "1", max: "2000", cache: "50", cycle: false,
+      });
+    });
+    await test.step("drop via tree", async () => {
+      await dropSequence(page, names.optionsSequence);
+    });
+  });
+
+  test("Standalone sequence ownership can be set and cleared", async () => {
+    await test.step("create a plain sequence", async () => {
+      await createSequence(page, names, names.ownedSequence);
+    });
+    await test.step("set OWNED BY users.id", async () => {
+      await setSequenceOwner(
+        page,
+        names.ownedSequence,
+        `${names.usersTable}.id`,
+        new RegExp(`OWNED BY "public"\\."${names.usersTable}"\\."id"`),
+      );
+    });
+    await test.step("reopen: owner is loaded as table.column", async () => {
+      await expectSequenceOwner(page, names.ownedSequence, `${names.usersTable}.id`);
+    });
+    await test.step("clear the owner", async () => {
+      await setSequenceOwner(page, names.ownedSequence, "", /OWNED BY NONE/);
+    });
+    await test.step("reopen: no owner", async () => {
+      await expectSequenceOwner(page, names.ownedSequence, "");
+    });
+    await test.step("drop via tree", async () => {
+      await dropSequence(page, names.ownedSequence);
+    });
   });
 
   test("Add table-owned sequence from the table design page", async () => {

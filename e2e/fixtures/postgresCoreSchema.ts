@@ -25,10 +25,15 @@ export const PG_CORE_FIELDS = {
   triggerEvents: 'events',
   triggerOrientation: 'orientation',
   triggerFunction: 'function',
+  triggerComment: 'comment',
   triggerWhen: 'when',
   sequenceName: 'name',
   sequenceStart: 'start_value',
   sequenceIncrement: 'increment_by',
+  sequenceMin: 'min_value',
+  sequenceMax: 'max_value',
+  sequenceCache: 'cache_size',
+  sequenceCycle: 'cycle',
   sequenceOwnedBy: 'owned_by',
   typeName: 'name',
   typeValues: 'values',
@@ -40,6 +45,7 @@ export const PG_CORE_FIELDS = {
   columnType: 'data_type',
   matViewName: 'name',
   matViewComment: 'comment',
+  matViewOwner: 'rolname',
   matViewQuery: 'query'
 } as const;
 
@@ -76,6 +82,10 @@ export function postgresCoreSchemaNames(suffix: string): {
   checkName: string;
   triggerFunction: string;
   signatureFunction: string;
+  optionsSequence: string;
+  ownedSequence: string;
+  roleName: string;
+  renamedMatView: string;
   triggerName: string;
   procedureName: string;
   sequenceName: string;
@@ -91,6 +101,10 @@ export function postgresCoreSchemaNames(suffix: string): {
     checkName: `ck_email_${suffix}`,
     triggerFunction: `trg_fn_${suffix}`,
     signatureFunction: `sig_fn_${suffix}`,
+    optionsSequence: `seq_opts_${suffix}`,
+    ownedSequence: `seq_own_${suffix}`,
+    roleName: `e2e_role_${suffix}`,
+    renamedMatView: `mv_renamed_${suffix}`,
     triggerName: `trg_${suffix}`,
     procedureName: `proc_${suffix}`,
     sequenceName: `seq_${suffix}`,

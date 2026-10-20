@@ -9,16 +9,22 @@ import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addCheck,
   addCheckRejected,
+  addColumn,
   addIndex,
+  addIndexes,
   addIndexRejected,
   changeIndexMethod,
   cleanupPgCoreSchema,
   dropFirstRowOfTab,
+  dropRowsOfTab,
   editCheckExpression,
   expectCheckLoaded,
   expectIndexLoaded,
+  expectIndexRows,
   expectIndexWhereLoaded,
   expectTabEmpty,
+  renameIndex,
+  type IndexSpec,
   setupPgCoreSchema,
 } from "../../helpers/objectFormPostgresCoreSchema";
 import { safeDeleteConnection } from "../../helpers/safeCleanup";
@@ -153,6 +159,43 @@ test.describe("Object Form PostgreSQL indexes and checks", () => {
     });
     await test.step("reopen: no checks left", async () => {
       await expectTabEmpty(page, names.usersTable, T.checks, "name");
+    });
+  });
+
+  test("GIN, GiST, BRIN and multi-column unique indexes round-trip", async () => {
+    // Sorted by name: that is the order the catalog returns them in.
+    const specs: IndexSpec[] = [
+      { name: `${names.indexName}_a_gin`, method: "gin", columns: ["doc"] },
+      { name: `${names.indexName}_b_gist`, method: "gist", columns: ["doc"] },
+      { name: `${names.indexName}_c_brin`, method: "brin", columns: ["email"] },
+      { name: `${names.indexName}_d_multi`, method: "btree", columns: ["id", "email"], unique: true },
+    ];
+
+    await test.step("add a tsvector column for GIN and GiST", async () => {
+      await addColumn(page, names.usersTable, "doc", "tsvector");
+    });
+    await test.step("add the four indexes in one save", async () => {
+      await addIndexes(page, names.usersTable, specs);
+    });
+    await test.step("reopen: method, columns and uniqueness are loaded", async () => {
+      await expectIndexRows(page, names.usersTable, specs);
+    });
+    await test.step("rename the BRIN index in place (no recreate)", async () => {
+      await renameIndex(page, names.usersTable, 2, `${names.indexName}_c_brin`, `${names.indexName}_c_brin2`);
+    });
+    await test.step("reopen: renamed index keeps its method", async () => {
+      await expectIndexRows(page, names.usersTable, [
+        specs[0],
+        specs[1],
+        { ...specs[2], name: `${names.indexName}_c_brin2` },
+        specs[3],
+      ]);
+    });
+    await test.step("drop all four", async () => {
+      await dropRowsOfTab(page, names.usersTable, T.indexes, [0, 1, 2, 3], P.dropIndex);
+    });
+    await test.step("reopen: no indexes left", async () => {
+      await expectTabEmpty(page, names.usersTable, T.indexes, "name");
     });
   });
 
