@@ -2,7 +2,7 @@ import {
   ResizableModalWrapperStyled,
   ResizeHandle
 } from '@/components/base/Modal/ResizableModal/ResizableModal.styled.ts';
-import { useScopedSelectAll } from '@/hooks';
+import { useModalEscapeGuard, useScopedSelectAll } from '@/hooks';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
@@ -14,6 +14,7 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
   const theme = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, open);
+  useModalEscapeGuard(open);
   const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);

@@ -139,6 +139,8 @@
   "platform": "Platform",
   "platform_version": "Platform Version",
   "format": "Format",
+  "language": "Language",
+  "auto_detect": "Auto detect",
   "continue_on_error": "Continue on error",
   "skip_errors": "Skip errors",
   "max_errors_before_stopping": "Max errors before stopping",

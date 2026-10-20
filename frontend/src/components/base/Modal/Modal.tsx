@@ -1,4 +1,4 @@
-import { useScopedSelectAll } from '@/hooks';
+import { useModalEscapeGuard, useScopedSelectAll } from '@/hooks';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useRef } from 'react';
 import { ModalStyled, ModalWrapperStyled } from './Modal.styled';
@@ -16,6 +16,7 @@ export default function Modal({
   const theme = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, open);
+  useModalEscapeGuard(open);
 
   return (
     <ModalStyled

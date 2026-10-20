@@ -1,5 +1,5 @@
 import { ConfirmModalStyled } from '@/components/base/Modal/ConfirmModal/ConfirmModal.styled.ts';
-import { useScopedSelectAll } from '@/hooks';
+import { useModalEscapeGuard, useScopedSelectAll } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
@@ -20,6 +20,7 @@ export default function ConfirmModal(): JSX.Element {
   const theme = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, isOpen);
+  useModalEscapeGuard(isOpen);
 
   // Destructive and cautionary confirmations use the semantic button colors; everything else is the primary action.
   const confirmColor = mode === 'danger' ? 'error' : mode === 'warning' ? 'warning' : 'primary';

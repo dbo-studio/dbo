@@ -9,6 +9,7 @@ export const ModalWrapperStyled = styled(Box)<{ padding?: string }>(({ theme, pa
   maxWidth: 'calc(100vw - 32px)',
   maxHeight: '90dvh',
   borderRadius: variables.radius.medium,
+  border: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.default,
   position: 'absolute',
   top: '50%',
