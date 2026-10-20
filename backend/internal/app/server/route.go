@@ -63,6 +63,7 @@ func (r *Server) routing() {
 	aiProvider := ai.Group("providers")
 	aiProvider.Get("/", r.handlers.AiProvider.Providers)
 	aiProvider.Patch("/:id", r.handlers.AiProvider.Update)
+	aiProvider.Post("/:id/models", r.handlers.AiProvider.Models)
 
 	aiChat := ai.Group("chats")
 	aiChat.Get("/", r.handlers.AiChat.Chats)

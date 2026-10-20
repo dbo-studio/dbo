@@ -19,15 +19,52 @@ export class FakeLlm {
   /** When set, the answer streams word by word with this pause between words, instead of "ok". */
   reply: { text: string; wordDelayMs: number; startDelayMs?: number } | null =
     null;
+  /** Model ids GET /models lists. */
+  models = ["fake-model", "fake-model-mini"];
+  /** When set, requests without this bearer key get 401, like a provider that rejects a wrong key. */
+  requiredKey: string | null = null;
   private server: Server | null = null;
 
   async start(): Promise<string> {
     this.server = createServer((req, res) => {
       const chunks: Buffer[] = [];
       req.on("data", (chunk: Buffer) => chunks.push(chunk));
-      req.on("end", () =>
-        this.handle(Buffer.concat(chunks).toString("utf8"), res),
-      );
+      req.on("end", () => {
+        if (
+          this.requiredKey &&
+          req.headers.authorization !== `Bearer ${this.requiredKey}`
+        ) {
+          res.writeHead(401, { "content-type": "application/json" });
+          res.end(
+            JSON.stringify({
+              error: {
+                message: "Incorrect API key provided",
+                type: "invalid_request_error",
+              },
+            }),
+          );
+          return;
+        }
+        if (
+          req.method === "GET" &&
+          req.url?.split("?")[0].endsWith("/models")
+        ) {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(
+            JSON.stringify({
+              object: "list",
+              data: this.models.map((id) => ({
+                id,
+                object: "model",
+                created: 1,
+                owned_by: "fake",
+              })),
+            }),
+          );
+          return;
+        }
+        this.handle(Buffer.concat(chunks).toString("utf8"), res);
+      });
     });
     await new Promise<void>((resolve) =>
       this.server?.listen(0, "127.0.0.1", resolve),
