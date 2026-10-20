@@ -3,6 +3,7 @@ import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box, Typography } from '@mui/material';
 import { useEffect, useRef } from 'react';
+import AiAuditPanel from './AiAuditPanel/AiAuditPanel';
 import AiProvidersPanel from './AiProvidersPanel/AiProvidersPanel';
 import McpPanel from './McpPanel/McpPanel';
 import type { AiPanelProps } from '../types';
@@ -28,6 +29,14 @@ export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
             {locales.ai_providers_heading}
           </Typography>
           <AiProvidersPanel />
+        </section>
+      ) : null}
+      {canAi ? (
+        <section aria-label={locales.ai_audit_heading}>
+          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+            {locales.ai_audit_heading}
+          </Typography>
+          <AiAuditPanel />
         </section>
       ) : null}
       {canMcp ? (

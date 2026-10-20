@@ -13,6 +13,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
@@ -34,28 +35,36 @@ type IAiChangesetService interface {
 	Apply(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetApplyRequest) (*dto.AiChangesetResponse, error)
 	// Describe tells the agent how the user reviewed its earlier proposals.
 	Describe(ctx context.Context, chatID uint) (string, error)
+	// Audit lists the caller's apply attempts on a connection, newest first.
+	Audit(ctx context.Context, req *dto.AiAuditListRequest) ([]dto.AiAuditEntryResponse, error)
 }
 
 var _ IAiChangesetService = (*IAiChangesetServiceImpl)(nil)
 
 type IAiChangesetServiceImpl struct {
 	aiChangesetRepo repository.IAiChangesetRepo
+	aiAuditRepo     repository.IAiAuditRepo
 	aiChatRepo      repository.IAiChatRepo
 	connectionRepo  repository.IConnectionRepo
 	schemaService   serviceSchema.ISchemaService
+	logger          logger.Logger
 }
 
 func NewAiChangesetService(
 	aiChangesetRepo repository.IAiChangesetRepo,
+	aiAuditRepo repository.IAiAuditRepo,
 	aiChatRepo repository.IAiChatRepo,
 	connectionRepo repository.IConnectionRepo,
 	schemaService serviceSchema.ISchemaService,
+	logger logger.Logger,
 ) IAiChangesetService {
 	return &IAiChangesetServiceImpl{
 		aiChangesetRepo: aiChangesetRepo,
+		aiAuditRepo:     aiAuditRepo,
 		aiChatRepo:      aiChatRepo,
 		connectionRepo:  connectionRepo,
 		schemaService:   schemaService,
+		logger:          logger,
 	}
 }
 
@@ -370,8 +379,13 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 
 	req.Confirmed = apply.Confirmed
 
+	// Read the SQL before it runs: the audit entry shows what was attempted even when the apply fails.
+	statements, _ := s.schemaService.PreviewChange(ctx, req)
+
 	result, applyErr := s.schemaService.ApplyChange(ctx, req)
 	if result == nil {
+		s.audit(ctx, changeset, open, statements, nil, applyErr)
+
 		return nil, applyErr
 	}
 
@@ -391,7 +405,71 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 		return nil, apperror.InternalServerError(err)
 	}
 
+	s.audit(ctx, changeset, open, statements, result, applyErr)
+
 	return s.response(ctx, changeset)
+}
+
+// audit logs an apply attempt. A failing log must not turn an applied change
+// into an error, so it is reported to the server log only.
+func (s IAiChangesetServiceImpl) audit(
+	ctx context.Context,
+	changeset *model.AiChangeset,
+	open []*model.AiChangesetOp,
+	statements []string,
+	result *serviceSchema.ChangeResult,
+	applyErr error,
+) {
+	entry := &model.AiAuditEntry{
+		ConnectionID: changeset.ConnectionID,
+		ChatID:       changeset.ChatID,
+		ChangesetID:  changeset.ID,
+		SQL:          strings.Join(statements, ";\n"),
+		Status:       model.AiAuditFailed,
+	}
+
+	if ops, err := decodeOps(open); err == nil {
+		entry.Summary = strings.Join(lo.Map(ops, func(op dto.SchemaChangeOp, _ int) string { return opLabel(op) }), "; ")
+	}
+
+	if applyErr != nil {
+		entry.Error = applyErr.Error()
+	}
+
+	if result != nil && len(result.Applied) > 0 {
+		entry.Status = model.AiAuditApplied
+		if len(result.Failed) > 0 {
+			entry.Status = model.AiAuditPartial
+		}
+	}
+
+	if err := s.aiAuditRepo.Create(context.WithoutCancel(ctx), entry); err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to write audit entry: %v", err))
+	}
+}
+
+func (s IAiChangesetServiceImpl) Audit(ctx context.Context, req *dto.AiAuditListRequest) ([]dto.AiAuditEntryResponse, error) {
+	if _, err := s.connectionRepo.Find(ctx, req.ConnectionID); err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	entries, err := s.aiAuditRepo.List(ctx, req)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return lo.Map(entries, func(entry model.AiAuditEntry, _ int) dto.AiAuditEntryResponse {
+		return dto.AiAuditEntryResponse{
+			ID:          entry.ID,
+			ChatID:      entry.ChatID,
+			ChangesetID: entry.ChangesetID,
+			Summary:     entry.Summary,
+			SQL:         entry.SQL,
+			Status:      entry.Status,
+			Error:       entry.Error,
+			CreatedAt:   lo.FromPtr(entry.CreatedAt),
+		}
+	}), nil
 }
 
 func (s IAiChangesetServiceImpl) Describe(ctx context.Context, chatID uint) (string, error) {

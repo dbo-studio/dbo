@@ -77,7 +77,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		deps.Logger,
 	)
 	schemaService := serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache)
-	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService)
+	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiAuditRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService, deps.Logger)
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
 	return &Service{

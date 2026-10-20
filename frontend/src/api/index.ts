@@ -1,5 +1,6 @@
 import * as adminUsers from './adminUsers';
 import * as ai from './ai';
+import * as aiAudit from './aiAudit';
 import * as aiChat from './aiChat';
 import * as aiProvider from './aiProvider';
 import * as auth from './auth';
@@ -28,6 +29,7 @@ const api = {
   job,
   ai,
   aiProvider,
+  aiAudit,
   aiChat,
   mcp,
   schema,

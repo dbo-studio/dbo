@@ -31,6 +31,25 @@ func (h AiChangesetHandler) Changesets(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(items).Send(c)
 }
 
+func (h AiChangesetHandler) Audit(c fiber.Ctx) error {
+	req := new(dto.AiAuditListRequest)
+	if err := c.Bind().Query(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	items, err := h.aiChangesetService.Audit(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(items).Send(c)
+}
+
 func (h AiChangesetHandler) Review(c fiber.Ctx) error {
 	req := new(dto.AiChangesetReviewRequest)
 	if err := c.Bind().Body(req); err != nil {
