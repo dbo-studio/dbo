@@ -6,3 +6,14 @@ export type UpdateProviderRequestType = {
   timeout?: number;
   models?: string[];
 };
+
+export type ProviderModelsRequestType = {
+  url?: string;
+  apiKey?: string;
+  timeout?: number;
+};
+
+export type ProviderModelsResponseType = {
+  models: string[];
+  error?: string;
+};

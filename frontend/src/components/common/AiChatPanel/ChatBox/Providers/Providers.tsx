@@ -1,5 +1,6 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { isProviderReady } from '@/core/ai/aiStatus';
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
@@ -58,7 +59,7 @@ export default function Providers(): JSX.Element {
     openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' });
   };
 
-  const selectable = (providers ?? []).filter((item) => item.models.length > 0);
+  const selectable = (providers ?? []).filter((item) => isProviderReady(item) && item.models.length > 0);
 
   return (
     <ProvidersStyled>
