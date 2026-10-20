@@ -1,15 +1,19 @@
 import api from '@/api';
 import type { BackupArtifactType, BackupScheduleType } from '@/api/backup/types';
 import Modal from '@/components/base/Modal/Modal';
+import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useBackupModalStore } from '@/store/backupModal/backup.store';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import type { ConnectionType } from '@/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Alert, Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
+import RestoreConfirm from '../BackupModal/RestoreConfirm';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import { describeCadence, formatDate, formatSize, statusLabel } from './format';
 import JobWizard from './JobWizard';
@@ -31,10 +35,10 @@ export default function BackupConsole(): JSX.Element | null {
 function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
   const queryClient = useQueryClient();
   const confirm = useConfirmModalStore((s) => s.danger);
-  const openBackup = useBackupModalStore((s) => s.open);
   const connections = useConnectionStore((s) => s.connections) ?? [];
   const [view, setView] = useState<View>({ kind: 'dashboard' });
   const [jobId, setJobId] = useState<string | null>(null);
+  const [restoreRun, setRestoreRun] = useState<BackupArtifactType | null>(null);
 
   const { data: jobs = [] } = useQuery({
     queryKey: ['backup-schedules'],
@@ -135,11 +139,25 @@ function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
               onRun={() => void run(selected)}
               onToggle={() => void toggle(selected)}
               onDelete={() => remove(selected)}
-              onRestore={(database) => openBackup(selected.connectionId, database)}
+              onRestore={setRestoreRun}
             />
           )}
         </Box>
       </Modal>
+
+      {restoreRun && selected && (
+        <RestoreConfirm
+          candidates={restoreCandidates(selected.connectionId, connections)}
+          artifact={restoreRun}
+          defaultDatabase={restoreRun.database}
+          schema={restoreRun.schema || undefined}
+          onCancel={() => setRestoreRun(null)}
+          onStarted={(id) => {
+            setRestoreRun(null);
+            setJobId(String(id));
+          }}
+        />
+      )}
 
       <JobProgressModal
         open={jobId !== null}
@@ -174,6 +192,7 @@ function JobRow({
       <Box sx={{ flex: 2, minWidth: 0 }}>
         <Typography variant='body2' noWrap>
           {job.name}
+          {job.encrypted ? ` · ${locales.backup_encrypted}` : ''}
           {!job.enabled ? ` · ${locales.backup_schedule_paused}` : ''}
         </Typography>
         <Typography variant='caption' color='textSubdued' noWrap component='p'>
@@ -229,7 +248,7 @@ function JobDetail({
   onRun: () => void;
   onToggle: () => void;
   onDelete: () => void;
-  onRestore: (database?: string) => void;
+  onRestore: (run: BackupArtifactType) => void;
 }): JSX.Element {
   const { data: runs = [] } = useQuery({
     queryKey: ['backup-runs', job.id, job.connectionId],
@@ -242,6 +261,17 @@ function JobDetail({
       tools.fileDownload(await api.backup.download(run.id), run.fileName);
     } catch {
       toast.error(locales.download_failed);
+    }
+  };
+
+  const [passphrase, setPassphrase] = useState('');
+  const verify = async (run: BackupArtifactType): Promise<void> => {
+    try {
+      const result = await api.backup.verify(run.id, passphrase || undefined);
+      if (result.ok) toast.success(`${locales.backup_verify_ok}: ${result.message}`);
+      else toast.error(`${locales.backup_verify_failed}: ${result.message}`);
+    } catch {
+      /* the api layer already toasted */
     }
   };
 
@@ -276,6 +306,16 @@ function JobDetail({
         <Alert severity='error' sx={{ mb: 2 }}>
           {locales.backup_schedule_failed}: {job.lastError}
         </Alert>
+      )}
+
+      {runs.some((r) => r.encrypted) && (
+        <FieldInput
+          name='verify-passphrase'
+          type='password'
+          label={locales.backup_verify_passphrase}
+          value={passphrase}
+          onChange={(e) => setPassphrase(e.target.value)}
+        />
       )}
 
       <Typography variant='subtitle2' sx={{ mb: 1 }}>
@@ -328,10 +368,13 @@ function JobDetail({
           </Box>
           {run.status === 'completed' && (
             <>
+              <Button size='small' onClick={() => void verify(run)}>
+                {locales.backup_verify}
+              </Button>
               <Button size='small' onClick={() => void download(run)}>
                 {locales.backup_download}
               </Button>
-              <Button size='small' color='error' onClick={() => onRestore(run.database || undefined)}>
+              <Button size='small' color='error' onClick={() => onRestore(run)}>
                 {locales.backup_job_open_restore}
               </Button>
             </>
@@ -340,4 +383,19 @@ function JobDetail({
       ))}
     </Box>
   );
+}
+
+/** The job's own connection first, then others of the same engine the user can write to. */
+function restoreCandidates(connectionId: number, all: ConnectionType[]): ConnectionType[] {
+  const home = all.find((c) => c.id === connectionId);
+  if (!home) return [];
+
+  const sameFamily = (c: ConnectionType): boolean =>
+    isPostgresDriver(home.type)
+      ? isPostgresDriver(c.type)
+      : isMysqlDriver(home.type)
+        ? isMysqlDriver(c.type)
+        : c.type === home.type;
+
+  return [home, ...all.filter((c) => c.id !== home.id && sameFamily(c) && (c.access ?? 'owner') !== 'viewer')];
 }

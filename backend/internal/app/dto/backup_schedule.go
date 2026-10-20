@@ -20,6 +20,9 @@ type (
 		Timezone     string `json:"timezone"`
 		KeepLast     int    `json:"keepLast"`
 		KeepDays     int    `json:"keepDays"`
+		Compress     bool   `json:"compress"`
+		// Passphrase encrypts every backup of the schedule; it is never returned.
+		Passphrase string `json:"passphrase"`
 	}
 
 	// BackupScheduleUpdateRequest changes only the fields that are sent.
@@ -36,6 +39,9 @@ type (
 		Timezone *string `json:"timezone"`
 		KeepLast *int    `json:"keepLast"`
 		KeepDays *int    `json:"keepDays"`
+		Compress *bool   `json:"compress"`
+		// Passphrase, when sent and not empty, sets or replaces the passphrase.
+		Passphrase *string `json:"passphrase"`
 	}
 
 	BackupScheduleResponse struct {
@@ -52,6 +58,8 @@ type (
 		Enabled       bool       `json:"enabled"`
 		KeepLast      int        `json:"keepLast"`
 		KeepDays      int        `json:"keepDays"`
+		Compress      bool       `json:"compress"`
+		Encrypted     bool       `json:"encrypted"`
 		NextRunAt     *time.Time `json:"nextRunAt"`
 		LastRunAt     *time.Time `json:"lastRunAt"`
 		LastSuccessAt *time.Time `json:"lastSuccessAt"`

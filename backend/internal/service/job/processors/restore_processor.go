@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -78,6 +80,22 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 
 	if err := p.jobManager.UpdateJobProgress(ctx, job, 10, "Restoring "+artifact.FileName); err != nil {
 		return err
+	}
+
+	// A compressed or encrypted backup is opened into a private temp file that
+	// is removed when the restore ends, whatever the outcome.
+	if serviceBackup.IsEncrypted(artifact.FileName) || serviceBackup.IsCompressed(artifact.FileName) {
+		plain := *artifact
+		plain.FileName = serviceBackup.PlainName(artifact.FileName)
+		plain.FilePath = filepath.Join(helper.BackupDir, fmt.Sprintf("restore_%d_%s", job.ID, plain.FileName))
+
+		if err := serviceBackup.Unseal(artifact.FilePath, plain.FilePath, serviceBackup.TakePassphrase(job.ID)); err != nil {
+			return err
+		}
+
+		defer func() { _ = os.Remove(plain.FilePath) }()
+
+		artifact = &plain
 	}
 
 	if connection.ConnectionType == string(databaseContract.Sqlite) {

@@ -7,6 +7,7 @@ import type {
   BackupScheduleType,
   BackupToolDownloadType,
   BackupToolType,
+  BackupVerifyResultType,
   RestoreRequestType
 } from './types';
 
@@ -16,6 +17,7 @@ const endpoint = {
   upload: (): string => '/backups/upload',
   history: (): string => '/backups/history',
   download: (id: number): string => `/backups/${id}/download`,
+  verify: (id: number): string => `/backups/${id}/verify`,
   tools: (): string => '/backups/tools',
   toolDownloads: (): string => '/backups/tools/downloads',
   installTool: (): string => '/backups/tools/install',
@@ -88,4 +90,8 @@ export const deleteSchedule = async (id: number): Promise<void> => {
 
 export const runSchedule = async (id: number): Promise<BackupJobResponseType> => {
   return (await api.post<{ data: BackupJobResponseType }>(endpoint.runSchedule(id))).data.data;
+};
+
+export const verify = async (id: number, passphrase?: string): Promise<BackupVerifyResultType> => {
+  return (await api.post<{ data: BackupVerifyResultType }>(endpoint.verify(id), { passphrase })).data.data;
 };

@@ -56,10 +56,15 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
             await next.click(); // Source: first connection is preselected
             await next.click(); // Schedule
             await next.click(); // Options
+            await page
+              .locator('input[name="job-passphrase"]')
+              .fill("e2e-secret");
+            await expect(page.getByText(/cannot be restored/)).toBeVisible();
             await expect(page.getByText(/Runs Every day/)).toBeVisible();
             await page.getByRole("button", { name: "Create schedule" }).click();
             await expect(row).toBeVisible();
             await expect(row.getByText("Not run")).toBeVisible();
+            await expect(row.getByText(/Encrypted/)).toBeVisible();
           });
 
           await test.step("Run now completes and the row shows the result", async () => {
@@ -82,6 +87,32 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
             await expect(
               detail.getByRole("button", { name: "Restore…" }),
             ).toHaveCount(1);
+          });
+
+          await test.step("Verify checks the checksum, and the contents with the passphrase", async () => {
+            const detail = page.getByTestId("backup-job-detail");
+            await detail.getByRole("button", { name: "Verify" }).click();
+            await expect(page.getByText(/contents not opened/)).toBeVisible();
+            await detail
+              .locator('input[name="verify-passphrase"]')
+              .fill("e2e-secret");
+            await detail.getByRole("button", { name: "Verify" }).click();
+            await expect(page.getByText(/read back completely/)).toBeVisible();
+          });
+
+          await test.step("Restore asks for the passphrase before it can start", async () => {
+            const detail = page.getByTestId("backup-job-detail");
+            await detail.getByRole("button", { name: "Restore…" }).click();
+            await expect(
+              page.getByRole("heading", { name: "Restore backup" }),
+            ).toBeVisible();
+            await expect(
+              page.locator('input[name="backup-restore-passphrase"]'),
+            ).toBeVisible();
+            await page.getByRole("button", { name: "Cancel" }).last().click();
+            await expect(
+              page.getByRole("heading", { name: "Restore backup" }),
+            ).toBeHidden();
           });
 
           await test.step("Pause, then delete after confirming", async () => {

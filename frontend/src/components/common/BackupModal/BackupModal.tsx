@@ -4,17 +4,17 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
-import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useBackupModalStore } from '@/store/backupModal/backup.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
-import { Box, Button, Checkbox, Chip, FormControlLabel, Typography } from '@mui/material';
+import { Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import BackupSchedules from './BackupSchedules';
+import RestoreConfirm from './RestoreConfirm';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 
 type Progress = { jobId: string; title: string };
@@ -253,9 +253,9 @@ function BackupModalBody({
 
       {restoreTarget && (
         <RestoreConfirm
-          connection={connection}
+          candidates={[connection]}
           artifact={restoreTarget}
-          defaultTarget={isSqlite ? connection.name : database}
+          defaultDatabase={database}
           schema={isPostgres ? schema : undefined}
           onCancel={() => setRestoreTarget(null)}
           onStarted={(jobId) => {
@@ -322,93 +322,5 @@ function ToolList({
         );
       })}
     </>
-  );
-}
-
-function RestoreConfirm({
-  connection,
-  artifact,
-  defaultTarget,
-  schema,
-  onCancel,
-  onStarted
-}: {
-  connection: ConnectionType;
-  artifact: BackupArtifactType;
-  defaultTarget: string;
-  schema?: string;
-  onCancel: () => void;
-  onStarted: (jobId: number) => void;
-}): JSX.Element {
-  const [typed, setTyped] = useState('');
-  const [safetyBackup, setSafetyBackup] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const matches = defaultTarget !== '' && typed === defaultTarget;
-
-  const handleRestore = async (): Promise<void> => {
-    const run = (): Promise<{ jobId: number }> =>
-      api.backup.restore({
-        connectionId: connection.id,
-        database: defaultTarget,
-        schema,
-        artifactId: artifact.id,
-        confirmName: typed,
-        safetyBackup
-      });
-
-    setBusy(true);
-    try {
-      let result: { jobId: number } | undefined;
-      try {
-        result = await run();
-      } catch (error) {
-        // Safe Mode may ask for the password; retry once it is unlocked.
-        if (await resolveSafeModeGate(error, connection.id)) {
-          result = await run();
-        }
-      }
-      if (result) onStarted(result.jobId);
-    } catch {
-      /* the api layer already toasted */
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Modal open title={locales.backup_restore_title} onClose={onCancel} padding='24px'>
-      <Box sx={{ width: 'min(480px, calc(100vw - 64px))' }}>
-        <Typography variant='body2' color='error.main' sx={{ mb: 2 }}>
-          {locales.backup_restore_warning}
-        </Typography>
-        <Typography variant='body2' sx={{ mb: 1 }}>
-          {artifact.fileName} · {formatSize(artifact.size)}
-        </Typography>
-        <FieldInput
-          name='backup-confirm-name'
-          label={`${locales.backup_restore_type_name}: ${defaultTarget}`}
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-        />
-        <FormControlLabel
-          control={<Checkbox checked={safetyBackup} onChange={(e) => setSafetyBackup(e.target.checked)} />}
-          label={locales.backup_restore_safety}
-        />
-        <ModalFooter>
-          <Button size='small' onClick={onCancel}>
-            {locales.cancel}
-          </Button>
-          <Button
-            size='small'
-            variant='contained'
-            color='error'
-            disabled={!matches || busy}
-            onClick={() => void handleRestore()}
-          >
-            {locales.backup_restore_action}
-          </Button>
-        </ModalFooter>
-      </Box>
-    </Modal>
   );
 }

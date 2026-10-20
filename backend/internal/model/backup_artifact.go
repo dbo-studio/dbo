@@ -42,6 +42,8 @@ type BackupArtifact struct {
 	FileName     string       `gorm:"not null;default:''"`
 	FilePath     string       `gorm:"not null;default:''"`
 	Size         int64        `gorm:"not null;default:0"`
+	Compressed   bool         `gorm:"not null;default:false"`
+	Encrypted    bool         `gorm:"not null;default:false"`
 	Checksum     string       `gorm:"not null;default:''"`
 	Error        string       `gorm:"not null;default:''"`
 	StartedAt    time.Time    `gorm:"not null"`

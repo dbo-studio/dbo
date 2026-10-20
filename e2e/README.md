@@ -91,6 +91,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Backup dialog (UI)       | `pg\|mysql\|sqlite/backup-ui.spec.ts`         | connection menu → Backup & Restore: progress, history, typed-name restore confirm, cancel queues nothing |
 | Backup schedules         | `pg\|mysql\|sqlite/backup-schedule.spec.ts`   | create/validate, run now, retention keeps newest N, pause/edit, delete keeps backups |
 | Backup console           | `pg\|mysql\|sqlite/backup-console.spec.ts`    | header → console: 5-step job wizard, run now, last result, per-job runs, pause/delete |
+| Backup encryption/verify | `pg\|mysql\|sqlite/backup-seal.spec.ts`        | gzip + AES-GCM schedule run, verify (checksum / contents / wrong passphrase), restore needs passphrase, SQLite round trip |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |

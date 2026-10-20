@@ -158,3 +158,18 @@ func (h BackupHandler) Upload(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
+
+func (h BackupHandler) Verify(c fiber.Ctx) error {
+	req := new(dto.BackupVerifyRequest)
+	// The body is optional: it only carries a passphrase.
+	_ = c.Bind().Body(req)
+	req.ID = fiber.Params[uint](c, "id")
+
+	result, err := h.service.Verify(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

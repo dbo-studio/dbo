@@ -37,6 +37,9 @@ type (
 		// ConfirmName must repeat Database exactly; it is the typed
 		// confirmation for an action that overwrites data.
 		ConfirmName string `json:"confirmName"`
+		// Passphrase opens an encrypted backup. It is held in memory for the job
+		// and never stored in the job row.
+		Passphrase string `json:"passphrase"`
 		// SafetyBackup queues a backup of the target first; the restore only
 		// runs if that backup succeeds.
 		SafetyBackup bool `json:"safetyBackup"`
@@ -73,6 +76,8 @@ type (
 		Schema       string     `json:"schema"`
 		Driver       string     `json:"driver"`
 		Method       string     `json:"method"`
+		Compressed   bool       `json:"compressed"`
+		Encrypted    bool       `json:"encrypted"`
 		Tool         string     `json:"tool"`
 		ToolVersion  string     `json:"toolVersion"`
 		Status       string     `json:"status"`
@@ -124,6 +129,16 @@ type (
 	ToolRemoveRequest struct {
 		Driver  string
 		Version string
+	}
+
+	BackupVerifyRequest struct {
+		ID         uint
+		Passphrase string `json:"passphrase"`
+	}
+
+	BackupVerifyResponse struct {
+		OK      bool   `json:"ok"`
+		Message string `json:"message"`
 	}
 
 	BackupDownloadRequest struct {

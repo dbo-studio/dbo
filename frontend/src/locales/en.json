@@ -828,5 +828,16 @@
   "backup_status_completed": "Completed",
   "backup_status_failed": "Failed",
   "backup_status_running": "Running",
-  "backup_status_none": "Not run"
+  "backup_status_none": "Not run",
+  "backup_restore_target": "Restore into",
+  "backup_passphrase": "Passphrase",
+  "backup_compress": "Compress (gzip)",
+  "backup_encrypt_passphrase": "Encryption passphrase (optional)",
+  "backup_encrypt_warning": "If you lose this passphrase the encrypted backups cannot be restored. DBO cannot recover it.",
+  "backup_encrypted": "Encrypted",
+  "backup_compressed": "Compressed",
+  "backup_verify": "Verify",
+  "backup_verify_passphrase": "Passphrase to check encrypted contents (optional)",
+  "backup_verify_ok": "Backup verified",
+  "backup_verify_failed": "Backup verification failed"
 }

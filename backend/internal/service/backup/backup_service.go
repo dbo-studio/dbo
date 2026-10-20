@@ -32,6 +32,7 @@ type IBackupService interface {
 	Upload(ctx context.Context, req *dto.BackupUploadRequest) (*dto.BackupArtifactResponse, error)
 	History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error)
 	Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error)
+	Verify(ctx context.Context, req *dto.BackupVerifyRequest) (*dto.BackupVerifyResponse, error)
 	Tools(ctx context.Context) []dto.BackupTool
 	ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error)
 	InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error)
@@ -103,6 +104,10 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 		return nil, apperror.BadRequest(apperror.ErrRestoreDriverMismatch)
 	}
 
+	if artifact.Encrypted && req.Passphrase == "" {
+		return nil, apperror.BadRequest(ErrNeedPassphrase)
+	}
+
 	if req.ConfirmName != req.Database {
 		return nil, apperror.BadRequest(apperror.ErrRestoreConfirmMismatch)
 	}
@@ -139,11 +144,15 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 
 	job, err := s.jobManager.CreateJob(model.JobTypeRestore, ownerID, helper.StructToJSON(dto.RestoreJob{
 		OwnerID:        ownerID,
-		RestoreRequest: *req,
+		RestoreRequest: withoutPassphrase(*req),
 		SafetyJobID:    safetyJobID,
 	}))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
+	}
+
+	if req.Passphrase != "" {
+		StashPassphrase(job.ID, req.Passphrase)
 	}
 
 	return &dto.RestoreResponse{JobID: int32(job.ID)}, nil
@@ -364,6 +373,8 @@ func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 		Schema:       a.Schema,
 		Driver:       a.Driver,
 		Method:       string(a.Method),
+		Compressed:   a.Compressed,
+		Encrypted:    a.Encrypted,
 		Tool:         a.Tool,
 		ToolVersion:  a.ToolVersion,
 		Status:       string(a.Status),
@@ -387,4 +398,33 @@ func (s IBackupServiceImpl) canWrite(ctx context.Context, connection *model.Conn
 	share, err := s.shareRepo.Find(ctx, connection.ID, ownerID)
 
 	return err == nil && share.Role == model.ConnectionShareEditor
+}
+
+// withoutPassphrase keeps the passphrase out of the job row.
+func withoutPassphrase(req dto.RestoreRequest) dto.RestoreRequest {
+	req.Passphrase = ""
+
+	return req
+}
+
+// Verify checks that a backup file is intact: its checksum matches the one
+// recorded when it was made and, when it is compressed or the passphrase is
+// given, that it reads back completely.
+func (s IBackupServiceImpl) Verify(ctx context.Context, req *dto.BackupVerifyRequest) (*dto.BackupVerifyResponse, error) {
+	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ID, helper.CtxOwnerID(ctx))
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrBackupNotFound)
+	}
+
+	if artifact.Status != model.BackupStatusCompleted {
+		return nil, apperror.BadRequest(apperror.ErrBackupNotCompleted)
+	}
+
+	if !helper.IsReadableBackupPath(artifact.FilePath) {
+		return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
+	}
+
+	ok, message := VerifyFile(artifact.FilePath, artifact.FileName, artifact.Checksum, req.Passphrase)
+
+	return &dto.BackupVerifyResponse{OK: ok, Message: message}, nil
 }

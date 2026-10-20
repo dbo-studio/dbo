@@ -6,7 +6,7 @@ import { SelectInputOption } from '@/components/base/SelectInput/types';
 import { isPostgresDriver } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Box, Button, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { describeCadence } from './format';
 
@@ -40,6 +40,8 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
   const [weekday, setWeekday] = useState(0);
   const [keepLast, setKeepLast] = useState(7);
   const [keepDays, setKeepDays] = useState(0);
+  const [compress, setCompress] = useState(true);
+  const [passphrase, setPassphrase] = useState('');
   const [timezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 
   const connection = writable.find((c) => c.id === connectionId);
@@ -71,7 +73,9 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
         weekday,
         timezone,
         keepLast,
-        keepDays
+        keepDays,
+        compress,
+        passphrase: passphrase || undefined
       });
       onDone();
     } catch {
@@ -219,6 +223,22 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
                 />
               </Box>
             </Box>
+            <FormControlLabel
+              control={<Checkbox checked={compress} onChange={(e) => setCompress(e.target.checked)} />}
+              label={locales.backup_compress}
+            />
+            <FieldInput
+              name='job-passphrase'
+              type='password'
+              label={locales.backup_encrypt_passphrase}
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+            />
+            {passphrase !== '' && (
+              <Typography variant='caption' color='warning.main' component='p'>
+                {locales.backup_encrypt_warning}
+              </Typography>
+            )}
             <Typography variant='body2' color='textSubdued' sx={{ mt: 2 }}>
               {locales.backup_wizard_summary
                 .replace('{schedule}', describeCadence({ cadence, hour, minute, weekday, timezone }))

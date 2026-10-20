@@ -24,6 +24,11 @@ type BackupSchedule struct {
 	Weekday  int    `gorm:"not null;default:0"`
 	Timezone string `gorm:"not null;default:'UTC'"`
 	Enabled  bool   `gorm:"not null;default:true"`
+	// Compress gzips each backup; PassphraseEnc, when set, encrypts it. The
+	// passphrase is stored only encrypted with the app key, because an unattended
+	// run has to read it back.
+	Compress      bool   `gorm:"not null;default:false"`
+	PassphraseEnc string `gorm:"column:passphrase_enc;not null;default:''"`
 	// KeepLast and KeepDays are retention limits; zero means no limit of that kind.
 	KeepLast  int `gorm:"not null;default:0"`
 	KeepDays  int `gorm:"not null;default:0"`

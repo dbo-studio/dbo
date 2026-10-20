@@ -12,6 +12,7 @@ export type RestoreRequestType = {
   artifactId: number;
   confirmName: string;
   safetyBackup: boolean;
+  passphrase?: string;
 };
 
 export type BackupJobResponseType = {
@@ -27,6 +28,8 @@ export type BackupArtifactType = {
   schema: string;
   driver: string;
   method: 'basic' | 'native' | 'uploaded';
+  compressed: boolean;
+  encrypted: boolean;
   tool: string;
   toolVersion: string;
   status: 'running' | 'completed' | 'failed';
@@ -72,6 +75,9 @@ export type BackupScheduleRequestType = {
   timezone: string;
   keepLast: number;
   keepDays: number;
+  compress?: boolean;
+  /** Write-only: sets the passphrase that encrypts every backup of the job. */
+  passphrase?: string;
 };
 
 export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 'schema'> & {
@@ -79,6 +85,7 @@ export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 's
   database: string;
   schema: string;
   enabled: boolean;
+  encrypted: boolean;
   nextRunAt?: string;
   lastRunAt?: string;
   lastSuccessAt?: string;
@@ -87,4 +94,9 @@ export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 's
   lastError: string;
   /** False when a scheduled run cannot log in: the password is not stored persistently. */
   passwordRemembered: boolean;
+};
+
+export type BackupVerifyResultType = {
+  ok: boolean;
+  message: string;
 };

@@ -22,6 +22,7 @@ import (
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
+	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -38,9 +39,10 @@ type BackupProcessor struct {
 	scheduleRepo   repository.IBackupScheduleRepo
 	secrets        serviceSecretStore.ISecretStore
 	cache          cache.Cache
+	cipherKey      []byte
 }
 
-func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
+func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache, cipherKey []byte) *BackupProcessor {
 	return &BackupProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
@@ -49,6 +51,7 @@ func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnectio
 		scheduleRepo:   scheduleRepo,
 		secrets:        secrets,
 		cache:          appCache,
+		cipherKey:      cipherKey,
 	}
 }
 
@@ -112,6 +115,8 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 	p.finish(ctx, artifact, map[string]any{
 		"status":       model.BackupStatusCompleted,
 		"method":       artifact.Method,
+		"compressed":   artifact.Compressed,
+		"encrypted":    artifact.Encrypted,
 		"tool":         artifact.Tool,
 		"tool_version": artifact.ToolVersion,
 		"file_name":    artifact.FileName,
@@ -280,6 +285,10 @@ func (p *BackupProcessor) sqliteVacuumInto(ctx context.Context, job *model.Job, 
 }
 
 func (p *BackupProcessor) completeFile(ctx context.Context, job *model.Job, artifact *model.BackupArtifact) error {
+	if err := p.seal(ctx, artifact); err != nil {
+		return err
+	}
+
 	var err error
 
 	artifact.Size, artifact.Checksum, err = fileSizeAndChecksum(artifact.FilePath)
@@ -381,6 +390,43 @@ func (p *BackupProcessor) checkDiskSpace(ctx context.Context, jobData *dto.Backu
 	if free < need {
 		return fmt.Errorf("not enough disk space for the backup: %d MiB free, need about %d MiB", free>>20, need>>20)
 	}
+
+	return nil
+}
+
+// seal applies a schedule's compression and encryption to the finished dump and
+// points the artifact at the sealed file.
+func (p *BackupProcessor) seal(ctx context.Context, artifact *model.BackupArtifact) error {
+	if artifact.ScheduleID == 0 {
+		return nil
+	}
+
+	schedule, err := p.scheduleRepo.FindByOwner(ctx, artifact.ScheduleID, artifact.OwnerID)
+	// A schedule deleted mid-run just leaves the plain dump.
+	if err != nil || (!schedule.Compress && schedule.PassphraseEnc == "") {
+		return nil //nolint:nilerr // see above
+	}
+
+	passphrase := ""
+
+	if schedule.PassphraseEnc != "" {
+		plain, err := cryptoutil.DecryptAESGCM(p.cipherKey, schedule.PassphraseEnc)
+		if err != nil {
+			return fmt.Errorf("cannot read the schedule passphrase: %w", err)
+		}
+
+		passphrase = string(plain)
+	}
+
+	sealed, err := serviceBackup.Seal(artifact.FilePath, schedule.Compress, passphrase)
+	if err != nil {
+		return err
+	}
+
+	artifact.FilePath = sealed
+	artifact.FileName = strings.TrimPrefix(filepath.Base(sealed), fmt.Sprintf("%d_", artifact.ID))
+	artifact.Compressed = schedule.Compress
+	artifact.Encrypted = passphrase != ""
 
 	return nil
 }
