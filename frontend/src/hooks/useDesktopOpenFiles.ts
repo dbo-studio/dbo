@@ -1,16 +1,35 @@
 import { commands, streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+const isSqlPath = (path: string): boolean => path.toLowerCase().endsWith('.sql');
+
+// Contents read before any connection is active (e.g. app launched by opening a file).
+let waitingForConnection: string[] = [];
+
+const flushWaiting = (): void => {
+  if (!useConnectionStore.getState().currentConnectionId) {
+    return;
+  }
+  const contents = waitingForConnection;
+  waitingForConnection = [];
+  contents.forEach((content) => useTabStore.getState().addEditorTab(content, { forceNew: true }));
+};
+
 const openSqlPaths = async (paths: string[]): Promise<void> => {
   for (const path of paths) {
     try {
-      const content = await commands.readSqlFile(path);
-      useTabStore.getState().addEditorTab(content);
+      waitingForConnection.push(await commands.readSqlFile(path));
+      if (useConnectionStore.getState().currentConnectionId) {
+        flushWaiting();
+      } else {
+        toast.info(locales.open_sql_file_select_connection);
+      }
     } catch {
       toast.error(locales.open_sql_file_failed);
     }
@@ -20,7 +39,7 @@ const openSqlPaths = async (paths: string[]): Promise<void> => {
 export const pickAndOpenSqlFile = async (): Promise<void> => {
   const selected = await open({
     multiple: true,
-    filters: [{ name: locales.open_sql_file, extensions: ['sql'] }]
+    filters: [{ name: 'SQL', extensions: ['sql'] }]
   });
   if (selected) {
     await openSqlPaths(selected);
@@ -51,9 +70,26 @@ export const useDesktopOpenFiles = (): void => {
       await drain();
     })();
 
+    const unsubscribe = useConnectionStore.subscribe(flushWaiting);
+    let unlistenDrop: (() => void) | undefined;
+
+    void (async () => {
+      if (!(await tools.isTauri())) {
+        return;
+      }
+      const stop = await streams.files.onDrop((paths) => void openSqlPaths(paths.filter(isSqlPath)));
+      if (disposed) {
+        stop();
+        return;
+      }
+      unlistenDrop = stop;
+    })();
+
     return () => {
       disposed = true;
+      unsubscribe();
       unlisten?.();
+      unlistenDrop?.();
     };
   }, []);
 };

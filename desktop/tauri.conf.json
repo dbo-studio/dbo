@@ -12,6 +12,7 @@
     "fileAssociations": [
       {
         "ext": ["sql"],
+        "contentTypes": ["org.iso.sql"],
         "name": "SQL File",
         "description": "SQL script",
         "mimeType": "application/sql",

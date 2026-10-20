@@ -89,7 +89,7 @@ fn build_menu<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<Menu<R>> 
                     .build(manager)?,
             )
             .item(
-                &MenuItemBuilder::with_id("openSqlFile", "Open SQL File…")
+                &MenuItemBuilder::with_id("openSqlFile", "Open…")
                     .accelerator("CmdOrCtrl+O")
                     .build(manager)?,
             )
