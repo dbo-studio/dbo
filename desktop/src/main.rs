@@ -13,9 +13,6 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
-#[cfg(target_os = "macos")]
-use tauri_plugin_decorum::WebviewWindowExt;
-
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
 type SidecarStopping = Arc<AtomicBool>;
 type SidecarEventsHandle = Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>;
@@ -25,10 +22,6 @@ const DEFAULT_PORT: u16 = 5124;
 pub const SIDECAR_FAILED_EVENT: &str = "sidecar://failed";
 const OPEN_FILES_EVENT: &str = "file://open";
 const MAX_SQL_FILE_BYTES: u64 = 50 * 1024 * 1024;
-
-/// Vertically centers traffic lights in the ~56px app header (8 + 40 + 8).
-#[cfg(target_os = "macos")]
-const TRAFFIC_LIGHT_INSET: (f32, f32) = (12.0, 20.0);
 
 #[derive(Clone, serde::Serialize)]
 struct SidecarFailedPayload {
@@ -66,7 +59,6 @@ fn main() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_decorum::init())
         .manage(sidecar_child.clone())
         .manage(sidecar_stopping.clone())
         .manage(sidecar_events.clone())
@@ -90,7 +82,7 @@ fn main() {
 
     builder
         .setup(|app| {
-            setup_macos_window(app)?;
+            setup_macos_toolbar(app)?;
             menu::setup_menu(app)?;
             setup_environment();
             start_backend_server(app.handle());
@@ -120,37 +112,26 @@ fn main() {
         });
 }
 
+/// An empty unified toolbar gives the window native toolbar chrome: AppKit places
+/// the traffic lights and applies the toolbar window corner radius.
 #[cfg(target_os = "macos")]
-fn setup_macos_window(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let main_window = app
-        .get_webview_window("main")
-        .ok_or("main window not found")?;
-    // Decorum owns overlay titlebar + fullscreen events the frontend listens for.
-    main_window.create_overlay_titlebar()?;
-    apply_traffic_light_inset(&main_window)?;
+fn setup_macos_toolbar(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    use objc2::MainThreadMarker;
+    use objc2_app_kit::{NSTitlebarSeparatorStyle, NSToolbar, NSWindow, NSWindowToolbarStyle};
 
-    // Decorum resizes the AppKit titlebar container. On blur/focus AppKit relayouts
-    // that view and the buttons can clip out of sight unless we re-apply the inset.
-    let window_for_events = main_window.clone();
-    main_window.on_window_event(move |event| {
-        if let tauri::WindowEvent::Focused(_) = event {
-            let _ = apply_traffic_light_inset(&window_for_events);
-        }
-    });
-
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-fn apply_traffic_light_inset(
-    window: &tauri::WebviewWindow,
-) -> Result<(), Box<dyn std::error::Error>> {
-    window.set_traffic_lights_inset(TRAFFIC_LIGHT_INSET.0, TRAFFIC_LIGHT_INSET.1)?;
+    let window = app.get_webview_window("main").ok_or("main window not found")?;
+    let mtm = MainThreadMarker::new().ok_or("setup must run on the main thread")?;
+    // SAFETY: ns_window is the live NSWindow owned by the main webview window.
+    let ns_window = unsafe { &*(window.ns_window()? as *const NSWindow) };
+    let toolbar = NSToolbar::new(mtm);
+    ns_window.setToolbar(Some(&toolbar));
+    ns_window.setToolbarStyle(NSWindowToolbarStyle::UnifiedCompact);
+    ns_window.setTitlebarSeparatorStyle(NSTitlebarSeparatorStyle::None);
     Ok(())
 }
 
 #[cfg(not(target_os = "macos"))]
-fn setup_macos_window(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn setup_macos_toolbar(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 

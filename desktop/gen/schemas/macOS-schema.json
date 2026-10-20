@@ -4551,18 +4551,6 @@
           "markdownDescription": "Denies the unminimize command without any pre-configured scope."
         },
         {
-          "description": "Enables the show_snap_overlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "decorum:allow-show-snap-overlay",
-          "markdownDescription": "Enables the show_snap_overlay command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the show_snap_overlay command without any pre-configured scope.",
-          "type": "string",
-          "const": "decorum:deny-show-snap-overlay",
-          "markdownDescription": "Denies the show_snap_overlay command without any pre-configured scope."
-        },
-        {
           "description": "This permission set configures the types of dialogs\navailable from the dialog plugin.\n\n#### Granted Permissions\n\nAll dialog types are enabled.\n\n\n\n#### This default permission set includes:\n\n- `allow-message`\n- `allow-save`\n- `allow-open`",
           "type": "string",
           "const": "dialog:default",

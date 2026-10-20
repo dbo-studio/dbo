@@ -213,7 +213,6 @@ export default function SafeModeMenu(): JSX.Element {
             data-icon={isSilent ? 'lock-open' : 'lock'}
             disabled={!currentConnection || isPending}
             onClick={handleOpen}
-            onMouseDown={(event) => event.stopPropagation()}
           >
             {isPending ? (
               <CircularProgress size={18} />

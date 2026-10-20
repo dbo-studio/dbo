@@ -122,7 +122,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
 
   return (
     <>
-      <IconButton aria-label='header-menu' onClick={handleOpen} onMouseDown={(event) => event.stopPropagation()}>
+      <IconButton aria-label='header-menu' onClick={handleOpen}>
         <CustomIcon type='ellipsisVertical' size='m' />
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>

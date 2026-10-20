@@ -6,8 +6,6 @@ export enum Command {
 }
 
 export enum ServerEvent {
-  WindowWillEnterFullScreen = 'will-enter-fullscreen',
-  WindowWillExitFullScreen = 'will-exit-fullscreen',
   MenuAction = 'menu://action',
   OpenFiles = 'file://open',
   SidecarFailed = 'sidecar://failed'
