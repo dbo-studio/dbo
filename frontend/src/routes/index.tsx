@@ -5,6 +5,7 @@ import TotpGateScreen from '@/components/common/Auth/TotpGateScreen/TotpGateScre
 import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
 import Layout from '@/components/layout/Layout.tsx';
 import MobileShell from '@/components/layout/MobileShell/MobileShell';
+import { useEscapeFullscreenGuard } from '@/hooks/useEscapeFullscreenGuard';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
@@ -24,6 +25,7 @@ const dismissBootSplash = (): void => {
 
 export default function Home(): JSX.Element | null {
   const { ready, boot } = useStartup();
+  useEscapeFullscreenGuard();
   const gate = useAuthStore((s) => s.gate);
   // Phones get the dedicated mobile shell; tablets keep the desktop layout with overlay sidebars.
   const { isMobile, isTablet, isTouch } = useLayoutMode();

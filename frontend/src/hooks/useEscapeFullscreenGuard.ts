@@ -1,12 +1,9 @@
 import { useEffect } from 'react';
 
-// While a modal is open, Esc must close it, not exit fullscreen.
+// Esc must never exit fullscreen app-wide; it still reaches handlers (modals, editors) as a normal key.
 // shortcut: preventDefault + Keyboard Lock only; a native OS fullscreen exit that ignores both needs a Rust-side fix.
-export function useModalEscapeGuard(open: boolean): void {
+export function useEscapeFullscreenGuard(): void {
   useEffect(() => {
-    if (!open) {
-      return;
-    }
     const onKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -21,5 +18,5 @@ export function useModalEscapeGuard(open: boolean): void {
       window.removeEventListener('keydown', onKeyDown, true);
       keyboard?.unlock?.();
     };
-  }, [open]);
+  }, []);
 }

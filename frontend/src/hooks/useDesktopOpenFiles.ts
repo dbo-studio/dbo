@@ -55,7 +55,11 @@ export const useDesktopOpenFiles = (): void => {
     let unlisten: (() => void) | undefined;
     let disposed = false;
 
-    const drain = () => commands.takePendingOpenFiles().then(openSqlPaths).catch(() => undefined);
+    const drain = () =>
+      commands
+        .takePendingOpenFiles()
+        .then(openSqlPaths)
+        .catch(() => undefined);
 
     void (async () => {
       if (!(await tools.isTauri())) {

@@ -23,4 +23,4 @@ export * from './useDesktopIntentBridge';
 export * from './useHardwareBack';
 export * from './usePullToRefresh';
 export * from './useTreeLevel';
-export * from './useModalEscapeGuard';
+export * from './useEscapeFullscreenGuard';
