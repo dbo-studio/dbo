@@ -10,12 +10,16 @@ import {
   addTrigger,
   addTriggerRejected,
   cleanupPgCoreSchema,
+  changeFunctionSignature,
   createFunctionRejected,
+  createIntegerFunction,
   createProcedure,
   createTriggerFunction,
   dropFirstRowOfTab,
   dropRoutine,
   editFunctionBody,
+  editProcedureBody,
+  expectFunctionSignature,
   expectTabEmpty,
   expectTriggerLoaded,
   setupPgCoreSchema,
@@ -114,9 +118,27 @@ test.describe("Object Form PostgreSQL routines and triggers", () => {
     await dropRoutine(page, `${names.triggerFunction}()`, "Drop function");
   });
 
-  test("Create and drop procedure", async () => {
+  test("Changing a function's parameters drops and recreates it", async () => {
+    await test.step("create function f(a integer)", async () => {
+      await createIntegerFunction(page, names, names.signatureFunction);
+    });
+    await test.step("add parameter b: preview is DROP + CREATE", async () => {
+      await changeFunctionSignature(page, names.signatureFunction);
+    });
+    await test.step("reopen: new signature and body are stored", async () => {
+      await expectFunctionSignature(page, `${names.signatureFunction}(a integer, b integer)`, "a integer, b integer");
+    });
+    await test.step("drop the function via tree", async () => {
+      await dropRoutine(page, `${names.signatureFunction}(a integer, b integer)`, "Drop function");
+    });
+  });
+
+  test("Create, edit and drop procedure", async () => {
     await test.step("create procedure", async () => {
       await createProcedure(page, names, names.procedureName);
+    });
+    await test.step("edit body: preview is CREATE OR REPLACE", async () => {
+      await editProcedureBody(page, `${names.procedureName}()`);
     });
     await test.step("drop procedure via tree", async () => {
       await dropRoutine(page, `${names.procedureName}()`, "Drop procedure");

@@ -55,6 +55,7 @@ export const PG_CORE_PREVIEW = {
   createFunction: /CREATE FUNCTION[\s\S]*RETURNS trigger[\s\S]*LANGUAGE plpgsql/i,
   replaceFunction: /CREATE OR REPLACE FUNCTION/i,
   createProcedure: /CREATE PROCEDURE[\s\S]*LANGUAGE plpgsql/i,
+  replaceProcedure: /CREATE OR REPLACE PROCEDURE/i,
   createSequence: /CREATE SEQUENCE[\s\S]*INCREMENT BY 5[\s\S]*START WITH 10/i,
   alterSequence: /ALTER SEQUENCE[\s\S]*INCREMENT BY 7/i,
   createOwnedSequence: /CREATE SEQUENCE[\s\S]*OWNED BY "public"\."[a-z0-9_]+"\."id"/i,
@@ -74,6 +75,7 @@ export function postgresCoreSchemaNames(suffix: string): {
   indexName: string;
   checkName: string;
   triggerFunction: string;
+  signatureFunction: string;
   triggerName: string;
   procedureName: string;
   sequenceName: string;
@@ -88,6 +90,7 @@ export function postgresCoreSchemaNames(suffix: string): {
     indexName: `ix_email_${suffix}`,
     checkName: `ck_email_${suffix}`,
     triggerFunction: `trg_fn_${suffix}`,
+    signatureFunction: `sig_fn_${suffix}`,
     triggerName: `trg_${suffix}`,
     procedureName: `proc_${suffix}`,
     sequenceName: `seq_${suffix}`,

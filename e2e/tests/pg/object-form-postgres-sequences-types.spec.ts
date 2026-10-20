@@ -15,6 +15,8 @@ import {
   createSequence,
   createSequenceRejected,
   dropEnumType,
+  dropColumnByName,
+  dropEnumTypeInUse,
   dropFirstRowOfTab,
   dropSequence,
   editEnumValuesRejected,
@@ -134,6 +136,16 @@ test.describe("Object Form PostgreSQL sequences and enum types", () => {
 
   test("Use enum type on a table column", async () => {
     await addEnumColumn(page, names.usersTable, names.enumName);
+  });
+
+  test("Dropping an enum a column still uses is refused", async () => {
+    await test.step("drop is rejected by PostgreSQL and the type stays", async () => {
+      await dropEnumTypeInUse(page, names.enumName);
+    });
+    await test.step("drop the column, then the enum drops cleanly", async () => {
+      await dropColumnByName(page, names.usersTable, "mood");
+      await dropEnumType(page, names.enumName);
+    });
   });
 
   test("Cleanup — drop database and connection", async () => {

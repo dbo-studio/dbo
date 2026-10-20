@@ -352,6 +352,60 @@ export async function editFunctionBody(page: Page, functionName: string): Promis
   await objectForm.confirmExecute();
 }
 
+/** A function that takes one integer and returns it; used to exercise signature changes. */
+export async function createIntegerFunction(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  functionName: string
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = await openCreateForm(page, names, 'Functions', 'Create function', T.function);
+
+  await objectForm.fillGeneralField(F.routineName, functionName);
+  await objectForm.fillGeneralField(F.routineParameters, 'a integer');
+  await objectForm.fillGeneralField(F.routineReturns, 'integer');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN RETURN a; END;');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/CREATE FUNCTION[\s\S]*\(a integer\) RETURNS integer/i);
+  await objectForm.confirmExecute();
+
+  await expandPublicContainer(page, names, 'Functions');
+  await expect(tree.getTreeNode(`${functionName}(a integer)`)).toBeVisible({ timeout: 15000 });
+}
+
+/** Changing parameters changes the signature: PostgreSQL needs DROP + CREATE, not CREATE OR REPLACE. */
+export async function changeFunctionSignature(page: Page, functionName: string): Promise<void> {
+  const objectForm = await openEditForm(page, `${functionName}(a integer)`, 'Edit function', T.function);
+
+  await expect(objectForm.getGeneralField(F.routineParameters).locator('input')).toHaveValue('a integer');
+  await objectForm.fillGeneralField(F.routineParameters, 'a integer, b integer');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN RETURN a + b; END;');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`DROP FUNCTION "public"\\."${functionName}"\\(a integer\\)`));
+  await objectForm.assertPreviewContains(/CREATE FUNCTION[\s\S]*\(a integer, b integer\) RETURNS integer/i);
+  await objectForm.confirmExecute();
+}
+
+export async function expectFunctionSignature(page: Page, nodeName: string, parameters: string): Promise<void> {
+  const objectForm = await openEditForm(page, nodeName, 'Edit function', T.function);
+
+  await expect(objectForm.getGeneralField(F.routineParameters).locator('input')).toHaveValue(parameters);
+  await expect(objectForm.getGeneralField(F.routineBody)).toContainText(/a\s+\+\s+b/);
+}
+
+export async function editProcedureBody(page: Page, nodeName: string): Promise<void> {
+  const objectForm = await openEditForm(page, nodeName, 'Edit procedure', T.procedure);
+
+  await expect(objectForm.getGeneralField(F.routineName).locator('input')).toHaveValue(nodeName.replace(/\(.*\)$/, ''));
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN PERFORM 1; END;');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.replaceProcedure);
+  await objectForm.assertPreviewContains(/PERFORM 1/);
+  await objectForm.confirmExecute();
+}
+
 export async function createProcedure(
   page: Page,
   names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
@@ -584,6 +638,43 @@ export async function addEnumColumn(page: Page, tableName: string, enumName: str
   await reloaded.selectTab(T.columns);
   await expect(reloaded.getArrayCell(row, F.columnName).locator('input')).toHaveValue('mood');
   await expect(reloaded.getArrayCell(row, F.columnType)).toContainText(enumName);
+}
+
+/** DROP TYPE is RESTRICT: a type a column still uses must fail with the server's message, and stay. */
+export async function dropEnumTypeInUse(page: Page, enumName: string): Promise<void> {
+  const tree = new ObjectTreePage(page);
+
+  await tree.runTreeAction(enumName, 'Drop enum type');
+  const response = await waitForResponseDuring(
+    page,
+    apiRoute.objectExecute,
+    () => tree.confirmDangerAction(),
+    API_DDL_TIMEOUT
+  );
+  expect(response.status(), 'drop of a type in use is refused').toBeGreaterThanOrEqual(400);
+  expect(await response.text()).toMatch(/depend on it|cannot drop type/i);
+
+  await tree.waitForTreeLoad();
+  await expect(tree.getTreeNode(enumName)).toBeVisible({ timeout: 15000 });
+}
+
+export async function dropColumnByName(page: Page, tableName: string, columnName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+
+  const count = await objectForm.arrayRowCount(F.columnName);
+  let row = -1;
+  for (let i = 0; i < count; i++) {
+    if ((await objectForm.getArrayCell(i, F.columnName).locator('input').inputValue()) === columnName) {
+      row = i;
+    }
+  }
+  expect(row, `column ${columnName} found`).toBeGreaterThanOrEqual(0);
+
+  await objectForm.deleteArrayRow(row);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`DROP COLUMN "${columnName}"`, 'i'));
+  await objectForm.confirmExecute();
 }
 
 export async function dropEnumType(page: Page, enumName: string): Promise<void> {
