@@ -2,13 +2,17 @@ import { FieldInputInputStyled } from '@/components/base/FieldInput/FieldInput.s
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import locales from '@/locales';
 import type { AiProviderType } from '@/types';
-import { Autocomplete, Box, Chip, Typography, createFilterOptions } from '@mui/material';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { Autocomplete, Box, Chip, IconButton, Typography, createFilterOptions } from '@mui/material';
 import type { JSX } from 'react';
 
 type ModelPickerProps = {
   providerType: AiProviderType['type'];
   value: string;
   options: string[];
+  /** Models the user saved; these show a remove button in the list. */
+  removable?: string[];
+  onRemove?: (model: string) => void;
   disabled?: boolean;
   error?: string;
   onChange: (model: string) => void;
@@ -21,6 +25,8 @@ export default function ModelPicker({
   providerType,
   value,
   options,
+  removable = [],
+  onRemove,
   disabled,
   error,
   onChange
@@ -57,6 +63,20 @@ export default function ModelPicker({
               <Typography variant='body2' noWrap sx={{ flex: 1 }}>
                 {custom ? locales.ai_model_use_custom.replace('{{model}}', option) : option}
               </Typography>
+              {!custom && removable.includes(option) && onRemove ? (
+                <IconButton
+                  size='small'
+                  aria-label={locales.ai_model_remove}
+                  data-testid='ai-model-remove'
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(option);
+                  }}
+                >
+                  <CustomIcon type='close' size='xs' />
+                </IconButton>
+              ) : null}
               {!custom && caps.tools ? (
                 <Chip
                   size='small'

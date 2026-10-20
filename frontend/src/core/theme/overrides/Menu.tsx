@@ -26,12 +26,26 @@ export default function Menu(theme: Theme): Components {
           color: theme.palette.text.text,
           borderRadius: variables.radius.small,
           fontSize: theme.typography.body2.fontSize,
-          '&:hover': {
-            backgroundColor: theme.palette.background.paper
+          '&:hover, &:focus-visible': {
+            backgroundColor: theme.palette.action.hover
           },
-          '&:focus-visible': {
-            backgroundColor: theme.palette.background.paper
+          // Selected must differ from hover, and stay visible while hovered.
+          '&.Mui-selected': {
+            backgroundColor: theme.palette.action.selected,
+            '&:hover, &.Mui-focusVisible': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.2)
+            }
           }
+        }
+      }
+    },
+    MuiListSubheader: {
+      styleOverrides: {
+        root: {
+          background: 'transparent',
+          color: theme.palette.text.subdued,
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em'
         }
       }
     }

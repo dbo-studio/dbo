@@ -7,7 +7,7 @@ import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import type { AiProviderType } from '@/types';
-import { Alert, Button, Chip, InputAdornment, Typography } from '@mui/material';
+import { Alert, Box, Button, InputAdornment, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -18,17 +18,26 @@ import {
   AiProviderListStyled
 } from './AiProviders.styled';
 import ModelPicker from './ModelPicker';
+import ProviderLogo from './ProviderLogo';
 
-function providerStatus(provider: AiProviderType): { label: string; color: 'success' | 'default' | 'warning' } {
+const PROVIDER_NAMES: Record<AiProviderType['type'], string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  groq: 'Groq',
+  ollama: 'Ollama'
+};
+
+function providerStatus(provider: AiProviderType): { label: string; tone: 'success' | 'warning' | 'neutral' } {
   if (provider.isActive && isProviderReady(provider)) {
-    return { label: locales.ai_provider_in_use, color: 'success' };
+    return { label: locales.ai_provider_in_use, tone: 'success' };
   }
 
   if (isProviderReady(provider)) {
-    return { label: locales.ai_status_ready, color: 'default' };
+    return { label: locales.ai_status_ready, tone: 'neutral' };
   }
 
-  return { label: locales.ai_provider_needs_key, color: 'warning' };
+  return { label: locales.ai_provider_needs_key, tone: 'warning' };
 }
 
 type ProviderFormProps = { provider: AiProviderType; canEdit: boolean };
@@ -39,7 +48,8 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
   const [apiKey, setApiKey] = useState(provider.apiKey ?? '');
   const [timeout, setTimeout] = useState(provider.timeout?.toString() ?? '');
   const [model, setModel] = useState(provider.model);
-  const [models, setModels] = useState(provider.models);
+  const [saved, setSaved] = useState(provider.models);
+  const [listed, setListed] = useState<string[]>([]);
   const [showKey, setShowKey] = useState(false);
   const [touched, setTouched] = useState(false);
   const [connection, setConnection] = useState<{ ok: boolean; text: string } | undefined>();
@@ -56,7 +66,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         url: url.trim(),
         apiKey,
         timeout: timeoutValue,
-        models: models.includes(model) ? models : [...models, model],
+        models: saved.includes(model) ? saved : [...saved, model],
         model,
         isActive: true
       }),
@@ -79,7 +89,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         return;
       }
 
-      setModels(result.models);
+      setListed(result.models);
       setConnection({ ok: true, text: locales.ai_connection_ok.replace('{{count}}', String(result.models.length)) });
     }
   });
@@ -152,7 +162,9 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
       <ModelPicker
         providerType={provider.type}
         value={model}
-        options={models}
+        options={[...new Set([...saved, ...listed])]}
+        removable={saved}
+        onRemove={(removed) => setSaved((list) => list.filter((item) => item !== removed))}
         disabled={!canEdit}
         error={shown('model')}
         onChange={setModel}
@@ -217,15 +229,27 @@ export default function AiProvidersPanel(): JSX.Element {
               onClick={() => setSelectedId(item.id)}
               data-testid={`ai-provider-${item.type}`}
             >
-              <Typography variant='subtitle2' sx={{ textTransform: 'capitalize' }}>
-                {item.type}
-              </Typography>
-              <Chip
-                size='small'
-                color={status.color}
-                label={status.label}
-                data-testid={`ai-provider-status-${item.type}`}
-              />
+              <ProviderLogo type={item.type} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant='subtitle2' noWrap>
+                  {PROVIDER_NAMES[item.type]}
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color={
+                    status.tone === 'success'
+                      ? 'success.main'
+                      : status.tone === 'warning'
+                        ? 'warning.main'
+                        : 'text.secondary'
+                  }
+                  noWrap
+                  component='div'
+                  data-testid={`ai-provider-status-${item.type}`}
+                >
+                  {status.label}
+                </Typography>
+              </Box>
             </AiProviderItemStyled>
           );
         })}

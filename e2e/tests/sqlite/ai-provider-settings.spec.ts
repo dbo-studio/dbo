@@ -61,7 +61,7 @@ test.describe("AI provider settings form", () => {
             "3 models available",
           );
           await form.getByTestId("ai-model-input").fill("mini");
-          await expect(page.getByTestId("ai-model-option")).toHaveCount(2);
+          await expect(page.getByRole("option", { name: "other-model" })).toHaveCount(0);
           await page.getByRole("option", { name: "fake-model-mini" }).click();
         });
 

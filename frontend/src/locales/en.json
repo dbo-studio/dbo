@@ -255,6 +255,8 @@
   "ai_provider_in_use": "In use",
   "ai_provider_needs_key": "Needs API key",
   "ai_provider_not_set_up": "Not set up",
+  "ai_context_target_desc": "The connection, database and schema the assistant works on. Change them in the explorer or with @.",
+  "ai_model_remove": "Remove model",
   "ai_model_search": "Search or type a model id",
   "ai_model_use_custom": "Use \"{{model}}\"",
   "ai_providers_heading": "Providers",

@@ -2,6 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { AiContextType } from '@/types';
 import { Box, Chip, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { useRef, useState } from 'react';
@@ -21,6 +22,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
   const updateContext = useAiStore((state) => state.updateContext);
   const autoContext = useAiStore((state) => state.autoContext);
   const setAutoContext = useAiStore((state) => state.setAutoContext);
+  const connection = useConnectionStore((state) => state.currentConnection());
   const activeProvider = useAiStore((state) => state.providers?.find((item) => item.isActive));
 
   const used = estimateContextTokens(context);
@@ -55,8 +57,27 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
     updateContext(c);
   };
 
+  const targetDatabase =
+    context.database || (connection && 'database' in connection.options ? connection.options.database : undefined);
+  const target = [connection?.name, targetDatabase, context.schema].filter(Boolean).join(' · ');
+
   return (
     <Box>
+      {target && (
+        <Tooltip title={locales.ai_context_target_desc}>
+          <Typography
+            variant='caption'
+            color='textSubdued'
+            noWrap
+            component='div'
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}
+            data-testid='ai-context-target'
+          >
+            <CustomIcon type='database' size='xs' />
+            {target}
+          </Typography>
+        </Tooltip>
+      )}
       <ChatContextTagsStyled direction={'row'} spacing={1}>
         <IconButton ref={anchorRef} onClick={toggleOpen}>
           <CustomIcon type='at' size='s' />

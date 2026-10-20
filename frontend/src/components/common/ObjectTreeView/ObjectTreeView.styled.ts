@@ -83,12 +83,9 @@ export const NodeLabel = styled(Box, {
   '&:hover': {
     backgroundColor: theme.palette.action.hover
   },
+  // Keyboard focus is a ring only, so it never reads as hover or as selected.
   ...(isFocused && {
-    backgroundColor: theme.palette.action.hover,
-    '& p': {
-      fontWeight: 500,
-      color: theme.palette.text.link
-    }
+    borderColor: theme.palette.primary.main
   }),
   ...(isSelected && {
     backgroundColor: theme.palette.action.selected,
@@ -97,7 +94,7 @@ export const NodeLabel = styled(Box, {
       color: theme.palette.text.link
     },
     '&:hover': {
-      backgroundColor: theme.palette.action.selected
+      backgroundColor: alpha(theme.palette.primary.main, 0.2)
     }
   }),
   '&:focus-visible': {

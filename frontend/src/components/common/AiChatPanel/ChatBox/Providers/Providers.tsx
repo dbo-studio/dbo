@@ -94,7 +94,7 @@ export default function Providers(): JSX.Element {
         slotProps={{ paper: { sx: { maxHeight: 360, minWidth: 240 } } }}
       >
         {selectable.flatMap((provider) => [
-          <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}>
+          <ListSubheader disableSticky key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}>
             {provider.type}
           </ListSubheader>,
           ...provider.models.map((model) => (
