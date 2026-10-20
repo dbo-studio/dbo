@@ -8,15 +8,12 @@ import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
-import CodeMessage from './CodeMessage/CodeMessage';
-import { DiffBaselineContext } from './DiffBaselineContext';
-import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
 import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
-import { formatMessageTime } from '../utils/messageTime';
 import AgentItemCard from './AgentItemCard/AgentItemCard';
+import MessageBlock from './MessageBlock/MessageBlock';
 import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
 import { useAiSession } from '../hooks/useAiSession';
@@ -168,47 +165,11 @@ export default function Messages({
 
       <MessagesListStyled ref={listRef}>
         {blocks.map((block) => {
-          if (block.kind === 'message') {
-            const { message } = block;
-            const inLastTurn = message.role === 'assistant' && lastTurn.includes(message);
-            const baseline = (inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message);
-            return (
-              <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
-                {message.thinking?.content && (
-                  <ThinkingMessage
-                    content={message.thinking.content}
-                    durationMs={message.thinking.durationMs}
-                    defaultCollapsed
-                  />
-                )}
-                {showModelLabel && message.role === 'assistant' && message.model && (
-                  <Typography variant='caption' color='textSubdued' data-testid='ai-message-model'>
-                    {message.model}
-                  </Typography>
-                )}
-                <DiffBaselineContext value={baseline}>
-                  {message.type === 'code' ? (
-                    <CodeMessage message={message} />
-                  ) : (
-                    <ExplanationMessage message={message} />
-                  )}
-                </DiffBaselineContext>
-              </MessageGroupStyled>
-            );
-          }
+          const message = block.kind === 'message' ? block.message : undefined;
+          const inLastTurn = message?.role === 'assistant' && lastTurn.includes(message);
+          const baseline = message ? ((inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message)) : undefined;
 
-          return (
-            <MessageGroupStyled key={block.key}>
-              {block.thinking?.content && (
-                <ThinkingMessage
-                  content={block.thinking.content}
-                  durationMs={block.thinking.durationMs}
-                  defaultCollapsed
-                />
-              )}
-              {block.kind === 'tools' ? <ToolCallGroup items={block.items} /> : <AgentItemCard item={block.item} />}
-            </MessageGroupStyled>
-          );
+          return <MessageBlock key={block.key} block={block} baseline={baseline} showModelLabel={showModelLabel} />;
         })}
 
         {streaming.status === 'streaming' && (

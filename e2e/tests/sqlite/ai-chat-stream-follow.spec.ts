@@ -99,6 +99,51 @@ test.describe("AI chat streaming follow", () => {
           expect(boxes[1].top - boxes[0].top).toBeLessThan(boxes[0].height * 2);
         });
 
+        await test.step("A thinking indicator shows at once, before the first word", async () => {
+          llm.reply = {
+            text: answer(60, 2),
+            wordDelayMs: 10,
+            startDelayMs: 2500,
+          };
+          await composer.fill("slow start");
+          await composer.press("Enter");
+
+          await expect(page.getByTestId("ai-thinking")).toBeVisible({
+            timeout: 800,
+          });
+          await expect(message("Section 60")).toHaveCount(1, {
+            timeout: 30000,
+          });
+          await expect(page.getByTestId("ai-thinking")).toHaveCount(0);
+        });
+
+        await test.step("The paragraph being typed is formatted and carries the caret", async () => {
+          llm.reply = { text: answer(70, 3), wordDelayMs: 120 };
+          await composer.fill("slow words");
+          await composer.press("Enter");
+
+          await expect
+            .poll(
+              () =>
+                page.evaluate(() =>
+                  [
+                    ...document.querySelectorAll(
+                      "[data-density] p, [data-density] li",
+                    ),
+                  ].some(
+                    (el) =>
+                      getComputedStyle(el, "::after").content !== "none" &&
+                      getComputedStyle(el, "::after").content !== "normal",
+                  ),
+                ),
+              { timeout: 20000 },
+            )
+            .toBe(true);
+          await expect(message("Section 72")).toHaveCount(1, {
+            timeout: 60000,
+          });
+        });
+
         await test.step("Sending brings the conversation back to the bottom after scrolling up", async () => {
           await hoverConversation(page);
           await page.mouse.wheel(0, -5000);

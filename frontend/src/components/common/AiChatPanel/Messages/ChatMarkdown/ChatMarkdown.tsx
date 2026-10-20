@@ -4,7 +4,7 @@ import { useMemo, type JSX } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { messageMarkdownSx } from '../messageMarkdownSx';
 import { splitStreamingMarkdown } from '../splitStreamingMarkdown';
-import { StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
+import { inlineCaretSx, StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
 import { splitChatContent, type ChatContentSegment } from '../../utils/chatTableContent';
 import type { AiMessageType } from '@/types';
 import type { ChatMarkdownProps } from '../../types';
@@ -91,7 +91,14 @@ export default function ChatMarkdown({
             {pending}
           </Typography>
         ) : (
-          <Typography component='div' variant='body2' sx={messageMarkdownSx(theme)}>
+          <Typography
+            component='div'
+            variant='body2'
+            sx={{
+              ...messageMarkdownSx(theme),
+              ...(showCursor ? inlineCaretSx(theme.palette.primary.main) : undefined)
+            }}
+          >
             <AppMarkdown renderCodeBlock={renderCodeBlock}>{pending}</AppMarkdown>
           </Typography>
         ))}

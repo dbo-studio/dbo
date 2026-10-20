@@ -34,7 +34,7 @@ export default function ThinkingMessage({
   if (!content && !isLive) return null;
 
   return (
-    <ThinkingMessageStyled $isLive={isLive}>
+    <ThinkingMessageStyled $isLive={isLive} data-testid={isLive ? 'ai-thinking' : undefined}>
       <Stack
         direction='row'
         spacing={0.75}

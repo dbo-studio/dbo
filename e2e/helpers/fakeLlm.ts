@@ -17,7 +17,8 @@ export class FakeLlm {
   readonly systemPrompts: string[] = [];
   script: ToolCallScript | null = null;
   /** When set, the answer streams word by word with this pause between words, instead of "ok". */
-  reply: { text: string; wordDelayMs: number } | null = null;
+  reply: { text: string; wordDelayMs: number; startDelayMs?: number } | null =
+    null;
   private server: Server | null = null;
 
   async start(): Promise<string> {
@@ -106,11 +107,14 @@ export class FakeLlm {
   }
 
   private async streamReply(
-    reply: { text: string; wordDelayMs: number },
+    reply: { text: string; wordDelayMs: number; startDelayMs?: number },
     send: (delta: Record<string, unknown>, finish: string | null) => void,
     res: ServerResponse,
   ): Promise<void> {
     send({ role: "assistant" }, null);
+    await new Promise((resolve) =>
+      setTimeout(resolve, reply.startDelayMs ?? 0),
+    );
     for (const word of reply.text.match(/\S+\s*/g) ?? []) {
       send({ content: word }, null);
       await new Promise((resolve) => setTimeout(resolve, reply.wordDelayMs));

@@ -1,8 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { getAiStatus } from '@/core/ai/aiStatus';
-import { openSettings } from '@/core/settings/openSettings';
-import locales from '@/locales';
-import { Button } from '@mui/material';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { ChatBoxProps } from '../types';
 import { ChatBoxStyled, ComposerFooterStyled, SendButtonStyled } from './ChatBox.styled';
@@ -14,20 +11,8 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
   const providers = useAiStore((state) => state.providers);
   const aiReady = getAiStatus(providers).ready;
 
-  // Full onboarding lives in ChatEmptyState; keep a compact entry point for non-empty chats.
-  if (!aiReady) {
-    return (
-      <ChatBoxStyled sx={{ alignItems: 'center' }}>
-        <Button
-          size='small'
-          onClick={() => openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' })}
-          data-testid='ai-composer-setup'
-        >
-          {locales.ai_setup_title}
-        </Button>
-      </ChatBoxStyled>
-    );
-  }
+  // Setting AI up lives in the empty state and in Settings; there is nothing to type into before then.
+  if (!aiReady) return null;
 
   return (
     <ChatBoxStyled>
