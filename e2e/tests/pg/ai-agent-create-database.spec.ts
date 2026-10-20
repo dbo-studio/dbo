@@ -50,91 +50,97 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
         await page.getByTestId("ai-expand-to-agent").click();
         await page.getByTestId("ai-mode-agent").click();
 
-        llm.script = {
-          name: "propose_schema_change",
-          args: {
-            ops: [
-              { op: "create_database", name: blog },
-              {
-                op: "create_table",
-                table: "users",
-                columns: [
-                  { name: "id", type: "INTEGER", primary: true },
-                  { name: "email", type: "TEXT" },
-                ],
-              },
-              {
-                op: "create_table",
-                table: "posts",
-                columns: [
-                  { name: "id", type: "INTEGER", primary: true },
-                  { name: "user_id", type: "INTEGER" },
-                ],
-              },
-              {
-                op: "add_foreign_key",
-                table: "posts",
-                fkColumns: ["user_id"],
-                refTable: "users",
-                refColumns: ["id"],
-              },
-            ],
-          },
-        };
-        const composer = page.getByTestId("ai-chat-input");
-        await composer.fill("create a blog database");
-        await composer.press("Enter");
-        await expect(page.getByTestId("ai-changeset-dock")).toContainText(
-          "4 pending change(s)",
-          { timeout: 15000 },
-        );
+        try {
+          llm.script = {
+            name: "propose_schema_change",
+            args: {
+              ops: [
+                { op: "create_database", name: blog },
+                {
+                  op: "create_table",
+                  table: "users",
+                  columns: [
+                    { name: "id", type: "INTEGER", primary: true },
+                    { name: "email", type: "TEXT" },
+                  ],
+                },
+                {
+                  op: "create_table",
+                  table: "posts",
+                  columns: [
+                    { name: "id", type: "INTEGER", primary: true },
+                    { name: "user_id", type: "INTEGER" },
+                  ],
+                },
+                {
+                  op: "add_foreign_key",
+                  table: "posts",
+                  fkColumns: ["user_id"],
+                  refTable: "users",
+                  refColumns: ["id"],
+                },
+              ],
+            },
+          };
+          const composer = page.getByTestId("ai-chat-input");
+          await composer.fill("create a blog database");
+          await composer.press("Enter");
+          await expect(page.getByTestId("ai-changeset-dock")).toContainText(
+            "4 pending change(s)",
+            { timeout: 15000 },
+          );
 
-        await test.step("The diff shows the database and its tables", async () => {
-          await expect(
-            page
-              .getByTestId("ai-diff-table")
-              .filter({ hasText: `DATABASE ${blog}` }),
-          ).toBeVisible();
-          await expect(
-            page.getByTestId("ai-diff-table").filter({ hasText: "email TEXT" }),
-          ).toBeVisible();
-        });
-
-        await test.step("The diagram draws the new tables and their key", async () => {
-          await page.getByTestId("ai-changes-tab-diagram").click();
-          const nodes = page.getByTestId("ai-mini-diagram-node");
-          await expect(nodes).toHaveCount(2);
-          await expect(nodes.first()).toHaveAttribute("data-status", "added");
-        });
-
-        await test.step("Apply all creates the database with its tables", async () => {
-          await page.getByTestId("ai-dock-apply-all").click();
-          const preview = page.getByTestId("ai-dock-preview-modal");
-          await expect(preview).toContainText(`CREATE DATABASE ${blog}`);
-          await page.getByTestId("ai-dock-execute").click();
-          await expect(page.getByTestId("ai-changeset-dock")).toHaveCount(0, {
-            timeout: 20000,
+          await test.step("The diff shows the database and its tables", async () => {
+            await expect(
+              page
+                .getByTestId("ai-diff-table")
+                .filter({ hasText: `DATABASE ${blog}` }),
+            ).toBeVisible();
+            await expect(
+              page
+                .getByTestId("ai-diff-table")
+                .filter({ hasText: "email TEXT" }),
+            ).toBeVisible();
           });
 
-          const response = await page.request.post("/api/query/raw", {
+          await test.step("The diagram draws the new tables and their key", async () => {
+            await page.getByTestId("ai-changes-tab-diagram").click();
+            const nodes = page.getByTestId("ai-mini-diagram-node");
+            await expect(nodes).toHaveCount(2);
+            await expect(nodes.first()).toHaveAttribute("data-status", "added");
+          });
+
+          await test.step("Apply all creates the database with its tables", async () => {
+            await page.getByTestId("ai-dock-apply-all").click();
+            const preview = page.getByTestId("ai-dock-preview-modal");
+            await expect(preview).toContainText(`CREATE DATABASE ${blog}`);
+            await page.getByTestId("ai-dock-execute").click();
+            await expect(page.getByTestId("ai-changeset-dock")).toHaveCount(0, {
+              timeout: 20000,
+            });
+
+            const response = await page.request.post("/api/query/raw", {
+              data: {
+                connectionId,
+                query: `SELECT datname FROM pg_database WHERE datname = '${blog}'`,
+              },
+            });
+            expect(
+              ((await response.json()) as { data: { data: unknown[] } }).data
+                .data,
+            ).toHaveLength(1);
+          });
+        } finally {
+          // The connection is deleted when this callback ends, so the database goes first.
+          await page.request.post("/api/query/raw", {
             data: {
               connectionId,
-              query: `SELECT datname FROM pg_database WHERE datname = '${blog}'`,
+              query: `DROP DATABASE IF EXISTS "${blog}" WITH (FORCE)`,
             },
           });
-          expect(
-            ((await response.json()) as { data: { data: unknown[] } }).data
-              .data,
-          ).toHaveLength(1);
-        });
+        }
       });
     } finally {
-      await page.request.post("/api/query/raw", {
-        data: {
-          connectionId,
-          query: `DROP DATABASE IF EXISTS "${blog}" WITH (FORCE)`,
-        },
-      });
       await llm.stop();
     }
   });
