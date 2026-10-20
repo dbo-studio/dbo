@@ -88,7 +88,7 @@ func (s *ISchemaServiceImpl) TableStructures(ctx context.Context, req *dto.Schem
 
 	structures := map[string]*contract.TableStructure{}
 
-	for _, table := range lo.Uniq(lo.Map(req.Ops, func(op dto.SchemaChangeOp, _ int) string { return op.Table })) {
+	for _, table := range lo.Compact(lo.Uniq(lo.Map(req.Ops, func(op dto.SchemaChangeOp, _ int) string { return op.Table }))) {
 		// A table that cannot be read (not created yet, or dropped) has no "before".
 		if structure, err := repo.TableStructure(ctx, table, req.Database, req.Schema); err == nil && len(structure.Columns) > 0 {
 			structures[table] = structure

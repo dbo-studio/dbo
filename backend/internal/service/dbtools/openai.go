@@ -99,7 +99,7 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 	}
 
 	return append(tools,
-		functionTool(ToolProposeSchemaChange, "Propose schema changes (create tables, add/alter/drop columns, add indexes, add foreign keys). "+
+		functionTool(ToolProposeSchemaChange, "Propose schema changes (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys). "+
 			"Changes are shown to the user on the diagram and are NOT applied until the user accepts them.", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
@@ -110,9 +110,10 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 						"properties": map[string]any{
 							"op": map[string]any{
 								"type": "string",
-								"enum": []string{dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn, dto.SchemaChangeDropColumn, dto.SchemaChangeAddIndex, dto.SchemaChangeAddForeignKey},
+								"enum": []string{dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema, dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn, dto.SchemaChangeDropColumn, dto.SchemaChangeAddIndex, dto.SchemaChangeAddForeignKey},
 							},
 							"table":        map[string]any{"type": "string"},
+							"name":         map[string]any{"type": "string", "description": "create_database / create_schema only: the new name. Tables in the same proposal are created inside it."},
 							"columns":      map[string]any{"type": "array", "items": column, "description": "create_table only: every column of the new table."},
 							"column":       column,
 							"columnName":   map[string]any{"type": "string", "description": "drop_column only: the column to remove."},
@@ -123,7 +124,7 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 							"refColumns":   map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 							"onDelete":     map[string]any{"type": "string", "enum": []string{"NO ACTION", "CASCADE", "SET NULL", "RESTRICT"}},
 						},
-						"required": []string{"op", "table"},
+						"required": []string{"op"},
 					},
 				},
 			},

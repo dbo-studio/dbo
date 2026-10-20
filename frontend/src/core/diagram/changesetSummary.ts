@@ -7,6 +7,10 @@ export type ChangesetLine = { label: string; detail: string };
 export const summarizeChangeset = (ops: SchemaChangeOp[]): ChangesetLine[] =>
   ops.map((op) => {
     switch (op.op) {
+      case 'create_database':
+        return { label: locales.ai_op_create_database, detail: op.name ?? '' };
+      case 'create_schema':
+        return { label: locales.ai_op_create_schema, detail: op.name ?? '' };
       case 'create_table':
         return {
           label: locales.ai_op_create_table,

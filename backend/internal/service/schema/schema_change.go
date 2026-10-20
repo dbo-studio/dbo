@@ -1,9 +1,11 @@
 package serviceSchema
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -27,6 +29,8 @@ type changeStep struct {
 	params []byte
 	// opIndexes are the request ops this step carries out.
 	opIndexes []int
+	// outside marks a step that cannot run inside the transaction of the others (CREATE DATABASE).
+	outside bool
 }
 
 type createSpec struct {
@@ -112,19 +116,48 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 		_ = s.cache.DeleteByPrefix(context.WithoutCancel(ctx), cache.OwnerConnectionPrefix(helper.CtxOwnerID(ctx), connection.ID))
 	}()
 
-	if atomic, ok := repo.(contract.AtomicExecutor); ok {
+	atomic, isAtomic := repo.(contract.AtomicExecutor)
+
+	// CREATE DATABASE cannot join a transaction, so it runs first and on its own.
+	var outside []changeStep
+	if isAtomic {
+		outside = lo.Filter(steps, func(step changeStep, _ int) bool { return step.outside })
+		steps = lo.Reject(steps, func(step changeStep, _ int) bool { return step.outside })
+	}
+
+	result := &ChangeResult{}
+
+	for _, step := range outside {
+		if _, err := repo.Execute(ctx, step.nodeID, step.action, step.params); err != nil {
+			result.Failed = step.opIndexes
+
+			return result, apperror.InternalServerError(fmt.Errorf("%s failed: %w", step.action, err))
+		}
+
+		result.Applied = append(result.Applied, step.opIndexes...)
+	}
+
+	if isAtomic && len(steps) > 0 {
 		executeSteps := lo.Map(steps, func(step changeStep, _ int) contract.ExecuteStep {
 			return contract.ExecuteStep{NodeID: step.nodeID, Action: step.action, Params: step.params}
 		})
 
 		if err := atomic.ExecuteAtomic(ctx, executeSteps); err != nil {
-			return nil, apperror.InternalServerError(fmt.Errorf("schema change rolled back, nothing was applied: %w", err))
+			rolledBack := apperror.InternalServerError(fmt.Errorf("schema change rolled back, nothing in it was applied: %w", err))
+			if len(result.Applied) == 0 {
+				return nil, rolledBack
+			}
+
+			// Something already ran outside the transaction: report the rest as failed.
+			result.Failed = lo.FlatMap(steps, func(step changeStep, _ int) []int { return step.opIndexes })
+
+			return result, rolledBack
 		}
 
-		return &ChangeResult{Applied: lo.FlatMap(steps, func(step changeStep, _ int) []int { return step.opIndexes })}, nil
-	}
+		result.Applied = append(result.Applied, lo.FlatMap(steps, func(step changeStep, _ int) []int { return step.opIndexes })...)
 
-	result := &ChangeResult{}
+		return result, nil
+	}
 
 	for i, step := range steps {
 		if _, err := repo.Execute(ctx, step.nodeID, step.action, step.params); err != nil {
@@ -160,6 +193,7 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 	)
 
 	editIndexes := map[string][]int{}
+	scopeIndexes := []int{}
 
 	for i, op := range req.Ops {
 		if op.Op != dto.SchemaChangeCreateTable {
@@ -179,6 +213,8 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 
 		switch {
 		case op.Op == dto.SchemaChangeCreateTable:
+		case op.IsScopeOp():
+			scopeIndexes = append(scopeIndexes, i)
 		case op.Op == dto.SchemaChangeAddColumn && created:
 			spec.columns = append(spec.columns, *op.Column)
 			spec.opIndexes = append(spec.opIndexes, i)
@@ -208,6 +244,25 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 	}
 
 	var steps []changeStep
+
+	// The database comes first, then its schema, then what goes inside them.
+	for _, i := range scopeIndexes {
+		op := req.Ops[i]
+
+		params, err := scopeParams(connectionType, op)
+		if err != nil {
+			return nil, err
+		}
+
+		step := changeStep{nodeID: databaseCore.FormatNodeID(connectionType, contract.DBNode{}), action: contract.CreateDatabaseAction, params: params, opIndexes: []int{i}, outside: true}
+		if op.Op == dto.SchemaChangeCreateSchema {
+			step = changeStep{nodeID: databaseCore.FormatNodeID(connectionType, contract.DBNode{Database: database}), action: contract.CreateSchemaAction, params: params, opIndexes: []int{i}}
+		}
+
+		steps = append(steps, step)
+	}
+
+	slices.SortStableFunc(steps, func(a, b changeStep) int { return cmp.Compare(boolRank(b.outside), boolRank(a.outside)) })
 
 	for _, table := range orderCreates(createOrder, creates) {
 		params, err := builder.create(creates[table])
@@ -542,5 +597,45 @@ func sqliteEditParams(ops []dto.SchemaChangeOp) ([]byte, error) {
 		contract.TableColumnsTab:     dto.SQLiteTableColumnParams{Columns: columns},
 		contract.TableIndexesTab:     dto.SQLiteIndexParams{Indexes: indexes},
 		contract.TableForeignKeysTab: dto.SQLiteTableForeignKeyParams{Columns: fks},
+	})
+}
+
+func boolRank(value bool) int {
+	if value {
+		return 1
+	}
+
+	return 0
+}
+
+// ValidateScopeOps refuses create_database and create_schema where the engine cannot do them.
+func ValidateScopeOps(connectionType string, ops []dto.SchemaChangeOp) error {
+	for _, op := range ops {
+		switch {
+		case op.Op == dto.SchemaChangeCreateDatabase && connectionType == string(contract.Sqlite):
+			return fmt.Errorf("SQLite has no databases to create")
+		case op.Op == dto.SchemaChangeCreateSchema && !contract.IsPostgresFamily(connectionType):
+			return fmt.Errorf("only PostgreSQL has schemas to create")
+		}
+	}
+
+	return nil
+}
+
+// scopeParams are the Object Form params that create the database or schema of an op.
+func scopeParams(connectionType string, op dto.SchemaChangeOp) ([]byte, error) {
+	if err := ValidateScopeOps(connectionType, []dto.SchemaChangeOp{op}); err != nil {
+		return nil, err
+	}
+
+	if op.Op == dto.SchemaChangeCreateSchema {
+		return marshalTabs(map[contract.TreeTab]any{
+			contract.SchemaTab: dto.PostgresSchemaParams{New: &dto.PostgresSchemaParamsData{Name: lo.ToPtr(op.Name)}},
+		})
+	}
+
+	// MySQL reads the same database params as PostgreSQL.
+	return marshalTabs(map[contract.TreeTab]any{
+		contract.DatabaseTab: dto.PostgresDatabaseParams{New: &dto.PostgresDatabaseParamsData{Name: lo.ToPtr(op.Name)}},
 	})
 }

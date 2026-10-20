@@ -23,7 +23,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
   const [editing, setEditing] = useState<number>();
   const tables = [
     ...changeset.ops.reduce(
-      (groups, op) => groups.set(op.table, [...(groups.get(op.table) ?? []), op]),
+      (groups, op) => groups.set(op.table || op.name || '', [...(groups.get(op.table || op.name || '') ?? []), op]),
       new Map<string, AiChangesetOp[]>()
     )
   ];
@@ -41,7 +41,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
             <Typography variant='subtitle2' sx={{ flex: 1 }}>
               {table}
             </Typography>
-            {!ops.some((op) => op.op === 'create_table') && (
+            {!ops.some((op) => op.op === 'create_table' || op.name) && (
               <Button size='small' variant='text' onClick={() => openForm(ops[0])} data-testid='ai-diff-open-form'>
                 {locales.ai_changes_open_form}
               </Button>

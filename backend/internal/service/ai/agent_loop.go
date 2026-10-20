@@ -28,7 +28,7 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 	`You cannot change the database. When the user wants a change, answer with the SQL in a code block for them to review and run themselves.`
 
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
-	`To design or change schema (create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
+	`To design or change schema (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
 	`To run INSERT/UPDATE/DELETE call execute_write; the user must confirm before it runs. ` +
 	`For work with several steps, call update_plan first and update it as steps finish. ` +
 	`Never claim a proposed change or write was applied — say it is waiting for the user's review.`

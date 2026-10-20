@@ -222,6 +222,46 @@ test.describe("Persisted changeset ops (postgres)", () => {
           await rows(page, connectionId, `DROP TABLE ${folded}`);
         });
 
+        await test.step("A new database with its schema and tables is created in one apply", async () => {
+          const blog = `e2e_blog_${suffix}`.toLowerCase();
+          const proposal = await proposeChangeset(page, llm, connectionId, [
+            { op: "create_database", name: blog },
+            { op: "create_schema", name: "app" },
+            {
+              op: "create_table",
+              table: "users",
+              columns: [
+                { name: "id", type: "INTEGER", primary: true },
+                { name: "email", type: "TEXT" },
+              ],
+            },
+          ]);
+          try {
+            expect((await applyChangeset(page, proposal)).status()).toBe(200);
+            expect(await changesetStatuses(page, proposal)).toEqual([
+              "applied",
+              "applied",
+              "applied",
+            ]);
+            expect(
+              await rows(
+                page,
+                connectionId,
+                `SELECT datname FROM pg_database WHERE datname = '${blog}'`,
+              ),
+            ).toHaveLength(1);
+            expect(await undoSql(page, proposal)).toEqual([
+              `DROP DATABASE "${blog}"`,
+            ]);
+          } finally {
+            await rows(
+              page,
+              connectionId,
+              `DROP DATABASE IF EXISTS "${blog}" WITH (FORCE)`,
+            );
+          }
+        });
+
         await rows(page, connectionId, `DROP TABLE ${table}`);
       });
     } finally {

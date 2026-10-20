@@ -10,6 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -57,6 +58,21 @@ func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, chatID uint, ra
 
 	database := lo.CoalesceOrEmpty(lo.FromPtr(args.Database), lo.FromPtr(toolCtx.Database))
 	schema := lo.CoalesceOrEmpty(lo.FromPtr(args.Schema), lo.FromPtr(toolCtx.Schema))
+
+	if err := serviceSchema.ValidateScopeOps(conn.ConnectionType, args.Ops); err != nil {
+		return nil, err
+	}
+
+	// Tables proposed together with a new database or schema go inside it.
+	for _, op := range args.Ops {
+		switch op.Op {
+		case dto.SchemaChangeCreateDatabase:
+			database = op.Name
+			schema = lo.If(contract.IsPostgresFamily(conn.ConnectionType), lo.CoalesceOrEmpty(schema, "public")).Else("")
+		case dto.SchemaChangeCreateSchema:
+			schema = op.Name
+		}
+	}
 
 	if contract.IsPostgresFamily(conn.ConnectionType) && (database == "" || schema == "") {
 		return nil, fmt.Errorf("database and schema are required; ask the user to select them in the chat context")

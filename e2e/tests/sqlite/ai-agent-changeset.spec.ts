@@ -131,6 +131,15 @@ test.describe("AI Agent Workspace changeset", () => {
           await expect(surface).toBeVisible();
         });
 
+        await test.step("The Diagram tab draws the tables involved with the pending changes", async () => {
+          await page.getByTestId("ai-changes-tab-diagram").click();
+          const nodes = page.getByTestId("ai-mini-diagram-node");
+          await expect(nodes.filter({ hasText: posts })).toHaveAttribute("data-status", "added");
+          await expect(nodes.filter({ hasText: users })).toHaveAttribute("data-status", "changed");
+          await expect(nodes.filter({ hasText: users })).toContainText("phone");
+          await page.getByTestId("ai-changes-tab-diff").click();
+        });
+
         await test.step("The SQL tab shows what would run", async () => {
           await page.getByTestId("ai-changes-tab-sql").click();
           const sql = page.getByTestId("ai-sql");

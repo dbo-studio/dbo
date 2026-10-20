@@ -17,12 +17,14 @@ import (
 const maxIdentifierLen = 63
 
 const (
-	SchemaChangeCreateTable   = "create_table"
-	SchemaChangeAddColumn     = "add_column"
-	SchemaChangeAlterColumn   = "alter_column"
-	SchemaChangeDropColumn    = "drop_column"
-	SchemaChangeAddIndex      = "add_index"
-	SchemaChangeAddForeignKey = "add_foreign_key"
+	SchemaChangeCreateDatabase = "create_database"
+	SchemaChangeCreateSchema   = "create_schema"
+	SchemaChangeCreateTable    = "create_table"
+	SchemaChangeAddColumn      = "add_column"
+	SchemaChangeAlterColumn    = "alter_column"
+	SchemaChangeDropColumn     = "drop_column"
+	SchemaChangeAddIndex       = "add_index"
+	SchemaChangeAddForeignKey  = "add_foreign_key"
 )
 
 var (
@@ -45,8 +47,10 @@ type (
 	}
 
 	SchemaChangeOp struct {
-		Op      string               `json:"op"`
-		Table   string               `json:"table"`
+		Op    string `json:"op"`
+		Table string `json:"table,omitempty"`
+		// Name is the database or schema that create_database or create_schema makes.
+		Name    string               `json:"name,omitempty"`
 		Columns []SchemaChangeColumn `json:"columns,omitempty"`
 		// Column is the new definition for add_column and alter_column (matched by name).
 		Column *SchemaChangeColumn `json:"column,omitempty"`
@@ -108,8 +112,9 @@ func (c SchemaChangeColumn) Validate() error {
 
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
-		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
-		validation.Field(&op.Table, validation.Required, validation.Length(1, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
+		validation.Field(&op.Table, validation.When(!op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.Name, validation.When(op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.ColumnName, validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.IndexColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
 		validation.Field(&op.RefTable, validation.Match(schemaChangeIdentifier)),
@@ -155,6 +160,11 @@ func (op SchemaChangeOp) Validate() error {
 	}
 
 	return nil
+}
+
+// IsScopeOp reports whether the op creates the database or schema the other ops work in.
+func (op SchemaChangeOp) IsScopeOp() bool {
+	return op.Op == SchemaChangeCreateDatabase || op.Op == SchemaChangeCreateSchema
 }
 
 // ForeignKeyName is the deterministic constraint name used for agent-proposed

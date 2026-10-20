@@ -29,6 +29,7 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
   const [draft, setDraft] = useState<SchemaChangeOp>(() => ({
     op: op.op,
     table: op.table,
+    name: op.name,
     columns: op.columns,
     column: op.column,
     columnName: op.columnName,
@@ -45,16 +46,28 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
     setDraft({ ...draft, columns: columns.map((item, i) => (i === index ? column : item)) });
 
   const complete =
-    draft.op === 'create_table'
-      ? columns.length > 0 && columns.every((column) => column.name && column.type)
-      : draft.op === 'add_index'
-        ? !!draft.indexColumns?.length
-        : draft.op === 'add_foreign_key'
-          ? !!draft.fkColumns?.length && !!draft.refTable && draft.refColumns?.length === draft.fkColumns.length
-          : !!draft.column?.name && !!draft.column.type;
+    draft.op === 'create_database' || draft.op === 'create_schema'
+      ? !!draft.name
+      : draft.op === 'create_table'
+        ? columns.length > 0 && columns.every((column) => column.name && column.type)
+        : draft.op === 'add_index'
+          ? !!draft.indexColumns?.length
+          : draft.op === 'add_foreign_key'
+            ? !!draft.fkColumns?.length && !!draft.refTable && draft.refColumns?.length === draft.fkColumns.length
+            : !!draft.column?.name && !!draft.column.type;
 
   return (
     <Stack spacing={1} sx={{ py: 0.5 }} data-testid='ai-diff-editor'>
+      {(draft.op === 'create_database' || draft.op === 'create_schema') && (
+        <TextField
+          size='small'
+          label={locales.ai_changes_edit_name}
+          value={draft.name ?? ''}
+          onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+          slotProps={{ htmlInput: { 'data-testid': 'ai-diff-edit-name' } }}
+        />
+      )}
+
       {draft.op === 'create_table' && (
         <>
           {columns.map((column, index) => (

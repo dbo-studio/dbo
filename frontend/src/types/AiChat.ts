@@ -54,8 +54,10 @@ export type SchemaChangeColumn = {
 };
 
 export type SchemaChangeOp = {
-  op: 'create_table' | 'add_column' | 'alter_column' | 'drop_column' | 'add_index' | 'add_foreign_key';
+  op: 'create_database' | 'create_schema' | 'create_table' | 'add_column' | 'alter_column' | 'drop_column' | 'add_index' | 'add_foreign_key';
   table: string;
+  /** create_database / create_schema: the new name. */
+  name?: string;
   columns?: SchemaChangeColumn[];
   column?: SchemaChangeColumn;
   columnName?: string;

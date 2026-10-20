@@ -12,6 +12,16 @@ import (
 // run. Only ops that add something can be taken back: altering or dropping a
 // column loses what the column was, and SQLite cannot drop a foreign key.
 func CompensatingSQL(connectionType, database, schema string, ops []dto.SchemaChangeOp) []string {
+	// Everything else in the changeset lives inside a new database or schema.
+	for _, op := range ops {
+		switch op.Op {
+		case dto.SchemaChangeCreateDatabase:
+			return []string{"DROP DATABASE " + identifier(connectionType, op.Name)}
+		case dto.SchemaChangeCreateSchema:
+			return []string{"DROP SCHEMA " + identifier(connectionType, op.Name)}
+		}
+	}
+
 	created := map[string]bool{}
 
 	for _, op := range ops {
@@ -30,16 +40,7 @@ func CompensatingSQL(connectionType, database, schema string, ops []dto.SchemaCh
 			return quote.SqliteIdent(name)
 		}
 	}
-	ident := func(name string) string {
-		switch {
-		case contract.IsPostgresFamily(connectionType):
-			return quote.PostgresIdent(name)
-		case contract.IsMysqlFamily(connectionType):
-			return quote.MysqlIdent(name)
-		default:
-			return quote.SqliteIdent(name)
-		}
-	}
+	ident := func(name string) string { return identifier(connectionType, name) }
 
 	statements := []string{}
 
@@ -74,6 +75,17 @@ func CompensatingSQL(connectionType, database, schema string, ops []dto.SchemaCh
 	}
 
 	return statements
+}
+
+func identifier(connectionType, name string) string {
+	switch {
+	case contract.IsPostgresFamily(connectionType):
+		return quote.PostgresIdent(name)
+	case contract.IsMysqlFamily(connectionType):
+		return quote.MysqlIdent(name)
+	default:
+		return quote.SqliteIdent(name)
+	}
 }
 
 func dropIndex(connectionType, schema, table, name string) string {

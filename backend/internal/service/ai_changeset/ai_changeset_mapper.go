@@ -68,6 +68,8 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 // opLabel is a short description of an op for the agent prompt.
 func opLabel(op dto.SchemaChangeOp) string {
 	switch op.Op {
+	case dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema:
+		return op.Op + " " + op.Name
 	case dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn:
 		return op.Op + " " + op.Table + "." + op.Column.Name
 	case dto.SchemaChangeDropColumn:

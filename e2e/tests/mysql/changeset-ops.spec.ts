@@ -261,6 +261,44 @@ test.describe("Persisted changeset ops (mysql)", () => {
           await rows(page, connectionId, `DROP TABLE \`${fresh}\``);
         });
 
+        await test.step("A new database with its tables is created in one apply", async () => {
+          const blog = `e2e_blog_${suffix}`.toLowerCase();
+          const proposal = await proposeChangeset(page, llm, connectionId, [
+            { op: "create_database", name: blog },
+            {
+              op: "create_table",
+              table: "users",
+              columns: [
+                { name: "id", type: "INT", primary: true },
+                { name: "email", type: "VARCHAR(100)" },
+              ],
+            },
+          ]);
+          try {
+            expect((await applyChangeset(page, proposal)).status()).toBe(200);
+            expect(await changesetStatuses(page, proposal)).toEqual([
+              "applied",
+              "applied",
+            ]);
+            expect(
+              await rows(
+                page,
+                connectionId,
+                `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '${blog}'`,
+              ),
+            ).toHaveLength(1);
+            expect(await undoSql(page, proposal)).toEqual([
+              `DROP DATABASE \`${blog}\``,
+            ]);
+          } finally {
+            await rows(
+              page,
+              connectionId,
+              `DROP DATABASE IF EXISTS \`${blog}\``,
+            );
+          }
+        });
+
         await rows(page, connectionId, `DROP TABLE \`${table}\``);
       });
     } finally {
