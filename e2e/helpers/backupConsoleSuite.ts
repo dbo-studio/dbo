@@ -89,6 +89,29 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
             ).toHaveCount(1);
           });
 
+          await test.step("A run's log shows what happened", async () => {
+            const detail = page.getByTestId("backup-job-detail");
+            await detail
+              .getByRole("button", { name: "Log", exact: true })
+              .click();
+            await expect(detail.getByText(/Wrote .* bytes/)).toBeVisible();
+            await detail.getByRole("button", { name: "Hide log" }).click();
+          });
+
+          await test.step("Edit keeps the job and saves changes", async () => {
+            const detail = page.getByTestId("backup-job-detail");
+            await detail
+              .getByRole("button", { name: "Edit", exact: true })
+              .click();
+            await expect(page.getByTestId("backup-job-wizard")).toBeVisible();
+            await expect(page.locator('input[name="job-name"]')).toHaveValue(
+              jobName,
+            );
+            for (let i = 0; i < 4; i++) await next.click();
+            await page.getByRole("button", { name: "Save changes" }).click();
+            await expect(page.getByTestId("backup-job-detail")).toBeVisible();
+          });
+
           await test.step("Verify checks the checksum, and the contents with the passphrase", async () => {
             const detail = page.getByTestId("backup-job-detail");
             await detail.getByRole("button", { name: "Verify" }).click();

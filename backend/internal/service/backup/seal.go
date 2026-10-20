@@ -5,7 +5,10 @@ import (
 	"compress/gzip"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ecdh"
+	"crypto/hkdf"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -18,9 +21,14 @@ import (
 )
 
 const (
-	sealMagic = "DBOENC01"
-	saltSize  = 16
-	chunkSize = 1 << 20
+	// Version 2 files carry no key: they are encrypted to a public key, and the
+	// matching private key is stored only wrapped by the passphrase.
+	sealMagic   = "DBOENC02"
+	saltSize    = 16
+	nonceSize   = 12
+	wrappedSize = saltSize + nonceSize + 32 + 16 // salt, nonce, X25519 private key, GCM tag
+	pubSize     = 32
+	chunkSize   = 1 << 20
 	// maxFrame bounds a frame length read from a file so a corrupt or hostile
 	// header cannot ask for gigabytes.
 	maxFrame = chunkSize + 64
@@ -47,10 +55,47 @@ func PlainName(name string) string {
 	return strings.TrimSuffix(strings.TrimSuffix(name, encSuffix), gzipSuffix)
 }
 
+// Encryption is what a backup needs to be encrypted without the passphrase: the
+// public key, and the private key wrapped by the passphrase (kept in each file
+// so a backup stays restorable without its schedule).
+type Encryption struct {
+	PublicKey  []byte
+	WrappedKey []byte
+}
+
+// NewEncryption makes a fresh key pair and wraps its private half with the
+// passphrase. The passphrase is not kept anywhere.
+func NewEncryption(passphrase string) (*Encryption, error) {
+	priv, err := ecdh.X25519().GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	salt := make([]byte, saltSize)
+	nonce := make([]byte, nonceSize)
+
+	if _, err := rand.Read(salt); err != nil {
+		return nil, err
+	}
+
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, err
+	}
+
+	aead, err := deriveKey(passphrase, salt)
+	if err != nil {
+		return nil, err
+	}
+
+	wrapped := append(append(salt, nonce...), aead.Seal(nil, nonce, priv.Bytes(), []byte(sealMagic))...)
+
+	return &Encryption{PublicKey: priv.PublicKey().Bytes(), WrappedKey: wrapped}, nil
+}
+
 // Seal gzips and/or encrypts src into a new file next to it, removes src, and
 // returns the new path. Nothing is done when neither option is on.
-func Seal(src string, compress bool, passphrase string) (string, error) {
-	if !compress && passphrase == "" {
+func Seal(src string, compress bool, enc *Encryption) (string, error) {
+	if !compress && enc == nil {
 		return src, nil
 	}
 
@@ -59,7 +104,7 @@ func Seal(src string, compress bool, passphrase string) (string, error) {
 		dest += gzipSuffix
 	}
 
-	if passphrase != "" {
+	if enc != nil {
 		dest += encSuffix
 	}
 
@@ -75,7 +120,7 @@ func Seal(src string, compress bool, passphrase string) (string, error) {
 		return "", err
 	}
 
-	if err := sealStream(in, out, compress, passphrase); err != nil {
+	if err := sealStream(in, out, compress, enc); err != nil {
 		_ = out.Close()
 		_ = os.Remove(dest)
 
@@ -91,16 +136,16 @@ func Seal(src string, compress bool, passphrase string) (string, error) {
 	return dest, os.Remove(src)
 }
 
-func sealStream(in io.Reader, out io.Writer, compress bool, passphrase string) error {
+func sealStream(in io.Reader, out io.Writer, compress bool, enc *Encryption) error {
 	sink := io.WriteCloser(nopCloser{out})
 
-	if passphrase != "" {
-		enc, err := newEncryptWriter(out, passphrase)
+	if enc != nil {
+		w, err := newEncryptWriter(out, enc)
 		if err != nil {
 			return err
 		}
 
-		sink = enc
+		sink = w
 	}
 
 	w := sink
@@ -202,6 +247,22 @@ func deriveKey(passphrase string, salt []byte) (cipher.AEAD, error) {
 	return cipher.NewGCM(block)
 }
 
+// fileAEAD derives a file's frame key from the key agreement. The ephemeral
+// public key is the HKDF salt, so each file gets its own key.
+func fileAEAD(shared, ephemeralPub []byte) (cipher.AEAD, error) {
+	key, err := hkdf.Key(sha256.New, shared, ephemeralPub, "dbo-backup-v2", 32)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return cipher.NewGCM(block)
+}
+
 // frameNonce is a counter, so every chunk of a file has its own nonce.
 func frameNonce(counter uint64) []byte {
 	nonce := make([]byte, 12)
@@ -219,18 +280,29 @@ type encryptWriter struct {
 	counter uint64
 }
 
-func newEncryptWriter(out io.Writer, passphrase string) (*encryptWriter, error) {
-	salt := make([]byte, saltSize)
-	if _, err := rand.Read(salt); err != nil {
-		return nil, err
-	}
-
-	aead, err := deriveKey(passphrase, salt)
+func newEncryptWriter(out io.Writer, enc *Encryption) (*encryptWriter, error) {
+	pub, err := ecdh.X25519().NewPublicKey(enc.PublicKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := out.Write(append([]byte(sealMagic), salt...)); err != nil {
+	eph, err := ecdh.X25519().GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	shared, err := eph.ECDH(pub)
+	if err != nil {
+		return nil, err
+	}
+
+	aead, err := fileAEAD(shared, eph.PublicKey().Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	header := append(append([]byte(sealMagic), enc.WrappedKey...), eph.PublicKey().Bytes()...)
+	if _, err := out.Write(header); err != nil {
 		return nil, err
 	}
 
@@ -290,12 +362,40 @@ type decryptReader struct {
 }
 
 func newDecryptReader(in io.Reader, passphrase string) (*decryptReader, error) {
-	head := make([]byte, len(sealMagic)+saltSize)
+	head := make([]byte, len(sealMagic)+wrappedSize+pubSize)
 	if _, err := io.ReadFull(in, head); err != nil || string(head[:len(sealMagic)]) != sealMagic {
 		return nil, fmt.Errorf("not an encrypted DBO backup: %w", ErrWrongPassphrase)
 	}
 
-	aead, err := deriveKey(passphrase, head[len(sealMagic):])
+	wrapped := head[len(sealMagic) : len(sealMagic)+wrappedSize]
+	ephPub := head[len(sealMagic)+wrappedSize:]
+
+	unwrap, err := deriveKey(passphrase, wrapped[:saltSize])
+	if err != nil {
+		return nil, err
+	}
+
+	privBytes, err := unwrap.Open(nil, wrapped[saltSize:saltSize+nonceSize], wrapped[saltSize+nonceSize:], []byte(sealMagic))
+	if err != nil {
+		return nil, ErrWrongPassphrase
+	}
+
+	priv, err := ecdh.X25519().NewPrivateKey(privBytes)
+	if err != nil {
+		return nil, ErrWrongPassphrase
+	}
+
+	peer, err := ecdh.X25519().NewPublicKey(ephPub)
+	if err != nil {
+		return nil, ErrWrongPassphrase
+	}
+
+	shared, err := priv.ECDH(peer)
+	if err != nil {
+		return nil, ErrWrongPassphrase
+	}
+
+	aead, err := fileAEAD(shared, ephPub)
 	if err != nil {
 		return nil, err
 	}

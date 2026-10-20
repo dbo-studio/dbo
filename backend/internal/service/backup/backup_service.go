@@ -66,10 +66,22 @@ func (s IBackupServiceImpl) Create(ctx context.Context, req *dto.BackupRequest) 
 
 	ownerID := helper.CtxOwnerID(ctx)
 
-	job, err := s.jobManager.CreateJob(model.JobTypeBackup, ownerID, helper.StructToJSON(dto.BackupJob{
-		OwnerID:       ownerID,
-		BackupRequest: *req,
-	}))
+	jobData := dto.BackupJob{OwnerID: ownerID, BackupRequest: *req}
+	jobData.Passphrase = ""
+
+	// The passphrase becomes key material here and is dropped: the job, its
+	// row and the logs never see it.
+	if req.Passphrase != "" {
+		enc, err := NewEncryption(req.Passphrase)
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		jobData.PublicKey = hex.EncodeToString(enc.PublicKey)
+		jobData.WrappedKey = hex.EncodeToString(enc.WrappedKey)
+	}
+
+	job, err := s.jobManager.CreateJob(model.JobTypeBackup, ownerID, helper.StructToJSON(jobData))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -125,7 +137,8 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 	// starts; the restore checks that it succeeded.
 	var safetyJobID uint
 
-	if req.SafetyBackup {
+	// A database that does not exist yet has nothing to back up.
+	if req.SafetyBackup && !req.CreateDatabase {
 		safety, err := s.jobManager.CreateJob(model.JobTypeBackup, ownerID, helper.StructToJSON(dto.BackupJob{
 			OwnerID: ownerID,
 			BackupRequest: dto.BackupRequest{
@@ -373,6 +386,7 @@ func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 		Schema:       a.Schema,
 		Driver:       a.Driver,
 		Method:       string(a.Method),
+		Log:          a.Log,
 		Compressed:   a.Compressed,
 		Encrypted:    a.Encrypted,
 		Tool:         a.Tool,

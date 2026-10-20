@@ -96,7 +96,7 @@ export function defineBackupSealTests(engine: DbEngine): void {
             const body = await (
               await page.request.get(`/api/backups/${artifact.id}/download`)
             ).body();
-            expect(body.subarray(0, 8).toString()).toBe("DBOENC01");
+            expect(body.subarray(0, 8).toString()).toBe("DBOENC02");
             expect(body.toString("latin1")).not.toContain(table);
           });
 
@@ -118,6 +118,28 @@ export function defineBackupSealTests(engine: DbEngine): void {
               ok: true,
               message: expect.stringContaining("read back"),
             });
+          });
+
+          await test.step("A manual backup can be encrypted too, and verifies", async () => {
+            const jobId = await startJob(page, "/api/backups", {
+              connectionId,
+              compress: true,
+              passphrase,
+              ...scopeFor(engine),
+            });
+            const job = await waitForJob(page, jobId);
+            expect(job.status, job.error).toBe("completed");
+            const manual = (await listHistory(page, connectionId)).find(
+              (a) => a.jobId === jobId,
+            ) as Sealed;
+            expect(manual.fileName).toMatch(/\.gz\.enc$/);
+            expect(manual.encrypted).toBe(true);
+            const verified = (await (
+              await page.request.post(`/api/backups/${manual.id}/verify`, {
+                data: { passphrase },
+              })
+            ).json()) as { data: { ok: boolean } };
+            expect(verified.data.ok).toBe(true);
           });
 
           const target = scopeFor(engine).database ?? "main";

@@ -3,6 +3,9 @@ export type BackupRequestType = {
   database?: string;
   schema?: string;
   note?: string;
+  compress?: boolean;
+  /** Encrypts the backup; turned into key material on the server and never stored. */
+  passphrase?: string;
 };
 
 export type RestoreRequestType = {
@@ -13,6 +16,8 @@ export type RestoreRequestType = {
   confirmName: string;
   safetyBackup: boolean;
   passphrase?: string;
+  /** Create the database first, so the restore goes into a new empty one. */
+  createDatabase?: boolean;
 };
 
 export type BackupJobResponseType = {
@@ -30,6 +35,7 @@ export type BackupArtifactType = {
   method: 'basic' | 'native' | 'uploaded';
   compressed: boolean;
   encrypted: boolean;
+  log: string;
   tool: string;
   toolVersion: string;
   status: 'running' | 'completed' | 'failed';

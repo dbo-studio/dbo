@@ -2,6 +2,7 @@ package serviceBackup
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -12,7 +13,6 @@ import (
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
-	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -33,17 +33,15 @@ type IBackupScheduleServiceImpl struct {
 	shareRepo      repository.IConnectionShareRepo
 	scheduleRepo   repository.IBackupScheduleRepo
 	secrets        serviceSecretStore.ISecretStore
-	cipherKey      []byte
 }
 
-func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, cipherKey []byte) IBackupScheduleService {
+func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore) IBackupScheduleService {
 	return &IBackupScheduleServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
 		shareRepo:      shareRepo,
 		scheduleRepo:   scheduleRepo,
 		secrets:        secrets,
-		cipherKey:      cipherKey,
 	}
 }
 
@@ -83,12 +81,9 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 	}
 
 	if req.Passphrase != "" {
-		enc, err := cryptoutil.EncryptAESGCM(s.cipherKey, []byte(req.Passphrase))
-		if err != nil {
+		if err := setEncryption(schedule, req.Passphrase); err != nil {
 			return nil, apperror.InternalServerError(err)
 		}
-
-		schedule.PassphraseEnc = enc
 	}
 
 	next, err := NextRun(schedule, time.Now())
@@ -121,20 +116,19 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 
 	applyScheduleUpdate(schedule, req)
 
+	// A new passphrase means a new key pair; backups already made keep the key
+	// they were written with.
 	if req.Passphrase != nil && *req.Passphrase != "" {
-		enc, err := cryptoutil.EncryptAESGCM(s.cipherKey, []byte(*req.Passphrase))
-		if err != nil {
+		if err := setEncryption(schedule, *req.Passphrase); err != nil {
 			return nil, apperror.InternalServerError(err)
 		}
-
-		schedule.PassphraseEnc = enc
 	}
 
 	fields := map[string]any{
 		"name": schedule.Name, "database": schedule.Database, "schema": schedule.Schema,
 		"cadence": schedule.Cadence, "hour": schedule.Hour, "minute": schedule.Minute,
 		"weekday": schedule.Weekday, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
-		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "compress": schedule.Compress, "passphrase_enc": schedule.PassphraseEnc,
+		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
 	}
 
 	// Timing or enabling changes recompute the next run from now.
@@ -264,7 +258,7 @@ func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 	return dto.BackupScheduleResponse{
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
 		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, Timezone: s.Timezone,
-		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, Compress: s.Compress, Encrypted: s.PassphraseEnc != "",
+		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, Compress: s.Compress, Encrypted: s.PublicKey != "",
 		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,
 	}
 }
@@ -279,8 +273,11 @@ func queueScheduledBackup(ctx context.Context, jobs serviceJob.IJobManager, repo
 			Database:     s.Database,
 			Schema:       s.Schema,
 			Note:         "Schedule: " + s.Name,
+			Compress:     s.Compress,
 		},
 		ScheduleID: s.ID,
+		PublicKey:  s.PublicKey,
+		WrappedKey: s.WrappedKey,
 	}))
 	if err != nil {
 		return nil, err
@@ -293,4 +290,17 @@ func queueScheduledBackup(ctx context.Context, jobs serviceJob.IJobManager, repo
 	})
 
 	return job, err
+}
+
+// setEncryption replaces a schedule's key pair with one wrapped by passphrase.
+func setEncryption(s *model.BackupSchedule, passphrase string) error {
+	enc, err := NewEncryption(passphrase)
+	if err != nil {
+		return err
+	}
+
+	s.PublicKey = hex.EncodeToString(enc.PublicKey)
+	s.WrappedKey = hex.EncodeToString(enc.WrappedKey)
+
+	return nil
 }

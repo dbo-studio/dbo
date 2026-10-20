@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
@@ -138,6 +139,12 @@ func (p *RestoreProcessor) restoreSQL(ctx context.Context, job *model.Job, conne
 		return err
 	}
 
+	if jobData.CreateDatabase {
+		if err := p.createDatabase(ctx, connection, jobData.Database); err != nil {
+			return err
+		}
+	}
+
 	cmd, err := serviceBackup.PlanNativeRestore(ctx, connection, password, jobData.Database, artifact.FilePath)
 	if errors.Is(err, serviceBackup.ErrNativeUnavailable) {
 		return fmt.Errorf("%w: %s", apperror.ErrRestoreToolMissing, err.Error())
@@ -187,4 +194,20 @@ func restoreErrors(stderr string) []string {
 	}
 
 	return failures
+}
+
+// createDatabase makes the target before the dump is replayed into it. The
+// name was validated as a plain identifier when the request came in.
+func (p *RestoreProcessor) createDatabase(ctx context.Context, connection *model.Connection, name string) error {
+	db, err := p.cm.GetConnection(ctx, connection, false)
+	if err != nil {
+		return err
+	}
+
+	statement := "CREATE DATABASE " + databaseCore.QuoteIdent(connection.ConnectionType, name)
+	if err := db.WithContext(ctx).Exec(statement).Error; err != nil {
+		return fmt.Errorf("create database %s: %w", name, err)
+	}
+
+	return nil
 }

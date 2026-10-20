@@ -42,13 +42,19 @@ type BackupArtifact struct {
 	FileName     string       `gorm:"not null;default:''"`
 	FilePath     string       `gorm:"not null;default:''"`
 	Size         int64        `gorm:"not null;default:0"`
-	Compressed   bool         `gorm:"not null;default:false"`
-	Encrypted    bool         `gorm:"not null;default:false"`
-	Checksum     string       `gorm:"not null;default:''"`
-	Error        string       `gorm:"not null;default:''"`
-	StartedAt    time.Time    `gorm:"not null"`
-	CompletedAt  *time.Time
-	CreatedAt    *time.Time `gorm:"autoCreateTime"`
+	Log          string       `gorm:"not null;default:''"`
+	// SealCompress, SealPublicKey and SealWrappedKey carry a run\'s sealing choice
+	// to the end of the dump; they are not stored.
+	SealCompress   bool      `gorm:"-"`
+	SealPublicKey  []byte    `gorm:"-"`
+	SealWrappedKey []byte    `gorm:"-"`
+	Compressed     bool      `gorm:"not null;default:false"`
+	Encrypted      bool      `gorm:"not null;default:false"`
+	Checksum       string    `gorm:"not null;default:''"`
+	Error          string    `gorm:"not null;default:''"`
+	StartedAt      time.Time `gorm:"not null"`
+	CompletedAt    *time.Time
+	CreatedAt      *time.Time `gorm:"autoCreateTime"`
 }
 
 func (BackupArtifact) TableName() string { return "backup_artifacts" }

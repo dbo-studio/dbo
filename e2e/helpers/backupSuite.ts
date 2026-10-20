@@ -320,12 +320,26 @@ export function defineBackupTests(engine: DbEngine): void {
             page.request.post("/api/query/raw", {
               data: { connectionId: sourceId, query },
             });
-          expect((await raw(`CREATE DATABASE ${scratch}`)).ok()).toBeTruthy();
 
           const cfg = getDbConfig(engine, targetName);
           let targetId: number | undefined;
 
           try {
+            const artifact = await runBackup(page, sourceId, engine);
+
+            await test.step("Restore creates the new database and fills it", async () => {
+              const jobId = await startJob(page, "/api/backups/restore", {
+                connectionId: sourceId,
+                database: scratch,
+                ...(engine === "postgresql" ? { schema: "public" } : {}),
+                artifactId: artifact.id,
+                confirmName: scratch,
+                createDatabase: true,
+              });
+              const job = await waitForJob(page, jobId);
+              expect(job.status, job.error).toBe("completed");
+            });
+
             const created = await page.request.post("/api/connections", {
               data: {
                 name: targetName,
@@ -342,20 +356,6 @@ export function defineBackupTests(engine: DbEngine): void {
             });
             expect(created.ok(), await created.text()).toBeTruthy();
             targetId = await connectionIdByName(page, targetName);
-
-            const artifact = await runBackup(page, sourceId, engine);
-
-            await test.step("Restore into the fresh database", async () => {
-              const jobId = await startJob(page, "/api/backups/restore", {
-                connectionId: targetId,
-                database: scratch,
-                ...(engine === "postgresql" ? { schema: "public" } : {}),
-                artifactId: artifact.id,
-                confirmName: scratch,
-              });
-              const job = await waitForJob(page, jobId);
-              expect(job.status, job.error).toBe("completed");
-            });
 
             await test.step("Tables and rows match the source", async () => {
               for (const table of [parent, child]) {

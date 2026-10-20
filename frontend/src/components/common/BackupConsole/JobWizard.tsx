@@ -1,5 +1,5 @@
 import api from '@/api';
-import type { BackupCadenceType } from '@/api/backup/types';
+import type { BackupCadenceType, BackupScheduleType } from '@/api/backup/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
@@ -24,25 +24,34 @@ const asNumber = (value: string, fallback: number): number => {
 };
 
 /** Five-step form: General, Destination, Source, Schedule, Options. */
-export default function JobWizard({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }): JSX.Element {
+export default function JobWizard({
+  job,
+  onDone,
+  onCancel
+}: {
+  /** Set to edit an existing job instead of creating one. */
+  job?: BackupScheduleType;
+  onDone: () => void;
+  onCancel: () => void;
+}): JSX.Element {
   const connections = useConnectionStore((s) => s.connections) ?? [];
   const writable = connections.filter((c) => (c.access ?? 'owner') !== 'viewer');
 
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [name, setName] = useState('');
-  const [connectionId, setConnectionId] = useState<number | null>(writable[0]?.id ?? null);
-  const [database, setDatabase] = useState('');
-  const [schema, setSchema] = useState('public');
-  const [cadence, setCadence] = useState<BackupCadenceType>('daily');
-  const [hour, setHour] = useState(2);
-  const [minute, setMinute] = useState(0);
-  const [weekday, setWeekday] = useState(0);
-  const [keepLast, setKeepLast] = useState(7);
-  const [keepDays, setKeepDays] = useState(0);
-  const [compress, setCompress] = useState(true);
+  const [name, setName] = useState(job?.name ?? '');
+  const [connectionId, setConnectionId] = useState<number | null>(job?.connectionId ?? writable[0]?.id ?? null);
+  const [database, setDatabase] = useState(job?.database ?? '');
+  const [schema, setSchema] = useState(job ? job.schema : 'public');
+  const [cadence, setCadence] = useState<BackupCadenceType>(job?.cadence ?? 'daily');
+  const [hour, setHour] = useState(job?.hour ?? 2);
+  const [minute, setMinute] = useState(job?.minute ?? 0);
+  const [weekday, setWeekday] = useState(job?.weekday ?? 0);
+  const [keepLast, setKeepLast] = useState(job?.keepLast ?? 7);
+  const [keepDays, setKeepDays] = useState(job?.keepDays ?? 0);
+  const [compress, setCompress] = useState(job?.compress ?? true);
   const [passphrase, setPassphrase] = useState('');
-  const [timezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  const [timezone] = useState(() => job?.timezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'));
 
   const connection = writable.find((c) => c.id === connectionId);
   const isSqlite = connection?.type === 'sqlite';
@@ -62,6 +71,25 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
 
     setBusy(true);
     try {
+      if (job) {
+        await api.backup.updateSchedule(job.id, {
+          name: name.trim(),
+          database: isSqlite ? '' : database,
+          schema: isPostgres ? schema : '',
+          cadence,
+          hour,
+          minute,
+          weekday,
+          timezone,
+          keepLast,
+          keepDays,
+          compress,
+          passphrase: passphrase || undefined
+        });
+        onDone();
+        return;
+      }
+
       await api.backup.createSchedule({
         connectionId,
         name: name.trim(),
@@ -125,6 +153,7 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
             <SelectInput
               emptylabel={locales.backup_wizard_pick_connection}
               value={connectionId === null ? undefined : String(connectionId)}
+              disabled={job !== undefined}
               onChange={(e) => pickConnection(Number((e as SelectInputOption)?.value))}
               label={locales.backup_job_connection}
               options={writable.map((c) => ({ label: c.name, value: String(c.id) }))}
@@ -234,6 +263,11 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
             />
+            {job?.encrypted && (
+              <Typography variant='caption' color='textSubdued' component='p'>
+                {locales.backup_job_keep_passphrase}
+              </Typography>
+            )}
             {passphrase !== '' && (
               <Typography variant='caption' color='warning.main' component='p'>
                 {locales.backup_encrypt_warning}
@@ -263,7 +297,7 @@ export default function JobWizard({ onDone, onCancel }: { onDone: () => void; on
           </Button>
         ) : (
           <Button size='small' variant='contained' disabled={busy} onClick={() => void handleCreate()}>
-            {locales.backup_schedule_create}
+            {job ? locales.backup_job_save : locales.backup_schedule_create}
           </Button>
         )}
       </Box>

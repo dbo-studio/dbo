@@ -22,7 +22,6 @@ import (
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
-	"github.com/dbo-studio/dbo/pkg/cryptoutil"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -39,10 +38,9 @@ type BackupProcessor struct {
 	scheduleRepo   repository.IBackupScheduleRepo
 	secrets        serviceSecretStore.ISecretStore
 	cache          cache.Cache
-	cipherKey      []byte
 }
 
-func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache, cipherKey []byte) *BackupProcessor {
+func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
 	return &BackupProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
@@ -51,7 +49,6 @@ func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnectio
 		scheduleRepo:   scheduleRepo,
 		secrets:        secrets,
 		cache:          appCache,
-		cipherKey:      cipherKey,
 	}
 }
 
@@ -91,6 +88,12 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		StartedAt:    time.Now(),
 	}
 
+	artifact.SealCompress = jobData.Compress
+	artifact.SealPublicKey, _ = hex.DecodeString(jobData.PublicKey)
+	artifact.SealWrappedKey, _ = hex.DecodeString(jobData.WrappedKey)
+
+	logLine(artifact, "Started %s backup of %s", connection.ConnectionType, lo.CoalesceOrEmpty(jobData.Database, connection.Name))
+
 	if err := p.artifactRepo.Create(ctx, artifact); err != nil {
 		return err
 	}
@@ -106,6 +109,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		p.finish(context.WithoutCancel(ctx), artifact, map[string]any{
 			"status": model.BackupStatusFailed,
 			"error":  runErr.Error(),
+			"log":    artifact.Log + time.Now().Format("15:04:05") + " Failed: " + runErr.Error() + "\n",
 		})
 		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error(), 0)
 
@@ -117,6 +121,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		"method":       artifact.Method,
 		"compressed":   artifact.Compressed,
 		"encrypted":    artifact.Encrypted,
+		"log":          artifact.Log,
 		"tool":         artifact.Tool,
 		"tool_version": artifact.ToolVersion,
 		"file_name":    artifact.FileName,
@@ -244,6 +249,8 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 		return true, err
 	}
 
+	logLine(artifact, "Using %s %s", dump.Tool, dump.Version)
+
 	artifact.Method = model.BackupMethodNative
 	artifact.Tool = dump.Tool
 	artifact.ToolVersion = dump.Version
@@ -252,8 +259,13 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 		return true, err
 	}
 
-	if _, err := dump.Run(ctx); err != nil {
+	stderr, err := dump.Run(ctx)
+	if err != nil {
 		return true, err
+	}
+
+	if stderr != "" {
+		logLine(artifact, "%s warnings: %s", dump.Tool, strings.TrimSpace(stderr))
 	}
 
 	return true, p.completeFile(ctx, job, artifact)
@@ -285,7 +297,7 @@ func (p *BackupProcessor) sqliteVacuumInto(ctx context.Context, job *model.Job, 
 }
 
 func (p *BackupProcessor) completeFile(ctx context.Context, job *model.Job, artifact *model.BackupArtifact) error {
-	if err := p.seal(ctx, artifact); err != nil {
+	if err := p.seal(artifact); err != nil {
 		return err
 	}
 
@@ -294,6 +306,18 @@ func (p *BackupProcessor) completeFile(ctx context.Context, job *model.Job, arti
 	artifact.Size, artifact.Checksum, err = fileSizeAndChecksum(artifact.FilePath)
 	if err != nil {
 		return err
+	}
+
+	logLine(artifact, "Wrote %s (%d bytes, sha256 %s)", artifact.FileName, artifact.Size, artifact.Checksum[:12])
+
+	// A compressed file can be read back right away. An encrypted one cannot:
+	// only the passphrase opens it, and the server never has it.
+	if !artifact.Encrypted {
+		if ok, message := serviceBackup.VerifyFile(artifact.FilePath, artifact.FileName, artifact.Checksum, ""); !ok {
+			return fmt.Errorf("verification failed: %s", message)
+		}
+
+		logLine(artifact, "Verified: %s", "contents read back")
 	}
 
 	return p.jobManager.UpdateJobProgress(ctx, job, 100, "Backup completed successfully")
@@ -394,39 +418,34 @@ func (p *BackupProcessor) checkDiskSpace(ctx context.Context, jobData *dto.Backu
 	return nil
 }
 
-// seal applies a schedule's compression and encryption to the finished dump and
+// seal applies the run's compression and encryption to the finished dump and
 // points the artifact at the sealed file.
-func (p *BackupProcessor) seal(ctx context.Context, artifact *model.BackupArtifact) error {
-	if artifact.ScheduleID == 0 {
-		return nil
+func (p *BackupProcessor) seal(artifact *model.BackupArtifact) error {
+	var enc *serviceBackup.Encryption
+	if len(artifact.SealPublicKey) > 0 {
+		enc = &serviceBackup.Encryption{PublicKey: artifact.SealPublicKey, WrappedKey: artifact.SealWrappedKey}
 	}
 
-	schedule, err := p.scheduleRepo.FindByOwner(ctx, artifact.ScheduleID, artifact.OwnerID)
-	// A schedule deleted mid-run just leaves the plain dump.
-	if err != nil || (!schedule.Compress && schedule.PassphraseEnc == "") {
-		return nil //nolint:nilerr // see above
-	}
-
-	passphrase := ""
-
-	if schedule.PassphraseEnc != "" {
-		plain, err := cryptoutil.DecryptAESGCM(p.cipherKey, schedule.PassphraseEnc)
-		if err != nil {
-			return fmt.Errorf("cannot read the schedule passphrase: %w", err)
-		}
-
-		passphrase = string(plain)
-	}
-
-	sealed, err := serviceBackup.Seal(artifact.FilePath, schedule.Compress, passphrase)
+	sealed, err := serviceBackup.Seal(artifact.FilePath, artifact.SealCompress, enc)
 	if err != nil {
 		return err
 	}
 
+	if sealed == artifact.FilePath {
+		return nil
+	}
+
 	artifact.FilePath = sealed
 	artifact.FileName = strings.TrimPrefix(filepath.Base(sealed), fmt.Sprintf("%d_", artifact.ID))
-	artifact.Compressed = schedule.Compress
-	artifact.Encrypted = passphrase != ""
+	artifact.Compressed = artifact.SealCompress
+	artifact.Encrypted = enc != nil
+
+	logLine(artifact, "Sealed: compressed=%t encrypted=%t", artifact.Compressed, artifact.Encrypted)
 
 	return nil
+}
+
+// logLine adds a line to the run's log, kept with the artifact for the console.
+func logLine(artifact *model.BackupArtifact, format string, args ...any) {
+	artifact.Log += time.Now().Format("15:04:05") + " " + fmt.Sprintf(format, args...) + "\n"
 }

@@ -839,5 +839,11 @@
   "backup_verify": "Verify",
   "backup_verify_passphrase": "Passphrase to check encrypted contents (optional)",
   "backup_verify_ok": "Backup verified",
-  "backup_verify_failed": "Backup verification failed"
+  "backup_verify_failed": "Backup verification failed",
+  "backup_restore_create_db": "Create this database first (it must not exist)",
+  "backup_job_edit": "Edit",
+  "backup_job_save": "Save changes",
+  "backup_job_keep_passphrase": "Leave empty to keep the current key. A new passphrase only applies to future backups.",
+  "backup_job_log_show": "Log",
+  "backup_job_log_hide": "Hide log"
 }

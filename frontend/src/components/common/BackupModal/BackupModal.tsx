@@ -11,7 +11,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { ConnectionType } from '@/types';
 import { Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useRef, useState } from 'react';
+import { type ChangeEvent, type JSX, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import BackupSchedules from './BackupSchedules';
 import RestoreConfirm from './RestoreConfirm';
@@ -74,6 +74,8 @@ function BackupModalBody({
   const [database, setDatabase] = useState(() => initialDatabase ?? defaultDatabase(connection));
   const [schema, setSchema] = useState(isPostgres ? 'public' : '');
   const [note, setNote] = useState('');
+  const [compress, setCompress] = useState(false);
+  const [passphrase, setPassphrase] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<BackupArtifactType | null>(null);
 
@@ -96,9 +98,12 @@ function BackupModalBody({
         connectionId: connection.id,
         database: isSqlite ? undefined : database,
         schema: isPostgres ? schema : undefined,
-        note: note.trim() || undefined
+        note: note.trim() || undefined,
+        compress,
+        passphrase: passphrase || undefined
       });
       setNote('');
+      setPassphrase('');
       track(jobId, locales.backup_in_progress);
     } catch {
       /* the api layer already toasted */
@@ -171,6 +176,27 @@ function BackupModalBody({
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={compress}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setCompress(e.target.checked)}
+              />
+            }
+            label={locales.backup_compress}
+          />
+          <FieldInput
+            name='backup-passphrase'
+            type='password'
+            label={locales.backup_encrypt_passphrase}
+            value={passphrase}
+            onChange={(e) => setPassphrase(e.target.value)}
+          />
+          {passphrase !== '' && (
+            <Typography variant='caption' color='warning.main' component='p'>
+              {locales.backup_encrypt_warning}
+            </Typography>
+          )}
 
           <ModalFooter spread>
             <Box>

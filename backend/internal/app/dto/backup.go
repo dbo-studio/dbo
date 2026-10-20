@@ -16,6 +16,10 @@ type (
 		Database string `json:"database"`
 		Schema   string `json:"schema"`
 		Note     string `json:"note"`
+		// Compress gzips the backup; Passphrase encrypts it. The passphrase turns
+		// into key material in the service and is never put in the job.
+		Compress   bool   `json:"compress"`
+		Passphrase string `json:"passphrase"`
 	}
 
 	BackupResponse struct {
@@ -27,6 +31,9 @@ type (
 		BackupRequest
 		// ScheduleID is set for runs started by a schedule.
 		ScheduleID uint `json:"scheduleId"`
+		// PublicKey and WrappedKey are hex; together they encrypt the backup.
+		PublicKey  string `json:"publicKey"`
+		WrappedKey string `json:"wrappedKey"`
 	}
 
 	RestoreRequest struct {
@@ -43,6 +50,9 @@ type (
 		// SafetyBackup queues a backup of the target first; the restore only
 		// runs if that backup succeeds.
 		SafetyBackup bool `json:"safetyBackup"`
+		// CreateDatabase creates Database first (Postgres and MySQL), so a restore
+		// can go into a new, empty database instead of overwriting one.
+		CreateDatabase bool `json:"createDatabase"`
 	}
 
 	RestoreResponse struct {
@@ -76,6 +86,7 @@ type (
 		Schema       string     `json:"schema"`
 		Driver       string     `json:"driver"`
 		Method       string     `json:"method"`
+		Log          string     `json:"log"`
 		Compressed   bool       `json:"compressed"`
 		Encrypted    bool       `json:"encrypted"`
 		Tool         string     `json:"tool"`

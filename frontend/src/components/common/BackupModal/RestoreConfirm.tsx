@@ -45,6 +45,7 @@ export default function RestoreConfirm({
   const [passphrase, setPassphrase] = useState('');
   const [typed, setTyped] = useState('');
   const [safetyBackup, setSafetyBackup] = useState(true);
+  const [createDatabase, setCreateDatabase] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // SQLite has no database name, so its connection name is what gets typed.
@@ -68,7 +69,8 @@ export default function RestoreConfirm({
         schema,
         artifactId: artifact.id,
         confirmName: typed,
-        safetyBackup,
+        safetyBackup: safetyBackup && !createDatabase,
+        createDatabase,
         passphrase: passphrase || undefined
       });
 
@@ -109,7 +111,7 @@ export default function RestoreConfirm({
             options={candidates.map((c) => ({ label: c.name, value: String(c.id) }))}
           />
         )}
-        {candidates.length > 1 && !isSqlite && (
+        {!isSqlite && (
           <FieldInput
             name='backup-restore-database'
             label={locales.backup_database}
@@ -135,8 +137,17 @@ export default function RestoreConfirm({
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
         />
+        {!isSqlite && (
+          <FormControlLabel
+            control={<Checkbox checked={createDatabase} onChange={(e) => setCreateDatabase(e.target.checked)} />}
+            label={locales.backup_restore_create_db}
+          />
+        )}
         <FormControlLabel
-          control={<Checkbox checked={safetyBackup} onChange={(e) => setSafetyBackup(e.target.checked)} />}
+          disabled={createDatabase}
+          control={
+            <Checkbox checked={safetyBackup && !createDatabase} onChange={(e) => setSafetyBackup(e.target.checked)} />
+          }
           label={locales.backup_restore_safety}
         />
         <ModalFooter>
