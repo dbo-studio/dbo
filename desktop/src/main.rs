@@ -3,7 +3,9 @@
 mod menu;
 
 use std::env;
+use std::fs;
 use std::net::TcpListener;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -17,9 +19,12 @@ use tauri_plugin_decorum::WebviewWindowExt;
 type SidecarChild = Arc<Mutex<Option<CommandChild>>>;
 type SidecarStopping = Arc<AtomicBool>;
 type SidecarEventsHandle = Arc<Mutex<Option<tauri::async_runtime::JoinHandle<()>>>>;
+type PendingOpenFiles = Arc<Mutex<Vec<String>>>;
 
 const DEFAULT_PORT: u16 = 5124;
 pub const SIDECAR_FAILED_EVENT: &str = "sidecar://failed";
+const OPEN_FILES_EVENT: &str = "file://open";
+const MAX_SQL_FILE_BYTES: u64 = 50 * 1024 * 1024;
 
 /// Vertically centers traffic lights in the ~56px app header (8 + 40 + 8).
 #[cfg(target_os = "macos")]
@@ -39,8 +44,19 @@ fn main() {
     let sidecar_child_for_cleanup = sidecar_child.clone();
     let sidecar_stopping_for_cleanup = sidecar_stopping.clone();
     let sidecar_events_for_cleanup = sidecar_events.clone();
+    // Files passed at launch (Windows/Linux argv); macOS delivers them via RunEvent::Opened.
+    let pending_open_files: PendingOpenFiles =
+        Arc::new(Mutex::new(env::args().skip(1).filter(|a| is_sql_file(a)).collect()));
 
     let mut builder = tauri::Builder::default()
+        // Must be registered first. Forwards files from a second launch to this instance.
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            queue_open_files(app, argv.into_iter().skip(1).filter(|a| is_sql_file(a)).collect());
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -54,7 +70,13 @@ fn main() {
         .manage(sidecar_child.clone())
         .manage(sidecar_stopping.clone())
         .manage(sidecar_events.clone())
-        .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend]);
+        .manage(pending_open_files.clone())
+        .invoke_handler(tauri::generate_handler![
+            get_backend_host,
+            restart_backend,
+            take_pending_open_files,
+            read_sql_file
+        ]);
 
     #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
     {
@@ -76,7 +98,18 @@ fn main() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(move |_, event| {
+        .run(move |_app, event| {
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            if let RunEvent::Opened { urls } = &event {
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|u| u.to_file_path().ok())
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .filter(|p| is_sql_file(p))
+                    .collect();
+                queue_open_files(_app, paths);
+            }
+
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 cleanup_sidecar(
                     &sidecar_child_for_cleanup,
@@ -137,6 +170,42 @@ fn restart_backend(
     cleanup_sidecar(&sidecar, &stopping, &events);
     start_backend_server(&app);
     Ok(())
+}
+
+fn queue_open_files(app: &AppHandle, paths: Vec<String>) {
+    if paths.is_empty() {
+        return;
+    }
+    if let Ok(mut pending) = app.state::<PendingOpenFiles>().lock() {
+        pending.extend(paths);
+    }
+    let _ = app.emit(OPEN_FILES_EVENT, ());
+}
+
+fn is_sql_file(path: &str) -> bool {
+    Path::new(path)
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("sql"))
+}
+
+#[tauri::command]
+fn take_pending_open_files(pending: State<'_, PendingOpenFiles>) -> Vec<String> {
+    pending
+        .lock()
+        .map(|mut files| std::mem::take(&mut *files))
+        .unwrap_or_default()
+}
+
+#[tauri::command]
+fn read_sql_file(path: String) -> Result<String, String> {
+    if !is_sql_file(&path) {
+        return Err("Not a .sql file".into());
+    }
+    let size = fs::metadata(&path).map_err(|e| e.to_string())?.len();
+    if size > MAX_SQL_FILE_BYTES {
+        return Err("File is too large".into());
+    }
+    fs::read_to_string(&path).map_err(|e| e.to_string())
 }
 
 fn setup_environment() {

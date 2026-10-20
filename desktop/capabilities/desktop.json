@@ -12,6 +12,7 @@
   "permissions": [
     "updater:default",
     "fs:default",
+    "dialog:allow-open",
     "core:window:default",
     "decorum:allow-show-snap-overlay",
     "opener:allow-default-urls"

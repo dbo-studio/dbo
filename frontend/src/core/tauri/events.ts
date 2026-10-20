@@ -1,4 +1,5 @@
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { ServerEvent, type MenuActionPayload, type SidecarFailedPayload } from './types';
 
 export const streams = {
@@ -15,6 +16,19 @@ export const streams = {
     onAction: async (callback: (id: string) => void): Promise<UnlistenFn> => {
       return listen<MenuActionPayload>(ServerEvent.MenuAction, (event) => {
         callback(event.payload.id);
+      });
+    }
+  },
+  files: {
+    onOpen: async (callback: () => void): Promise<UnlistenFn> => {
+      return listen(ServerEvent.OpenFiles, () => callback());
+    },
+
+    onDrop: async (callback: (paths: string[]) => void): Promise<UnlistenFn> => {
+      return getCurrentWebview().onDragDropEvent((event) => {
+        if (event.payload.type === 'drop') {
+          callback(event.payload.paths);
+        }
       });
     }
   },

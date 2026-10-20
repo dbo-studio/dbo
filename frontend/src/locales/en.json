@@ -100,6 +100,8 @@
   "restart_required": "Restart require!",
   "dark_mode_restart": "To apply a changing theme you need to restart the app!",
   "new_tab": "New tab",
+  "open_sql_file_failed": "Could not open SQL file.",
+  "open_sql_file_select_connection": "Select a connection to open the SQL file.",
   "close_tab": "Close tab",
   "404_description": " Oops! The page you're looking for doesn't exist.",
   "back_to_home": "Back to Home",
