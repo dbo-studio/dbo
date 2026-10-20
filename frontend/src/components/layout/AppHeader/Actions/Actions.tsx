@@ -23,7 +23,6 @@ export default function Actions(): JSX.Element {
   return (
     <Stack
       direction='row'
-      onMouseDown={(event) => event.stopPropagation()}
       sx={{
         justifyContent: 'flex-end'
       }}

@@ -4,7 +4,6 @@ import { tools } from '@/core/utils';
 import { switchToDesktopShortcuts } from '@/core/utils/shortcuts';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { platform } from '@tauri-apps/plugin-os';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,7 +16,7 @@ const BACKEND_HEALTH_CHECK_CONFIG = {
 
 const TITLE_BAR_CONFIG = {
   normal: {
-    paddingLeft: 80,
+    paddingLeft: 88,
     paddingTop: 8
   },
   fullScreen: {
@@ -193,21 +192,6 @@ const disableDefaultContextMenu = (): void => {
   document.addEventListener('selectstart', preventSelectStart, { capture: true });
 };
 
-const createHeaderAreaClickHandler = (event: MouseEvent): void => {
-  if (event.button !== 0) {
-    return;
-  }
-
-  const window = getCurrentWebviewWindow();
-  // Native macOS titlebar: double-click toggles zoom; single-click starts drag.
-  if (event.detail === 2) {
-    void window.toggleMaximize().catch(() => undefined);
-    return;
-  }
-
-  void window.startDragging().catch(() => undefined);
-};
-
 const setupTitleBar = (): void => {
   const updateUI = useSettingStore.getState().updateUI;
   const currentPlatform = platform();
@@ -221,18 +205,14 @@ const setupTitleBar = (): void => {
       titleBar: {
         paddingLeft: config.paddingLeft,
         paddingTop: config.paddingTop,
-        onHeaderAreaClick: createHeaderAreaClickHandler
+        draggable: true
       }
     });
   };
 
   updateTitleBar(TITLE_BAR_CONFIG.normal);
 
-  streams.window.willEnterFullScreen(() => {
-    updateTitleBar(TITLE_BAR_CONFIG.fullScreen);
-  });
-
-  streams.window.willExitFullScreen(() => {
-    updateTitleBar(TITLE_BAR_CONFIG.normal);
+  void streams.window.onFullScreenChange((isFullScreen) => {
+    updateTitleBar(isFullScreen ? TITLE_BAR_CONFIG.fullScreen : TITLE_BAR_CONFIG.normal);
   });
 };

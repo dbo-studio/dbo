@@ -69,7 +69,7 @@ export type SetupSettings = {
 export type TitleBarType = {
   paddingLeft: number;
   paddingTop: number;
-  onHeaderAreaClick: (event: MouseEvent) => void;
+  draggable: boolean;
 };
 
 export type SidebarType = {

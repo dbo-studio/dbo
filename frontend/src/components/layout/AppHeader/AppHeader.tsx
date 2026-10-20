@@ -2,7 +2,7 @@ import { AppHeaderGridStyled, AppHeaderStyled } from '@/components/layout/AppHea
 import { useLayoutMode } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid } from '@mui/material';
-import type { JSX, MouseEvent as ReactMouseEvent } from 'react';
+import type { JSX } from 'react';
 import Actions from './Actions/Actions.tsx';
 import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
 import HeaderOverflowMenu from './HeaderOverflowMenu/HeaderOverflowMenu';
@@ -11,10 +11,6 @@ import Leading from './Leading/Leading.tsx';
 export default function AppHeader(): JSX.Element {
   const { useCompactHeader } = useLayoutMode();
   const titleBar = useSettingStore((state) => state.ui.titleBar);
-
-  const onMouseDown = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    titleBar?.onHeaderAreaClick?.(event.nativeEvent);
-  };
 
   return (
     <AppHeaderStyled
@@ -25,7 +21,8 @@ export default function AppHeader(): JSX.Element {
         paddingLeft: titleBar?.paddingLeft,
         paddingTop: titleBar?.paddingTop
       }}
-      onMouseDown={onMouseDown}
+      // Tauri drag script: drag/zoom from any non-interactive descendant
+      data-tauri-drag-region={titleBar?.draggable ? 'deep' : undefined}
     >
       <AppHeaderGridStyled useCompactHeader={useCompactHeader} size='auto'>
         <HeaderOverflowMenu />
