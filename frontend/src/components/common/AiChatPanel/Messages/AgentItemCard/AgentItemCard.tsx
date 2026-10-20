@@ -2,7 +2,6 @@ import type { AiAgentItem } from '@/types';
 import type { JSX } from 'react';
 import DiagramDiffCard from '../DiagramDiffCard/DiagramDiffCard';
 import PlanCard from '../PlanCard/PlanCard';
-import PermissionCard from '../PermissionCard/PermissionCard';
 
 export default function AgentItemCard({ item }: { item: AiAgentItem }): JSX.Element | null {
   switch (item.kind) {
@@ -10,8 +9,6 @@ export default function AgentItemCard({ item }: { item: AiAgentItem }): JSX.Elem
       return <DiagramDiffCard changesetId={item.changesetId} />;
     case 'plan':
       return <PlanCard steps={item.steps} />;
-    case 'permission':
-      return <PermissionCard request={item.request} />;
     default:
       return null;
   }

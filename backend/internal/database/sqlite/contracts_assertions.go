@@ -13,5 +13,6 @@ var (
 	_ databaseContract.AIMetadataRepository     = (*SQLiteRepository)(nil)
 	_ databaseContract.DBToolsRepository        = (*SQLiteRepository)(nil)
 	_ databaseContract.TableStructureRepository = (*SQLiteRepository)(nil)
+	_ databaseContract.WritePreviewRepository   = (*SQLiteRepository)(nil)
 	_ ddl.TablePlanBuilder                      = (*SQLiteRepository)(nil)
 )

@@ -29,7 +29,7 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 	`To design or change schema (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
-	`To run INSERT/UPDATE/DELETE call execute_write; the user must confirm before it runs. ` +
+	`To change data call preview_write with one INSERT/UPDATE/DELETE; the user sees how many rows it changes and applies it. ` +
 	`For work with several steps, call update_plan first and update it as steps finish. ` +
 	`Never claim a proposed change or write was applied — say it is waiting for the user's review.`
 
@@ -199,12 +199,12 @@ func (s *AiServiceImpl) runToolCall(
 			ev := streamEvent("plan_delta", call.ID, plan)
 			extra, event = &msg, &ev
 		}
-	case call.Name == serviceDbtools.ToolExecuteWrite:
-		var permission *PermissionData
-		if permission, err = requestWrite(call.Arguments, toolCtx); err == nil {
-			result = "The statement is waiting for the user's confirmation and has NOT run yet."
-			msg := traceMessage(model.AiChatMessageTypePermission, permission)
-			ev := streamEvent("permission_request", permission.RequestID, permission)
+	case call.Name == serviceDbtools.ToolPreviewWrite:
+		var written *previewWriteResult
+		if written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx); err == nil {
+			result = writePreviewText(written.Preview)
+			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, map[string]uint{"changesetId": written.Changeset.ID})
+			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(written.Changeset.ID), 10), written.Changeset)
 			extra, event = &msg, &ev
 		}
 	default:
@@ -268,4 +268,16 @@ func modeName(mode string) string {
 	}
 
 	return mode
+}
+
+// writePreviewText tells the model what a previewed data change would do.
+func writePreviewText(preview *dto.WritePreviewResponse) string {
+	text := fmt.Sprintf("The statement would change %d row(s). It is added to the user's proposal for review and has NOT run.", preview.AffectedRows)
+
+	if len(preview.Rows) > 0 {
+		rows, _ := json.Marshal(preview.Rows)
+		text += " Rows it touches now (sample): " + string(rows)
+	}
+
+	return text
 }

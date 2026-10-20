@@ -12,7 +12,7 @@ const (
 	ToolDescribeTable       = "describe_table"
 	ToolExecuteSQL          = "execute_sql"
 	ToolProposeSchemaChange = "propose_schema_change"
-	ToolExecuteWrite        = "execute_write"
+	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
 )
 
@@ -20,7 +20,7 @@ const (
 // surface a proposal that the user must accept through the regular APIs.
 var agentOnlyTools = map[string]bool{
 	ToolProposeSchemaChange: true,
-	ToolExecuteWrite:        true,
+	ToolPreviewWrite:        true,
 	ToolUpdatePlan:          true,
 }
 
@@ -148,13 +148,13 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 			},
 			"required": []string{"steps"},
 		}),
-		functionTool(ToolExecuteWrite, "Request running a single INSERT/UPDATE/DELETE or DDL statement. "+
-			"The statement is shown to the user and only runs if they confirm it.", shared.FunctionParameters{
+		functionTool(ToolPreviewWrite, "Preview one INSERT, UPDATE or DELETE (UPDATE/DELETE need a WHERE): how many rows it changes and a sample of them. "+
+			"Nothing changes now. The statement joins the user's proposal and runs only when the user applies it.", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
 				"sql": map[string]any{
 					"type":        "string",
-					"description": "The write statement. UPDATE/DELETE must have a WHERE clause.",
+					"description": "The data change. UPDATE/DELETE must have a WHERE clause.",
 				},
 			},
 			"required": []string{"sql"},

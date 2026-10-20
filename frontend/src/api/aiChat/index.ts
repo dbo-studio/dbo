@@ -1,5 +1,12 @@
 import { api } from '@/core/api';
-import type { AiChangeset, AiChangesetOpStatus, AiChatType, SchemaChangeOp, TableStructure } from '@/types';
+import type {
+  AiChangeset,
+  AiChangesetOpStatus,
+  AiChatType,
+  SchemaChangeOp,
+  TableStructure,
+  WritePreview
+} from '@/types';
 import type { AiChatDetailRequestType, AiChatRequestType, CreateChatRequestType } from './types';
 
 const endpoint = {
@@ -8,7 +15,6 @@ const endpoint = {
   create: (): string => '/ai/chats',
   update: (chatID: string | number): string => `/ai/chats/${chatID}`,
   feedback: (chatID: string | number): string => `/ai/chats/${chatID}/feedback`,
-  review: (chatID: string | number): string => `/ai/chats/${chatID}/review`,
   changesets: (chatID: number): string => `/ai/chats/${chatID}/changesets`,
   changeset: (chatID: number, id: number): string => `/ai/chats/${chatID}/changesets/${id}`,
   delete: (chatID: string | number): string => `/ai/chats/${chatID}`
@@ -40,11 +46,6 @@ export const updateChat = async (
   return (await api.patch<{ data: AiChatType }>(endpoint.update(id), data)).data.data;
 };
 
-/** Persists the user's decision on a permission card. */
-export const reviewCard = async (chatId: string | number, data: { id: string; decision: string }): Promise<void> => {
-  await api.post(endpoint.review(chatId), data);
-};
-
 export const getChangesets = async (chatId: number): Promise<AiChangeset[]> => {
   return (await api.get<{ data: AiChangeset[] }>(endpoint.changesets(chatId))).data.data;
 };
@@ -69,6 +70,11 @@ export const getChangesetBefore = async (
       `${endpoint.changeset(changeset.chatId, changeset.id)}/before`
     )
   ).data.data;
+};
+
+/** What a data change of the changeset would do right now, without doing it. */
+export const getWritePreview = async (chatId: number, id: number, position: number): Promise<WritePreview> => {
+  return (await api.get<{ data: WritePreview }>(`${endpoint.changeset(chatId, id)}/ops/${position}/preview`)).data.data;
 };
 
 /** Replaces the definition of an op that was not applied yet; the op goes back to pending. */

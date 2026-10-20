@@ -17,6 +17,7 @@ import (
 const maxIdentifierLen = 63
 
 const (
+	SchemaChangeWrite          = "write"
 	SchemaChangeCreateDatabase = "create_database"
 	SchemaChangeCreateSchema   = "create_schema"
 	SchemaChangeCreateTable    = "create_table"
@@ -49,6 +50,9 @@ type (
 	SchemaChangeOp struct {
 		Op    string `json:"op"`
 		Table string `json:"table,omitempty"`
+		// SQL is the INSERT, UPDATE or DELETE of a write; AffectedRows is how many rows it changed when it was previewed.
+		SQL          string `json:"sql,omitempty"`
+		AffectedRows int64  `json:"affectedRows,omitempty"`
 		// Name is the database or schema that create_database or create_schema makes.
 		Name    string               `json:"name,omitempty"`
 		Columns []SchemaChangeColumn `json:"columns,omitempty"`
@@ -112,8 +116,9 @@ func (c SchemaChangeColumn) Validate() error {
 
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
-		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
-		validation.Field(&op.Table, validation.When(!op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeWrite, SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
+		validation.Field(&op.Table, validation.When(op.HasTable(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.SQL, validation.When(op.Op == SchemaChangeWrite, validation.Required), validation.Length(0, 10000)),
 		validation.Field(&op.Name, validation.When(op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.ColumnName, validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.IndexColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
@@ -160,6 +165,11 @@ func (op SchemaChangeOp) Validate() error {
 	}
 
 	return nil
+}
+
+// HasTable reports whether the op works on one table.
+func (op SchemaChangeOp) HasTable() bool {
+	return !op.IsScopeOp() && op.Op != SchemaChangeWrite
 }
 
 // IsScopeOp reports whether the op creates the database or schema the other ops work in.

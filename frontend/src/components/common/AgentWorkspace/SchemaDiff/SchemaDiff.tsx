@@ -7,9 +7,13 @@ import type { AiChangeset, AiChangesetOp, SchemaChangeOp, TableStructure } from 
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import OpEditor from './OpEditor';
+import WriteSample from './WriteSample';
 import CurrentStructure from './CurrentStructure';
 import { DiffOpStyled, DiffRowStyled, DiffTableHeaderStyled, DiffTableStyled } from './SchemaDiff.styled';
 import { diffRows } from './schemaDiffRows';
+
+/** Ops share a card by table; the ones with none (data changes, new databases) get their own. */
+const groupKey = (op: AiChangesetOp): string => op.table || op.name || op.op;
 
 type SchemaDiffProps = {
   changeset: AiChangeset;
@@ -23,7 +27,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
   const [editing, setEditing] = useState<number>();
   const tables = [
     ...changeset.ops.reduce(
-      (groups, op) => groups.set(op.table || op.name || '', [...(groups.get(op.table || op.name || '') ?? []), op]),
+      (groups, op) => groups.set(groupKey(op), [...(groups.get(groupKey(op)) ?? []), op]),
       new Map<string, AiChangesetOp[]>()
     )
   ];
@@ -39,7 +43,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
           <DiffTableHeaderStyled>
             <CustomIcon type='structure' size='xs' />
             <Typography variant='subtitle2' sx={{ flex: 1 }}>
-              {table}
+              {table === 'write' ? locales.ai_changes_data : table}
             </Typography>
             {!ops.some((op) => op.op === 'create_table' || op.name) && (
               <Button size='small' variant='text' onClick={() => openForm(ops[0])} data-testid='ai-diff-open-form'>
@@ -72,6 +76,9 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                     </DiffRowStyled>
                   ))
                 )}
+                {op.op === 'write' && op.status !== 'applied' && (
+                  <WriteSample changeset={changeset} position={op.position} />
+                )}
                 {op.error && (
                   <Typography variant='caption' color='error'>
                     {op.error}
@@ -87,7 +94,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               />
               {op.status !== 'applied' && (
                 <Stack direction='row'>
-                  {op.op !== 'drop_column' && (
+                  {op.op !== 'drop_column' && op.op !== 'write' && (
                     <Tooltip title={locales.ai_changes_edit}>
                       <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
                         <CustomIcon type='pen' size='xs' />

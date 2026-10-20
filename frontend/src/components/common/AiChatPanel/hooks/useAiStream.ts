@@ -136,9 +136,6 @@ export const useAiStream = (): UseAiStreamReturn => {
           case 'plan_delta':
             setPlan(chatId, event.data.steps);
             break;
-          case 'permission_request':
-            appendAgentItem(chatId, { kind: 'permission', request: event.data });
-            break;
           case 'error':
             updateStreaming(chatId, { error: event.message });
             break;

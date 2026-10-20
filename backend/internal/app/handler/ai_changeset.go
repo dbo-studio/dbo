@@ -79,6 +79,16 @@ func (h AiChangesetHandler) Before(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(structures).Send(c)
 }
 
+func (h AiChangesetHandler) PreviewOp(c fiber.Ctx) error {
+	result, err := h.aiChangesetService.PreviewOp(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "changesetId"), fiber.Params[int](c, "position"))
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h AiChangesetHandler) Preview(c fiber.Ctx) error {
 	queries, err := h.aiChangesetService.Preview(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "changesetId"))
 	if err != nil {

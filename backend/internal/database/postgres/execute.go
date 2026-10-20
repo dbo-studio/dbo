@@ -6,12 +6,17 @@ import (
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
+
+	if action == contract.ExecuteSQLAction {
+		return databaseCore.SQLFromParams(params)
+	}
 
 	type ExecuteParams map[contract.TreeTab]any
 
@@ -147,7 +152,16 @@ func (r *PostgresRepository) ExecuteAtomic(ctx context.Context, steps []contract
 		return err
 	}
 
+	schema := r.base.ExtractNode(steps[0].NodeID).Schema
+
 	return conn.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Data changes name their tables without a schema.
+		if schema != "" {
+			if err := tx.Exec("SET LOCAL search_path TO " + quote.PostgresIdent(schema)).Error; err != nil {
+				return err
+			}
+		}
+
 		for _, query := range queries {
 			if query == "" {
 				continue

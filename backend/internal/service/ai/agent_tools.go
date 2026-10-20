@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -13,7 +14,6 @@ import (
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 )
 
@@ -26,20 +26,32 @@ type blockedError struct{ reason string }
 func (e blockedError) Error() string { return e.reason }
 func (e blockedError) Unwrap() error { return errToolBlocked }
 
-// PermissionData is the payload of a permission_request event.
-type PermissionData struct {
-	RequestID    string `json:"requestId"`
-	ConnectionID int32  `json:"connectionId"`
-	Database     string `json:"database,omitempty"`
-	Schema       string `json:"schema,omitempty"`
-	SQL          string `json:"sql"`
-	Class        string `json:"class"`
-}
-
 type proposeSchemaChangeArgs struct {
 	Database *string              `json:"database"`
 	Schema   *string              `json:"schema"`
 	Ops      []dto.SchemaChangeOp `json:"ops"`
+}
+
+// scope is the database and schema a proposal works in on this engine; the
+// ones the engine has no use for are dropped, the ones it needs must be chosen.
+func scope(connectionType, database, schema string) (string, string, error) {
+	if contract.IsPostgresFamily(connectionType) && (database == "" || schema == "") {
+		return "", "", fmt.Errorf("database and schema are required; ask the user to select them in the chat context")
+	}
+
+	if contract.IsMysqlFamily(connectionType) && database == "" {
+		return "", "", fmt.Errorf("database is required; ask the user to select it in the chat context")
+	}
+
+	if !contract.IsPostgresFamily(connectionType) {
+		schema = ""
+	}
+
+	if connectionType == string(contract.Sqlite) {
+		database = ""
+	}
+
+	return database, schema, nil
 }
 
 // proposeSchemaChange validates the model's ops and stores them as a pending
@@ -74,20 +86,9 @@ func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, chatID uint, ra
 		}
 	}
 
-	if contract.IsPostgresFamily(conn.ConnectionType) && (database == "" || schema == "") {
-		return nil, fmt.Errorf("database and schema are required; ask the user to select them in the chat context")
-	}
-
-	if contract.IsMysqlFamily(conn.ConnectionType) && database == "" {
-		return nil, fmt.Errorf("database is required; ask the user to select it in the chat context")
-	}
-
-	if !contract.IsPostgresFamily(conn.ConnectionType) {
-		schema = ""
-	}
-
-	if conn.ConnectionType == string(contract.Sqlite) {
-		database = ""
+	database, schema, err = scope(conn.ConnectionType, database, schema)
+	if err != nil {
+		return nil, err
 	}
 
 	req := dto.SchemaChangeRequest{
@@ -117,10 +118,15 @@ func updatePlan(rawArgs string) (*dto.AiPlan, error) {
 	return &plan, nil
 }
 
-// requestWrite classifies a write statement and turns it into a permission
-// request. It never executes: the user confirms via POST /query/raw, which
-// enforces Safe Mode.
-func requestWrite(rawArgs string, toolCtx serviceDbtools.ToolContext) (*PermissionData, error) {
+// previewWriteResult is what the model learns about a data change it previewed.
+type previewWriteResult struct {
+	Changeset *dto.AiChangesetResponse
+	Preview   *dto.WritePreviewResponse
+}
+
+// previewWrite counts the rows a data change touches, without changing
+// anything, and adds the statement to the chat's changeset. The user applies it.
+func (s *AiServiceImpl) previewWrite(ctx context.Context, chatID uint, rawArgs string, toolCtx serviceDbtools.ToolContext) (*previewWriteResult, error) {
 	var args struct {
 		SQL string `json:"sql"`
 	}
@@ -128,29 +134,45 @@ func requestWrite(rawArgs string, toolCtx serviceDbtools.ToolContext) (*Permissi
 		return nil, fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	classification := sqlguard.ClassifySQL(args.SQL)
+	if _, err := sqlguard.WriteStatement(args.SQL); err != nil {
+		if errors.Is(err, sqlguard.ErrBlocked) {
+			return nil, blockedError{strings.TrimPrefix(err.Error(), "blocked: ")}
+		}
 
-	switch {
-	case len(classification.Statements) != 1:
-		return nil, blockedError{"exactly one statement is allowed per request"}
-	case classification.Class == sqlguard.ClassRead:
-		return nil, fmt.Errorf("this is a read-only statement; use %s instead", serviceDbtools.ToolExecuteSQL)
-	case classification.Class == sqlguard.ClassDangerousDML:
-		return nil, blockedError{"UPDATE/DELETE without WHERE is not allowed"}
-	case classification.Class == sqlguard.ClassCatastrophicDDL:
-		return nil, blockedError{"destructive DDL (DROP/TRUNCATE) is not allowed from the agent; the user must run it manually"}
-	case classification.Class == sqlguard.ClassUnknown:
-		return nil, blockedError{"statement could not be classified"}
+		return nil, err
 	}
 
-	return &PermissionData{
-		RequestID:    uuid.NewString(),
+	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return nil, fmt.Errorf("connection not found")
+	}
+
+	database, schema, err := scope(conn.ConnectionType, lo.FromPtr(toolCtx.Database), lo.FromPtr(toolCtx.Schema))
+	if err != nil {
+		return nil, err
+	}
+
+	preview, err := s.schemaService.PreviewWrite(ctx, &dto.WritePreviewRequest{
 		ConnectionID: toolCtx.ConnectionID,
-		Database:     lo.FromPtr(toolCtx.Database),
-		Schema:       lo.FromPtr(toolCtx.Schema),
-		SQL:          classification.Statements[0],
-		Class:        string(classification.Class),
-	}, nil
+		Database:     lo.EmptyableToPtr(database),
+		Schema:       lo.EmptyableToPtr(schema),
+		SQL:          args.SQL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	changeset, err := s.changesetService.Create(ctx, chatID, &dto.SchemaChangeRequest{
+		ConnectionID: toolCtx.ConnectionID,
+		Database:     lo.EmptyableToPtr(database),
+		Schema:       lo.EmptyableToPtr(schema),
+		Ops:          []dto.SchemaChangeOp{{Op: dto.SchemaChangeWrite, SQL: preview.SQL, AffectedRows: preview.AffectedRows}},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &previewWriteResult{Changeset: changeset, Preview: preview}, nil
 }
 
 // ToolTrace is the persisted/streamed record of one tool call.

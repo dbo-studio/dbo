@@ -9,23 +9,23 @@ export type Changeset = { id: number; connectionId: number; ops: ChangesetOpStat
 
 export type ProposedChangeset = { chatId: number; changeset: Changeset };
 
-/**
- * Makes the agent propose `ops` through the fake LLM, so the changeset is
- * persisted by the real propose_schema_change tool.
- */
-export async function proposeChangeset(
+async function runAgentTool(
   page: Page,
   llm: FakeLlm,
   connectionId: number,
-  ops: ChangesetOp[],
+  script: { name: string; args: Record<string, unknown> },
   contextOpts?: { database?: string; schema?: string },
+  chatId?: number,
 ): Promise<ProposedChangeset> {
-  const created = await page.request.post("/api/ai/chats", { data: { connectionId, title: "changeset chat" } });
-  const chatId = ((await created.json()) as { data: { id: number } }).data.id;
+  let id = chatId;
+  if (id === undefined) {
+    const created = await page.request.post("/api/ai/chats", { data: { connectionId, title: "changeset chat" } });
+    id = ((await created.json()) as { data: { id: number } }).data.id;
+  }
 
-  llm.script = { name: "propose_schema_change", args: { ops } };
+  llm.script = script;
   const sent = await page.request.post("/api/ai/chat/stream", {
-    data: { connectionId, chatId, message: "change the schema", mode: "agent", contextOpts },
+    data: { connectionId, chatId: id, message: "change the schema", mode: "agent", contextOpts },
   });
   const events = (await sent.text())
     .split("\n")
@@ -34,7 +34,35 @@ export async function proposeChangeset(
   const proposal = events.find((event) => event.type === "diagram_diff");
   expect(proposal?.data, "the agent proposed a changeset").toBeDefined();
 
-  return { chatId, changeset: proposal?.data as Changeset };
+  return { chatId: id, changeset: proposal?.data as Changeset };
+}
+
+/**
+ * Makes the agent propose `ops` through the fake LLM, so the changeset is
+ * persisted by the real propose_schema_change tool. Pass `chatId` to propose
+ * into an existing chat.
+ */
+export function proposeChangeset(
+  page: Page,
+  llm: FakeLlm,
+  connectionId: number,
+  ops: ChangesetOp[],
+  contextOpts?: { database?: string; schema?: string },
+  chatId?: number,
+): Promise<ProposedChangeset> {
+  return runAgentTool(page, llm, connectionId, { name: "propose_schema_change", args: { ops } }, contextOpts, chatId);
+}
+
+/** Makes the agent preview a data change, which joins the chat's changeset. */
+export function previewWrite(
+  page: Page,
+  llm: FakeLlm,
+  connectionId: number,
+  sql: string,
+  contextOpts?: { database?: string; schema?: string },
+  chatId?: number,
+): Promise<ProposedChangeset> {
+  return runAgentTool(page, llm, connectionId, { name: "preview_write", args: { sql } }, contextOpts, chatId);
 }
 
 export function applyChangeset(

@@ -13,5 +13,6 @@ var (
 	_ databaseContract.AIMetadataRepository     = (*PostgresRepository)(nil)
 	_ databaseContract.DBToolsRepository        = (*PostgresRepository)(nil)
 	_ databaseContract.TableStructureRepository = (*PostgresRepository)(nil)
+	_ databaseContract.WritePreviewRepository   = (*PostgresRepository)(nil)
 	_ ddl.TablePlanBuilder                      = (*PostgresRepository)(nil)
 )

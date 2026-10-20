@@ -36,7 +36,6 @@ const (
 	// Agent traces: JSON payloads rendered as cards, never sent back to the model as history.
 	AiChatMessageTypeTool        AiChatMessageType = "tool"
 	AiChatMessageTypeDiagramDiff AiChatMessageType = "diagram_diff"
-	AiChatMessageTypePermission  AiChatMessageType = "permission"
 	AiChatMessageTypePlan        AiChatMessageType = "plan"
 )
 

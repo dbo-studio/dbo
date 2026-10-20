@@ -129,13 +129,13 @@ type IAiChatRepo interface {
 	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
 	Delete(ctx context.Context, chat *model.AiChat) error
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error
-	UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error)
 }
 
 type IAiChangesetRepo interface {
 	List(ctx context.Context, chatID uint) ([]model.AiChangeset, error)
 	Find(ctx context.Context, chatID, id uint) (*model.AiChangeset, error)
 	Create(ctx context.Context, changeset *model.AiChangeset) error
+	AddOps(ctx context.Context, ops []model.AiChangesetOp) error
 	SaveOps(ctx context.Context, ops []model.AiChangesetOp) error
 }
 

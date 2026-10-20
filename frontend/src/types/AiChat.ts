@@ -20,7 +20,7 @@ export type AiMessageType = {
   /** Rating the user sent for this answer in this session; never stored or restored. */
   feedback?: 'up' | 'down';
   language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
-  /** tool / diagram_diff / permission carry a JSON payload (see agent trace types below). */
+  /** tool / diagram_diff / plan carry a JSON payload (see agent trace types below). */
   type: 'code' | 'explanation' | AiTraceMessageKind;
   isNew?: boolean;
   thinking?: {
@@ -31,7 +31,7 @@ export type AiMessageType = {
 
 export type AiChatMode = 'ask' | 'agent';
 
-export type AiTraceMessageKind = 'tool' | 'diagram_diff' | 'permission' | 'plan';
+export type AiTraceMessageKind = 'tool' | 'diagram_diff' | 'plan';
 
 export type AiToolStatus = 'running' | 'done' | 'error' | 'blocked' | 'cancelled';
 
@@ -54,10 +54,22 @@ export type SchemaChangeColumn = {
 };
 
 export type SchemaChangeOp = {
-  op: 'create_database' | 'create_schema' | 'create_table' | 'add_column' | 'alter_column' | 'drop_column' | 'add_index' | 'add_foreign_key';
+  op:
+    | 'write'
+    | 'create_database'
+    | 'create_schema'
+    | 'create_table'
+    | 'add_column'
+    | 'alter_column'
+    | 'drop_column'
+    | 'add_index'
+    | 'add_foreign_key';
   table: string;
   /** create_database / create_schema: the new name. */
   name?: string;
+  /** write: the INSERT, UPDATE or DELETE, and how many rows it changed when previewed. */
+  sql?: string;
+  affectedRows?: number;
   columns?: SchemaChangeColumn[];
   column?: SchemaChangeColumn;
   columnName?: string;
@@ -67,6 +79,15 @@ export type SchemaChangeOp = {
   refTable?: string;
   refColumns?: string[];
   onDelete?: string;
+};
+
+/** What a data change would do right now: the rows it changes and a sample of them. */
+export type WritePreview = {
+  sql: string;
+  affectedRows: number;
+  columns: string[];
+  rows: Record<string, unknown>[];
+  sampleQuery?: string;
 };
 
 /** The live definition of a table a changeset changes. */
@@ -100,17 +121,6 @@ export type AiChangeset = {
   undoSql: string[];
 };
 
-export type AiPermissionRequest = {
-  requestId: string;
-  connectionId: number;
-  database?: string;
-  schema?: string;
-  sql: string;
-  class: string;
-  /** Set by the server once the user has confirmed or rejected the request. */
-  decision?: 'confirmed' | 'rejected';
-};
-
 export type AiPlanStep = {
   title: string;
   status: 'pending' | 'in_progress' | 'done';
@@ -119,7 +129,6 @@ export type AiPlanStep = {
 export type AiAgentItem =
   | { kind: 'tool'; trace: AiToolTrace }
   | { kind: 'diagram_diff'; changesetId: number }
-  | { kind: 'permission'; request: AiPermissionRequest }
   | { kind: 'plan'; steps: AiPlanStep[] };
 
 export type AiContextType = {

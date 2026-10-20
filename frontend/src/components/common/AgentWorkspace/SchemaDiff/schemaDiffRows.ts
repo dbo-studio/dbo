@@ -37,6 +37,8 @@ export const diffRows = (op: AiChangesetOp, before: TableStructure | undefined):
   const live = (name?: string) => before?.columns.find((column) => column.name === name);
 
   switch (op.op) {
+    case 'write':
+      return [{ sign: '~', text: `${op.sql} — ${op.affectedRows ?? 0} row(s)` }];
     case 'create_database':
       return [{ sign: '+', text: `DATABASE ${op.name}` }];
     case 'create_schema':

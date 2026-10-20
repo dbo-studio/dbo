@@ -6,6 +6,7 @@ import {
   applyChangeset,
   changesetBefore,
   changesetStatuses,
+  previewWrite,
   proposeChangeset,
   undoSql,
 } from "../../helpers/changeset";
@@ -259,6 +260,39 @@ test.describe("Persisted changeset ops (mysql)", () => {
           expect(await tableExists(fresh)).toBe(true);
 
           await rows(page, connectionId, `DROP TABLE \`${fresh}\``);
+        });
+
+        await test.step("A data change is counted without running, then applied", async () => {
+          const emails = async (): Promise<unknown[]> =>
+            (
+              await rows(
+                page,
+                connectionId,
+                `SELECT email FROM ${table} ORDER BY id`,
+              )
+            ).map((row) => row.email);
+          await rows(
+            page,
+            connectionId,
+            `INSERT INTO ${table} (id, email) VALUES (1, 'a'), (2, 'b')`,
+          );
+
+          const proposal = await previewWrite(
+            page,
+            llm,
+            connectionId,
+            `UPDATE ${table} SET email = 'z' WHERE id = 1`,
+            scope,
+          );
+          expect(proposal.changeset.ops).toMatchObject([
+            { op: "write", affectedRows: 1, status: "pending" },
+          ]);
+          expect(await emails()).toEqual(["a", "b"]);
+
+          expect((await applyChangeset(page, proposal)).status()).toBe(200);
+          expect(await changesetStatuses(page, proposal)).toEqual(["applied"]);
+          expect(await emails()).toEqual(["z", "b"]);
+          expect(await undoSql(page, proposal)).toEqual([]);
         });
 
         await test.step("A new database with its tables is created in one apply", async () => {

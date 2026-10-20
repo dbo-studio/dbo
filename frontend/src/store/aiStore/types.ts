@@ -28,7 +28,7 @@ export type AiStreamingState = {
 /** One chat's running or last turn. Chats stream independently of each other. */
 export type AiSession = {
   streaming: AiStreamingState;
-  /** Live tool/diagram/plan/permission cards of the turn being streamed. */
+  /** Live tool/diagram/plan cards of the turn being streamed. */
   agentItems: AiAgentItem[];
   /** A turn finished while the user was in another chat. */
   unseen: boolean;
@@ -85,12 +85,4 @@ export type AiContextSlice = {
 export type AiBridgeSlice = {
   bridgeRequest: AiBridgeRequest | null;
   setBridgeRequest: (request: AiBridgeRequest | null) => void;
-};
-
-/** Outcome of a permission card, keyed by requestId. */
-export type AiReviewDecision = 'rejected' | 'confirmed';
-
-export type AiToolSlice = {
-  reviews: Record<string, AiReviewDecision>;
-  setReview: (id: string, decision: AiReviewDecision) => void;
 };

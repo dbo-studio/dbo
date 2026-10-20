@@ -45,6 +45,11 @@ func (r AiChangesetRepoImpl) Create(ctx context.Context, changeset *model.AiChan
 	return r.db.WithContext(ctx).Create(changeset).Error
 }
 
+// AddOps appends ops to an existing changeset.
+func (r AiChangesetRepoImpl) AddOps(ctx context.Context, ops []model.AiChangesetOp) error {
+	return r.db.WithContext(ctx).Create(&ops).Error
+}
+
 // SaveOps writes the definition, status and error of the given ops in one transaction.
 func (r AiChangesetRepoImpl) SaveOps(ctx context.Context, ops []model.AiChangesetOp) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

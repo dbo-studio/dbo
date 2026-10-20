@@ -68,6 +68,8 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 // opLabel is a short description of an op for the agent prompt.
 func opLabel(op dto.SchemaChangeOp) string {
 	switch op.Op {
+	case dto.SchemaChangeWrite:
+		return op.Op + " " + strings.TrimSpace(op.SQL)
 	case dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema:
 		return op.Op + " " + op.Name
 	case dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn:
@@ -79,4 +81,9 @@ func opLabel(op dto.SchemaChangeOp) string {
 	default:
 		return op.Op + " " + op.Table
 	}
+}
+
+// isOpenStatus reports whether an op still waits for the user: not rejected, not applied.
+func isOpenStatus(status model.AiChangesetOpStatus) bool {
+	return status != model.AiChangesetOpRejected && status != model.AiChangesetOpApplied
 }

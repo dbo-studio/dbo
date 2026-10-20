@@ -1,4 +1,4 @@
-import type { AiChangeset, AiPlanStep, AiMessageType, AiPermissionRequest } from '@/types';
+import type { AiChangeset, AiPlanStep, AiMessageType } from '@/types';
 
 export type AiStreamEvent =
   | { type: 'status'; label: string }
@@ -20,7 +20,6 @@ export type AiStreamEvent =
     }
   | { type: 'diagram_diff'; id: string; data: AiChangeset }
   | { type: 'plan_delta'; id: string; data: { steps: AiPlanStep[] } }
-  | { type: 'permission_request'; id: string; data: AiPermissionRequest }
   | { type: 'ping' }
   | { type: 'done'; chatId: number; title: string; messages: AiMessageType[] }
   | { type: 'error'; message: string };

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -25,6 +26,8 @@ type IAiChangesetService interface {
 	Review(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetReviewRequest) (*dto.AiChangesetResponse, error)
 	// EditOp replaces the definition of an op that was not applied yet and puts it back to pending.
 	EditOp(ctx context.Context, chatID, changesetID uint, position int, edited *dto.SchemaChangeOp) (*dto.AiChangesetResponse, error)
+	// PreviewOp counts the rows a write op would change and reads a few of them, without changing anything.
+	PreviewOp(ctx context.Context, chatID, changesetID uint, position int) (*dto.WritePreviewResponse, error)
 	// Before reads the live definition of the tables the changeset changes.
 	Before(ctx context.Context, chatID, changesetID uint) (map[string]*contract.TableStructure, error)
 	Preview(ctx context.Context, chatID, changesetID uint) ([]string, error)
@@ -92,9 +95,30 @@ func (s IAiChangesetServiceImpl) response(ctx context.Context, changeset *model.
 	return changesetToResponse(changeset, connection.ConnectionType)
 }
 
+// Create adds the ops to the chat's open changeset for the same database and
+// schema, so a chat has one changeset to review; with none open it starts one.
 func (s IAiChangesetServiceImpl) Create(ctx context.Context, chatID uint, req *dto.SchemaChangeRequest) (*dto.AiChangesetResponse, error) {
 	if err := s.requireChat(ctx, chatID); err != nil {
 		return nil, err
+	}
+
+	existing, err := s.aiChangesetRepo.List(ctx, chatID)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	slices.Reverse(existing)
+
+	open, found := lo.Find(existing, func(changeset model.AiChangeset) bool {
+		return changeset.ConnectionID == uint(req.ConnectionID) &&
+			changeset.Database == lo.FromPtr(req.Database) &&
+			changeset.Schema == lo.FromPtr(req.Schema) &&
+			lo.ContainsBy(changeset.Ops, func(op model.AiChangesetOp) bool { return isOpenStatus(op.Status) })
+	})
+
+	first := 0
+	if found {
+		first = len(open.Ops)
 	}
 
 	ops := make([]model.AiChangesetOp, len(req.Ops))
@@ -105,7 +129,21 @@ func (s IAiChangesetServiceImpl) Create(ctx context.Context, chatID uint, req *d
 			return nil, apperror.InternalServerError(err)
 		}
 
-		ops[i] = model.AiChangesetOp{Position: i, OpJSON: string(raw), Status: model.AiChangesetOpPending}
+		ops[i] = model.AiChangesetOp{Position: first + i, OpJSON: string(raw), Status: model.AiChangesetOpPending}
+	}
+
+	if found {
+		for i := range ops {
+			ops[i].ChangesetID = open.ID
+		}
+
+		if err := s.aiChangesetRepo.AddOps(ctx, ops); err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		open.Ops = append(open.Ops, ops...)
+
+		return s.response(ctx, &open)
 	}
 
 	changeset := &model.AiChangeset{
@@ -228,7 +266,7 @@ func (s IAiChangesetServiceImpl) EditOp(ctx context.Context, chatID, changesetID
 // in request order.
 func changeRequest(changeset *model.AiChangeset) (*dto.SchemaChangeRequest, []*model.AiChangesetOp, error) {
 	open := lo.FilterMap(changeset.Ops, func(op model.AiChangesetOp, i int) (*model.AiChangesetOp, bool) {
-		return &changeset.Ops[i], op.Status != model.AiChangesetOpRejected && op.Status != model.AiChangesetOpApplied
+		return &changeset.Ops[i], isOpenStatus(op.Status)
 	})
 
 	if len(open) == 0 {
@@ -246,6 +284,34 @@ func changeRequest(changeset *model.AiChangeset) (*dto.SchemaChangeRequest, []*m
 		Schema:       lo.EmptyableToPtr(changeset.Schema),
 		Ops:          ops,
 	}, open, nil
+}
+
+func (s IAiChangesetServiceImpl) PreviewOp(ctx context.Context, chatID, changesetID uint, position int) (*dto.WritePreviewResponse, error) {
+	changeset, err := s.find(ctx, chatID, changesetID)
+	if err != nil {
+		return nil, err
+	}
+
+	row, found := lo.Find(changeset.Ops, func(op model.AiChangesetOp) bool { return op.Position == position })
+	if !found {
+		return nil, apperror.BadRequest(errors.New("no matching change"))
+	}
+
+	ops, err := decodeOps([]*model.AiChangesetOp{&row})
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	if ops[0].Op != dto.SchemaChangeWrite {
+		return nil, apperror.BadRequest(errors.New("only a data change can be previewed"))
+	}
+
+	return s.schemaService.PreviewWrite(ctx, &dto.WritePreviewRequest{
+		ConnectionID: int32(changeset.ConnectionID),
+		Database:     lo.EmptyableToPtr(changeset.Database),
+		Schema:       lo.EmptyableToPtr(changeset.Schema),
+		SQL:          ops[0].SQL,
+	})
 }
 
 func (s IAiChangesetServiceImpl) Before(ctx context.Context, chatID, changesetID uint) (map[string]*contract.TableStructure, error) {

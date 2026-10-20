@@ -24,7 +24,7 @@ type StreamEvent = {
   data?: Record<string, unknown>;
 };
 
-const WRITE_TOOL = "execute_write";
+const WRITE_TOOL = "preview_write";
 const PROPOSE_TOOL = "propose_schema_change";
 
 async function connectionIdByName(page: Page, name: string): Promise<number> {
@@ -111,7 +111,7 @@ test.describe("AI Agent Mode policy (server side)", () => {
           llm.script = { name: WRITE_TOOL, args: { sql: updateSql } };
           const events = await chat(page, connectionId, "ask");
           expect(blocked(events)?.label).toBe(WRITE_TOOL);
-          expect(types(events)).not.toContain("permission_request");
+          expect(types(events)).not.toContain("diagram_diff");
 
           llm.script = { name: PROPOSE_TOOL, args: { ops } };
           const proposeEvents = await chat(page, connectionId, "ask");
@@ -140,11 +140,13 @@ test.describe("AI Agent Mode policy (server side)", () => {
           expect(llm.offeredTools[0]).toEqual(expect.arrayContaining([WRITE_TOOL, PROPOSE_TOOL]));
         });
 
-        await test.step("Agent: execute_write only requests permission, never runs", async () => {
+        await test.step("Agent: preview_write adds a data change to the changeset, never runs it", async () => {
           llm.script = { name: WRITE_TOOL, args: { sql: updateSql } };
           const events = await chat(page, connectionId, "agent");
-          const permission = events.find((event) => event.type === "permission_request");
-          expect(permission?.data?.sql).toBe(updateSql);
+          const changeset = events.find((event) => event.type === "diagram_diff")?.data as
+            | { ops: Array<{ op: string; sql: string; affectedRows: number; status: string }> }
+            | undefined;
+          expect(changeset?.ops).toMatchObject([{ op: "write", sql: updateSql, affectedRows: 1, status: "pending" }]);
           expect(await scalar(page, connectionId, `SELECT email AS v FROM ${usersTable} WHERE id = 1`)).toBe("a@x.io");
         });
 
@@ -158,7 +160,7 @@ test.describe("AI Agent Mode policy (server side)", () => {
             llm.script = { name: WRITE_TOOL, args: { sql } };
             const events = await chat(page, connectionId, "agent");
             expect(blocked(events), sql).toBeDefined();
-            expect(types(events), sql).not.toContain("permission_request");
+            expect(types(events), sql).not.toContain("diagram_diff");
           }
           expect(await scalar(page, connectionId, `SELECT COUNT(*) AS v FROM ${usersTable}`)).toBe(1);
         });

@@ -1,17 +1,10 @@
-import type {
-  AiAgentItem,
-  AiMessageType,
-  AiPermissionRequest,
-  AiPlanStep,
-  AiToolTrace,
-  AiTraceMessageKind
-} from '@/types';
+import type { AiAgentItem, AiMessageType, AiPlanStep, AiToolTrace, AiTraceMessageKind } from '@/types';
 
-const TRACE_KINDS: ReadonlySet<string> = new Set<AiTraceMessageKind>(['tool', 'diagram_diff', 'permission', 'plan']);
+const TRACE_KINDS: ReadonlySet<string> = new Set<AiTraceMessageKind>(['tool', 'diagram_diff', 'plan']);
 
 export const isTraceMessage = (message: AiMessageType): boolean => TRACE_KINDS.has(message.type);
 
-/** Parses a persisted tool / diagram_diff / permission / plan message into a card item. */
+/** Parses a persisted tool / diagram_diff / plan message into a card item. */
 export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefined => {
   try {
     const payload: unknown = JSON.parse(message.content);
@@ -20,8 +13,6 @@ export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefi
         return { kind: 'tool', trace: payload as AiToolTrace };
       case 'diagram_diff':
         return { kind: 'diagram_diff', changesetId: (payload as { changesetId: number }).changesetId };
-      case 'permission':
-        return { kind: 'permission', request: payload as AiPermissionRequest };
       case 'plan':
         return { kind: 'plan', steps: (payload as { steps: AiPlanStep[] }).steps };
       default:
@@ -53,8 +44,6 @@ export const agentItemToMessage = (item: AiAgentItem): AiMessageType => {
       };
     case 'diagram_diff':
       return { ...base, type: 'diagram_diff', content: JSON.stringify({ changesetId: item.changesetId }) };
-    case 'permission':
-      return { ...base, type: 'permission', content: JSON.stringify(item.request) };
     case 'plan':
       return { ...base, type: 'plan', content: JSON.stringify({ steps: item.steps }) };
   }

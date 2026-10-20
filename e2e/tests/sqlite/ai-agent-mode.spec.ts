@@ -18,8 +18,8 @@ import {
 } from "../../pages";
 
 /**
- * Agent Mode UI against a mocked NDJSON stream (no real LLM): tool cards,
- * confirm-before-write card, and the diagram_diff → preview → apply path.
+ * Agent Mode UI against a mocked NDJSON stream (no real LLM): tool cards and
+ * the diagram_diff → preview → apply path.
  * The changeset itself is real (proposed through the fake LLM), so apply runs
  * real DDL on SQLite from the stored ops.
  */
@@ -46,19 +46,11 @@ function agentTurn(usersTable: string, proposal: ProposedChangeset): Event[] {
     result: `CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT)`,
     durationMs: 4,
   };
-  const permission = {
-    requestId: "perm-e2e",
-    connectionId: proposal.changeset.connectionId,
-    sql: `UPDATE ${usersTable} SET email = 'x' WHERE id = 1`,
-    class: "write_dml",
-  };
-
   return [
     { type: "status", label: "Thinking..." },
     { type: "tool_start", id: describe.id, label: describe.name, content: describe.args },
     { type: "tool_result", id: describe.id, label: describe.name, content: describe.result, durationMs: 4 },
     { type: "diagram_diff", id: String(proposal.changeset.id), data: proposal.changeset },
-    { type: "permission_request", id: permission.requestId, data: permission },
     { type: "block_start", blockType: "explanation" },
     { type: "content_delta", content: "Proposed a posts table for your review." },
     { type: "block_end" },
@@ -69,7 +61,6 @@ function agentTurn(usersTable: string, proposal: ProposedChangeset): Event[] {
       messages: [
         traceMessage("tool", describe),
         traceMessage("diagram_diff", { changesetId: proposal.changeset.id }),
-        traceMessage("permission", permission),
         {
           role: "assistant",
           type: "explanation",
@@ -112,13 +103,6 @@ test.describe("AI Agent Mode", () => {
       const diagram = new DiagramPage(page);
 
       const sentModes: string[] = [];
-      const rawQueries: string[] = [];
-
-      page.on("request", (request) => {
-        if (request.method() === "POST" && new URL(request.url()).pathname.endsWith("/api/query/raw")) {
-          rawQueries.push(String((request.postDataJSON() as { query?: string })?.query ?? ""));
-        }
-      });
 
       await page.route("**/api/ai/chat/stream", async (route) => {
         const body = route.request().postDataJSON() as { mode?: string };
@@ -180,14 +164,6 @@ test.describe("AI Agent Mode", () => {
           const card = page.getByTestId("ai-tool-card");
           await expect(card).toHaveAttribute("data-tool", "describe_table");
           await expect(card).toHaveAttribute("data-status", "done");
-        });
-
-        await test.step("Rejecting the write request never runs it", async () => {
-          const permission = page.getByTestId("ai-permission-card");
-          await expect(permission).toContainText(`UPDATE ${usersTable}`);
-          await permission.getByTestId("ai-permission-reject").click();
-          await expect(permission).toHaveAttribute("data-decision", "rejected");
-          expect(rawQueries.filter((query) => query.includes("UPDATE"))).toHaveLength(0);
         });
 
         await test.step("Proposal shows as pending on the diagram", async () => {

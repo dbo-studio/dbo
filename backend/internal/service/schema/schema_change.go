@@ -94,10 +94,15 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	policy := serviceSafemode.FromConnection(connection)
 	policy = s.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
-	// Dropping a column loses data, so it gates like DROP/TRUNCATE does.
+	// Dropping a column loses data, so it gates like DROP/TRUNCATE does. A
+	// changeset of data changes only is gated as one.
 	class := sqlguard.ClassDDL
-	if lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeDropColumn }) {
+
+	switch {
+	case lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeDropColumn }):
 		class = sqlguard.ClassCatastrophicDDL
+	case lo.EveryBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeWrite }):
+		class = sqlguard.ClassWriteDML
 	}
 
 	if err := serviceSafemode.Enforce(policy, class, req.Confirmed); err != nil {
@@ -194,6 +199,7 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 
 	editIndexes := map[string][]int{}
 	scopeIndexes := []int{}
+	writeIndexes := []int{}
 
 	for i, op := range req.Ops {
 		if op.Op != dto.SchemaChangeCreateTable {
@@ -215,6 +221,8 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		case op.Op == dto.SchemaChangeCreateTable:
 		case op.IsScopeOp():
 			scopeIndexes = append(scopeIndexes, i)
+		case op.Op == dto.SchemaChangeWrite:
+			writeIndexes = append(writeIndexes, i)
 		case op.Op == dto.SchemaChangeAddColumn && created:
 			spec.columns = append(spec.columns, *op.Column)
 			spec.opIndexes = append(spec.opIndexes, i)
@@ -280,6 +288,21 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		}
 
 		steps = append(steps, changeStep{nodeID: tableID(table), action: contract.EditTableAction, params: params, opIndexes: editIndexes[table]})
+	}
+
+	// Data changes run last, so they see the tables and columns the others make.
+	for _, i := range writeIndexes {
+		statement, err := sqlguard.WriteStatement(req.Ops[i].SQL)
+		if err != nil {
+			return nil, err
+		}
+
+		params, err := json.Marshal(databaseCore.ExecuteSQLParams{SQL: statement})
+		if err != nil {
+			return nil, err
+		}
+
+		steps = append(steps, changeStep{nodeID: containerID, action: contract.ExecuteSQLAction, params: params, opIndexes: []int{i}})
 	}
 
 	return steps, nil
