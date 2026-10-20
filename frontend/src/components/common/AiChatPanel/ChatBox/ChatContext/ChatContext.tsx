@@ -1,16 +1,16 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import type { AiContextType } from '@/types';
-import { Box, Chip, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import { useRef, useState } from 'react';
+import { Box, Chip, IconButton, Popover, Tooltip, Typography } from '@mui/material';
+import { useMemo, useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps, ContextItemType } from '../../types';
-import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
+import { ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
-import ChatContextModalItem from './ChatContextModalItem/ChatContextModalItem';
+import ContextPicker from '../ContextPicker/ContextPicker';
+import { buildContextOptions, toggleContextOption, type ContextOption } from '../../utils/contextOptions';
 import { contextWindowOf, estimateContextTokens, formatTokens } from '../../utils/contextBudget';
 import { variables } from '@/core/theme/variables';
 
@@ -28,33 +28,29 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
   const used = estimateContextTokens(context);
   const limit = contextWindowOf(activeProvider);
 
-  const [localContext, setLocalContext] = useState<AiContextType>({
-    input: '',
-    database: undefined,
-    schema: undefined,
-    tables: context.tables,
-    views: context.views
-  });
+  const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const options = useMemo(() => buildContextOptions(autocomplete, context, search), [autocomplete, context, search]);
+  const active = Math.min(activeIndex, Math.max(options.length - 1, 0));
 
   const handleContextChange = (name: string, type: ContextItemType) => {
-    const c = { ...localContext, input: context.input };
-    switch (type) {
-      case 'database':
-      case 'schema':
-        c[type] = c[type] === name ? undefined : name;
-        break;
-      case 'tables':
-      case 'views':
-        if (c[type]?.some((c: string) => c === name)) {
-          c[type] = c[type].filter((c) => c !== name);
-        } else {
-          c[type] = [...(c[type] ?? []), name];
-        }
-        break;
-    }
+    const kind = { database: 'database', schema: 'schema', tables: 'table', views: 'view' }[
+      type
+    ] as ContextOption['kind'];
+    updateContext(toggleContextOption(context, { kind, label: name, attached: true }));
+  };
 
-    setLocalContext(c);
-    updateContext(c);
+  // The list stays open so several items can be attached in a row.
+  const handlePick = (option: ContextOption) => updateContext(toggleContextOption(context, option));
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((active + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % Math.max(options.length, 1));
+    } else if (e.key === 'Enter' && options[active]) {
+      e.preventDefault();
+      handlePick(options[active]);
+    }
   };
 
   const targetDatabase =
@@ -160,49 +156,33 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           </Typography>
         </Tooltip>
       </ChatContextTagsStyled>
-      <DropDownMenu open={isOpen} onClose={() => setOpen(false)} anchorRef={anchorRef}>
-        <ChatContextStyled>
-          {autocomplete?.databases.map((database) => (
-            <ChatContextModalItem
-              key={`${database}-database`}
-              name={database}
-              type={'database'}
-              isActive={localContext.database === database}
-              onClick={handleContextChange}
-            />
-          ))}
-          {autocomplete?.databases.length > 0 && <Divider sx={{ marginBottom: 1 }} />}
-          {autocomplete?.schemas.map((schema) => (
-            <ChatContextModalItem
-              key={`${schema}-schema`}
-              name={schema}
-              type={'schema'}
-              isActive={localContext.schema === schema}
-              onClick={handleContextChange}
-            />
-          ))}
-          {autocomplete?.schemas.length > 0 && <Divider sx={{ marginBottom: 1 }} />}
-          {autocomplete?.tables.map((table) => (
-            <ChatContextModalItem
-              key={`${table}-table`}
-              name={table}
-              type={'tables'}
-              isActive={localContext.tables?.some((c) => c === table) ?? false}
-              onClick={handleContextChange}
-            />
-          ))}
-          {autocomplete?.views.length > 0 && <Divider sx={{ marginBottom: 1 }} />}
-          {autocomplete?.views.map((view) => (
-            <ChatContextModalItem
-              key={`${view}-view`}
-              name={view}
-              type={'views'}
-              isActive={localContext.views?.some((c) => c === view) ?? false}
-              onClick={handleContextChange}
-            />
-          ))}
-        </ChatContextStyled>
-      </DropDownMenu>
+      <Popover
+        open={isOpen}
+        anchorEl={anchorRef.current}
+        onClose={() => {
+          setOpen(false);
+          setSearch('');
+        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        slotProps={{ paper: { sx: { width: 280 } } }}
+      >
+        <Box sx={{ p: 1, pb: 0 }}>
+          <FieldInput
+            autoFocus
+            fullWidth
+            placeholder={locales.ai_context_search}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={handleSearchKeyDown}
+            inputProps={{ 'data-testid': 'ai-context-search' }}
+          />
+        </Box>
+        <ContextPicker options={options} activeIndex={active} onPick={handlePick} onHover={setActiveIndex} />
+      </Popover>
     </Box>
   );
 }

@@ -123,8 +123,30 @@ test.describe("AI chat context chips", () => {
           const options = page.getByTestId("ai-mention-option");
           await expect(options.filter({ hasText: usersTable })).toBeVisible();
           await composer.fill("@que");
-          await expect(options.filter({ hasText: "@query" })).toBeVisible();
+          await expect(options.filter({ hasText: "query" })).toBeVisible();
           await composer.fill("");
+        });
+
+        await test.step("A mention with no match says so, and an email address is not a mention", async () => {
+          await composer.fill("@zzzzqqq");
+          await expect(page.getByTestId("ai-mention-empty")).toBeVisible();
+          await composer.fill("mail me at someone@example");
+          await expect(page.getByTestId("ai-mention-empty")).toHaveCount(0);
+          await composer.fill("");
+        });
+
+        await test.step("The @ button searches and toggles an item without typing in the message", async () => {
+          const option = page.getByTestId("ai-mention-option").filter({ hasText: usersTable });
+          await page.getByTestId("ai-context-follow").locator("xpath=preceding-sibling::button").click();
+          await page.getByTestId("ai-context-search").fill(usersTable.slice(0, 12));
+          await expect(option).toHaveAttribute("data-attached", "true");
+          await option.click();
+          await expect(option).toHaveAttribute("data-attached", "false");
+          await option.click();
+          await expect(option).toHaveAttribute("data-attached", "true");
+          await page.keyboard.press("Escape");
+          await expect(page.getByTestId("ai-context-search")).toHaveCount(0);
+          await expect(chip(usersTable)).toBeVisible();
         });
 
         await test.step("Mentioning a table adds a chip and is sent with the request", async () => {
