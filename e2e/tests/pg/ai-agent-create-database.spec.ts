@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile, saveAiSetup, setAiMode } from "../../helpers/aiSetup";
+import {
+  clearActiveAiProfile,
+  saveAiSetup,
+  setAiMode,
+} from "../../helpers/aiSetup";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SettingsPage } from "../../pages";
@@ -84,7 +88,16 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
           };
           const composer = page.getByTestId("ai-chat-input");
           await composer.fill("create a blog database");
+          const sent = page.waitForRequest((request) =>
+            request.url().includes("/ai/chat/stream"),
+          );
           await composer.press("Enter");
+          // The database and schema the composer shows are the ones the turn sends, and no table the user did not pick.
+          expect((await sent).postDataJSON().contextOpts).toMatchObject({
+            database: "default",
+            schema: "public",
+            tables: [],
+          });
           await expect(page.getByTestId("ai-changeset-dock")).toContainText(
             "4 changes pending",
             { timeout: 15000 },

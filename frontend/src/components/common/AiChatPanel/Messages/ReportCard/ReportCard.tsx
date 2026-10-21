@@ -24,9 +24,15 @@ export default function ReportCard({ report }: { report: ChartReport }): JSX.Ele
 
   return (
     <AgentCardStyled data-testid='ai-report-card'>
-      <Stack direction='row' spacing={0.75} sx={{ alignItems: 'center', px: 1, py: 0.75 }}>
+      <Stack
+        direction='row'
+        useFlexGap
+        spacing={0.75}
+        // The actions drop below the title when the panel is narrow, instead of squeezing it away.
+        sx={{ alignItems: 'center', flexWrap: 'wrap', px: 1, py: 0.75, '& .MuiButton-root': { whiteSpace: 'nowrap' } }}
+      >
         <CustomIcon type='layout' size='xs' />
-        <Typography variant='caption' sx={{ fontWeight: 600, flex: 1, minWidth: 0 }} noWrap>
+        <Typography variant='caption' sx={{ fontWeight: 600, flex: '1 1 140px', minWidth: 0 }} noWrap>
           {report.title}
         </Typography>
         <Button

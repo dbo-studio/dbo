@@ -87,6 +87,12 @@ test.describe("AI schema review (sqlite)", () => {
           await expect(page.getByTestId("ai-changeset-dock")).toHaveCount(0);
         });
 
+        await test.step("After a reload the open chat comes back with its review", async () => {
+          await page.reload();
+          if ((await page.getByTestId("ai-chat-input").count()) === 0) await settingsPage.openRightSidebar();
+          await expect(page.getByTestId("ai-review-card").last()).toBeVisible({ timeout: 15000 });
+        });
+
         await test.step("The findings and an applied fix through the API", async () => {
           await checkSchemaReview(page, llm, connectionId);
         });

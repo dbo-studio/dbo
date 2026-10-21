@@ -8,9 +8,10 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
-import { openChat } from '../utils/openChat';
+import { contextScope } from '../utils/contextScope';
+import { openChat, rememberChat, reopenLastChat } from '../utils/openChat';
 import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
@@ -40,8 +41,7 @@ const buildContextOpts = (): AiContextOptsType => {
   const context = useAiStore.getState().context;
 
   const contextOpts: AiContextOptsType = {
-    database: context.database,
-    schema: context.schema,
+    ...contextScope(context, useConnectionStore.getState().currentConnection()),
     tables: context.tables,
     views: context.views
   };
@@ -90,6 +90,11 @@ export const useAiChat = (active = true): useAiChatReturnType => {
   // Tables and views belong to one database and schema, so the list follows the context's.
   const contextDatabase = useAiStore((state) => state.context.database);
   const contextSchema = useAiStore((state) => state.context.schema);
+
+  // After a reload the panel shows the chat the user had open, as it does before one.
+  useEffect(() => {
+    if (active && connectionId) void reopenLastChat(connectionId);
+  }, [active, connectionId]);
 
   const { data: autocomplete } = useQuery({
     queryKey: ['ai_autocomplete', connectionId, contextDatabase, contextSchema],
@@ -347,6 +352,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
         await handleChatChange(newChats[newChats.length - 1]);
       } else if (newChats.length === 0) {
         updateCurrentChat(undefined);
+        rememberChat(useConnectionStore.getState().currentConnectionId, undefined);
       }
     },
     [handleChatChange, updateChats, updateCurrentChat]

@@ -5,6 +5,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { ChartReport } from '../utils/chartReport';
+import { contextScope } from '../utils/contextScope';
 
 /** Saves a chart as a report, or updates it when it was saved before; returns the report with its id. */
 export const useSaveReport = () => {
@@ -13,7 +14,10 @@ export const useSaveReport = () => {
 
   return useMutation({
     mutationFn: async (report: ChartReport): Promise<ChartReport> => {
-      const { database, schema } = useAiStore.getState().context;
+      const { database, schema } = contextScope(
+        useAiStore.getState().context,
+        useConnectionStore.getState().currentConnection()
+      );
       const body = { name: report.title, sql: report.sql, chart: report.spec };
       const saved = report.questionId
         ? await api.question.updateQuestion(report.questionId, body)

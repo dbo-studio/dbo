@@ -15,7 +15,7 @@ import locales from '@/locales';
 import { tools } from '@/core/utils/tools';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { chatFileName, chatToMarkdown } from '../utils/chatExport';
-import { openChat } from '../utils/openChat';
+import { openChat, rememberChat } from '../utils/openChat';
 import type { ChatHistoryProps } from './types';
 import { variables } from '@/core/theme/variables';
 
@@ -99,6 +99,7 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
             await handleSelectChat(newChats[newChats.length - 1]);
           } else {
             updateCurrentChat(undefined);
+            rememberChat(currentConnectionId, undefined);
           }
         }
 

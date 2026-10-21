@@ -7,6 +7,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { AutoCompleteType } from '@/types';
 import { Box, Button, Typography } from '@mui/material';
 import { useRef, useState, type JSX } from 'react';
+import { contextScope } from '../../utils/contextScope';
 import {
   ContextPickerItemStyled,
   ContextPickerListStyled,
@@ -27,14 +28,12 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
   const [menu, setMenu] = useState<Level | null>(null);
 
   const capabilities = getEngineCapabilities(connection?.type);
-  const database =
-    context.database || (connection && 'database' in connection.options ? connection.options.database : undefined);
-  const schema = context.schema;
+  const { database, schema } = contextScope(context, connection);
 
   if (!connection) return null;
 
   const choices = menu === 'database' ? autocomplete.databases : autocomplete.schemas;
-  const current = menu === 'database' ? database : (schema ?? capabilities.preferredSchema);
+  const current = menu === 'database' ? database : schema;
 
   const handlePick = (name: string): void => {
     if (!menu) return;
@@ -86,7 +85,7 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
           {connection.name}
         </Box>
         {selector('database', database, capabilities.hasDatabase)}
-        {selector('schema', schema ?? capabilities.preferredSchema, capabilities.hasSchema)}
+        {selector('schema', schema, capabilities.hasSchema)}
       </Typography>
       <DropDownMenu open={!!menu} onClose={() => setMenu(null)} anchorRef={anchorRef}>
         <ContextPickerStyled sx={{ width: 200 }}>
