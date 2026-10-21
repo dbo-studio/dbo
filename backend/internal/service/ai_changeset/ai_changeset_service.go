@@ -14,6 +14,7 @@ import (
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
@@ -397,6 +398,15 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 	// Read the SQL before it runs: the audit entry shows what was attempted even when the apply fails.
 	statements, _ := s.schemaService.PreviewChange(ctx, req)
 
+	// Data changes are read before they run, so they can be undone after.
+	captures := map[int]*serviceSchema.WriteCapture{}
+
+	for i, op := range req.Ops {
+		if op.Op == dto.SchemaChangeWrite {
+			captures[i] = s.schemaService.CaptureWrite(ctx, writeRequest(changeset, op.SQL))
+		}
+	}
+
 	result, applyErr := s.schemaService.ApplyChange(ctx, req)
 	if result == nil {
 		s.audit(ctx, changeset, open, statements, nil, applyErr)
@@ -408,6 +418,11 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 
 	for _, i := range result.Applied {
 		open[i].Status, open[i].Error = model.AiChangesetOpApplied, ""
+
+		if capture, ok := captures[i]; ok {
+			open[i].UndoSQL, open[i].UndoNote = s.schemaService.WriteUndo(ctx, writeRequest(changeset, req.Ops[i].SQL), capture)
+		}
+
 		touched = append(touched, *open[i])
 	}
 
@@ -532,11 +547,16 @@ func (s IAiChangesetServiceImpl) Undo(ctx context.Context, chatID, changesetID u
 		return nil, apperror.InternalServerError(err)
 	}
 
-	if connection.AgentTier != model.AgentTierSchemaChange {
+	schemaUndo := serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
+	statements := undoStatements(changeset, connection.ConnectionType, ops)
+
+	switch {
+	case connection.AgentTier == model.AgentTierReadOnly:
+		return nil, apperror.Forbidden(errTierReadOnly)
+	case len(schemaUndo) > 0 && connection.AgentTier != model.AgentTierSchemaChange:
 		return nil, apperror.Forbidden(errTierSchema)
 	}
 
-	statements := serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
 	if len(statements) == 0 {
 		return nil, apperror.BadRequest(errors.New("nothing in this change can be undone"))
 	}
@@ -576,10 +596,25 @@ func (s IAiChangesetServiceImpl) allowedByTier(ctx context.Context, changeset *m
 	case model.AgentTierReadOnly:
 		return apperror.Forbidden(errTierReadOnly)
 	case model.AgentTierDataWrite:
-		if lo.SomeBy(ops, func(op dto.SchemaChangeOp) bool { return op.Op != dto.SchemaChangeWrite }) {
+		if lo.SomeBy(ops, func(op dto.SchemaChangeOp) bool { return !isDataChange(op) }) {
 			return apperror.Forbidden(errTierSchema)
 		}
 	}
 
 	return nil
+}
+
+// isDataChange reports whether an op only changes rows: a data change, or the undo of one.
+func isDataChange(op dto.SchemaChangeOp) bool {
+	return op.Op == dto.SchemaChangeWrite ||
+		op.Op == dto.SchemaChangeUndo && sqlguard.ClassifySQL(op.SQL).Class == sqlguard.ClassWriteDML
+}
+
+func writeRequest(changeset *model.AiChangeset, sql string) *dto.WritePreviewRequest {
+	return &dto.WritePreviewRequest{
+		ConnectionID: int32(changeset.ConnectionID),
+		Database:     lo.EmptyableToPtr(changeset.Database),
+		Schema:       lo.EmptyableToPtr(changeset.Schema),
+		SQL:          sql,
+	}
 }

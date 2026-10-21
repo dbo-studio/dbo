@@ -23,6 +23,9 @@ type ISchemaService interface {
 	PreviewWrite(ctx context.Context, req *dto.WritePreviewRequest) (*dto.WritePreviewResponse, error)
 	PreviewChange(ctx context.Context, req *dto.SchemaChangeRequest) ([]string, error)
 	ApplyChange(ctx context.Context, req *dto.SchemaChangeRequest) (*ChangeResult, error)
+	// CaptureWrite reads what a data change touches before it runs; WriteUndo then builds its undo.
+	CaptureWrite(ctx context.Context, req *dto.WritePreviewRequest) *WriteCapture
+	WriteUndo(ctx context.Context, req *dto.WritePreviewRequest, capture *WriteCapture) (string, string)
 }
 
 var _ ISchemaService = (*ISchemaServiceImpl)(nil)

@@ -120,7 +120,8 @@ test.describe("Persisted changeset ops (postgres)", () => {
         });
 
         let undone: string[] = [];
-        let appliedProposal: Awaited<ReturnType<typeof proposeChangeset>> | undefined;
+        let appliedProposal:
+          Awaited<ReturnType<typeof proposeChangeset>> | undefined;
 
         await test.step("Alter, index, add and drop apply together", async () => {
           const proposal = await proposeChangeset(
@@ -175,12 +176,19 @@ test.describe("Persisted changeset ops (postgres)", () => {
         });
 
         await test.step("Undo becomes a pending change that applies the undo SQL", async () => {
-          const { chatId, changeset } = appliedProposal as NonNullable<typeof appliedProposal>;
-          const response = await page.request.post(`/api/ai/chats/${chatId}/changesets/${changeset.id}/undo`);
+          const { chatId, changeset } = appliedProposal as NonNullable<
+            typeof appliedProposal
+          >;
+          const response = await page.request.post(
+            `/api/ai/chats/${chatId}/changesets/${changeset.id}/undo`,
+          );
           expect(response.status()).toBe(200);
-          const undo = ((await response.json()) as { data: typeof changeset }).data;
+          const undo = ((await response.json()) as { data: typeof changeset })
+            .data;
           expect(undo.ops.map((op) => op.sql)).toEqual(undone);
-          expect((await applyChangeset(page, { chatId, changeset: undo })).status()).toBe(200);
+          expect(
+            (await applyChangeset(page, { chatId, changeset: undo })).status(),
+          ).toBe(200);
           expect((await columnsOf(table)).map((column) => column.name)).toEqual(
             ["id", "email"],
           );
@@ -258,7 +266,27 @@ test.describe("Persisted changeset ops (postgres)", () => {
           expect((await applyChangeset(page, proposal)).status()).toBe(200);
           expect(await changesetStatuses(page, proposal)).toEqual(["applied"]);
           expect(await emails()).toEqual(["z", "b"]);
-          expect(await undoSql(page, proposal)).toEqual([]);
+          const undone = await undoSql(page, proposal);
+          expect(undone).toHaveLength(1);
+          expect(undone[0]).toContain("CASE WHEN");
+
+          // The undo is a new pending change; applying it puts the old value back.
+          const undo = await page.request.post(
+            `/api/ai/chats/${proposal.chatId}/changesets/${proposal.changeset.id}/undo`,
+          );
+          expect(undo.status()).toBe(200);
+          const undoChangeset = (
+            (await undo.json()) as { data: typeof proposal.changeset }
+          ).data;
+          expect(
+            (
+              await applyChangeset(page, {
+                chatId: proposal.chatId,
+                changeset: undoChangeset,
+              })
+            ).status(),
+          ).toBe(200);
+          expect(await emails()).toEqual(["a", "b"]);
         });
 
         await test.step("A new database with its schema and tables is created in one apply", async () => {

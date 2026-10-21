@@ -689,6 +689,7 @@
   "ai_op_write": "Data change",
   "ai_op_undo": "Undo",
   "ai_undo_ready": "Undo is ready to review",
+  "ai_undo_unavailable": "Can't be undone: {reason}.",
   "ai_keep_change": "Keep this change",
   "ai_drop_change": "Skip this change",
   "ai_changes_undo_title": "Undo",

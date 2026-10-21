@@ -21,6 +21,9 @@ type AiChangesetOp struct {
 	OpJSON      string              `gorm:"column:op_json;type:text;not null"`
 	Status      AiChangesetOpStatus `gorm:"size:16;not null;default:pending"`
 	Error       string              `gorm:"type:text;not null;default:''"`
+	// UndoSQL takes back an applied data change; UndoNote says why there is none.
+	UndoSQL  string `gorm:"column:undo_sql;type:text;not null;default:''"`
+	UndoNote string `gorm:"column:undo_note;type:text;not null;default:''"`
 }
 
 type AiChangesetOpStatus string

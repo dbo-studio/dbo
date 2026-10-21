@@ -84,6 +84,11 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                     {op.error}
                   </Typography>
                 )}
+                {op.status === 'applied' && op.undoNote && (
+                  <Typography variant='caption' color='textSubdued' data-testid='ai-undo-note'>
+                    {locales.ai_undo_unavailable.replace('{reason}', op.undoNote)}
+                  </Typography>
+                )}
               </Box>
               <Chip
                 size='small'

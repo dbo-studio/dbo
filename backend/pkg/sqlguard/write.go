@@ -60,3 +60,63 @@ func sampleSelect(tables sqlparser.TableExprs, where *sqlparser.Where, limit int
 
 	return fmt.Sprintf("SELECT * FROM %s%s LIMIT %d", sqlparser.String(tables), sqlparser.String(where), limit), true
 }
+
+// WriteTarget is what a data change works on: its kind (INSERT, UPDATE, DELETE),
+// its one table, and for an UPDATE the columns it sets. It reports false for
+// statements the parser cannot read or that touch more than one table.
+type WriteTarget struct {
+	Kind       string
+	Table      string
+	SetColumns []string
+}
+
+func ParseWriteTarget(sql string) (WriteTarget, bool) {
+	statement, err := sqlparser.Parse(sql)
+	if err != nil {
+		return WriteTarget{}, false
+	}
+
+	switch s := statement.(type) {
+	case *sqlparser.Insert:
+		return WriteTarget{Kind: "INSERT", Table: s.Table.Name.String()}, true
+	case *sqlparser.Update:
+		table, ok := singleTable(s.TableExprs)
+		if !ok {
+			return WriteTarget{}, false
+		}
+
+		columns := make([]string, 0, len(s.Exprs))
+		for _, expr := range s.Exprs {
+			columns = append(columns, expr.Name.Name.String())
+		}
+
+		return WriteTarget{Kind: "UPDATE", Table: table, SetColumns: columns}, true
+	case *sqlparser.Delete:
+		table, ok := singleTable(s.TableExprs)
+		if !ok {
+			return WriteTarget{}, false
+		}
+
+		return WriteTarget{Kind: "DELETE", Table: table}, true
+	default:
+		return WriteTarget{}, false
+	}
+}
+
+func singleTable(tables sqlparser.TableExprs) (string, bool) {
+	if len(tables) != 1 {
+		return "", false
+	}
+
+	aliased, ok := tables[0].(*sqlparser.AliasedTableExpr)
+	if !ok {
+		return "", false
+	}
+
+	name, ok := aliased.Expr.(sqlparser.TableName)
+	if !ok {
+		return "", false
+	}
+
+	return name.Name.String(), true
+}

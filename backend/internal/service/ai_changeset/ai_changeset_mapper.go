@@ -1,6 +1,7 @@
 package serviceAiChangeset
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -57,11 +58,12 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 				Status:         string(row.Status),
 				Error:          row.Error,
 				TableID:        serviceSchema.TableNodeID(connectionType, changeset.Database, changeset.Schema, ops[i].Table),
+				UndoNote:       row.UndoNote,
 				SchemaChangeOp: ops[i],
 			}
 		}),
 		DiagramOps: serviceSchema.ChangeDiagramOps(connectionType, changeset.Database, changeset.Schema, open),
-		UndoSQL:    serviceSchema.CompensatingSQL(connectionType, changeset.Database, changeset.Schema, applied),
+		UndoSQL:    undoStatements(changeset, connectionType, applied),
 	}, nil
 }
 
@@ -86,4 +88,15 @@ func opLabel(op dto.SchemaChangeOp) string {
 // isOpenStatus reports whether an op still waits for the user: not rejected, not applied.
 func isOpenStatus(status model.AiChangesetOpStatus) bool {
 	return status != model.AiChangesetOpRejected && status != model.AiChangesetOpApplied
+}
+
+// undoStatements takes back what a changeset applied: its data changes first, newest first
+// (they ran last), then its schema changes.
+func undoStatements(changeset *model.AiChangeset, connectionType string, applied []dto.SchemaChangeOp) []string {
+	data := lo.FilterMap(changeset.Ops, func(op model.AiChangesetOp, _ int) (string, bool) {
+		return op.UndoSQL, op.Status == model.AiChangesetOpApplied && op.UndoSQL != ""
+	})
+	slices.Reverse(data)
+
+	return append(data, serviceSchema.CompensatingSQL(connectionType, changeset.Database, changeset.Schema, applied)...)
 }

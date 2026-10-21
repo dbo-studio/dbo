@@ -71,6 +71,8 @@ export type SchemaChangeOp = {
   /** write: the INSERT, UPDATE or DELETE, and how many rows it changed when previewed. */
   sql?: string;
   affectedRows?: number;
+  /** Why an applied data change cannot be undone. */
+  undoNote?: string;
   columns?: SchemaChangeColumn[];
   column?: SchemaChangeColumn;
   columnName?: string;

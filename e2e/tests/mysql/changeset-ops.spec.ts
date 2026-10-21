@@ -292,7 +292,27 @@ test.describe("Persisted changeset ops (mysql)", () => {
           expect((await applyChangeset(page, proposal)).status()).toBe(200);
           expect(await changesetStatuses(page, proposal)).toEqual(["applied"]);
           expect(await emails()).toEqual(["z", "b"]);
-          expect(await undoSql(page, proposal)).toEqual([]);
+          const undone = await undoSql(page, proposal);
+          expect(undone).toHaveLength(1);
+          expect(undone[0]).toContain("CASE WHEN");
+
+          // The undo is a new pending change; applying it puts the old value back.
+          const undo = await page.request.post(
+            `/api/ai/chats/${proposal.chatId}/changesets/${proposal.changeset.id}/undo`,
+          );
+          expect(undo.status()).toBe(200);
+          const undoChangeset = (
+            (await undo.json()) as { data: typeof proposal.changeset }
+          ).data;
+          expect(
+            (
+              await applyChangeset(page, {
+                chatId: proposal.chatId,
+                changeset: undoChangeset,
+              })
+            ).status(),
+          ).toBe(200);
+          expect(await emails()).toEqual(["a", "b"]);
         });
 
         await test.step("A new database with its tables is created in one apply", async () => {

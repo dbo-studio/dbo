@@ -162,6 +162,14 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
             </Button>
           )}
         </CardActionsStyled>
+        {!pending &&
+          changeset.ops
+            .filter((op) => op.status === 'applied' && op.undoNote)
+            .map((op) => (
+              <Typography key={op.position} variant='caption' color='textSubdued' data-testid='ai-undo-note'>
+                {locales.ai_undo_unavailable.replace('{reason}', op.undoNote ?? '')}
+              </Typography>
+            ))}
       </AgentCardBodyStyled>
       <QueryPreviewModal
         open={review.previewQueries !== undefined}

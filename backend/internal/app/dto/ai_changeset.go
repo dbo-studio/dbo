@@ -15,6 +15,8 @@ type (
 		Error    string `json:"error,omitempty"`
 		// TableID is the tree node id of the op's table, to open it in the Object Form.
 		TableID string `json:"tableId"`
+		// UndoNote says why an applied data change cannot be undone.
+		UndoNote string `json:"undoNote,omitempty"`
 		SchemaChangeOp
 	}
 
