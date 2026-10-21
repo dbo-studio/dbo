@@ -10,6 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -49,6 +50,8 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 	case "execute_sql", ToolShowChart:
 		// A chart runs its SELECT exactly like execute_sql; the chart settings only matter to the UI.
 		return r.executeSQL(ctx, args, toolCtx)
+	case ToolExplainQuery:
+		return r.explainQuery(ctx, args, toolCtx)
 	case "list_connections":
 		return r.listConnections(ctx)
 	default:
@@ -150,6 +153,37 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 		return "", fmt.Errorf("connection not found: %w", err)
 	}
 
+	return r.runReadOnly(ctx, conn, safeSQL, toolCtx)
+}
+
+// explainQuery returns the plan of one SELECT without running it (no ANALYZE).
+func (r *Registry) explainQuery(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
+	sqlText, _ := args["sql"].(string)
+
+	safeSQL, err := GuardExplainSQL(sqlText)
+	if err != nil {
+		return "", err
+	}
+
+	conn, err := r.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return "", fmt.Errorf("connection not found: %w", err)
+	}
+
+	switch {
+	case databaseContract.IsPostgresFamily(conn.ConnectionType), databaseContract.IsMysqlFamily(conn.ConnectionType):
+		safeSQL = "EXPLAIN " + safeSQL
+	case conn.ConnectionType == databaseContract.Sqlite:
+		safeSQL = "EXPLAIN QUERY PLAN " + safeSQL
+	default:
+		return "", fmt.Errorf("query plans are not available for %s connections", conn.ConnectionType)
+	}
+
+	return r.runReadOnly(ctx, conn, safeSQL, toolCtx)
+}
+
+// runReadOnly runs an already guarded read-only statement and returns its rows as JSON.
+func (r *Registry) runReadOnly(ctx context.Context, conn *model.Connection, safeSQL string, toolCtx ToolContext) (string, error) {
 	// Tools never confirm on the user's behalf: under Safe Mode "safe" even
 	// reads need the user to unlock the connection first.
 	policy := r.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), conn.ID, serviceSafemode.FromConnection(conn))

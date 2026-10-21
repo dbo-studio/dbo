@@ -815,6 +815,8 @@
   "ai_step_read": "Read {table}",
   "ai_step_running_query": "Running query",
   "ai_step_ran_query": "Ran query · {rows}",
+  "ai_step_explaining": "Reading the query plan",
+  "ai_step_explained": "Read the query plan",
   "ai_step_proposing": "Proposing changes",
   "ai_step_proposed": "Proposed {changes}",
   "ai_step_previewing": "Previewing data change",

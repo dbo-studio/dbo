@@ -12,6 +12,7 @@ const (
 	ToolListViews           = "list_views"
 	ToolDescribeTable       = "describe_table"
 	ToolExecuteSQL          = "execute_sql"
+	ToolExplainQuery        = "explain_query"
 	ToolProposeSchemaChange = "propose_schema_change"
 	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
@@ -33,7 +34,7 @@ var agentOnlyTools = map[string]bool{
 // whose agent level is data_write never gets schema proposals.
 func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart, ToolSaveReport, ToolPinReport:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolShowChart, ToolSaveReport, ToolPinReport:
 		return true
 	case ToolProposeSchemaChange:
 		if tier == TierDataWrite {
@@ -97,6 +98,17 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				"sql": map[string]any{
 					"type":        "string",
 					"description": "SELECT statement only. LIMIT is enforced automatically.",
+				},
+			},
+			"required": []string{"sql"},
+		}),
+		functionTool(ToolExplainQuery, "Show the database's plan for one SELECT without running it (EXPLAIN, no ANALYZE). "+
+			"Use it to find out why a query is slow and which index would help.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"sql": map[string]any{
+					"type":        "string",
+					"description": "The SELECT statement to explain.",
 				},
 			},
 			"required": []string{"sql"},
