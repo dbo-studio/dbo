@@ -13,6 +13,7 @@ import McpPanel from './McpPanel/McpPanel';
 import type { AiPanelProps } from '../types';
 
 const DENSITIES: AiToolDensity[] = ['compact', 'balanced', 'detailed'];
+const WIDTHS = ['narrow', 'default', 'wide'] as const;
 
 export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
   const mode = useAuthStore((s) => s.mode);
@@ -22,6 +23,7 @@ export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
   const mcpRef = useRef<HTMLDivElement>(null);
   const toolDensity = useSettingStore((state) => state.editor.aiToolDensity ?? 'balanced');
   const updateEditor = useSettingStore((state) => state.updateEditor);
+  const chatWidth = useSettingStore((state) => state.editor.aiChatWidth ?? 'default');
 
   useEffect(() => {
     if (initialTab === 'mcp') {
@@ -46,6 +48,17 @@ export default function AiPanel({ initialTab = 'providers' }: AiPanelProps) {
           <Typography variant='caption' color='textSubdued'>
             {locales.ai_tool_density_desc}
           </Typography>
+          <Box sx={{ pt: 2 }}>
+            <SelectInput
+              label={locales.ai_chat_width}
+              testId='ai-chat-width'
+              value={chatWidth}
+              options={WIDTHS.map((value) => ({ value, label: locales[`ai_chat_width_${value}`] }))}
+              onChange={(option) =>
+                updateEditor({ aiChatWidth: (option as SelectInputOption).value as (typeof WIDTHS)[number] })
+              }
+            />
+          </Box>
         </Box>
       </section>
       {canAi ? (

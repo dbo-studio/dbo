@@ -83,7 +83,8 @@ const columnWidth = (column: string, rows: Record<string, unknown>[]): number =>
 export default function ChatDataTable({
   rows: initialRows,
   columns: initialColumns,
-  query
+  query,
+  tall = false
 }: ChatDataTableProps): JSX.Element | null {
   const [, copy] = useCopyToClipboard();
   const [rerun, setRerun] = useState<{
@@ -133,7 +134,7 @@ export default function ChatDataTable({
           <ChatChart rows={rows} series={series} />
         </Suspense>
       )}
-      <ChatDataTableScroll>
+      <ChatDataTableScroll sx={tall ? { maxHeight: 'none' } : undefined}>
         {/* Fills the card when the columns are narrower than it; scrolls when wider. */}
         <StyledTable style={{ width: '100%', minWidth: tableWidth }}>
           <colgroup>

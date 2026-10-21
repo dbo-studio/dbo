@@ -93,6 +93,7 @@ export const IconTypes = {
   layout: 'LayoutGrid',
   fit: 'Maximize2',
   expand: 'Maximize2',
+  collapse: 'Minimize2',
   send: 'Send',
   at: 'AtSign',
   history: 'RotateCcwClock',

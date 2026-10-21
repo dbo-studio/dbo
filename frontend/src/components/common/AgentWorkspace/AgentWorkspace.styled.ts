@@ -55,3 +55,15 @@ export const WorkspaceComposerStyled = styled(Box)(({ theme }) => ({
   flexShrink: 0,
   paddingTop: theme.spacing(1)
 }));
+
+export const FloatingPromptStyled = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  left: '50%',
+  bottom: theme.spacing(2),
+  transform: 'translateX(-50%)',
+  width: 'min(720px, calc(100% - 32px))',
+  zIndex: 2,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[8],
+  backgroundColor: theme.palette.background.default
+}));

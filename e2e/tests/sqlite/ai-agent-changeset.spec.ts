@@ -192,7 +192,8 @@ test.describe("AI Agent Workspace changeset", () => {
           await page.getByTestId("ai-dock-execute").click();
 
           await expect(dock).toHaveCount(0, { timeout: 15000 });
-          await expect(surface).toHaveCount(0);
+          // The canvas stays and shows what was applied.
+          await expect(table(posts).getByTestId("ai-diff-op").first()).toHaveAttribute("data-status", "applied");
           expect(await columnNames(page, connectionId, posts)).toEqual(["id"]);
           expect(await columnNames(page, connectionId, users)).toEqual([
             "id",

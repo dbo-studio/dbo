@@ -100,6 +100,8 @@ export type ChatDataTableProps = {
   columns?: string[];
   /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
   query?: string;
+  /** Lets the table grow, for the workstation canvas; the chat keeps a short table. */
+  tall?: boolean;
 };
 
 export type StreamingMarkdownProps = {

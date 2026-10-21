@@ -37,16 +37,15 @@ export default function ChatHistoryItem({
           <Typography color={'textText'} variant='caption' noWrap sx={{ display: 'block' }}>
             {item.title}
           </Typography>
-          <Typography
-            color={'textSubdued'}
-            variant='caption'
-            sx={{ display: 'block', fontSize: variables.fontSize.xxs }}
-          >
-            {relativeTime(item.updatedAt ?? item.createdAt)}
-          </Typography>
+          {/* The status sits on the meta line so long titles keep their room. */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography color={'textSubdued'} variant='caption' sx={{ fontSize: variables.fontSize.xxs }}>
+              {relativeTime(item.updatedAt ?? item.createdAt)}
+            </Typography>
+            <SessionStatusBadge chatId={item.id} />
+          </Box>
         </Box>
       </Box>
-      <SessionStatusBadge chatId={item.id} />
       <Box className='history-actions'>
         <Tooltip title={item.pinned ? locales.ai_history_unpin : locales.ai_history_pin}>
           <span data-testid='ai-history-pin' onClick={stop(onTogglePin)}>

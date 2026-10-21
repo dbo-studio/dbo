@@ -1,7 +1,10 @@
 import { Box, styled } from '@mui/material';
 
-export const ChangesetSurfaceStyled = styled(Box)(({ theme }) => ({
-  width: 440,
+export const WorkspaceCanvasStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'fullScreen'
+})<{ fullScreen: boolean }>(({ theme, fullScreen }) => ({
+  width: fullScreen ? 'auto' : 520,
+  flex: fullScreen ? 1 : 'none',
   flexShrink: 0,
   minHeight: 0,
   display: 'flex',
@@ -15,7 +18,7 @@ export const ChangesetSurfaceStyled = styled(Box)(({ theme }) => ({
   }
 }));
 
-export const ChangesetSurfaceHeaderStyled = styled(Box)(({ theme }) => ({
+export const WorkspaceCanvasHeaderStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
@@ -23,9 +26,15 @@ export const ChangesetSurfaceHeaderStyled = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`
 }));
 
-export const ChangesetSurfaceBodyStyled = styled(Box)(({ theme }) => ({
+export const WorkspaceCanvasBodyStyled = styled(Box)(({ theme }) => ({
   flex: 1,
   minHeight: 0,
   overflow: 'auto',
   padding: theme.spacing(1.5)
+}));
+
+export const WorkspaceCanvasEmptyStyled = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(4, 2),
+  textAlign: 'center',
+  color: theme.palette.text.secondary
 }));
