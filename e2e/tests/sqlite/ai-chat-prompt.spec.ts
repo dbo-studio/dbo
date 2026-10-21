@@ -9,7 +9,7 @@ import { ConnectionPage } from "../../pages";
 
 /** What the model is told about the connection, and the title a chat gets from its first message. */
 test.describe("AI chat prompt and title", () => {
-  test("names the engine, guards against data instructions, titles by whole characters", async ({ page }, testInfo) => {
+  test("names the engine, guards against data instructions, titles by whole characters, explains provider errors", async ({ page }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `ai-prompt-${suffix}`;
     const dbPath = `/tmp/dbo-e2e-ai-prompt-${suffix}.db`;
@@ -52,6 +52,17 @@ test.describe("AI chat prompt and title", () => {
         expect(chat.data.title.endsWith("…")).toBe(true);
         expect(chat.data.title).not.toContain("�");
         expect(message.startsWith(chat.data.title.slice(0, -1))).toBe(true);
+
+        // A provider failure reaches the chat as something the user can act on, not a raw client error.
+        llm.requiredKey = "sk-another-key";
+        const refused = await page.request.post("/api/ai/chat/stream", {
+          data: { connectionId, chatId, message: "hello again", mode: "ask" },
+        });
+        const events = (await refused.text())
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => JSON.parse(line) as { type: string; message?: string });
+        expect(events.find((event) => event.type === "error")?.message).toBe("the provider rejected the API key");
       });
     } finally {
       await llm.stop();

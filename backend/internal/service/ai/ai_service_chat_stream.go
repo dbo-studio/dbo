@@ -87,7 +87,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	}
 
 	if providerErr != nil {
-		return providerErr
+		return aiProvider.ProviderError(providerErr)
 	}
 
 	response := &dto.AiChatResponse{

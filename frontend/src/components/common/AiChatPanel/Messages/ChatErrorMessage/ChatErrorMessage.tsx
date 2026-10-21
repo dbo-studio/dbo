@@ -11,7 +11,12 @@ export default function ChatErrorMessage({ message, onRetry }: ChatErrorMessageP
   return (
     <ChatErrorMessageStyled>
       <Stack spacing={1}>
-        <Typography variant='body2' color='error' data-testid='ai-error-text'>
+        <Typography
+          variant='body2'
+          color='error'
+          data-testid='ai-error-text'
+          sx={{ '&::first-letter': { textTransform: 'uppercase' } }}
+        >
           {message}
         </Typography>
         <Stack direction='row' spacing={1}>

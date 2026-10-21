@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"sort"
 	"time"
@@ -22,7 +23,9 @@ var (
 	ErrKeyRejected    = errors.New("the provider rejected the API key")
 	ErrUnreachable    = errors.New("could not reach the provider; check the URL and your network")
 	ErrNoModelList    = errors.New("this provider does not list its models; type a model id instead")
-	ErrRequestTooLong = errors.New("the provider did not answer in time; raise the timeout or check the URL")
+	ErrRequestTooLong = errors.New("the provider did not answer in time; try again, or raise the timeout in AI settings")
+	ErrModelNotFound  = errors.New("the provider does not know this model or URL; check both in AI settings")
+	ErrRateLimited    = errors.New("the provider is limiting requests right now; wait a moment and try again")
 )
 
 // ListModels asks the provider which models it serves. It doubles as the
@@ -68,14 +71,29 @@ func listTimeout(seconds int) time.Duration {
 
 func classifyListError(err error) error {
 	var apiErr *openai.Error
+	if errors.As(err, &apiErr) && (apiErr.StatusCode == http.StatusNotFound || apiErr.StatusCode == http.StatusMethodNotAllowed) {
+		return ErrNoModelList
+	}
+
+	return ProviderError(err)
+}
+
+// ProviderError turns a failed provider request into a message the user can act
+// on. Errors that did not come from the provider are returned unchanged.
+func ProviderError(err error) error {
+	var apiErr *openai.Error
 	if errors.As(err, &apiErr) {
-		switch apiErr.StatusCode {
-		case http.StatusUnauthorized, http.StatusForbidden:
+		switch {
+		case apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden:
 			return ErrKeyRejected
-		case http.StatusNotFound, http.StatusMethodNotAllowed:
-			return ErrNoModelList
+		case apiErr.StatusCode == http.StatusNotFound:
+			return ErrModelNotFound
+		case apiErr.StatusCode == http.StatusTooManyRequests:
+			return ErrRateLimited
+		case apiErr.StatusCode >= http.StatusInternalServerError:
+			return fmt.Errorf("the provider had an error (status %d); try again", apiErr.StatusCode)
 		default:
-			return fmt.Errorf("the provider answered with status %d", apiErr.StatusCode)
+			return fmt.Errorf("the provider refused the request (status %d): %s", apiErr.StatusCode, apiErr.Message)
 		}
 	}
 
@@ -84,5 +102,10 @@ func classifyListError(err error) error {
 	}
 
 	// What the network said (refused, no such host, bad response) helps more than a guess.
-	return fmt.Errorf("%w: %s", ErrUnreachable, err.Error())
+	var netErr net.Error
+	if errors.As(err, &netErr) {
+		return fmt.Errorf("%w: %s", ErrUnreachable, err.Error())
+	}
+
+	return err
 }
