@@ -3,6 +3,7 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import api from '@/api';
 import ChatDataTable from '@/components/common/AiChatPanel/Messages/ChatDataTable/ChatDataTable';
 import type { ChatActivity } from '@/components/common/AiChatPanel/hooks/useChatActivity';
+import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import type { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { IconButton, Stack, Tab, Tabs, Tooltip, Typography } from '@mui/material';
@@ -25,6 +26,8 @@ type WorkspaceCanvasProps = {
   onTabChange: (tab: CanvasTab) => void;
   review: ReturnType<typeof useChangesetReview>;
   activity: ChatActivity;
+  /** The report on the Report tab: one the user opened, else the agent's newest chart. */
+  report?: ChartReport;
   fullScreen: boolean;
   onToggleFullScreen: () => void;
   onClose: () => void;
@@ -48,6 +51,7 @@ export default function WorkspaceCanvas({
   onTabChange,
   review,
   activity,
+  report,
   fullScreen,
   onToggleFullScreen,
   onClose
@@ -88,11 +92,7 @@ export default function WorkspaceCanvas({
           <Empty text={locales.ai_canvas_no_data} />
         );
       case 'report':
-        return activity.lastReport ? (
-          <ReportEditor report={activity.lastReport} />
-        ) : (
-          <Empty text={locales.ai_canvas_no_report} />
-        );
+        return report ? <ReportEditor report={report} /> : <Empty text={locales.ai_canvas_no_report} />;
       case 'sql':
         return (
           <Stack spacing={1.5}>

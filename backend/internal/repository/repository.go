@@ -139,6 +139,14 @@ type IAiChangesetRepo interface {
 	SaveOps(ctx context.Context, ops []model.AiChangesetOp) error
 }
 
+type IQuestionRepo interface {
+	List(ctx context.Context, connectionID uint) ([]model.Question, error)
+	Find(ctx context.Context, id uint) (*model.Question, error)
+	Create(ctx context.Context, question *model.Question) error
+	Save(ctx context.Context, question *model.Question) error
+	Delete(ctx context.Context, question *model.Question) error
+}
+
 type IAiAuditRepo interface {
 	Create(ctx context.Context, entry *model.AiAuditEntry) error
 	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
@@ -158,6 +166,7 @@ type Repository struct {
 	AiChatRepo                 IAiChatRepo
 	AiChangesetRepo            IAiChangesetRepo
 	AiAuditRepo                IAiAuditRepo
+	QuestionRepo               IQuestionRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -179,6 +188,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		AiChatRepo:                 NewAiChatRepo(db),
 		AiChangesetRepo:            NewAiChangesetRepo(db),
 		AiAuditRepo:                NewAiAuditRepo(db),
+		QuestionRepo:               NewQuestionRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),

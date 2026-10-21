@@ -15,6 +15,7 @@ const (
 	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
 	ToolShowChart           = "show_chart"
+	ToolSaveReport          = "save_report"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -29,7 +30,7 @@ var agentOnlyTools = map[string]bool{
 // may call. Ask mode is limited to read-only inspection tools.
 func AllowedTool(agent bool, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart, ToolSaveReport:
 		return true
 	}
 
@@ -98,6 +99,19 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 			},
 			"required": []string{"sql", "title"},
 		}),
+		functionTool(ToolSaveReport, "Save a chart as a report the user can reopen and refresh later. Use it when the user asks to save, keep or pin a chart.",
+			shared.FunctionParameters{
+				"type": "object",
+				"properties": map[string]any{
+					"title":   map[string]any{"type": "string"},
+					"sql":     map[string]any{"type": "string", "description": "The SELECT the report runs."},
+					"type":    map[string]any{"type": "string", "enum": []string{"bar", "line", "area", "pie", "number", "table"}},
+					"x":       map[string]any{"type": "string"},
+					"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"stacked": map[string]any{"type": "boolean"},
+				},
+				"required": []string{"title", "sql", "type"},
+			}),
 	}
 
 	if !agent {

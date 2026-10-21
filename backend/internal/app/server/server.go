@@ -24,6 +24,7 @@ type Handlers struct {
 	Config       *handler.ConfigHandler
 	Connection   *handler.ConnectionHandler
 	SavedQuery   *handler.SavedQueryHandler
+	Question     *handler.QuestionHandler
 	History      *handler.HistoryHandler
 	TreeHandler  *handler.TreeHandler
 	QueryHandler *handler.QueryHandler

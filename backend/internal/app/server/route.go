@@ -120,6 +120,13 @@ func (r *Server) routing() {
 	saved.Patch("/:id", r.handlers.SavedQuery.Update)
 	saved.Delete("/:id", r.handlers.SavedQuery.Delete)
 
+	questions := api.Group("questions")
+	questions.Get("/", r.handlers.Question.Questions)
+	questions.Post("/", r.handlers.Question.Create)
+	questions.Patch("/:id", r.handlers.Question.Update)
+	questions.Delete("/:id", r.handlers.Question.Delete)
+	questions.Post("/:id/run", r.handlers.Question.Run)
+
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
 	history.Delete("/", r.handlers.History.Delete)

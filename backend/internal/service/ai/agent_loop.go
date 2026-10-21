@@ -204,6 +204,11 @@ func (s *AiServiceImpl) runToolCall(
 			ev := streamEvent("plan_delta", call.ID, plan)
 			extra, event = &msg, &ev
 		}
+	case call.Name == serviceDbtools.ToolSaveReport:
+		var saved *dto.QuestionResponse
+		if saved, err = s.saveReport(ctx, call.Arguments, toolCtx); err == nil {
+			result = fmt.Sprintf("Saved the report %q (id %d). The user can reopen it from Reports.", saved.Name, saved.ID)
+		}
 	case call.Name == serviceDbtools.ToolPreviewWrite:
 		var written *previewWriteResult
 		if written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx); err == nil {
@@ -285,4 +290,35 @@ func writePreviewText(preview *dto.WritePreviewResponse) string {
 	}
 
 	return text
+}
+
+type saveReportArgs struct {
+	Title   string   `json:"title"`
+	SQL     string   `json:"sql"`
+	Type    string   `json:"type"`
+	X       string   `json:"x"`
+	Y       []string `json:"y"`
+	Stacked bool     `json:"stacked"`
+}
+
+// saveReport stores a chart as a report of the chat's connection, database and schema.
+func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (*dto.QuestionResponse, error) {
+	var args saveReportArgs
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return nil, fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	req := &dto.QuestionCreateRequest{
+		ConnectionID: toolCtx.ConnectionID,
+		Database:     toolCtx.Database,
+		Schema:       toolCtx.Schema,
+		Name:         args.Title,
+		SQL:          args.SQL,
+		Chart:        dto.QuestionChart{Type: args.Type, X: args.X, Y: args.Y, Stacked: args.Stacked},
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	return s.questionService.Create(ctx, req)
 }

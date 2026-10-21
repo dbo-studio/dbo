@@ -24,6 +24,7 @@ import {
   WorkspaceThreadStyled
 } from './AgentWorkspace.styled';
 import ChangesetDock from './ChangesetDock/ChangesetDock';
+import SavedReports from './SavedReports/SavedReports';
 import WorkspaceCanvas from './WorkspaceCanvas/WorkspaceCanvas';
 import { useWorkspaceCanvas } from './workspaceCanvas.store';
 import WorkspaceTopBar from './WorkspaceTopBar/WorkspaceTopBar';
@@ -46,6 +47,8 @@ export default function AgentWorkspace(): JSX.Element {
   const setCanvasTab = useWorkspaceCanvas((state) => state.setTab);
   const canvasRequested = useWorkspaceCanvas((state) => state.open);
   const closeCanvasRequest = useWorkspaceCanvas((state) => state.closeRequest);
+  const showReport = useWorkspaceCanvas((state) => state.showReport);
+  const canvasReport = useWorkspaceCanvas((state) => state.report);
   const [fullScreen, setFullScreen] = useState(false);
   const chatWidth = useSettingStore((state) => state.editor.aiChatWidth ?? 'default');
   const rootRef = useRef<HTMLElement>(null);
@@ -79,7 +82,11 @@ export default function AgentWorkspace(): JSX.Element {
   const activity = useChatActivity();
   const changesets = useChangesetStore((state) => state.changesets);
   const hasCanvasContent =
-    !!review.changeset || !!activity.lastResult || !!activity.lastReport || activity.statements.length > 0;
+    !!review.changeset ||
+    !!activity.lastResult ||
+    !!activity.lastReport ||
+    !!canvasReport ||
+    activity.statements.length > 0;
 
   // The canvas follows the agent: a proposal opens Changes, a query result opens Data.
   const [seenItems, setSeenItems] = useState(activity.items.length);
@@ -95,7 +102,7 @@ export default function AgentWorkspace(): JSX.Element {
       setCanvasTab('data');
       setShowCanvas(true);
     } else if (last?.kind === 'tool' && last.trace.name === 'show_chart' && last.trace.status === 'done') {
-      setCanvasTab('report');
+      if (activity.lastReport) showReport(activity.lastReport);
       setShowCanvas(true);
     }
   }
@@ -176,6 +183,7 @@ export default function AgentWorkspace(): JSX.Element {
               <AddChat onClick={() => void handleCreateChat()} />
             </WorkspaceSessionsHeaderStyled>
             <ChatHistory variant='list' />
+            <SavedReports />
           </WorkspaceSessionsStyled>
         )}
         {!fullScreen && (
@@ -199,6 +207,7 @@ export default function AgentWorkspace(): JSX.Element {
             onTabChange={setCanvasTab}
             review={review}
             activity={activity}
+            report={canvasReport ?? activity.lastReport}
             fullScreen={fullScreen}
             onToggleFullScreen={() => setFullScreen((value) => !value)}
             onClose={() => {

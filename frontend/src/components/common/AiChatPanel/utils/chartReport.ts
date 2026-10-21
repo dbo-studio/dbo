@@ -9,6 +9,8 @@ export type ChartReport = {
   spec: ChartSpec;
   rows: Record<string, unknown>[];
   columns: string[];
+  /** Set once the report is saved. */
+  questionId?: number;
 };
 
 type ShowChartArgs = { sql?: string; title?: string; type?: string; x?: string; y?: string[]; stacked?: boolean };

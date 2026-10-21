@@ -3,6 +3,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
+import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import { CHART_TYPES, numericColumns, type ChartType } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -33,6 +34,7 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
     setSql(report.sql);
   }
 
+  const { mutate: save, isPending: saving } = useSaveReport();
   const {
     mutate: run,
     isPending,
@@ -53,7 +55,12 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
 
   return (
     <Stack spacing={1.5} data-testid='ai-report-editor'>
-      <Typography variant='subtitle2'>{edited.title}</Typography>
+      <TextField
+        size='small'
+        value={edited.title}
+        onChange={(event) => setEdited({ ...edited, title: event.target.value })}
+        slotProps={{ htmlInput: { 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' } }}
+      />
       <ToggleButtonGroup
         exclusive
         size='small'
@@ -110,6 +117,15 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
           data-testid='ai-report-run'
         >
           {locales.ai_report_run}
+        </Button>
+        <Button
+          size='small'
+          variant='outlined'
+          disabled={saving || !edited.title.trim()}
+          onClick={() => save({ ...edited, sql }, { onSuccess: (saved) => setEdited(saved) })}
+          data-testid='ai-report-save-canvas'
+        >
+          {locales.ai_report_save}
         </Button>
         {error && (
           <Typography variant='caption' color='error'>

@@ -11,6 +11,7 @@ import * as importExport from './importExport';
 import * as job from './job';
 import * as mcp from './mcp';
 import * as query from './query';
+import * as question from './question';
 import * as safeMode from './safeMode';
 import * as savedQueries from './savedQuery';
 import * as schema from './schema';
@@ -22,6 +23,7 @@ const api = {
   config,
   connection,
   query,
+  question,
   savedQueries,
   histories,
   tree,

@@ -99,6 +99,7 @@ func Execute() {
 	restServer := server.New(appLogger, cfg, server.Handlers{Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		Question:     handler.NewQuestionHandler(appLogger, ss.QuestionService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
