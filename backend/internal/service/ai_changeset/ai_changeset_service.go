@@ -29,6 +29,8 @@ const describedChangesets = 5
 
 type IAiChangesetService interface {
 	Create(ctx context.Context, chatID uint, req *dto.SchemaChangeRequest) (*dto.AiChangesetResponse, error)
+	// Propose stores schema ops the user picked, such as the fix of a schema review finding, for review on the chat's connection.
+	Propose(ctx context.Context, chatID uint, req *dto.SchemaChangeRequest) (*dto.AiChangesetResponse, error)
 	Index(ctx context.Context, chatID uint) ([]dto.AiChangesetResponse, error)
 	Review(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetReviewRequest) (*dto.AiChangesetResponse, error)
 	// EditOp replaces the definition of an op that was not applied yet and puts it back to pending.
@@ -88,6 +90,36 @@ func (s IAiChangesetServiceImpl) requireChat(ctx context.Context, chatID uint) e
 	}
 
 	return nil
+}
+
+func (s IAiChangesetServiceImpl) Propose(ctx context.Context, chatID uint, req *dto.SchemaChangeRequest) (*dto.AiChangesetResponse, error) {
+	chat, err := s.aiChatRepo.Find(ctx, chatID, &dto.PaginationRequest{Page: lo.ToPtr(1), Count: lo.ToPtr(1)})
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	connection, err := s.connectionRepo.Find(ctx, int32(chat.ConnectionID))
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrAiChatNotFound)
+	}
+
+	req.ConnectionID = int32(chat.ConnectionID)
+	if err := req.Validate(); err != nil {
+		return nil, apperror.Validation(err)
+	}
+
+	// Data changes need their preview, and undo SQL only ever comes from the server.
+	if lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool {
+		return op.Op == dto.SchemaChangeWrite || op.Op == dto.SchemaChangeUndo
+	}) {
+		return nil, apperror.BadRequest(errors.New("only schema changes can be proposed here"))
+	}
+
+	if err := serviceSchema.ValidateScopeOps(connection.ConnectionType, req.Ops); err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	return s.Create(ctx, chatID, req)
 }
 
 func (s IAiChangesetServiceImpl) find(ctx context.Context, chatID, changesetID uint) (*model.AiChangeset, error) {

@@ -95,6 +95,14 @@ export const previewChangeset = async (changeset: AiChangeset): Promise<string[]
   ).data.data.queries;
 };
 
+/** Stores ops the user picked, such as a schema review fix, as a proposal of the chat to review. */
+export const proposeChangeset = async (
+  chatId: number,
+  data: { database?: string; schema?: string; ops: SchemaChangeOp[] }
+): Promise<AiChangeset> => {
+  return (await api.post<{ data: AiChangeset }>(endpoint.changesets(chatId), data)).data.data;
+};
+
 /** Applies the ops still open under Safe Mode — call through withSafeModeRetry. */
 export const applyChangeset = async (changeset: AiChangeset, confirmed: boolean): Promise<AiChangeset> => {
   return (

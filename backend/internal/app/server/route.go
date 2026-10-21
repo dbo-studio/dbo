@@ -73,6 +73,7 @@ func (r *Server) routing() {
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
 	aiChat.Patch("/:id", r.handlers.AiChat.Update)
 	aiChat.Get("/:id/changesets", r.handlers.AiChangeset.Changesets)
+	aiChat.Post("/:id/changesets", r.handlers.AiChangeset.Propose)
 	aiChat.Patch("/:id/changesets/:changesetId", r.handlers.AiChangeset.Review)
 	aiChat.Get("/:id/changesets/:changesetId/ops/:position/preview", r.handlers.AiChangeset.PreviewOp)
 	aiChat.Put("/:id/changesets/:changesetId/ops/:position", r.handlers.AiChangeset.EditOp)

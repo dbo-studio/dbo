@@ -118,6 +118,21 @@ func (h AiChangesetHandler) Preview(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(dto.SchemaChangePreviewResponse{Queries: queries}).Send(c)
 }
 
+func (h AiChangesetHandler) Propose(c fiber.Ctx) error {
+	req := new(dto.SchemaChangeRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	result, err := h.aiChangesetService.Propose(c, fiber.Params[uint](c, "id"), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h AiChangesetHandler) Apply(c fiber.Ctx) error {
 	req := new(dto.AiChangesetApplyRequest)
 	if err := c.Bind().Body(req); err != nil {

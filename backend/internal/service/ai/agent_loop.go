@@ -26,6 +26,7 @@ const (
 
 const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-only SELECT queries with tools. ` +
 	`To explain why a query is slow, call explain_query and base any index advice on the plan. ` +
+	`When asked to review or improve the schema, call review_schema. ` +
 	`You cannot change the database. When the user wants a change, give the SQL in a code block for them to review and run, ` +
 	`and say that Agent mode can prepare it as a change they review and apply.`
 
@@ -206,6 +207,8 @@ func (s *AiServiceImpl) runToolCall(
 			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(changeset.ID), 10), changeset)
 			extra, event = &msg, &ev
 		}
+	case call.Name == serviceDbtools.ToolReviewSchema:
+		result, err = s.reviewSchema(ctx, call.Arguments, toolCtx)
 	case call.Name == serviceDbtools.ToolUpdatePlan:
 		var plan *dto.AiPlan
 		if plan, err = updatePlan(call.Arguments); err == nil {

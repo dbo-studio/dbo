@@ -9,6 +9,8 @@ import ToolCallCard from '../ToolCallCard/ToolCallCard';
 import { describeToolStep } from '../../utils/toolStep';
 import { reportFromTrace } from '../../utils/chartReport';
 import ReportCard from '../ReportCard/ReportCard';
+import { reviewFromTrace } from '../../utils/schemaReview';
+import SchemaReviewCard from '../SchemaReviewCard/SchemaReviewCard';
 
 /**
  * The agent's tool calls as a timeline of readable steps, like Cursor. Density
@@ -26,11 +28,17 @@ export default function ToolCallGroup({ items, live = false }: { items: AiAgentI
   const steps = traces.map((trace) => (
     <ToolCallCard key={trace.id} trace={trace} defaultExpanded={density === 'detailed'} />
   ));
-  // Charts are the answer, not a step, so they show whatever the density.
+  // Charts and schema reviews are the answer, not a step, so they show whatever the density.
   const reports = traces
     .map(reportFromTrace)
     .filter((report) => report !== undefined)
-    .map((report) => <ReportCard key={report.id} report={report} />);
+    .map((report) => <ReportCard key={report.id} report={report} />)
+    .concat(
+      traces
+        .map(reviewFromTrace)
+        .filter((review) => review !== undefined)
+        .map((review) => <SchemaReviewCard key={review.id} review={review} />)
+    );
 
   if (density !== 'compact') {
     return (

@@ -14,6 +14,7 @@ const (
 	ToolExecuteSQL          = "execute_sql"
 	ToolExplainQuery        = "explain_query"
 	ToolTableStats          = "table_stats"
+	ToolReviewSchema        = "review_schema"
 	ToolProposeSchemaChange = "propose_schema_change"
 	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
@@ -35,7 +36,7 @@ var agentOnlyTools = map[string]bool{
 // whose agent level is data_write never gets schema proposals.
 func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolShowChart, ToolSaveReport, ToolPinReport:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolReviewSchema, ToolShowChart, ToolSaveReport, ToolPinReport:
 		return true
 	case ToolProposeSchemaChange:
 		if tier == TierDataWrite {
@@ -113,6 +114,14 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 			},
 			"required": []string{"sql"},
+		}),
+		functionTool(ToolReviewSchema, "Review the design of the tables in the current database/schema (or the named ones): missing primary keys, "+
+			"foreign keys without an index, columns that look like references but have no foreign key, nullable foreign keys, duplicate indexes "+
+			"and mixed naming. The user sees each finding as a card with a Fix button, so summarize them briefly instead of repeating them.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"tables": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Optional: only these tables."},
+			},
 		}),
 		functionTool(ToolTableStats, "Measure a table's data: row count and, per column, the percent of NULLs, the number of distinct values, "+
 			"and the min and max. Use it before writing filters or proposing NOT NULL, UNIQUE or CHECK constraints. "+
