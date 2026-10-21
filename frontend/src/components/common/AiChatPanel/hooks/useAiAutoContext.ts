@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { getEngineCapabilities, parseObjectNodeId } from '@/core/db';
 import { TabMode } from '@/core/enums';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
@@ -44,12 +46,25 @@ export const useAiAutoContext = (active = true): void => {
       queryDebounceRef.current = setTimeout(() => syncQuerySnippet(query), QUERY_DEBOUNCE_MS);
     }
 
+    if (selectedTab.mode === TabMode.Data && useAiStore.getState().autoContext) {
+      // A table opened from another database moves the context there.
+      const capabilities = getEngineCapabilities(useConnectionStore.getState().currentConnection()?.type);
+      const opened = parseObjectNodeId(selectedTab.nodeId);
+      if (capabilities.hasDatabase && opened.database) nextContext.database = opened.database;
+      if (capabilities.hasSchema && opened.schema) nextContext.schema = opened.schema;
+    }
+
+    // Tables and views belong to one database and schema; a different one starts them over.
+    if (nextContext.database !== context.database || nextContext.schema !== context.schema) {
+      nextContext.tables = [];
+      nextContext.views = [];
+    }
+
     if (selectedTab.mode === TabMode.Data) {
       const dataTab = selectedTab as DataTabType;
       if (dataTab.table && useAiStore.getState().autoContext) {
-        const hasTable = context.tables.includes(dataTab.table);
-        if (!hasTable) {
-          nextContext.tables = [...context.tables, dataTab.table];
+        if (!nextContext.tables.includes(dataTab.table)) {
+          nextContext.tables = [...nextContext.tables, dataTab.table];
         }
       }
     }
@@ -57,7 +72,8 @@ export const useAiAutoContext = (active = true): void => {
     if (
       nextContext.database !== context.database ||
       nextContext.schema !== context.schema ||
-      nextContext.tables.join() !== context.tables.join()
+      nextContext.tables.join() !== context.tables.join() ||
+      nextContext.views.join() !== context.views.join()
     ) {
       updateContext(nextContext);
     }

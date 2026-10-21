@@ -4,7 +4,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiContextType, AutoCompleteType } from '@/types';
 import { editor } from 'monaco-editor';
 
-export type ContextOptionKind = 'query' | 'selection' | 'database' | 'schema' | 'table' | 'view';
+export type ContextOptionKind = 'query' | 'selection' | 'table' | 'view';
 
 export type ContextOption = {
   kind: ContextOptionKind;
@@ -17,8 +17,6 @@ export type ContextOption = {
 export const CONTEXT_GROUP_LABEL: Record<ContextOptionKind, string> = {
   query: locales.ai_context_group_editor,
   selection: locales.ai_context_group_editor,
-  database: locales.ai_context_group_databases,
-  schema: locales.ai_context_group_schemas,
   table: locales.ai_context_group_tables,
   view: locales.ai_context_group_views
 };
@@ -61,12 +59,6 @@ export function buildContextOptions(
 
   if (autocomplete) {
     options.push(
-      ...autocomplete.databases.map((label) => ({
-        kind: 'database' as const,
-        label,
-        attached: context.database === label
-      })),
-      ...autocomplete.schemas.map((label) => ({ kind: 'schema' as const, label, attached: context.schema === label })),
       ...autocomplete.tables.map((label) => ({
         kind: 'table' as const,
         label,
@@ -88,10 +80,6 @@ function toggled(names: string[], option: ContextOption): string[] {
 /** The context with the option attached, or detached when it already was. */
 export function toggleContextOption(context: AiContextType, option: ContextOption): AiContextType {
   switch (option.kind) {
-    case 'database':
-      return { ...context, database: option.attached ? undefined : option.label };
-    case 'schema':
-      return { ...context, schema: option.attached ? undefined : option.label };
     case 'table':
       return {
         ...context,

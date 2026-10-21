@@ -4,6 +4,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import type { ChatBoxProps } from '../types';
 import { ChatBoxStyled, ComposerFooterStyled, SendButtonStyled } from './ChatBox.styled';
 import ChatContext from './ChatContext/ChatContext';
+import ContextBudget from './ContextBudget';
 import ChatTextInput from './ChatTextInput/ChatTextInput';
 import Providers from './Providers/Providers';
 
@@ -20,6 +21,7 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
       <ChatTextInput loading={loading} onSend={onSend} onCancel={onCancel} autocomplete={autocomplete} />
       <ComposerFooterStyled>
         <Providers />
+        <ContextBudget />
         {loading ? (
           <SendButtonStyled onClick={onCancel} variant='contained' color='primary' data-testid='ai-chat-cancel'>
             <CustomIcon type='pause' size='xs' />

@@ -88,13 +88,13 @@ test.describe("AI chat context chips", () => {
           await expect(chipsBar).toHaveAttribute("data-following", "true");
           await chipsBar.click();
           await expect(chipsBar).toHaveAttribute("data-following", "false");
-          await expect(chipsBar).toContainText("pinned");
+          await expect(chipsBar).toContainText("Pinned");
           await chipsBar.click();
           await expect(chipsBar).toHaveAttribute("data-following", "true");
         });
 
         await test.step("Token budget meter is shown", async () => {
-          await expect(page.getByTestId("ai-context-budget")).toContainText("tokens");
+          await expect(page.getByTestId("ai-context-budget")).toContainText("/");
         });
 
         await test.step("Removing the query chip stops sending the editor query", async () => {
@@ -122,6 +122,8 @@ test.describe("AI chat context chips", () => {
           await composer.fill(`look at @${usersTable.slice(0, 12)}`);
           const options = page.getByTestId("ai-mention-option");
           await expect(options.filter({ hasText: usersTable })).toBeVisible();
+          // Visible is not enough: a clipped list still counts as visible, in viewport does not.
+          await expect(options.filter({ hasText: usersTable })).toBeInViewport({ ratio: 1 });
           await composer.fill("@que");
           await expect(options.filter({ hasText: "query" })).toBeVisible();
           await composer.fill("");
@@ -137,7 +139,7 @@ test.describe("AI chat context chips", () => {
 
         await test.step("The @ button searches and toggles an item without typing in the message", async () => {
           const option = page.getByTestId("ai-mention-option").filter({ hasText: usersTable });
-          await page.getByTestId("ai-context-follow").locator("xpath=preceding-sibling::button").click();
+          await page.getByTestId("ai-context-add").click();
           await page.getByTestId("ai-context-search").fill(usersTable.slice(0, 12));
           await expect(option).toHaveAttribute("data-attached", "true");
           await option.click();

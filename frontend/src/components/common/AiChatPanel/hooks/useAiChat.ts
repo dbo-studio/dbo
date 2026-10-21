@@ -7,7 +7,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
 import { openChat } from '../utils/openChat';
@@ -87,12 +87,19 @@ export const useAiChat = (active = true): useAiChatReturnType => {
 
   const { isStreaming, sendStream, cancelStream, cancelAllStreams } = useAiStream();
 
+  // Tables and views belong to one database and schema, so the list follows the context's.
+  const contextDatabase = useAiStore((state) => state.context.database);
+  const contextSchema = useAiStore((state) => state.context.schema);
+
   const { data: autocomplete } = useQuery({
-    queryKey: ['ai_autocomplete', connectionId],
+    queryKey: ['ai_autocomplete', connectionId, contextDatabase, contextSchema],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
-        connectionId: Number(connectionId)
+        connectionId: Number(connectionId),
+        database: contextDatabase,
+        schema: contextSchema
       }),
+    placeholderData: keepPreviousData,
     enabled: !!connectionId && active
   });
 

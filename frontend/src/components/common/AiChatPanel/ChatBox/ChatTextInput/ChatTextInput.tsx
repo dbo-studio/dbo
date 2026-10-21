@@ -1,6 +1,6 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { Box, Paper } from '@mui/material';
+import { Box } from '@mui/material';
 import { useMemo, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
 import { buildContextOptions, toggleContextOption, type ContextOption } from '../../utils/contextOptions';
@@ -119,31 +119,34 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
     }
   };
 
+  // The list sits outside the scrolling box: inside it, the box would clip a list that opens upward.
   return (
-    <Box sx={{ flex: 1, overflowY: 'scroll', position: 'relative' }}>
+    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
       {mention !== null && (
-        <Paper sx={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 10, mb: 0.5 }}>
+        <Box sx={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 10, mb: 1 }}>
           <ContextPicker
             options={mentionOptions}
             activeIndex={selectedOption}
             onPick={applyMention}
             onHover={setActiveOption}
           />
-        </Paper>
+        </Box>
       )}
-      <ChatTextInputStyled
-        data-testid='ai-chat-input'
-        readOnly={loading}
-        placeholder={locales.ask_anything}
-        value={input}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onSelect={(e) => {
-          const target = e.target as HTMLTextAreaElement;
-          setCursorPos(target.selectionStart ?? 0);
-          setMention(getMentionState(target.value, target.selectionStart ?? 0));
-        }}
-      />
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        <ChatTextInputStyled
+          data-testid='ai-chat-input'
+          readOnly={loading}
+          placeholder={locales.ask_anything}
+          value={input}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onSelect={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            setCursorPos(target.selectionStart ?? 0);
+            setMention(getMentionState(target.value, target.selectionStart ?? 0));
+          }}
+        />
+      </Box>
     </Box>
   );
 }

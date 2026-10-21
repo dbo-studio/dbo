@@ -33,7 +33,7 @@ export type ChatContextProps = {
 
 export type ChatContextItemProps = {
   name: string;
-  type: 'tables' | 'views' | 'database' | 'schema';
+  type: 'tables' | 'views' | 'database' | 'schema' | 'query';
   onClick: () => void;
 };
 
