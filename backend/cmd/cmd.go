@@ -100,6 +100,7 @@ func Execute() {
 		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		Question:     handler.NewQuestionHandler(appLogger, ss.QuestionService),
+		Dashboard:    handler.NewDashboardHandler(appLogger, ss.DashboardService),
 		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
 		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),

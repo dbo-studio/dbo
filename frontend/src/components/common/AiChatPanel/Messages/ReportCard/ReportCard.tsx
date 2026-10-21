@@ -7,6 +7,7 @@ import { lazy, Suspense, type JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled } from '../AgentCards.styled';
 import type { ChartReport } from '../../utils/chartReport';
 import { useSaveReport } from '../../hooks/useSaveReport';
+import PinReportButton from '@/components/common/AgentWorkspace/PinReportButton/PinReportButton';
 
 const ChartView = lazy(() => import('@/components/common/ChartView/ChartView'));
 
@@ -37,6 +38,7 @@ export default function ReportCard({ report }: { report: ChartReport }): JSX.Ele
         >
           {saved ? locales.ai_report_saved : locales.ai_report_save}
         </Button>
+        <PinReportButton report={saved ?? report} />
         <Button size='small' variant='text' onClick={open} data-testid='ai-report-open'>
           {locales.ai_report_open}
         </Button>

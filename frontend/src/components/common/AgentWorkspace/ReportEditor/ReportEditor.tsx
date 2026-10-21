@@ -4,6 +4,7 @@ import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
+import PinReportButton from '../PinReportButton/PinReportButton';
 import { CHART_TYPES, numericColumns, type ChartType } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -127,6 +128,7 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
         >
           {locales.ai_report_save}
         </Button>
+        <PinReportButton report={{ ...edited, sql }} onSaved={setEdited} />
         {error && (
           <Typography variant='caption' color='error'>
             {error.message}

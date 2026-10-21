@@ -71,7 +71,7 @@ func (s IQuestionServiceImpl) Index(ctx context.Context, req *dto.QuestionListRe
 		return nil, apperror.InternalServerError(err)
 	}
 
-	return lo.Map(questions, func(question model.Question, _ int) dto.QuestionResponse { return toResponse(&question) }), nil
+	return lo.Map(questions, func(question model.Question, _ int) dto.QuestionResponse { return ToResponse(&question) }), nil
 }
 
 func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreateRequest) (*dto.QuestionResponse, error) {
@@ -102,7 +102,7 @@ func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreat
 		return nil, apperror.InternalServerError(err)
 	}
 
-	response := toResponse(question)
+	response := ToResponse(question)
 
 	return &response, nil
 }
@@ -138,7 +138,7 @@ func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.Ques
 		return nil, apperror.InternalServerError(err)
 	}
 
-	response := toResponse(question)
+	response := ToResponse(question)
 
 	return &response, nil
 }
@@ -174,8 +174,10 @@ func (s IQuestionServiceImpl) Run(ctx context.Context, id uint) (json.RawMessage
 	return json.RawMessage(result), nil
 }
 
-func toResponse(question *model.Question) dto.QuestionResponse {
+// ToResponse maps a stored report; boards reuse it for their cards.
+func ToResponse(question *model.Question) dto.QuestionResponse {
 	var chart dto.QuestionChart
+
 	_ = json.Unmarshal([]byte(question.ChartJSON), &chart)
 
 	return dto.QuestionResponse{

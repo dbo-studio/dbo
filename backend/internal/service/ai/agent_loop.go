@@ -209,6 +209,11 @@ func (s *AiServiceImpl) runToolCall(
 		if saved, err = s.saveReport(ctx, call.Arguments, toolCtx); err == nil {
 			result = fmt.Sprintf("Saved the report %q (id %d). The user can reopen it from Reports.", saved.Name, saved.ID)
 		}
+	case call.Name == serviceDbtools.ToolPinReport:
+		var board *dto.DashboardResponse
+		if board, err = s.pinReport(ctx, call.Arguments); err == nil {
+			result = fmt.Sprintf("Pinned to the board %q, which now has %d report(s).", board.Name, len(board.Cards))
+		}
 	case call.Name == serviceDbtools.ToolPreviewWrite:
 		var written *previewWriteResult
 		if written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx); err == nil {
@@ -321,4 +326,23 @@ func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx 
 	}
 
 	return s.questionService.Create(ctx, req)
+}
+
+type pinReportArgs struct {
+	ReportID uint   `json:"reportId"`
+	Board    string `json:"board"`
+}
+
+func (s *AiServiceImpl) pinReport(ctx context.Context, rawArgs string) (*dto.DashboardResponse, error) {
+	var args pinReportArgs
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return nil, fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	name := strings.TrimSpace(args.Board)
+	if name == "" || args.ReportID == 0 {
+		return nil, fmt.Errorf("reportId and board are required")
+	}
+
+	return s.dashboardService.PinByName(ctx, name, args.ReportID)
 }

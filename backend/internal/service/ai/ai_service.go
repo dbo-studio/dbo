@@ -8,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	serviceAiChangeset "github.com/dbo-studio/dbo/internal/service/ai_changeset"
+	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	serviceQuestion "github.com/dbo-studio/dbo/internal/service/question"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
@@ -27,6 +28,7 @@ type AiServiceImpl struct {
 	aiChatRepo       repository.IAiChatRepo
 	changesetService serviceAiChangeset.IAiChangesetService
 	questionService  serviceQuestion.IQuestionService
+	dashboardService serviceDashboard.IDashboardService
 	schemaService    serviceSchema.ISchemaService
 	cm               *databaseConnection.ConnectionManager
 	toolRegistry     *serviceDbtools.Registry
@@ -41,6 +43,7 @@ func NewAiService(
 	aiChatRepo repository.IAiChatRepo,
 	changesetService serviceAiChangeset.IAiChangesetService,
 	questionService serviceQuestion.IQuestionService,
+	dashboardService serviceDashboard.IDashboardService,
 	schemaService serviceSchema.ISchemaService,
 	cm *databaseConnection.ConnectionManager,
 	toolRegistry *serviceDbtools.Registry,
@@ -53,6 +56,7 @@ func NewAiService(
 		aiChatRepo:       aiChatRepo,
 		changesetService: changesetService,
 		questionService:  questionService,
+		dashboardService: dashboardService,
 		schemaService:    schemaService,
 		cm:               cm,
 		toolRegistry:     toolRegistry,

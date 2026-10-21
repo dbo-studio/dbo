@@ -22,7 +22,7 @@ export const useSaveReport = () => {
     },
     onSuccess: async () => {
       toast.success(locales.ai_report_saved);
-      await queryClient.invalidateQueries({ queryKey: ['questions'] });
+      await queryClient.invalidateQueries({ queryKey: ['questions'], refetchType: 'all' });
     }
   });
 };

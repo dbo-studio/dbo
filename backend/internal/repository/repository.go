@@ -147,6 +147,17 @@ type IQuestionRepo interface {
 	Delete(ctx context.Context, question *model.Question) error
 }
 
+type IDashboardRepo interface {
+	List(ctx context.Context, connectionID uint) ([]model.Dashboard, error)
+	Find(ctx context.Context, id uint) (*model.Dashboard, error)
+	FindByName(ctx context.Context, connectionID uint, name string) (*model.Dashboard, error)
+	Create(ctx context.Context, dashboard *model.Dashboard) error
+	Delete(ctx context.Context, dashboard *model.Dashboard) error
+	AddCard(ctx context.Context, card *model.DashboardCard) error
+	SaveCard(ctx context.Context, card *model.DashboardCard) error
+	DeleteCard(ctx context.Context, card *model.DashboardCard) error
+}
+
 type IAiAuditRepo interface {
 	Create(ctx context.Context, entry *model.AiAuditEntry) error
 	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
@@ -167,6 +178,7 @@ type Repository struct {
 	AiChangesetRepo            IAiChangesetRepo
 	AiAuditRepo                IAiAuditRepo
 	QuestionRepo               IQuestionRepo
+	DashboardRepo              IDashboardRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -189,6 +201,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		AiChangesetRepo:            NewAiChangesetRepo(db),
 		AiAuditRepo:                NewAiAuditRepo(db),
 		QuestionRepo:               NewQuestionRepo(db),
+		DashboardRepo:              NewDashboardRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),

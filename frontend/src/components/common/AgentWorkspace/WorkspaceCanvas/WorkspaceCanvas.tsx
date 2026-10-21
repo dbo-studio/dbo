@@ -11,7 +11,9 @@ import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import MiniDiagram from '../MiniDiagram/MiniDiagram';
 import ReportEditor from '../ReportEditor/ReportEditor';
-import type { CanvasTab } from '../workspaceCanvas.store';
+import { useWorkspaceCanvas, type CanvasTab } from '../workspaceCanvas.store';
+import BoardView from '../BoardView/BoardView';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import SchemaDiff from '../SchemaDiff/SchemaDiff';
 import SqlPreview from '../SqlPreview/SqlPreview';
 import {
@@ -57,6 +59,16 @@ export default function WorkspaceCanvas({
   onClose
 }: WorkspaceCanvasProps): JSX.Element {
   const { changeset } = review;
+  const connectionId = Number(useConnectionStore((state) => state.currentConnectionId));
+  const boardId = useWorkspaceCanvas((state) => state.boardId);
+  const { data: boards } = useQuery({
+    queryKey: ['dashboards', connectionId],
+    queryFn: () => api.dashboard.getDashboards(connectionId),
+    // Lists change behind this screen (the agent saves and pins), so a stale one reloads on open.
+    refetchOnMount: true,
+    enabled: !!connectionId
+  });
+  const board = boards?.find((item) => item.id === boardId);
   const chatId = changeset?.chatId;
   const id = changeset?.id;
   const { data: before } = useQuery({
@@ -93,6 +105,8 @@ export default function WorkspaceCanvas({
         );
       case 'report':
         return report ? <ReportEditor report={report} /> : <Empty text={locales.ai_canvas_no_report} />;
+      case 'board':
+        return board ? <BoardView board={board} /> : <Empty text={locales.ai_canvas_no_board} />;
       case 'sql':
         return (
           <Stack spacing={1.5}>
@@ -127,6 +141,7 @@ export default function WorkspaceCanvas({
           <Tab value='diff' label={locales.ai_changes_tab_diff} data-testid='ai-changes-tab-diff' />
           <Tab value='data' label={locales.ai_canvas_tab_data} data-testid='ai-canvas-tab-data' />
           <Tab value='report' label={locales.ai_canvas_tab_report} data-testid='ai-canvas-tab-report' />
+          <Tab value='board' label={locales.ai_canvas_tab_board} data-testid='ai-canvas-tab-board' />
           <Tab value='sql' label={locales.ai_changes_tab_sql} data-testid='ai-changes-tab-sql' />
         </Tabs>
         <Tooltip title={fullScreen ? locales.ai_canvas_exit_full_screen : locales.ai_canvas_full_screen}>

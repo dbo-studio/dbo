@@ -6,6 +6,7 @@ import * as aiProvider from './aiProvider';
 import * as auth from './auth';
 import * as config from './config';
 import * as connection from './connection';
+import * as dashboard from './dashboard';
 import * as histories from './history';
 import * as importExport from './importExport';
 import * as job from './job';
@@ -22,6 +23,7 @@ const api = {
   adminUsers,
   config,
   connection,
+  dashboard,
   query,
   question,
   savedQueries,

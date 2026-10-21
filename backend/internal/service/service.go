@@ -12,6 +12,7 @@ import (
 	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
+	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceImportExport "github.com/dbo-studio/dbo/internal/service/import_export"
@@ -34,6 +35,7 @@ type Service struct {
 	HistoryService          serviceHistory.IHistoryService
 	SavedQueryService       serviceSavedQuery.ISavedQueryService
 	QuestionService         serviceQuestion.IQuestionService
+	DashboardService        serviceDashboard.IDashboardService
 	TreeService             serviceTree.ITreeService
 	QueryService            serviceQuery.IQueryService
 	ImportExportService     serviceImportExport.IImportExport
@@ -69,6 +71,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
 	questionService := serviceQuestion.NewQuestionService(repo.QuestionRepo, repo.ConnectionRepo, toolRegistry)
+	dashboardService := serviceDashboard.NewDashboardService(repo.DashboardRepo, repo.QuestionRepo, repo.ConnectionRepo)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
 	authService := serviceAuth.NewAuthService(
@@ -88,12 +91,13 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		HistoryService:          serviceHistory.NewHistoryService(repo.HistoryRepo, repo.ConnectionRepo),
 		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo, repo.ConnectionRepo),
 		QuestionService:         questionService,
+		DashboardService:        dashboardService,
 		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
 		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:              jobManager,
-		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
+		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:       aiProviderService,
 		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
 		AiChangesetService:      aiChangesetService,

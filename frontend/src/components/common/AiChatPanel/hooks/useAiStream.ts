@@ -4,6 +4,7 @@ import type { AiChatRequest } from '@/api/ai/types';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiStreamingState } from '@/store/aiStore/types';
 import { useChangesetStore } from '@/store/changesetStore/changeset.store';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 import { useAiSession } from './useAiSession';
 
@@ -29,6 +30,7 @@ type UseAiStreamReturn = {
 /** Streams chat turns; each chat has its own stream, state and abort handle. */
 export const useAiStream = (): UseAiStreamReturn => {
   const controllersRef = useRef(new Map<number, AbortController>());
+  const queryClient = useQueryClient();
 
   const resetStreaming = useAiStore((state) => state.resetStreaming);
   const setStreamingStatus = useAiStore((state) => state.setStreamingStatus);
@@ -120,6 +122,11 @@ export const useAiStream = (): UseAiStreamReturn => {
               result: event.content,
               durationMs: event.durationMs
             });
+            // The agent saved a report or pinned one: lists already loaded are out of date.
+            if (event.label === 'save_report' || event.label === 'pin_report') {
+              void queryClient.invalidateQueries({ queryKey: ['questions'], refetchType: 'all' });
+              void queryClient.invalidateQueries({ queryKey: ['dashboards'], refetchType: 'all' });
+            }
             break;
           case 'tool_error':
             updateToolTrace(chatId, runningToolId(chatId, event.id, event.label), {
@@ -181,6 +188,7 @@ export const useAiStream = (): UseAiStreamReturn => {
     [
       appendAgentItem,
       clearAgentItems,
+      queryClient,
       setPlan,
       resetStreaming,
       setLastRequest,

@@ -49,6 +49,7 @@ export default function AgentWorkspace(): JSX.Element {
   const closeCanvasRequest = useWorkspaceCanvas((state) => state.closeRequest);
   const showReport = useWorkspaceCanvas((state) => state.showReport);
   const canvasReport = useWorkspaceCanvas((state) => state.report);
+  const canvasBoard = useWorkspaceCanvas((state) => state.boardId);
   const [fullScreen, setFullScreen] = useState(false);
   const chatWidth = useSettingStore((state) => state.editor.aiChatWidth ?? 'default');
   const rootRef = useRef<HTMLElement>(null);
@@ -83,6 +84,7 @@ export default function AgentWorkspace(): JSX.Element {
   const changesets = useChangesetStore((state) => state.changesets);
   const hasCanvasContent =
     !!review.changeset ||
+    !!canvasBoard ||
     !!activity.lastResult ||
     !!activity.lastReport ||
     !!canvasReport ||

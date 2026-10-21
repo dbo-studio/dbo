@@ -49,6 +49,13 @@ func (r QuestionRepoImpl) Save(ctx context.Context, question *model.Question) er
 	return r.db.WithContext(ctx).Save(question).Error
 }
 
+// Delete removes the report and its cards on boards; the app database does not enforce foreign keys.
 func (r QuestionRepoImpl) Delete(ctx context.Context, question *model.Question) error {
-	return r.db.WithContext(ctx).Delete(question).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("question_id = ?", question.ID).Delete(&model.DashboardCard{}).Error; err != nil {
+			return err
+		}
+
+		return tx.Delete(question).Error
+	})
 }

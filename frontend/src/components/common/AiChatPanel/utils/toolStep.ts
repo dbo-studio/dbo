@@ -52,6 +52,10 @@ export function describeToolStep(trace: AiToolTrace): string {
     }
     case 'update_plan':
       return locales.ai_step_plan;
+    case 'pin_report': {
+      const board = typeof args.board === 'string' ? args.board : '';
+      return running ? locales.ai_step_pinning_report : locales.ai_step_pinned_report.replace('{board}', board);
+    }
     case 'save_report': {
       const title = typeof args.title === 'string' ? args.title : '';
       return running ? locales.ai_step_saving_report : locales.ai_step_saved_report.replace('{title}', title);

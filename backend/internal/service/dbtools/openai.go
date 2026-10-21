@@ -16,6 +16,7 @@ const (
 	ToolUpdatePlan          = "update_plan"
 	ToolShowChart           = "show_chart"
 	ToolSaveReport          = "save_report"
+	ToolPinReport           = "pin_report"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -30,7 +31,7 @@ var agentOnlyTools = map[string]bool{
 // may call. Ask mode is limited to read-only inspection tools.
 func AllowedTool(agent bool, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart, ToolSaveReport:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart, ToolSaveReport, ToolPinReport:
 		return true
 	}
 
@@ -112,6 +113,15 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 				"required": []string{"title", "sql", "type"},
 			}),
+		functionTool(ToolPinReport, "Pin a saved report to a board (a simple dashboard) by board name; the board is created when it does not exist. "+
+			"Save the report with save_report first and use the id it returns.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"reportId": map[string]any{"type": "integer", "description": "Id returned by save_report."},
+				"board":    map[string]any{"type": "string", "description": "Board name, e.g. \"Sales\"."},
+			},
+			"required": []string{"reportId", "board"},
+		}),
 	}
 
 	if !agent {

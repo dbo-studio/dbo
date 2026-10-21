@@ -127,6 +127,14 @@ func (r *Server) routing() {
 	questions.Delete("/:id", r.handlers.Question.Delete)
 	questions.Post("/:id/run", r.handlers.Question.Run)
 
+	dashboards := api.Group("dashboards")
+	dashboards.Get("/", r.handlers.Dashboard.Dashboards)
+	dashboards.Post("/", r.handlers.Dashboard.Create)
+	dashboards.Delete("/:id", r.handlers.Dashboard.Delete)
+	dashboards.Post("/:id/cards", r.handlers.Dashboard.Pin)
+	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)
+	dashboards.Delete("/:id/cards/:cardId", r.handlers.Dashboard.Unpin)
+
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
 	history.Delete("/", r.handlers.History.Delete)
