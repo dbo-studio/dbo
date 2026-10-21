@@ -193,13 +193,16 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 						"properties": map[string]any{
 							"op": map[string]any{
 								"type": "string",
-								"enum": []string{dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema, dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn, dto.SchemaChangeDropColumn, dto.SchemaChangeAddIndex, dto.SchemaChangeAddForeignKey},
+								"enum": []string{dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema, dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn, dto.SchemaChangeDropColumn, dto.SchemaChangeAddIndex, dto.SchemaChangeAddForeignKey,
+									dto.SchemaChangeRenameTable, dto.SchemaChangeRenameColumn, dto.SchemaChangeCreateView, dto.SchemaChangeDropView, dto.SchemaChangeAddCheck, dto.SchemaChangeDropConstraint, dto.SchemaChangeDropTable},
 							},
-							"table":        map[string]any{"type": "string"},
-							"name":         map[string]any{"type": "string", "description": "create_database / create_schema only: the new name. Tables in the same proposal are created inside it."},
+							"table": map[string]any{"type": "string"},
+							"name": map[string]any{"type": "string", "description": "create_database / create_schema: the new name (tables in the same proposal are created inside it). " +
+								"rename_table / rename_column: the new name. create_view / drop_view: the view. add_check / drop_constraint: the constraint name."},
+							"sql":          map[string]any{"type": "string", "description": "create_view: the view's SELECT. add_check: the boolean expression, e.g. \"price >= 0\"."},
 							"columns":      map[string]any{"type": "array", "items": column, "description": "create_table only: every column of the new table."},
 							"column":       column,
-							"columnName":   map[string]any{"type": "string", "description": "drop_column only: the column to remove."},
+							"columnName":   map[string]any{"type": "string", "description": "drop_column: the column to remove. rename_column: its current name."},
 							"indexColumns": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_index only: indexed columns."},
 							"unique":       map[string]any{"type": "boolean", "description": "add_index only: create a unique index."},
 							"fkColumns":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_foreign_key only: source columns on table."},

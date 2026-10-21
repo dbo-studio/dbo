@@ -82,6 +82,12 @@ func ChangeDiagramOps(connectionType, database, schema string, ops []dto.SchemaC
 			})
 		case dto.SchemaChangeDropColumn:
 			result = append(result, dto.DiagramOp{Op: "remove", Target: "column", ID: op.ColumnName, NodeID: id})
+		case dto.SchemaChangeRenameColumn:
+			result = append(result, dto.DiagramOp{Op: "change", Target: "column", ID: op.ColumnName, NodeID: id, Patch: map[string]any{"name": op.Name}})
+		case dto.SchemaChangeRenameTable:
+			result = append(result, dto.DiagramOp{Op: "change", Target: "node", ID: id, Patch: map[string]any{"name": op.Name}})
+		case dto.SchemaChangeDropTable:
+			result = append(result, dto.DiagramOp{Op: "remove", Target: "node", ID: id})
 		case dto.SchemaChangeAddForeignKey:
 			targetID := nodeID(op.RefTable)
 			edgeID := contract.DiagramEdgeID(op.ForeignKeyName(), id, targetID)

@@ -72,6 +72,7 @@ export default function ChangesetDock({ review, onReview }: ChangesetDockProps):
         isExecuting={review.isApplying}
         onCancel={review.closePreview}
         onConfirm={() => void review.apply()}
+        confirmText={review.dropConfirm}
         testIdPrefix='ai-dock'
       />
     </Box>

@@ -12,6 +12,17 @@ import CurrentStructure from './CurrentStructure';
 import { DiffOpStyled, DiffRowStyled, DiffTableHeaderStyled, DiffTableStyled } from './SchemaDiff.styled';
 import { diffRows } from './schemaDiffRows';
 
+/** Ops the inline editor can change; renames, views, constraints and drops are rejected and asked for again. */
+const EDITABLE: SchemaChangeOp['op'][] = [
+  'create_database',
+  'create_schema',
+  'create_table',
+  'add_column',
+  'alter_column',
+  'add_index',
+  'add_foreign_key'
+];
+
 /** Ops share a card by table; the ones with none (data changes, new databases) get their own. */
 const groupKey = (op: AiChangesetOp): string => op.table || op.name || op.op;
 
@@ -84,7 +95,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                     {op.error}
                   </Typography>
                 )}
-                {op.status === 'applied' && op.undoNote && (
+                {op.undoNote && op.status !== 'rejected' && (
                   <Typography variant='caption' color='textSubdued' data-testid='ai-undo-note'>
                     {locales.ai_undo_unavailable.replace('{reason}', op.undoNote)}
                   </Typography>
@@ -99,7 +110,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               />
               {op.status !== 'applied' && (
                 <Stack direction='row'>
-                  {op.op !== 'drop_column' && op.op !== 'write' && op.op !== 'undo' && (
+                  {EDITABLE.includes(op.op) && (
                     <Tooltip title={locales.ai_changes_edit}>
                       <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
                         <CustomIcon type='pen' size='xs' />

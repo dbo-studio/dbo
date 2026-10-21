@@ -177,6 +177,7 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
         isExecuting={review.isApplying}
         onCancel={review.closePreview}
         onConfirm={() => void review.apply()}
+        confirmText={review.dropConfirm}
         testIdPrefix='ai-changeset'
       />
     </AgentCardStyled>

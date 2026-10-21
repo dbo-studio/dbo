@@ -58,7 +58,7 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 				Status:         string(row.Status),
 				Error:          row.Error,
 				TableID:        serviceSchema.TableNodeID(connectionType, changeset.Database, changeset.Schema, ops[i].Table),
-				UndoNote:       row.UndoNote,
+				UndoNote:       lo.Ternary(slices.Contains(dto.SchemaChangeLossyOps, ops[i].Op), lossyNote, row.UndoNote),
 				SchemaChangeOp: ops[i],
 			}
 		}),
@@ -66,6 +66,9 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 		UndoSQL:    undoStatements(changeset, connectionType, applied),
 	}, nil
 }
+
+// lossyNote says why an op that drops or retypes something cannot be undone.
+const lossyNote = "it loses what was there before"
 
 // opLabel is a short description of an op for the agent prompt.
 func opLabel(op dto.SchemaChangeOp) string {
@@ -78,6 +81,14 @@ func opLabel(op dto.SchemaChangeOp) string {
 		return op.Op + " " + op.Table + "." + op.Column.Name
 	case dto.SchemaChangeDropColumn:
 		return op.Op + " " + op.Table + "." + op.ColumnName
+	case dto.SchemaChangeRenameColumn:
+		return op.Op + " " + op.Table + "." + op.ColumnName + " to " + op.Name
+	case dto.SchemaChangeRenameTable:
+		return op.Op + " " + op.Table + " to " + op.Name
+	case dto.SchemaChangeCreateView, dto.SchemaChangeDropView:
+		return op.Op + " " + op.Name
+	case dto.SchemaChangeAddCheck, dto.SchemaChangeDropConstraint:
+		return op.Op + " " + op.Table + "." + op.Name
 	case dto.SchemaChangeAddIndex:
 		return op.Op + " " + op.Table + "(" + strings.Join(op.IndexColumns, ", ") + ")"
 	default:

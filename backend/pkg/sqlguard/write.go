@@ -3,6 +3,7 @@ package sqlguard
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
 )
@@ -119,4 +120,19 @@ func singleTable(tables sqlparser.TableExprs) (string, bool) {
 	}
 
 	return name.Name.String(), true
+}
+
+// SelectStatement returns the one SELECT (or WITH … SELECT) in sql, such as the body of a view.
+func SelectStatement(sql string) (string, error) {
+	classification := ClassifySQL(sql)
+	if len(classification.Statements) != 1 || classification.Class != ClassRead {
+		return "", fmt.Errorf("%w: a view must be exactly one SELECT", ErrBlocked)
+	}
+
+	statement := strings.TrimSpace(classification.Statements[0])
+	if keyword, _, _ := strings.Cut(strings.ToUpper(statement), " "); keyword != "SELECT" && keyword != "WITH" {
+		return "", fmt.Errorf("%w: a view must be exactly one SELECT", ErrBlocked)
+	}
+
+	return statement, nil
 }

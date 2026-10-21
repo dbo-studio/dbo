@@ -6,11 +6,12 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
+	"github.com/samber/lo"
 )
 
 // CompensatingSQL is the SQL that takes back applied ops, in the order it must
 // run. Only ops that add something can be taken back: altering or dropping a
-// column loses what the column was, and SQLite cannot drop a foreign key.
+// column, table, view or constraint loses what it was, and SQLite cannot drop a foreign key.
 func CompensatingSQL(connectionType, database, schema string, ops []dto.SchemaChangeOp) []string {
 	// Everything else in the changeset lives inside a new database or schema.
 	for _, op := range ops {
@@ -58,6 +59,19 @@ func CompensatingSQL(connectionType, database, schema string, ops []dto.SchemaCh
 			statements = append(statements, "DROP TABLE "+table(op.Table))
 		case dto.SchemaChangeAddColumn:
 			statements = append(statements, "ALTER TABLE "+table(op.Table)+" DROP COLUMN "+ident(op.Column.Name))
+		case dto.SchemaChangeRenameTable, dto.SchemaChangeRenameColumn:
+			back := op
+			back.Name = lo.If(op.Op == dto.SchemaChangeRenameTable, op.Table).Else(op.ColumnName)
+			back.Table = lo.If(op.Op == dto.SchemaChangeRenameTable, op.Name).Else(op.Table)
+			back.ColumnName = op.Name
+
+			if statement, err := opStatement(connectionType, database, schema, back); err == nil {
+				statements = append(statements, statement)
+			}
+		case dto.SchemaChangeCreateView:
+			statements = append(statements, "DROP VIEW "+table(op.Name))
+		case dto.SchemaChangeAddCheck:
+			statements = append(statements, "ALTER TABLE "+table(op.Table)+" DROP CONSTRAINT "+ident(op.Name))
 		case dto.SchemaChangeAddIndex:
 			statements = append(statements, dropIndex(connectionType, schema, table(op.Table), op.IndexName()))
 		case dto.SchemaChangeAddForeignKey:

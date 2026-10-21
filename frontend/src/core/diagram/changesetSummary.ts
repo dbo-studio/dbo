@@ -37,6 +37,20 @@ export const summarizeChangeset = (ops: SchemaChangeOp[]): ChangesetLine[] =>
           label: locales.ai_op_add_index,
           detail: `${op.table}(${(op.indexColumns ?? []).join(', ')})${op.unique ? ' unique' : ''}`
         };
+      case 'rename_table':
+        return { label: locales.ai_op_rename_table, detail: `${op.table} → ${op.name ?? ''}` };
+      case 'rename_column':
+        return { label: locales.ai_op_rename_column, detail: `${op.table}.${op.columnName ?? ''} → ${op.name ?? ''}` };
+      case 'create_view':
+        return { label: locales.ai_op_create_view, detail: op.name ?? '' };
+      case 'drop_view':
+        return { label: locales.ai_op_drop_view, detail: op.name ?? '' };
+      case 'add_check':
+        return { label: locales.ai_op_add_check, detail: `${op.table} (${op.sql ?? ''})` };
+      case 'drop_constraint':
+        return { label: locales.ai_op_drop_constraint, detail: `${op.table}.${op.name ?? ''}` };
+      case 'drop_table':
+        return { label: locales.ai_op_drop_table, detail: op.table };
       case 'add_foreign_key':
         return {
           label: locales.ai_op_add_foreign_key,

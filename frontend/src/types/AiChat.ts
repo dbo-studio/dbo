@@ -64,11 +64,18 @@ export type SchemaChangeOp = {
     | 'alter_column'
     | 'drop_column'
     | 'add_index'
-    | 'add_foreign_key';
+    | 'add_foreign_key'
+    | 'rename_table'
+    | 'rename_column'
+    | 'create_view'
+    | 'drop_view'
+    | 'add_check'
+    | 'drop_constraint'
+    | 'drop_table';
   table: string;
-  /** create_database / create_schema: the new name. */
+  /** create_database / create_schema / renames: the new name; views and constraints: their name. */
   name?: string;
-  /** write: the INSERT, UPDATE or DELETE, and how many rows it changed when previewed. */
+  /** write: the INSERT, UPDATE or DELETE, and how many rows it changed when previewed. create_view: its SELECT; add_check: its expression. */
   sql?: string;
   affectedRows?: number;
   /** Why an applied data change cannot be undone. */

@@ -1,8 +1,8 @@
 import Modal from '@/components/base/Modal/Modal';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
-import { Box, Button, CircularProgress } from '@mui/material';
-import React from 'react';
+import { Box, Button, CircularProgress, TextField } from '@mui/material';
+import React, { useState } from 'react';
 import { QueryPreviewActionsStyled, QueryPreviewContentStyled } from './QueryPreviewModal.styled';
 
 export type QueryPreviewModalProps = {
@@ -13,6 +13,8 @@ export type QueryPreviewModalProps = {
   onConfirm: () => void;
   /** Prefix for data-testid values, e.g. `object-form` → `object-form-preview-modal`. */
   testIdPrefix?: string;
+  /** Text the user must type before Execute enables, such as the name of a table being dropped. */
+  confirmText?: string;
 };
 
 export default function QueryPreviewModal({
@@ -21,8 +23,14 @@ export default function QueryPreviewModal({
   isExecuting,
   onCancel,
   onConfirm,
-  testIdPrefix = 'object-form'
+  testIdPrefix = 'object-form',
+  confirmText
 }: QueryPreviewModalProps): React.JSX.Element {
+  const [typed, setTyped] = useState('');
+  // Each opening asks again.
+  if (!open && typed) setTyped('');
+  const confirmed = !confirmText || typed.trim() === confirmText;
+
   const formattedQueries = queries
     .filter((query) => query.trim() !== '')
     .map((query, index) => `-- ${index + 1}\n${query}`)
@@ -34,6 +42,16 @@ export default function QueryPreviewModal({
         <Box sx={{ flex: 1 }}>
           <SyntaxHighlighter value={formattedQueries} />
         </Box>
+        {confirmText && (
+          <TextField
+            size='small'
+            autoComplete='off'
+            label={locales.query_preview_type_to_confirm.replace('{name}', confirmText)}
+            value={typed}
+            onChange={(event) => setTyped(event.target.value)}
+            slotProps={{ htmlInput: { 'data-testid': `${testIdPrefix}-confirm-input` } }}
+          />
+        )}
         <QueryPreviewActionsStyled>
           <Button
             variant='text'
@@ -47,7 +65,7 @@ export default function QueryPreviewModal({
           <Button
             variant='contained'
             size='small'
-            disabled={isExecuting || queries.length === 0}
+            disabled={isExecuting || queries.length === 0 || !confirmed}
             onClick={onConfirm}
             data-testid={`${testIdPrefix}-execute`}
             startIcon={isExecuting ? <CircularProgress size={14} color='inherit' /> : undefined}

@@ -29,7 +29,25 @@ const (
 	SchemaChangeDropColumn     = "drop_column"
 	SchemaChangeAddIndex       = "add_index"
 	SchemaChangeAddForeignKey  = "add_foreign_key"
+	SchemaChangeRenameTable    = "rename_table"
+	SchemaChangeRenameColumn   = "rename_column"
+	SchemaChangeCreateView     = "create_view"
+	SchemaChangeDropView       = "drop_view"
+	SchemaChangeAddCheck       = "add_check"
+	SchemaChangeDropConstraint = "drop_constraint"
+	SchemaChangeDropTable      = "drop_table"
 )
+
+// SchemaChangeSQLOps run as one generated statement each instead of through the table form.
+var SchemaChangeSQLOps = []string{
+	SchemaChangeRenameTable, SchemaChangeRenameColumn, SchemaChangeCreateView, SchemaChangeDropView,
+	SchemaChangeAddCheck, SchemaChangeDropConstraint, SchemaChangeDropTable,
+}
+
+// SchemaChangeLossyOps lose what was there, so applying them cannot be taken back.
+var SchemaChangeLossyOps = []string{
+	SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeDropView, SchemaChangeDropConstraint, SchemaChangeDropTable,
+}
 
 var (
 	schemaChangeTypePattern     = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_ ]*(\(\s*\d+\s*(,\s*\d+\s*)?\))?(\[\])?$`)
@@ -119,10 +137,11 @@ func (c SchemaChangeColumn) Validate() error {
 
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
-		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeWrite, SchemaChangeUndo, SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
+		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeWrite, SchemaChangeUndo, SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey,
+			SchemaChangeRenameTable, SchemaChangeRenameColumn, SchemaChangeCreateView, SchemaChangeDropView, SchemaChangeAddCheck, SchemaChangeDropConstraint, SchemaChangeDropTable)),
 		validation.Field(&op.Table, validation.When(op.HasTable(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
-		validation.Field(&op.SQL, validation.When(op.Op == SchemaChangeWrite || op.Op == SchemaChangeUndo, validation.Required), validation.Length(0, 10000)),
-		validation.Field(&op.Name, validation.When(op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
+		validation.Field(&op.SQL, validation.When(op.needsSQL(), validation.Required), validation.Length(0, 10000)),
+		validation.Field(&op.Name, validation.When(op.needsName(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.ColumnName, validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.IndexColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
 		validation.Field(&op.RefTable, validation.Match(schemaChangeIdentifier)),
@@ -153,7 +172,12 @@ func (op SchemaChangeOp) Validate() error {
 		if err := op.Column.Validate(); err != nil {
 			return fmt.Errorf("%s %q: %w", op.Op, op.Table, err)
 		}
-	case SchemaChangeDropColumn:
+	case SchemaChangeAddCheck:
+		// The expression goes into the DDL as written: one expression, no statement breaks or comments.
+		if strings.ContainsAny(op.SQL, ";") || strings.Contains(op.SQL, "--") || strings.Contains(op.SQL, "/*") {
+			return fmt.Errorf("%s %q: the check must be one expression without ';' or comments", op.Op, op.Table)
+		}
+	case SchemaChangeDropColumn, SchemaChangeRenameColumn:
 		if op.ColumnName == "" {
 			return fmt.Errorf("%s %q: columnName is required", op.Op, op.Table)
 		}
@@ -172,7 +196,23 @@ func (op SchemaChangeOp) Validate() error {
 
 // HasTable reports whether the op works on one table.
 func (op SchemaChangeOp) HasTable() bool {
-	return !op.IsScopeOp() && op.Op != SchemaChangeWrite && op.Op != SchemaChangeUndo
+	return !op.IsScopeOp() && !op.IsViewOp() && op.Op != SchemaChangeWrite && op.Op != SchemaChangeUndo
+}
+
+// IsViewOp reports whether the op creates or drops the view named by Name.
+func (op SchemaChangeOp) IsViewOp() bool {
+	return op.Op == SchemaChangeCreateView || op.Op == SchemaChangeDropView
+}
+
+// needsName: the new name for scope ops and renames, the view, or the constraint.
+func (op SchemaChangeOp) needsName() bool {
+	return op.IsScopeOp() || op.IsViewOp() || op.Op == SchemaChangeRenameTable || op.Op == SchemaChangeRenameColumn ||
+		op.Op == SchemaChangeAddCheck || op.Op == SchemaChangeDropConstraint
+}
+
+// needsSQL: the statement of a data change or undo, the SELECT of a view, or the expression of a check.
+func (op SchemaChangeOp) needsSQL() bool {
+	return op.Op == SchemaChangeWrite || op.Op == SchemaChangeUndo || op.Op == SchemaChangeCreateView || op.Op == SchemaChangeAddCheck
 }
 
 // IsScopeOp reports whether the op creates the database or schema the other ops work in.

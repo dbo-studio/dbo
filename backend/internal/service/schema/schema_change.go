@@ -95,13 +95,13 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	policy := serviceSafemode.FromConnection(connection)
 	policy = s.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
-	// Dropping a column loses data, so it gates like DROP/TRUNCATE does. A
+	// Dropping a column, table, view or constraint loses data, so it gates like DROP/TRUNCATE does. A
 	// changeset of data changes only is gated as one.
 	class := sqlguard.ClassDDL
 
 	switch {
 	case lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool {
-		return op.Op == dto.SchemaChangeDropColumn || op.Op == dto.SchemaChangeUndo
+		return op.Op == dto.SchemaChangeUndo || (op.Op != dto.SchemaChangeAlterColumn && slices.Contains(dto.SchemaChangeLossyOps, op.Op))
 	}):
 		class = sqlguard.ClassCatastrophicDDL
 	case lo.EveryBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeWrite }):
@@ -202,6 +202,7 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 
 	editIndexes := map[string][]int{}
 	scopeIndexes := []int{}
+	statementIndexes := []int{}
 	writeIndexes := []int{}
 	undoIndexes := []int{}
 
@@ -225,6 +226,8 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		case op.Op == dto.SchemaChangeCreateTable:
 		case op.IsScopeOp():
 			scopeIndexes = append(scopeIndexes, i)
+		case slices.Contains(dto.SchemaChangeSQLOps, op.Op):
+			statementIndexes = append(statementIndexes, i)
 		case op.Op == dto.SchemaChangeWrite:
 			writeIndexes = append(writeIndexes, i)
 		case op.Op == dto.SchemaChangeUndo:
@@ -294,6 +297,21 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		}
 
 		steps = append(steps, changeStep{nodeID: tableID(table), action: contract.EditTableAction, params: params, opIndexes: editIndexes[table]})
+	}
+
+	// Renames, views, constraints and drops run in proposal order once the tables exist.
+	for _, i := range statementIndexes {
+		statement, err := opStatement(connectionType, database, schema, req.Ops[i])
+		if err != nil {
+			return nil, err
+		}
+
+		params, err := json.Marshal(databaseCore.ExecuteSQLParams{SQL: statement})
+		if err != nil {
+			return nil, err
+		}
+
+		steps = append(steps, changeStep{nodeID: containerID, action: contract.ExecuteSQLAction, params: params, opIndexes: []int{i}})
 	}
 
 	// Data changes run last, so they see the tables and columns the others make.
@@ -649,7 +667,7 @@ func boolRank(value bool) int {
 	return 0
 }
 
-// ValidateScopeOps refuses create_database and create_schema where the engine cannot do them.
+// ValidateScopeOps refuses ops the engine cannot do, such as create_schema outside PostgreSQL.
 func ValidateScopeOps(connectionType string, ops []dto.SchemaChangeOp) error {
 	for _, op := range ops {
 		switch {
@@ -657,6 +675,10 @@ func ValidateScopeOps(connectionType string, ops []dto.SchemaChangeOp) error {
 			return fmt.Errorf("SQLite has no databases to create")
 		case op.Op == dto.SchemaChangeCreateSchema && !contract.IsPostgresFamily(connectionType):
 			return fmt.Errorf("only PostgreSQL has schemas to create")
+		}
+
+		if err := validateDialect(connectionType, op); err != nil {
+			return err
 		}
 	}
 

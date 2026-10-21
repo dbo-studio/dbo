@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 type ChangesetReview = {
   changeset: AiChangeset | undefined;
   openCount: number;
+  /** Names of the tables the open ops drop, which the user types before applying. */
+  dropConfirm: string | undefined;
   previewQueries: string[] | undefined;
   isPreviewing: boolean;
   isApplying: boolean;
@@ -85,6 +87,11 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
   return {
     changeset,
     openCount: changeset?.ops.filter((op) => isOpen(op.status)).length ?? 0,
+    dropConfirm:
+      changeset?.ops
+        .filter((op) => op.op === 'drop_table' && isOpen(op.status))
+        .map((op) => op.table)
+        .join(', ') || undefined,
     previewQueries,
     isPreviewing,
     isApplying,

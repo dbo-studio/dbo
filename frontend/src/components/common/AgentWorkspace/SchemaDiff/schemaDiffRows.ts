@@ -63,6 +63,20 @@ export const diffRows = (op: AiChangesetOp, before: TableStructure | undefined):
       const same = before?.indexes.find((index) => index.columns.join() === (op.indexColumns ?? []).join());
       return [{ sign: '+', text: same ? `${text}  (${same.name} already covers these columns)` : text }];
     }
+    case 'rename_table':
+      return [{ sign: '~', text: `RENAME TO ${op.name}` }];
+    case 'rename_column':
+      return [{ sign: '~', text: `${op.columnName} → ${op.name}` }];
+    case 'create_view':
+      return [{ sign: '+', text: `VIEW ${op.name} AS ${op.sql}` }];
+    case 'drop_view':
+      return [{ sign: '−', text: `VIEW ${op.name}` }];
+    case 'add_check':
+      return [{ sign: '+', text: `CHECK ${op.name} (${op.sql})` }];
+    case 'drop_constraint':
+      return [{ sign: '−', text: `CONSTRAINT ${op.name}` }];
+    case 'drop_table':
+      return [{ sign: '−', text: `TABLE ${op.table}` }];
     case 'add_foreign_key':
       return [
         {
