@@ -3,7 +3,7 @@ import locales from '@/locales';
 import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { CircularProgress, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import { lazy, Suspense, useState, type JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
@@ -21,9 +21,11 @@ import {
   StyledTableRow
 } from './ChatDataTable.styled';
 import type { ChatDataTableProps } from '../../types';
-import { chartSeries } from '../../utils/chartSeries';
+import { autoChart, type ChartType } from '@/core/charts/chartSpec';
 
-const ChatChart = lazy(() => import('../ChatChart/ChatChart'));
+const ChartView = lazy(() => import('@/components/common/ChartView/ChartView'));
+
+const SWITCHABLE: ChartType[] = ['bar', 'line', 'area', 'pie'];
 
 const MAX_ROWS = 10;
 const MAX_COLUMNS = 12;
@@ -94,6 +96,10 @@ export default function ChatDataTable({
   }>();
   const [isRerunning, setIsRerunning] = useState(false);
   const [showChart, setShowChart] = useState(false);
+  const [chartChoice, setChartChoice] = useState<{ rows: unknown; type: ChartType }>();
+  // A picked chart type belongs to these rows; a reused table showing new rows starts from the auto pick.
+  const chartType = chartChoice?.rows === initialRows ? chartChoice.type : undefined;
+  const setChartType = (type: ChartType): void => setChartChoice({ rows: initialRows, type });
   const rows = rerun?.rows ?? initialRows;
 
   if (rows.length === 0) {
@@ -123,15 +129,31 @@ export default function ChatDataTable({
   const columns = allColumns.slice(0, MAX_COLUMNS);
   const displayRows = rows.slice(0, MAX_ROWS);
   const truncated = rows.length > MAX_ROWS || allColumns.length > MAX_COLUMNS;
-  const series = chartSeries(rows, allColumns);
+  const auto = autoChart(rows, allColumns);
+  const chartable = auto.type !== 'table' && auto.type !== 'number' && rows.length <= 200;
+  const spec = { ...auto, type: chartType ?? auto.type };
   const widths = columns.map((column) => columnWidth(column, displayRows));
   const tableWidth = widths.reduce((total, width) => total + width, 0);
 
   return (
     <ChatDataTableWrapper>
-      {series && showChart && (
+      {chartable && showChart && (
         <Suspense fallback={<CircularProgress size={16} />}>
-          <ChatChart rows={rows} series={series} />
+          <ToggleButtonGroup
+            exclusive
+            size='small'
+            value={spec.type}
+            onChange={(_, next: ChartType | null) => next && setChartType(next)}
+            sx={{ m: 1, mb: 0, '& .MuiToggleButton-root': { py: 0.25, px: 1, textTransform: 'none' } }}
+            data-testid='ai-chart-type'
+          >
+            {SWITCHABLE.map((type) => (
+              <ToggleButton key={type} value={type} data-testid={`ai-chart-type-${type}`}>
+                {locales[`ai_chart_type_${type}`]}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          <ChartView rows={rows} columns={allColumns} spec={spec} />
         </Suspense>
       )}
       <ChatDataTableScroll sx={tall ? { maxHeight: 'none' } : undefined}>
@@ -200,7 +222,7 @@ export default function ChatDataTable({
             <CustomIcon type='code' size='xs' />
           </IconButton>
         </Tooltip>
-        {series && (
+        {chartable && (
           <Tooltip title={locales.ai_chart}>
             <IconButton
               size='small'

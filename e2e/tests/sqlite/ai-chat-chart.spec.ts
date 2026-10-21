@@ -58,10 +58,16 @@ test.describe("AI chat chart", () => {
                   { category: "games", total: 30 },
                   { category: "music", total: 7 },
                 ]
-              : [
-                  { id: 1, name: "alpha" },
-                  { id: 2, name: "beta" },
-                ];
+              : message === "monthly"
+                ? [
+                    { month: "2026-01", revenue: "120.50" },
+                    { month: "2026-02", revenue: "98.00" },
+                    { month: "2026-03", revenue: "143.25" },
+                  ]
+                : [
+                    { id: 1, name: "alpha" },
+                    { id: 2, name: "beta" },
+                  ];
           await route.fulfill({
             status: 200,
             contentType: "application/x-ndjson",
@@ -92,10 +98,24 @@ test.describe("AI chat chart", () => {
 
           await page.getByTestId("ai-table-chart").last().click();
           await expect(page.getByTestId("ai-chart")).toBeVisible();
+          await expect(page.getByTestId("ai-chart")).toHaveAttribute("data-type", "bar");
           await expect(page.getByTestId("ai-chart")).toContainText("books");
+
+          await page.getByTestId("ai-chart-type-pie").click();
+          await expect(page.getByTestId("ai-chart")).toHaveAttribute("data-type", "pie");
+          await expect(page.getByTestId("ai-chart").locator(".recharts-pie-sector")).toHaveCount(3);
 
           await page.getByTestId("ai-table-chart").last().click();
           await expect(page.getByTestId("ai-chart")).toHaveCount(0);
+        });
+
+        await test.step("A monthly series is drawn as a line, from numbers sent as text", async () => {
+          await send("monthly");
+          await expect(page.getByTestId("ai-table-row-count")).toHaveCount(2, { timeout: 15000 });
+          await page.getByTestId("ai-table-chart").last().click();
+          await expect(page.getByTestId("ai-chart")).toHaveAttribute("data-type", "line");
+          await expect(page.getByTestId("ai-chart").locator(".recharts-line-curve")).toHaveCount(1);
+          await page.getByTestId("ai-table-chart").last().click();
         });
 
         await test.step("A result without a numeric column has no chart", async () => {
@@ -103,7 +123,8 @@ test.describe("AI chat chart", () => {
           await expect(
             page.getByTestId("ai-table-row-count").last(),
           ).toContainText("2", { timeout: 15000 });
-          await expect(page.getByTestId("ai-table-chart")).toHaveCount(1);
+          await expect(page.getByTestId("ai-table-row-count")).toHaveCount(3);
+          await expect(page.getByTestId("ai-table-chart")).toHaveCount(2);
         });
       });
     } finally {
