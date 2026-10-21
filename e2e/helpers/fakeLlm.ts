@@ -73,6 +73,8 @@ export class FakeLlm {
   }
 
   async stop(): Promise<void> {
+    // close() alone waits for open streams, which the app keeps until its request timeout.
+    this.server?.closeAllConnections();
     await new Promise<void>((resolve) =>
       this.server ? this.server.close(() => resolve()) : resolve(),
     );
