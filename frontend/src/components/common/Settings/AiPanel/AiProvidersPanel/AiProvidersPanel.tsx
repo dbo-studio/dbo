@@ -1,6 +1,7 @@
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { isProviderReady } from '@/core/ai/aiStatus';
+import { PROVIDER_NAMES } from '@/core/ai/providerNames';
 import { validateProvider } from '@/core/ai/providerValidation';
 import { canManageAiSettings } from '@/core/auth/permissions';
 import locales from '@/locales';
@@ -19,14 +20,6 @@ import {
 } from './AiProviders.styled';
 import ModelPicker from './ModelPicker';
 import ProviderLogo from './ProviderLogo';
-
-const PROVIDER_NAMES: Record<AiProviderType['type'], string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  gemini: 'Gemini',
-  groq: 'Groq',
-  ollama: 'Ollama'
-};
 
 function providerStatus(provider: AiProviderType): { label: string; tone: 'success' | 'warning' | 'neutral' } {
   if (provider.isActive && isProviderReady(provider)) {
@@ -147,7 +140,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
       />
 
       <FieldInput
-        placeholder='30'
+        placeholder='300'
         typelabel={`${locales.max} 1000`}
         type='number'
         label={locales.timeout}

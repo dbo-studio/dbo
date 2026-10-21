@@ -505,12 +505,10 @@ func (p *BaseProvider) convertToStructuredResponse(content string, role model.Ai
 	}, nil
 }
 
-// requestTimeout clamps the user-configured provider timeout: a zero or
-// negative value would otherwise disable the request timeout entirely.
-func requestTimeout(seconds int) time.Duration {
-	if seconds <= 0 {
-		return 30 * time.Second
-	}
+// minRequestTimeout is the shortest chat request timeout: a local or large model
+// can need minutes to answer, so a shorter configured value is raised to this.
+const minRequestTimeout = 5 * time.Minute
 
-	return time.Duration(seconds) * time.Second
+func requestTimeout(seconds int) time.Duration {
+	return max(time.Duration(seconds)*time.Second, minRequestTimeout)
 }

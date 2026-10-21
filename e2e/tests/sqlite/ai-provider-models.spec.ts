@@ -110,12 +110,4 @@ test.describe("AI provider settings API", () => {
       data: { isActive: false },
     });
   });
-
-  test("the Groq entry points at Groq", async ({ page }) => {
-    const response = await page.request.get("/api/ai/providers");
-    const groq = (
-      (await response.json()) as { data: Array<{ type: string; url: string }> }
-    ).data.find((item) => item.type === "groq");
-    expect(groq?.url).toBe("https://api.groq.com/openai/v1");
-  });
 });

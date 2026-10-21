@@ -24,6 +24,5 @@ const (
 	AIProviderTypeOpenAI    AIProviderType = "openai"
 	AIProviderTypeAnthropic AIProviderType = "anthropic"
 	AIProviderTypeGemini    AIProviderType = "gemini"
-	AIProviderTypeGroq      AIProviderType = "groq"
 	AIProviderTypeOllama    AIProviderType = "ollama"
 )

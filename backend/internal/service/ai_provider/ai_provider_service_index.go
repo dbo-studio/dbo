@@ -24,7 +24,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"gpt-4o", "gpt-4o-mini"},
 		Model:    "gpt-4o",
 		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeAnthropic,
@@ -32,7 +32,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"claude-sonnet-5-5"},
 		Model:    "claude-sonnet-5-5",
 		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeGemini,
@@ -40,15 +40,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"gemini-2.0-flash"},
 		Model:    "gemini-2.0-flash",
 		IsActive: false,
-		Timeout:  30,
-	},
-	{
-		Type:     model.AIProviderTypeGroq,
-		URL:      "https://api.groq.com/openai/v1",
-		Models:   []string{"llama-3.3-70b-versatile"},
-		Model:    "llama-3.3-70b-versatile",
-		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeOllama,
@@ -56,7 +48,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"llama3.1"},
 		Model:    "llama3.1",
 		IsActive: false,
-		Timeout:  60,
+		Timeout:  300,
 	},
 }
 

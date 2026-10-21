@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/openai/openai-go/v2"
@@ -14,6 +15,8 @@ import (
 
 // maxListedModels keeps a provider with a huge catalog from flooding the picker.
 const maxListedModels = 500
+
+const maxListTimeout = 30 * time.Second
 
 var (
 	ErrKeyRejected    = errors.New("the provider rejected the API key")
@@ -27,7 +30,7 @@ var (
 func ListModels(ctx context.Context, provider *model.AiProvider) ([]string, error) {
 	options := []option.RequestOption{
 		option.WithBaseURL(provider.URL),
-		option.WithRequestTimeout(requestTimeout(provider.Timeout)),
+		option.WithRequestTimeout(listTimeout(provider.Timeout)),
 	}
 
 	// Ollama needs no key; every other provider does.
@@ -51,6 +54,16 @@ func ListModels(ctx context.Context, provider *model.AiProvider) ([]string, erro
 	sort.Strings(ids)
 
 	return ids, nil
+}
+
+// listTimeout bounds a connection test: it must fail fast on a wrong URL, so it
+// never waits for the long chat timeout.
+func listTimeout(seconds int) time.Duration {
+	if seconds <= 0 {
+		return maxListTimeout
+	}
+
+	return min(time.Duration(seconds)*time.Second, maxListTimeout)
 }
 
 func classifyListError(err error) error {

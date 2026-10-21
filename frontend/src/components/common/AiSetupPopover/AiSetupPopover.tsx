@@ -3,6 +3,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { getAiStatus } from '@/core/ai/aiStatus';
+import { PROVIDER_NAMES } from '@/core/ai/providerNames';
 import { validateProvider } from '@/core/ai/providerValidation';
 import { canManageAiSettings } from '@/core/auth/permissions';
 import { openSettings } from '@/core/settings/openSettings';
@@ -108,7 +109,7 @@ export default function AiSetupPopover({ open, anchorEl, onClose, onReady }: AiS
         label={locales.provider}
         testId='ai-setup-provider'
         value={selected?.id.toString()}
-        options={providers?.map((item) => ({ label: item.type, value: item.id.toString() })) ?? []}
+        options={providers?.map((item) => ({ label: PROVIDER_NAMES[item.type], value: item.id.toString() })) ?? []}
         onChange={(value) => handleProviderChange(value as SelectInputOption)}
       />
       {selected?.type === 'ollama' && (

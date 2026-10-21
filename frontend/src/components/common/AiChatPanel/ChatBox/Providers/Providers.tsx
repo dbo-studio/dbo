@@ -1,6 +1,7 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { isProviderReady } from '@/core/ai/aiStatus';
+import { PROVIDER_NAMES } from '@/core/ai/providerNames';
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
@@ -70,7 +71,9 @@ export default function Providers(): JSX.Element {
           onClick={(event) => setAnchorEl(event.currentTarget)}
           data-testid='ai-model-picker'
         >
-          <span className='model-label'>{active ? `${active.type} · ${active.model}` : locales.ai_select_model}</span>
+          <span className='model-label'>
+            {active ? `${PROVIDER_NAMES[active.type]} · ${active.model}` : locales.ai_select_model}
+          </span>
           <CustomIcon type='chevronDown' size='xs' />
         </ModelButtonStyled>
       </Tooltip>
@@ -99,7 +102,7 @@ export default function Providers(): JSX.Element {
             key={`h-${provider.id}`}
             sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}
           >
-            {provider.type}
+            {PROVIDER_NAMES[provider.type]}
           </ListSubheader>,
           ...provider.models.map((model) => (
             <MenuItem
