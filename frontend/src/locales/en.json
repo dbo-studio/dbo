@@ -773,6 +773,8 @@
   "ai_changes_tab_diff": "Schema diff",
   "ai_changes_tab_sql": "SQL",
   "ai_changes_dock": "{changes} pending",
+  "ai_changes_mysql_notice": "MySQL applies schema changes one at a time. If a step fails, the steps before it stay applied.",
+  "ai_changes_partial": "{applied} of {total} steps applied, then step {step} failed: {error}. The applied steps stay. Fix or reject the failed step and apply again, or undo.",
   "ai_changes_review": "Review",
   "ai_changes_apply_all": "Apply all",
   "ai_changes_reject_all": "Reject all",

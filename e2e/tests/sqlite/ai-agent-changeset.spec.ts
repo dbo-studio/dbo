@@ -114,6 +114,8 @@ test.describe("AI Agent Workspace changeset", () => {
           await expect(dock).toContainText("2 changes pending", {
             timeout: 15000,
           });
+          // SQLite applies the changeset in one transaction, so no MySQL notice.
+          await expect(page.getByTestId("ai-dock-mysql-notice")).toHaveCount(0);
           await expect(surface).toBeVisible();
           // A new table opens the design first; the diff is one tab over.
           await expect(surface).toHaveAttribute("data-tab", "diagram");

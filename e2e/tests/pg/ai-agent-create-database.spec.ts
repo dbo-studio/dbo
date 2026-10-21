@@ -89,6 +89,8 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
             "4 changes pending",
             { timeout: 15000 },
           );
+          // Postgres runs the whole changeset in one transaction, so no MySQL notice.
+          await expect(page.getByTestId("ai-dock-mysql-notice")).toHaveCount(0);
 
           await test.step("The diff shows the database and its tables", async () => {
             // New tables open the design first; the diff is one tab over.
