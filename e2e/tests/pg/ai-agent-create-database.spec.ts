@@ -91,6 +91,8 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
           );
 
           await test.step("The diff shows the database and its tables", async () => {
+            // New tables open the design first; the diff is one tab over.
+            await page.getByTestId("ai-changes-tab-diff").click();
             await expect(
               page
                 .getByTestId("ai-diff-table")

@@ -8,7 +8,7 @@ import type { AddressInfo } from "node:net";
  * with no script) it answers "ok".
  */
 
-export type ToolCallScript = { name: string; args: Record<string, unknown> };
+export type ToolCallScript = { name: string; args: Record<string, unknown>; delayMs?: number };
 
 export class FakeLlm {
   /** Tool names offered to the model, one entry per completion request. */
@@ -16,6 +16,9 @@ export class FakeLlm {
   /** Text of every system message the model received, one entry per completion request. */
   readonly systemPrompts: string[] = [];
   script: ToolCallScript | null = null;
+  /** Tool calls made one per round within a turn, before the answer; consumed in order. */
+  queue: ToolCallScript[] = [];
+  private calls = 0;
   /** When set, the answer streams word by word with this pause between words, instead of "ok". */
   reply: { text: string; wordDelayMs: number; startDelayMs?: number } | null =
     null;
@@ -97,7 +100,12 @@ export class FakeLlm {
     }
 
     const afterToolResult = body.messages?.at(-1)?.role === "tool";
-    const call = !afterToolResult && tools.length > 0 ? this.script : null;
+    const call =
+      tools.length > 0 && this.queue.length > 0
+        ? (this.queue.shift() ?? null)
+        : !afterToolResult && tools.length > 0
+          ? this.script
+          : null;
 
     res.writeHead(200, { "content-type": "text/event-stream" });
     const send = (
@@ -115,6 +123,12 @@ export class FakeLlm {
       );
     };
 
+    if (call?.delayMs) {
+      const delayed = call;
+      setTimeout(() => this.respond(delayed, send, res), delayed.delayMs);
+      return;
+    }
+
     if (call) {
       send(
         {
@@ -122,7 +136,7 @@ export class FakeLlm {
           tool_calls: [
             {
               index: 0,
-              id: "call_e2e",
+              id: `call_e2e_${++this.calls}`,
               type: "function",
               function: {
                 name: call.name,
@@ -141,6 +155,30 @@ export class FakeLlm {
       send({ role: "assistant", content: "ok" }, null);
       send({}, "stop");
     }
+    res.write("data: [DONE]\n\n");
+    res.end();
+  }
+
+  private respond(
+    call: ToolCallScript,
+    send: (delta: Record<string, unknown>, finish: string | null) => void,
+    res: ServerResponse,
+  ): void {
+    send(
+      {
+        role: "assistant",
+        tool_calls: [
+          {
+            index: 0,
+            id: `call_e2e_${++this.calls}`,
+            type: "function",
+            function: { name: call.name, arguments: JSON.stringify(call.args) },
+          },
+        ],
+      },
+      null,
+    );
+    send({}, "tool_calls");
     res.write("data: [DONE]\n\n");
     res.end();
   }

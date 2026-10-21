@@ -88,6 +88,8 @@ test.describe("AI Agent Workspace changeset editing", () => {
         );
 
         await test.step("A new table's columns can be changed, added and removed", async () => {
+          // New tables open the design first; the diff is one tab over.
+          await page.getByTestId("ai-changes-tab-diff").click();
           await diffOp(0).getByTestId("ai-diff-edit").click();
           await diffOp(0)
             .getByTestId("ai-diff-edit-type")

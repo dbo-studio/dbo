@@ -73,6 +73,7 @@ export default function AgentWorkspace(): JSX.Element {
   const pending = useChangesetReview(openChangesetId ?? 0);
   const review = useChangesetReview(openChangesetId ?? latestChangesetId ?? 0);
   const activity = useChatActivity();
+  const changesets = useChangesetStore((state) => state.changesets);
   const hasCanvasContent = !!review.changeset || !!activity.lastResult || activity.statements.length > 0;
 
   // The canvas follows the agent: a proposal opens Changes, a query result opens Data.
@@ -81,7 +82,9 @@ export default function AgentWorkspace(): JSX.Element {
     setSeenItems(activity.items.length);
     const last = activity.items.slice(seenItems).pop();
     if (last?.kind === 'diagram_diff') {
-      setCanvasTab('diff');
+      // New tables are easiest to follow on the design; edits to existing ones on the diff.
+      const creates = changesets[last.changesetId]?.ops.some((op) => op.op === 'create_table');
+      setCanvasTab(creates ? 'diagram' : 'diff');
       setShowCanvas(true);
     } else if (last?.kind === 'tool' && last.trace.name === 'execute_sql' && last.trace.status === 'done') {
       setCanvasTab('data');

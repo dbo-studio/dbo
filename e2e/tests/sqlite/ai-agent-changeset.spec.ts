@@ -115,6 +115,9 @@ test.describe("AI Agent Workspace changeset", () => {
             timeout: 15000,
           });
           await expect(surface).toBeVisible();
+          // A new table opens the design first; the diff is one tab over.
+          await expect(surface).toHaveAttribute("data-tab", "diagram");
+          await page.getByTestId("ai-changes-tab-diff").click();
           await expect(page.getByTestId("ai-diff-table")).toHaveCount(2);
           await expect(table(users)).toContainText("phone TEXT");
           expect(await columnNames(page, connectionId, posts)).toEqual([]);
