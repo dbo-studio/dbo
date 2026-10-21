@@ -52,6 +52,8 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 		return r.executeSQL(ctx, args, toolCtx)
 	case ToolExplainQuery:
 		return r.explainQuery(ctx, args, toolCtx)
+	case ToolTableStats:
+		return r.tableStats(ctx, args, toolCtx)
 	case "list_connections":
 		return r.listConnections(ctx)
 	default:
@@ -184,27 +186,7 @@ func (r *Registry) explainQuery(ctx context.Context, args map[string]any, toolCt
 
 // runReadOnly runs an already guarded read-only statement and returns its rows as JSON.
 func (r *Registry) runReadOnly(ctx context.Context, conn *model.Connection, safeSQL string, toolCtx ToolContext) (string, error) {
-	// Tools never confirm on the user's behalf: under Safe Mode "safe" even
-	// reads need the user to unlock the connection first.
-	policy := r.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), conn.ID, serviceSafemode.FromConnection(conn))
-	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, false); err != nil {
-		return "", fmt.Errorf("blocked by Safe Mode on this connection: unlock it (lock icon in the header) to let the assistant run queries")
-	}
-
-	repo, err := database.NewDBToolsRepository(ctx, conn, r.cm)
-	if err != nil {
-		return "", err
-	}
-
-	queryCtx, cancel := context.WithTimeout(ctx, queryTimeout)
-	defer cancel()
-
-	resp, err := repo.RunRawQuery(queryCtx, &dto.RawQueryRequest{
-		ConnectionID: toolCtx.ConnectionID,
-		Query:        safeSQL,
-		Database:     toolCtx.Database,
-		Schema:       toolCtx.Schema,
-	})
+	resp, err := r.query(ctx, conn, safeSQL, toolCtx)
 	if err != nil {
 		return "", err
 	}
@@ -222,6 +204,31 @@ func (r *Registry) runReadOnly(ctx context.Context, conn *model.Connection, safe
 	}
 
 	return string(raw), nil
+}
+
+// query runs a statement the caller already knows is read-only, under the connection's Safe Mode and the tool timeout.
+func (r *Registry) query(ctx context.Context, conn *model.Connection, safeSQL string, toolCtx ToolContext) (*databaseContract.RawQueryResponse, error) {
+	// Tools never confirm on the user's behalf: under Safe Mode "safe" even
+	// reads need the user to unlock the connection first.
+	policy := r.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), conn.ID, serviceSafemode.FromConnection(conn))
+	if err := serviceSafemode.Enforce(policy, sqlguard.ClassRead, false); err != nil {
+		return nil, fmt.Errorf("blocked by Safe Mode on this connection: unlock it (lock icon in the header) to let the assistant run queries")
+	}
+
+	repo, err := database.NewDBToolsRepository(ctx, conn, r.cm)
+	if err != nil {
+		return nil, err
+	}
+
+	queryCtx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	return repo.RunRawQuery(queryCtx, &dto.RawQueryRequest{
+		ConnectionID: toolCtx.ConnectionID,
+		Query:        safeSQL,
+		Database:     toolCtx.Database,
+		Schema:       toolCtx.Schema,
+	})
 }
 
 func (r *Registry) listConnections(ctx context.Context) (string, error) {

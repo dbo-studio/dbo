@@ -13,6 +13,7 @@ const (
 	ToolDescribeTable       = "describe_table"
 	ToolExecuteSQL          = "execute_sql"
 	ToolExplainQuery        = "explain_query"
+	ToolTableStats          = "table_stats"
 	ToolProposeSchemaChange = "propose_schema_change"
 	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
@@ -34,7 +35,7 @@ var agentOnlyTools = map[string]bool{
 // whose agent level is data_write never gets schema proposals.
 func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolShowChart, ToolSaveReport, ToolPinReport:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolShowChart, ToolSaveReport, ToolPinReport:
 		return true
 	case ToolProposeSchemaChange:
 		if tier == TierDataWrite {
@@ -112,6 +113,16 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 			},
 			"required": []string{"sql"},
+		}),
+		functionTool(ToolTableStats, "Measure a table's data: row count and, per column, the percent of NULLs, the number of distinct values, "+
+			"and the min and max. Use it before writing filters or proposing NOT NULL, UNIQUE or CHECK constraints. "+
+			"Large tables are measured on a sample of their first rows.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"table":  map[string]any{"type": "string", "description": "Table name to measure."},
+				"schema": map[string]any{"type": "string", "description": "Optional schema/database name."},
+			},
+			"required": []string{"table"},
 		}),
 		functionTool(ToolShowChart, "Show the user a chart of a read-only SELECT. Use it when the answer is numbers over categories or time "+
 			"(totals per group, trends by month, shares of a whole). The result rows come back to you too.", shared.FunctionParameters{

@@ -15,11 +15,24 @@ const scanWord: Record<DbEngine, RegExp> = {
   sqlite: /SCAN/,
 };
 
+type ToolStep = { type: string; content?: string };
+type Stats = {
+  rows: number;
+  columns: Array<{
+    name: string;
+    nullPercent: number;
+    distinctCount?: number;
+    min?: unknown;
+    max?: unknown;
+  }>;
+};
+
 /**
- * The explain_query tool in Ask mode: a scripted model asks for the plan of a
- * SELECT and gets the engine's plan back; a non-SELECT is refused.
+ * The read-only inspection tools in Ask mode, called by a scripted model:
+ * explain_query returns the engine's plan and refuses a non-SELECT, and
+ * table_stats returns the right figures for a known table.
  */
-export async function checkExplainQuery(
+export async function checkInspectTools(
   page: Page,
   engine: DbEngine,
   connectionName: string,
@@ -58,14 +71,15 @@ export async function checkExplainQuery(
         : engine === "postgresql"
           ? { schema: "public" }
           : undefined;
-    const explain = async (
-      sql: string,
-    ): Promise<{ type: string; content?: string }> => {
-      llm.script = { name: "explain_query", args: { sql } };
+    const callTool = async (
+      name: string,
+      args: Record<string, unknown>,
+    ): Promise<ToolStep> => {
+      llm.script = { name, args };
       const sent = await page.request.post("/api/ai/chat/stream", {
         data: {
           connectionId,
-          message: "why is this slow?",
+          message: "look at this",
           mode: "ask",
           contextOpts,
         },
@@ -73,41 +87,52 @@ export async function checkExplainQuery(
       const events = (await sent.text())
         .split("\n")
         .filter(Boolean)
-        .map(
-          (line) =>
-            JSON.parse(line) as {
-              type: string;
-              label?: string;
-              content?: string;
-            },
-        );
+        .map((line) => JSON.parse(line) as ToolStep & { label?: string });
       const step = events.find(
-        (event) =>
-          event.label === "explain_query" && event.type !== "tool_start",
+        (event) => event.label === name && event.type !== "tool_start",
       );
-      expect(step, "the tool ran").toBeDefined();
-      return step as { type: string; content?: string };
+      expect(step, `${name} ran`).toBeDefined();
+      return step as ToolStep;
     };
 
     await raw(
-      `CREATE TABLE ${table} (id INTEGER PRIMARY KEY, email VARCHAR(100))`,
+      `CREATE TABLE ${table} (id INTEGER PRIMARY KEY, email VARCHAR(100), age INTEGER)`,
     );
     try {
-      await raw(`INSERT INTO ${table} VALUES (1, 'a@x.io'), (2, 'b@x.io')`);
-
-      const plan = await explain(
-        `SELECT id FROM ${table} WHERE email = 'a@x.io'`,
+      await raw(
+        `INSERT INTO ${table} VALUES (1, 'a@x.io', 30), (2, 'b@x.io', NULL), (3, 'a@x.io', 50), (4, NULL, 20)`,
       );
+
+      const plan = await callTool("explain_query", {
+        sql: `SELECT id FROM ${table} WHERE email = 'a@x.io'`,
+      });
       expect(plan.type).toBe("tool_result");
       expect(plan.content).toMatch(scanWord[engine]);
 
-      const refused = await explain(`DELETE FROM ${table}`);
+      const refused = await callTool("explain_query", {
+        sql: `DELETE FROM ${table}`,
+      });
       expect(refused.type).toBe("tool_error");
       expect(refused.content).toContain("only SELECT");
-      const left = await page.request.post("/api/query/raw", {
-        data: { connectionId, query: `SELECT COUNT(*) AS n FROM ${table}` },
+
+      const measured = await callTool("table_stats", { table });
+      expect(measured.type, measured.content).toBe("tool_result");
+      const stats = JSON.parse(measured.content ?? "{}") as Stats;
+      const column = (name: string) =>
+        stats.columns.find((item) => item.name === name);
+      expect(stats.rows).toBe(4);
+      expect(column("email")).toMatchObject({
+        nullPercent: 25,
+        distinctCount: 2,
+        min: "a@x.io",
+        max: "b@x.io",
       });
-      expect(JSON.stringify(await left.json())).toContain("2");
+      expect(column("age")).toMatchObject({
+        nullPercent: 25,
+        distinctCount: 3,
+      });
+      expect(Number(column("age")?.min)).toBe(20);
+      expect(Number(column("age")?.max)).toBe(50);
     } finally {
       await raw(`DROP TABLE ${table}`);
     }

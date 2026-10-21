@@ -40,6 +40,10 @@ export function describeToolStep(trace: AiToolTrace): string {
       const rows = (result as { count?: number; rows?: unknown[] } | undefined)?.count ?? 0;
       return locales.ai_step_ran_query.replace('{rows}', count(rows, locales.ai_unit_row, locales.ai_unit_rows));
     }
+    case 'table_stats': {
+      const table = typeof args.table === 'string' ? args.table : '';
+      return (running ? locales.ai_step_measuring : locales.ai_step_measured).replace('{table}', table);
+    }
     case 'explain_query':
       return running ? locales.ai_step_explaining : locales.ai_step_explained;
     case 'propose_schema_change': {

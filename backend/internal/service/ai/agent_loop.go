@@ -32,7 +32,7 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 	`To design or change schema (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
 	`To change data call preview_write with one INSERT/UPDATE/DELETE; the user sees how many rows it changes and applies it. ` +
-	`Inspect the tables a change touches before you propose it. ` +
+	`Inspect the tables a change touches before you propose it; call table_stats before adding NOT NULL or UNIQUE to a column that has data. ` +
 	`Before you propose add_index, call explain_query on the slow query and cite what the plan shows (for example a full table scan). ` +
 	`When you design several new tables, call propose_schema_change once per table (with its keys and indexes), ` +
 	`so the user watches the design grow on the canvas. ` +
