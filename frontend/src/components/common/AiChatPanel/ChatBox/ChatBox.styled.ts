@@ -35,3 +35,12 @@ export const ComposerFooterStyled = styled(Box)(({ theme }) => ({
   gap: theme.spacing(0.5),
   minWidth: 0
 }));
+
+export const PinnedPlanStyled = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.75),
+  minWidth: 0,
+  padding: theme.spacing(0.25, 0.5),
+  borderBottom: `1px solid ${theme.palette.divider}`
+}));

@@ -72,7 +72,12 @@ test.describe("AI Agent plan checklist", () => {
               ],
             },
           };
+          // A slow answer keeps the turn running, so the pinned plan line can be seen.
+          llm.reply = { text: "Working on it.", wordDelayMs: 10, startDelayMs: 1500 };
           await send("plan it");
+          await expect(page.getByTestId("ai-plan-pinned")).toContainText("Draft the migration", { timeout: 15000 });
+          await expect(page.getByTestId("ai-plan-pinned")).toBeHidden({ timeout: 15000 });
+          llm.reply = null;
           await expect(plan).toBeVisible({ timeout: 15000 });
           await expect(plan).toContainText("1/3 done");
           await expect(plan.getByTestId("ai-plan-step")).toHaveCount(3);

@@ -1,7 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
-import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -12,6 +11,7 @@ import { type JSX, useState } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from '../AgentCards.styled';
 import ToolStatusPill from '../ToolStatusPill/ToolStatusPill';
+import { describeToolStep, toolStepDetail } from '../../utils/toolStep';
 
 const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   list_tables: 'grid',
@@ -19,7 +19,9 @@ const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   describe_table: 'structure',
   execute_sql: 'sql',
   propose_schema_change: 'network',
-  execute_write: 'pen'
+  execute_write: 'pen',
+  preview_write: 'pen',
+  update_plan: 'layoutList'
 };
 
 type SqlResult = {
@@ -47,17 +49,14 @@ const parseSqlResult = (trace: AiToolTrace): SqlResult | undefined => {
   }
 };
 
-/** Short, single-line argument summary shown next to the tool name. */
-const summarizeArgs = (args: Record<string, unknown>): string => {
-  if (typeof args.sql === 'string') return args.sql.replace(/\s+/g, ' ');
-  if (typeof args.table === 'string') return args.table;
-  if (Array.isArray(args.ops)) return changeCount(args.ops.length);
-  if (typeof args.schema === 'string') return args.schema;
-  return '';
-};
-
-export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Element {
-  const [expanded, setExpanded] = useState(false);
+export default function ToolCallCard({
+  trace,
+  defaultExpanded = false
+}: {
+  trace: AiToolTrace;
+  defaultExpanded?: boolean;
+}): JSX.Element {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const args = parseArgs(trace.args);
   const sqlArg = typeof args.sql === 'string' ? args.sql : undefined;
   const sqlResult = parseSqlResult(trace);
@@ -74,11 +73,11 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
     <ToolRowStyled data-testid='ai-tool-card' data-tool={trace.name} data-status={trace.status}>
       <AgentCardHeaderStyled onClick={() => setExpanded((prev) => !prev)}>
         <CustomIcon type={TOOL_ICONS[trace.name] ?? 'code'} size='xs' />
-        <Typography variant='caption' sx={{ fontWeight: 600, flexShrink: 0 }}>
-          {trace.name}
+        <Typography variant='caption' sx={{ fontWeight: 500, flexShrink: 0 }} data-testid='ai-tool-step'>
+          {describeToolStep(trace)}
         </Typography>
-        <Typography variant='caption' color='textSubdued' noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {summarizeArgs(args)}
+        <Typography variant='caption' color='textSubdued' noWrap sx={{ flex: 1, minWidth: 0 }} title={trace.name}>
+          {toolStepDetail(trace)}
         </Typography>
         {trace.durationMs !== undefined && trace.status !== 'running' && (
           <Typography variant='caption' color='textSubdued' sx={{ flexShrink: 0 }}>

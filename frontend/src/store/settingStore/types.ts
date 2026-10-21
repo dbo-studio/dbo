@@ -43,12 +43,16 @@ export type ThemeSettings = {
   themeName: string;
 };
 
+export type AiToolDensity = 'compact' | 'balanced' | 'detailed';
+
 export type EditorSettings = {
   enableEditorAi: boolean;
   scrollToBottom: boolean;
   aiChatMode?: AiChatMode;
   aiWhatsNewSeen?: boolean;
   aiChatDensity?: 'comfortable' | 'compact';
+  /** How much of the agent's tool activity the chat shows, like Cursor's tool call density. */
+  aiToolDensity?: AiToolDensity;
 };
 
 export type GeneralSettings = {

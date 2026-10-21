@@ -170,10 +170,9 @@ test.describe("AI chat composer and message polish", () => {
 
       await test.step("Result table: Copy JSON, Rerun, tool-card link", async () => {
         await send(page, "table");
-        await page.getByTestId("ai-tool-group").getByText(/Used 1 tool/).click();
         const card = page.getByTestId("ai-tool-card").last();
         await expect(card).toBeVisible({ timeout: 15000 });
-        await card.getByText("execute_sql").click();
+        await card.getByTestId("ai-tool-step").click();
 
         await page.getByTestId("ai-table-copy-json").last().click();
         await expect

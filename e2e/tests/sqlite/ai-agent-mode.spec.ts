@@ -159,11 +159,31 @@ test.describe("AI Agent Mode", () => {
 
         await test.step("Tool call renders as an expandable card", async () => {
           const group = page.getByTestId("ai-tool-group");
-          await expect(group).toContainText(/Used 1 tool/);
-          await group.getByText(/Used 1 tool/).click();
           const card = page.getByTestId("ai-tool-card");
           await expect(card).toHaveAttribute("data-tool", "describe_table");
           await expect(card).toHaveAttribute("data-status", "done");
+          // A readable step line, not the raw tool name.
+          await expect(card.getByTestId("ai-tool-step")).toHaveText(/^Read /);
+          await expect(group).toHaveAttribute("data-density", "balanced");
+        });
+
+        await test.step("Compact tool activity folds the steps behind the latest one", async () => {
+          const settings = new SettingsPage(page);
+          await settings.open();
+          await settings.navigateTo("AI");
+          await page.getByTestId("ai-tool-density").click();
+          await page.getByRole("option", { name: "Compact" }).click();
+          await settings.close();
+          const group = page.getByTestId("ai-tool-group").first();
+          await expect(group).toHaveAttribute("data-density", "compact");
+          await expect(group).toContainText("Read ");
+          await expect(group.getByTestId("ai-tool-card")).toBeHidden();
+
+          await settings.open();
+          await settings.navigateTo("AI");
+          await page.getByTestId("ai-tool-density").click();
+          await page.getByRole("option", { name: "Balanced" }).click();
+          await settings.close();
         });
 
         await test.step("Proposal shows as pending on the diagram", async () => {
@@ -282,8 +302,8 @@ test.describe("AI Agent Mode", () => {
           await composer.fill("list items");
           await composer.press("Enter");
           await expect(page.getByText("Answer 1")).toBeVisible({ timeout: 15000 });
-          await page.getByTestId("ai-tool-group").getByText(/Used 1 tool/).click();
-          await page.getByTestId("ai-tool-card").getByText("execute_sql").click();
+          await expect(page.getByTestId("ai-tool-step").last()).toHaveText("Ran query · 1 row");
+          await page.getByTestId("ai-tool-step").last().click();
           await expect(page.getByTestId("ai-table-row-count")).toHaveText("1 rows");
           // Columns follow the result order the server sent, not alphabetical key order.
           await expect(page.getByTestId("ai-tool-card").getByRole("columnheader")).toHaveText(["name", "id"]);
