@@ -13,7 +13,7 @@ import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
 import { useAiChatController } from './hooks/useAiChatController';
 import Messages from './Messages/Messages';
-import ModeBar from './ModeBar/ModeBar';
+import { SafeModeBadge } from './ModeBar/ModeBar';
 
 export default function AiChatPanel() {
   const {
@@ -38,7 +38,7 @@ export default function AiChatPanel() {
   const updateUI = useSettingStore((state) => state.updateUI);
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
-  const { useSidebarOverlay, isMobile } = useLayoutMode();
+  const { useSidebarOverlay } = useLayoutMode();
 
   return (
     <AiChatPanelContainerStyled>
@@ -50,6 +50,7 @@ export default function AiChatPanel() {
           onChatDelete={(chat) => void handleChatDelete(chat)}
           onChatRename={(chat, title) => void handleChatRename(chat, title)}
         />
+        {connectionId && <SafeModeBadge />}
         <AddChat onClick={() => void handleCreateChat()} />
         <ChatHistory />
         <Tooltip title={density === 'compact' ? locales.ai_density_compact : locales.ai_density_comfortable}>
@@ -69,7 +70,6 @@ export default function AiChatPanel() {
           </Tooltip>
         )}
       </HeaderContainerStyled>
-      {connectionId && !isMobile && <ModeBar />}
       {!connectionId ? (
         <Stack
           spacing={1.5}
@@ -99,8 +99,6 @@ export default function AiChatPanel() {
       )}
       {connectionId && (
         <ComposerContainerStyled>
-          {/* Phones: the mode switch sits right above the input it affects, not under the header. */}
-          {isMobile && <ModeBar />}
           <ChatBox
             loading={chatPending}
             autocomplete={autocomplete}

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
+import { clearActiveAiProfile, saveAiSetup, setAiMode } from "../../helpers/aiSetup";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import {
   ensureSqliteDbFile,
@@ -51,7 +51,7 @@ test.describe("AI Agent plan checklist", () => {
         await expect(composer).toBeVisible({ timeout: 15000 });
 
         await test.step("Ask mode is not offered the plan tool", async () => {
-          await page.getByTestId("ai-mode-ask").click();
+          await setAiMode(page, "ask");
           await send("hello");
           await expect(
             page.getByTestId("ai-message").filter({ hasText: "ok" }).last(),
@@ -59,7 +59,7 @@ test.describe("AI Agent plan checklist", () => {
           expect(llm.offeredTools.flat()).not.toContain("update_plan");
         });
 
-        await page.getByTestId("ai-mode-agent").click();
+        await setAiMode(page, "agent");
 
         await test.step("Agent mode shows the checklist", async () => {
           llm.script = {

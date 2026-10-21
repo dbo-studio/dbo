@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
+import { clearActiveAiProfile, saveAiSetup, setAiMode } from "../../helpers/aiSetup";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import {
   ensureSqliteDbFile,
@@ -86,7 +86,7 @@ test.describe("AI Agent Workspace changeset", () => {
         await saveAiSetup(page, "sk-e2e-fake-key");
         await pointProviderAtFakeLlm(page, llmUrl);
         await page.getByTestId("ai-expand-to-agent").click();
-        await page.getByTestId("ai-mode-agent").click();
+        await setAiMode(page, "agent");
 
         llm.script = {
           name: "propose_schema_change",

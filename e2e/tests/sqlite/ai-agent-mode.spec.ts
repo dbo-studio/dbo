@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
+import { clearActiveAiProfile, saveAiSetup, setAiMode } from "../../helpers/aiSetup";
 import { proposeChangeset, type ProposedChangeset } from "../../helpers/changeset";
 import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import {
@@ -144,8 +144,8 @@ test.describe("AI Agent Mode", () => {
             },
             { op: "add_foreign_key", table: postsTable, fkColumns: ["user_id"], refTable: usersTable, refColumns: ["id"] },
           ]);
-          await page.getByTestId("ai-mode-agent").click();
-          await expect(page.getByTestId("ai-mode-agent")).toHaveAttribute("aria-pressed", "true");
+          await setAiMode(page, "agent");
+          
 
           const composer = page.getByPlaceholder(/ask anything/i);
           await composer.fill("design a posts table");

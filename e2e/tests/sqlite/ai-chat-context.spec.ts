@@ -88,7 +88,7 @@ test.describe("AI chat context chips", () => {
           await expect(chipsBar).toHaveAttribute("data-following", "true");
           await chipsBar.click();
           await expect(chipsBar).toHaveAttribute("data-following", "false");
-          await expect(chipsBar).toContainText("Pinned");
+          await expect(chipsBar).toHaveAttribute("aria-label", "Pinned");
           await chipsBar.click();
           await expect(chipsBar).toHaveAttribute("data-following", "true");
         });

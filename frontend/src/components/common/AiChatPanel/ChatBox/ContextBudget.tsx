@@ -1,6 +1,7 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip } from '@mui/material';
+import { VisuallyHidden } from './Providers/Providers.styled';
 import type { JSX } from 'react';
 import { contextWindowOf, estimateContextTokens, formatTokens } from '../utils/contextBudget';
 
@@ -11,16 +12,32 @@ export default function ContextBudget(): JSX.Element {
   const used = estimateContextTokens(context);
   const limit = contextWindowOf(activeProvider);
 
+  const label = locales.ai_context_budget.replace('{used}', formatTokens(used)).replace('{limit}', formatTokens(limit));
+  const ratio = Math.min(used / limit, 1);
+
   return (
-    <Tooltip title={locales.ai_context_budget_desc} enterDelay={700} enterNextDelay={700}>
-      <Typography
-        variant='caption'
-        color={used / limit > 0.8 ? 'warning.main' : 'textSubdued'}
-        sx={{ whiteSpace: 'nowrap', flexShrink: 0, alignSelf: 'center' }}
+    <Tooltip title={`${label} · ${locales.ai_context_budget_desc}`} enterDelay={500}>
+      {/* A ring like Cursor's context meter; the numbers are in the tooltip. */}
+      <Box
+        sx={{ display: 'inline-flex', position: 'relative', flexShrink: 0, alignSelf: 'center' }}
         data-testid='ai-context-budget'
       >
-        {locales.ai_context_budget.replace('{used}', formatTokens(used)).replace('{limit}', formatTokens(limit))}
-      </Typography>
+        <CircularProgress
+          variant='determinate'
+          value={100}
+          size={14}
+          thickness={5}
+          sx={{ color: 'divider', position: 'absolute' }}
+        />
+        <CircularProgress
+          variant='determinate'
+          value={Math.max(ratio * 100, 4)}
+          size={14}
+          thickness={5}
+          color={ratio > 0.8 ? 'warning' : 'primary'}
+        />
+        <VisuallyHidden>{label}</VisuallyHidden>
+      </Box>
     </Tooltip>
   );
 }

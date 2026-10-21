@@ -78,7 +78,7 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
         color='textSubdued'
         noWrap
         component='div'
-        sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flex: '1 1 auto', minWidth: 0 }}
+        sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flex: '0 1 auto', minWidth: 0, maxWidth: '100%' }}
         data-testid='ai-context-target'
       >
         <CustomIcon type='database' size='xs' />

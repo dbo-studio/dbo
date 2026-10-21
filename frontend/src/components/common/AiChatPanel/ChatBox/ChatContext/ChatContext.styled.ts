@@ -8,13 +8,6 @@ export const ChatContextStyled = styled(Box)(({ theme }) => ({
   minWidth: 0
 }));
 
-export const ChatContextHeaderStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(1),
-  minWidth: 0
-}));
-
 // Two rows at most; more chips scroll inside, without a scrollbar, so the composer keeps its height.
 export const ChatContextTagsStyled = styled(Box)(({ theme }) => ({
   display: 'flex',

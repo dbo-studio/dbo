@@ -6,6 +6,7 @@ import { ChatBoxStyled, ComposerFooterStyled, SendButtonStyled } from './ChatBox
 import ChatContext from './ChatContext/ChatContext';
 import ContextBudget from './ContextBudget';
 import ChatTextInput from './ChatTextInput/ChatTextInput';
+import ModeBar from '../ModeBar/ModeBar';
 import Providers from './Providers/Providers';
 
 export default function ChatBox({ autocomplete, loading, onSend, onCancel }: ChatBoxProps) {
@@ -20,6 +21,7 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
       {autocomplete && <ChatContext autocomplete={autocomplete} />}
       <ChatTextInput loading={loading} onSend={onSend} onCancel={onCancel} autocomplete={autocomplete} />
       <ComposerFooterStyled>
+        <ModeBar />
         <Providers />
         <ContextBudget />
         {loading ? (

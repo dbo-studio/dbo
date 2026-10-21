@@ -786,6 +786,8 @@
   "ai_copy_answer": "Copy answer",
   "ai_rename_chat": "Rename chat",
   "ai_select_connection": "Select connection",
-  "ai_shortcuts_hint": "Enter to send · Shift+Enter new line · Esc to stop · {mod}+L to focus",
+  "ai_shortcut_send": "send",
+  "ai_shortcut_stop": "stop",
+  "ai_shortcut_focus": "focus chat",
   "ai_open_new_query_tab": "Open in new query tab"
 }

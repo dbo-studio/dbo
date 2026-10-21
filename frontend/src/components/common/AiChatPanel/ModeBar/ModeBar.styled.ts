@@ -1,22 +1,15 @@
-import { Box, styled } from '@mui/material';
+import { Button, styled } from '@mui/material';
 import { variables } from '@/core/theme/variables';
 
-export const ModeBarStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: theme.spacing(1),
-  padding: `${theme.spacing(0.75)} 0`,
+export const ModeButtonStyled = styled(Button)(({ theme }) => ({
+  minWidth: 0,
+  height: 24,
   flexShrink: 0,
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(0, 0, 1),
-    '& .MuiToggleButtonGroup-root': { flex: 1 },
-    '& .MuiToggleButton-root': { flex: 1 }
-  },
-  '& .MuiToggleButton-root': {
-    padding: `${theme.spacing(0.125)} ${theme.spacing(1.25)}`,
-    fontSize: variables.fontSize.sm,
-    textTransform: 'none',
-    lineHeight: 1.6
-  }
+  padding: theme.spacing(0, 0.75),
+  textTransform: 'none',
+  fontWeight: 500,
+  fontSize: variables.fontSize.sm,
+  color: theme.palette.text.secondary,
+  gap: theme.spacing(0.25),
+  '& .MuiButton-startIcon, & .MuiButton-endIcon': { margin: 0 }
 }));

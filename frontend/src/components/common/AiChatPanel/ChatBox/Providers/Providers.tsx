@@ -11,7 +11,7 @@ import { Chip, Divider, ListSubheader, Menu, MenuItem, Tooltip, Typography } fro
 import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { useAiChatMode } from '../../hooks/useAiChatMode';
-import { ModelButtonStyled, ProvidersStyled } from './Providers.styled';
+import { CapabilityIconStyled, ModelButtonStyled, ProvidersStyled, VisuallyHidden } from './Providers.styled';
 import { variables } from '@/core/theme/variables';
 
 const badgeSx = { height: 18, fontSize: variables.fontSize.xxs, '& .MuiChip-label': { px: 0.75 } };
@@ -79,14 +79,27 @@ export default function Providers(): JSX.Element {
         </ModelButtonStyled>
       </Tooltip>
       {active && mode === 'agent' && (
-        <Tooltip title={activeCaps.tools ? locales.ai_tools_supported_desc : locales.ai_no_tools_desc}>
-          <span data-testid='ai-model-capability'>
-            {activeCaps.tools ? (
-              <CapabilityBadge provider={active} model={active.model} />
-            ) : (
-              <Chip size='small' variant='outlined' color='warning' label={locales.ai_no_tools} sx={badgeSx} />
-            )}
-          </span>
+        <Tooltip
+          enterDelay={500}
+          title={
+            activeCaps.tools
+              ? `${locales.ai_tools_supported_desc}${activeCaps.contextWindow ? ` · ${formatContextWindow(activeCaps.contextWindow)}` : ''}`
+              : locales.ai_no_tools_desc
+          }
+        >
+          {/* An icon keeps the footer narrow; the label stays for screen readers. */}
+          <CapabilityIconStyled
+            data-testid='ai-model-capability'
+            data-tools={activeCaps.tools}
+            warn={!activeCaps.tools}
+          >
+            <CustomIcon type={activeCaps.tools ? 'check' : 'stop'} size='xs' />
+            <VisuallyHidden>
+              {activeCaps.tools
+                ? `${locales.ai_tools_supported}${activeCaps.contextWindow ? ` · ${formatContextWindow(activeCaps.contextWindow)}` : ''}`
+                : locales.ai_no_tools}
+            </VisuallyHidden>
+          </CapabilityIconStyled>
         </Tooltip>
       )}
       <Menu

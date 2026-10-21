@@ -3,16 +3,15 @@ import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { Box, Chip, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps } from '../../types';
-import { ChatContextHeaderStyled, ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
+import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextTarget from './ChatContextTarget';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
 import ContextPicker from '../ContextPicker/ContextPicker';
 import { buildContextOptions, toggleContextOption, type ContextOption } from '../../utils/contextOptions';
-import { variables } from '@/core/theme/variables';
 
 export default function ChatContext({ autocomplete }: ChatContextProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -50,26 +49,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
 
   return (
     <ChatContextStyled>
-      <ChatContextHeaderStyled>
-        <ChatContextTarget autocomplete={autocomplete} />
-        <Tooltip
-          enterDelay={700}
-          enterNextDelay={700}
-          title={autoContext ? locales.ai_context_following_desc : locales.ai_context_pinned_desc}
-        >
-          <Chip
-            size='small'
-            variant={autoContext ? 'outlined' : 'filled'}
-            icon={<CustomIcon type={autoContext ? 'refresh' : 'pin'} size='xs' />}
-            label={autoContext ? locales.ai_context_following : locales.ai_context_pinned}
-            onClick={() => setAutoContext(!autoContext)}
-            data-testid='ai-context-follow'
-            data-following={autoContext}
-            sx={{ height: 20, fontSize: variables.fontSize.xs, flexShrink: 0 }}
-          />
-        </Tooltip>
-      </ChatContextHeaderStyled>
-
       <ChatContextTagsStyled>
         <IconButton
           ref={anchorRef}
@@ -80,6 +59,25 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         >
           <CustomIcon type='at' size='s' />
         </IconButton>
+
+        <ChatContextTarget autocomplete={autocomplete} />
+
+        <Tooltip
+          enterDelay={700}
+          enterNextDelay={700}
+          title={autoContext ? locales.ai_context_following_desc : locales.ai_context_pinned_desc}
+        >
+          <IconButton
+            size='small'
+            aria-label={autoContext ? locales.ai_context_following : locales.ai_context_pinned}
+            onClick={() => setAutoContext(!autoContext)}
+            data-testid='ai-context-follow'
+            data-following={autoContext}
+            sx={{ width: 22, height: 22, p: 0, flexShrink: 0 }}
+          >
+            <CustomIcon type={autoContext ? 'refresh' : 'pin'} size='xs' />
+          </IconButton>
+        </Tooltip>
 
         {context.tables.map((item) => (
           <ChatContextItem
