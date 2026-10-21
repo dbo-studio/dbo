@@ -25,13 +25,16 @@ const (
 )
 
 const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-only SELECT queries with tools. ` +
-	`You cannot change the database. When the user wants a change, answer with the SQL in a code block for them to review and run themselves.`
+	`You cannot change the database. When the user wants a change, give the SQL in a code block for them to review and run, ` +
+	`and say that Agent mode can prepare it as a change they review and apply.`
 
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 	`To design or change schema (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys) call propose_schema_change; the user reviews it and applies it. ` +
 	`To change data call preview_write with one INSERT/UPDATE/DELETE; the user sees how many rows it changes and applies it. ` +
+	`Inspect the tables a change touches before you propose it. ` +
 	`For work with several steps, call update_plan first and update it as steps finish. ` +
-	`Never claim a proposed change or write was applied — say it is waiting for the user's review.`
+	`Never claim a proposed change or write was applied — say it is waiting for the user's review. ` +
+	`End with a short summary of what you proposed and what the user should check.`
 
 // modeInstructions adds how the user reviewed the chat's earlier proposals in
 // Agent mode, so the model does not repeat rejected changes or assume pending

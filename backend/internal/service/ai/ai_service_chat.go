@@ -46,7 +46,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 

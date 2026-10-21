@@ -12,13 +12,13 @@ func buildProviderChatRequest(
 	modelName string,
 	contextStr string,
 	req *dto.AiChatRequest,
-	useMarkdown bool,
+	engine string,
 ) *aiProvider.ChatRequest {
 	providerReq := &aiProvider.ChatRequest{
-		Messages:          conversationHistory(chat.Messages),
-		Model:             modelName,
-		Context:           contextStr,
-		UseMarkdownPrompt: useMarkdown,
+		Messages: conversationHistory(chat.Messages),
+		Model:    modelName,
+		Context:  contextStr,
+		Engine:   engine,
 	}
 
 	if req.ContextOpts == nil {

@@ -67,7 +67,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode())
 	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -147,9 +148,12 @@ func (s *AiServiceImpl) findChat(ctx context.Context, req *dto.AiChatRequest) (*
 // historyFetchCount loads enough recent rows to still find historyTurnCount
 // conversational messages when agent trace rows are interleaved.
 const (
-	historyFetchCount = 20
-	historyTurnCount  = 5
+	historyFetchCount = 40
+	historyTurnCount  = 12
 )
+
+// maxTitleRunes keeps a chat title short enough for the chat tabs.
+const maxTitleRunes = 40
 
 // conversationHistory drops agent trace rows (tool/diagram/permission cards)
 // and keeps the most recent conversational messages for the model.
@@ -222,18 +226,29 @@ func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat
 
 func (s *AiServiceImpl) updateChatTitle(ctx context.Context, chat *model.AiChat, userMessage string) error {
 	if len(chat.Messages) == 0 {
-		title := userMessage
-		if len(userMessage) > 20 {
-			title = userMessage[0:20]
-		}
-
-		chat.Title = title
+		chat.Title = chatTitle(userMessage)
 		if err := s.aiChatRepo.Update(ctx, chat); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+// chatTitle is the first message on one line, cut at a word within maxTitleRunes.
+// It counts runes, not bytes, so non-Latin text is never split mid-character.
+func chatTitle(message string) string {
+	title := []rune(strings.Join(strings.Fields(message), " "))
+	if len(title) <= maxTitleRunes {
+		return string(title)
+	}
+
+	cut := string(title[:maxTitleRunes])
+	if i := strings.LastIndex(cut, " "); i > maxTitleRunes/2 {
+		cut = cut[:i]
+	}
+
+	return cut + "…"
 }
 
 // saveChatContext remembers the explorer context so reopening the chat restores its chips.
