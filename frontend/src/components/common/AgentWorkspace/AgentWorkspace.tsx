@@ -24,7 +24,8 @@ import {
   WorkspaceThreadStyled
 } from './AgentWorkspace.styled';
 import ChangesetDock from './ChangesetDock/ChangesetDock';
-import WorkspaceCanvas, { type CanvasTab } from './WorkspaceCanvas/WorkspaceCanvas';
+import WorkspaceCanvas from './WorkspaceCanvas/WorkspaceCanvas';
+import { useWorkspaceCanvas } from './workspaceCanvas.store';
 import WorkspaceTopBar from './WorkspaceTopBar/WorkspaceTopBar';
 
 const OPEN_OVERLAY = '.MuiModal-root:not(.MuiModal-hidden)';
@@ -41,7 +42,10 @@ export default function AgentWorkspace(): JSX.Element {
   const isNarrow = useMediaQuery(theme.breakpoints.down('md'));
   const [showSessions, setShowSessions] = useState(!isNarrow);
   const [showCanvas, setShowCanvas] = useState(true);
-  const [canvasTab, setCanvasTab] = useState<CanvasTab>('diff');
+  const canvasTab = useWorkspaceCanvas((state) => state.tab);
+  const setCanvasTab = useWorkspaceCanvas((state) => state.setTab);
+  const canvasRequested = useWorkspaceCanvas((state) => state.open);
+  const closeCanvasRequest = useWorkspaceCanvas((state) => state.closeRequest);
   const [fullScreen, setFullScreen] = useState(false);
   const chatWidth = useSettingStore((state) => state.editor.aiChatWidth ?? 'default');
   const rootRef = useRef<HTMLElement>(null);
@@ -74,7 +78,8 @@ export default function AgentWorkspace(): JSX.Element {
   const review = useChangesetReview(openChangesetId ?? latestChangesetId ?? 0);
   const activity = useChatActivity();
   const changesets = useChangesetStore((state) => state.changesets);
-  const hasCanvasContent = !!review.changeset || !!activity.lastResult || activity.statements.length > 0;
+  const hasCanvasContent =
+    !!review.changeset || !!activity.lastResult || !!activity.lastReport || activity.statements.length > 0;
 
   // The canvas follows the agent: a proposal opens Changes, a query result opens Data.
   const [seenItems, setSeenItems] = useState(activity.items.length);
@@ -89,7 +94,15 @@ export default function AgentWorkspace(): JSX.Element {
     } else if (last?.kind === 'tool' && last.trace.name === 'execute_sql' && last.trace.status === 'done') {
       setCanvasTab('data');
       setShowCanvas(true);
+    } else if (last?.kind === 'tool' && last.trace.name === 'show_chart' && last.trace.status === 'done') {
+      setCanvasTab('report');
+      setShowCanvas(true);
     }
+  }
+  // A chat card asked to show something on the canvas.
+  if (canvasRequested) {
+    closeCanvasRequest();
+    setShowCanvas(true);
   }
   const updateUI = useSettingStore((state) => state.updateUI);
 

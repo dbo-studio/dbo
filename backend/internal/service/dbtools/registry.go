@@ -46,7 +46,8 @@ func (r *Registry) Execute(ctx context.Context, toolName string, args map[string
 		return r.listViews(ctx, args, toolCtx)
 	case "describe_table":
 		return r.describeTable(ctx, args, toolCtx)
-	case "execute_sql":
+	case "execute_sql", ToolShowChart:
+		// A chart runs its SELECT exactly like execute_sql; the chart settings only matter to the UI.
 		return r.executeSQL(ctx, args, toolCtx)
 	case "list_connections":
 		return r.listConnections(ctx)

@@ -14,6 +14,7 @@ const (
 	ToolProposeSchemaChange = "propose_schema_change"
 	ToolPreviewWrite        = "preview_write"
 	ToolUpdatePlan          = "update_plan"
+	ToolShowChart           = "show_chart"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -28,7 +29,7 @@ var agentOnlyTools = map[string]bool{
 // may call. Ask mode is limited to read-only inspection tools.
 func AllowedTool(agent bool, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart:
 		return true
 	}
 
@@ -79,6 +80,23 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 			},
 			"required": []string{"sql"},
+		}),
+		functionTool(ToolShowChart, "Show the user a chart of a read-only SELECT. Use it when the answer is numbers over categories or time "+
+			"(totals per group, trends by month, shares of a whole). The result rows come back to you too.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"sql":   map[string]any{"type": "string", "description": "SELECT that returns the label column first and the numbers after it. LIMIT is enforced automatically."},
+				"title": map[string]any{"type": "string", "description": "Short chart title, e.g. \"Revenue by month\"."},
+				"type": map[string]any{
+					"type":        "string",
+					"enum":        []string{"bar", "line", "area", "pie", "number", "table"},
+					"description": "line or area for time, bar for categories, pie for a few shares of a whole, number for a single value.",
+				},
+				"x":       map[string]any{"type": "string", "description": "Column for categories or time."},
+				"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Number columns to plot."},
+				"stacked": map[string]any{"type": "boolean"},
+			},
+			"required": []string{"sql", "title"},
 		}),
 	}
 

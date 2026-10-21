@@ -2,6 +2,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiAgentItem, AiToolTrace } from '@/types';
 import { useMemo } from 'react';
 import { isTraceMessage, traceMessageToItem } from '../utils/agentTrace';
+import { reportFromTrace, type ChartReport } from '../utils/chartReport';
 import { useAiSession } from './useAiSession';
 
 export type QueryResult = {
@@ -15,6 +16,8 @@ export type ChatActivity = {
   items: AiAgentItem[];
   /** The newest read query that returned rows. */
   lastResult?: QueryResult;
+  /** The newest chart the agent drew. */
+  lastReport?: ChartReport;
   /** Every SQL statement the agent ran or previewed, oldest first, keyed by its tool call. */
   statements: { id: string; sql: string }[];
 };
@@ -59,7 +62,11 @@ export function useChatActivity(): ChatActivity {
         .map(queryResult)
         .filter((result) => result !== undefined)
         .pop(),
-      statements: traces.map(statementOf).filter((sql) => sql !== undefined)
+      statements: traces.map(statementOf).filter((sql) => sql !== undefined),
+      lastReport: traces
+        .map(reportFromTrace)
+        .filter((report) => report !== undefined)
+        .pop()
     };
   }, [messages, live]);
 }

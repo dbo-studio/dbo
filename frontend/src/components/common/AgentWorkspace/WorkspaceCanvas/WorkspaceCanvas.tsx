@@ -9,6 +9,8 @@ import { IconButton, Stack, Tab, Tabs, Tooltip, Typography } from '@mui/material
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import MiniDiagram from '../MiniDiagram/MiniDiagram';
+import ReportEditor from '../ReportEditor/ReportEditor';
+import type { CanvasTab } from '../workspaceCanvas.store';
 import SchemaDiff from '../SchemaDiff/SchemaDiff';
 import SqlPreview from '../SqlPreview/SqlPreview';
 import {
@@ -17,8 +19,6 @@ import {
   WorkspaceCanvasHeaderStyled,
   WorkspaceCanvasStyled
 } from './WorkspaceCanvas.styled';
-
-export type CanvasTab = 'diagram' | 'diff' | 'data' | 'sql';
 
 type WorkspaceCanvasProps = {
   tab: CanvasTab;
@@ -87,6 +87,12 @@ export default function WorkspaceCanvas({
         ) : (
           <Empty text={locales.ai_canvas_no_data} />
         );
+      case 'report':
+        return activity.lastReport ? (
+          <ReportEditor report={activity.lastReport} />
+        ) : (
+          <Empty text={locales.ai_canvas_no_report} />
+        );
       case 'sql':
         return (
           <Stack spacing={1.5}>
@@ -110,10 +116,17 @@ export default function WorkspaceCanvas({
   return (
     <WorkspaceCanvasStyled fullScreen={fullScreen} data-testid='ai-changeset-surface' data-tab={tab}>
       <WorkspaceCanvasHeaderStyled>
-        <Tabs value={tab} onChange={(_, value: CanvasTab) => onTabChange(value)} sx={{ minHeight: 0, flex: 1 }}>
+        <Tabs
+          value={tab}
+          onChange={(_, value: CanvasTab) => onTabChange(value)}
+          variant='scrollable'
+          scrollButtons={false}
+          sx={{ minHeight: 0, flex: 1 }}
+        >
           <Tab value='diagram' label={locales.ai_changes_tab_diagram} data-testid='ai-changes-tab-diagram' />
           <Tab value='diff' label={locales.ai_changes_tab_diff} data-testid='ai-changes-tab-diff' />
           <Tab value='data' label={locales.ai_canvas_tab_data} data-testid='ai-canvas-tab-data' />
+          <Tab value='report' label={locales.ai_canvas_tab_report} data-testid='ai-canvas-tab-report' />
           <Tab value='sql' label={locales.ai_changes_tab_sql} data-testid='ai-changes-tab-sql' />
         </Tabs>
         <Tooltip title={fullScreen ? locales.ai_canvas_exit_full_screen : locales.ai_canvas_full_screen}>

@@ -7,6 +7,8 @@ import { type JSX, useState } from 'react';
 import { AgentCardHeaderStyled, AgentCardStyled } from '../AgentCards.styled';
 import ToolCallCard from '../ToolCallCard/ToolCallCard';
 import { describeToolStep } from '../../utils/toolStep';
+import { reportFromTrace } from '../../utils/chartReport';
+import ReportCard from '../ReportCard/ReportCard';
 
 /**
  * The agent's tool calls as a timeline of readable steps, like Cursor. Density
@@ -24,30 +26,41 @@ export default function ToolCallGroup({ items, live = false }: { items: AiAgentI
   const steps = traces.map((trace) => (
     <ToolCallCard key={trace.id} trace={trace} defaultExpanded={density === 'detailed'} />
   ));
+  // Charts are the answer, not a step, so they show whatever the density.
+  const reports = traces
+    .map(reportFromTrace)
+    .filter((report) => report !== undefined)
+    .map((report) => <ReportCard key={report.id} report={report} />);
 
   if (density !== 'compact') {
     return (
-      <AgentCardStyled data-testid='ai-tool-group' data-density={density}>
-        {steps}
-      </AgentCardStyled>
+      <>
+        <AgentCardStyled data-testid='ai-tool-group' data-density={density}>
+          {steps}
+        </AgentCardStyled>
+        {reports}
+      </>
     );
   }
 
   return (
-    <AgentCardStyled data-testid='ai-tool-group' data-density={density}>
-      <AgentCardHeaderStyled onClick={() => setExpanded((prev) => !prev)}>
-        {running ? <CircularProgress size={12} thickness={5} /> : <CustomIcon type='bot' size='xs' />}
-        <Typography variant='caption' sx={{ fontWeight: 500, flex: 1, minWidth: 0 }} noWrap>
-          {latest ? describeToolStep(latest) : ''}
-        </Typography>
-        {traces.length > 1 && (
-          <Typography variant='caption' color='textSubdued' sx={{ flexShrink: 0 }}>
-            {locales.ai_steps.replace('{n}', String(traces.length))}
+    <>
+      <AgentCardStyled data-testid='ai-tool-group' data-density={density}>
+        <AgentCardHeaderStyled onClick={() => setExpanded((prev) => !prev)}>
+          {running ? <CircularProgress size={12} thickness={5} /> : <CustomIcon type='bot' size='xs' />}
+          <Typography variant='caption' sx={{ fontWeight: 500, flex: 1, minWidth: 0 }} noWrap>
+            {latest ? describeToolStep(latest) : ''}
           </Typography>
-        )}
-        <CustomIcon type={expanded ? 'chevronDown' : 'chevronRight'} size='xs' />
-      </AgentCardHeaderStyled>
-      <Collapse in={expanded || (live && running && traces.length === 1)}>{steps}</Collapse>
-    </AgentCardStyled>
+          {traces.length > 1 && (
+            <Typography variant='caption' color='textSubdued' sx={{ flexShrink: 0 }}>
+              {locales.ai_steps.replace('{n}', String(traces.length))}
+            </Typography>
+          )}
+          <CustomIcon type={expanded ? 'chevronDown' : 'chevronRight'} size='xs' />
+        </AgentCardHeaderStyled>
+        <Collapse in={expanded || (live && running && traces.length === 1)}>{steps}</Collapse>
+      </AgentCardStyled>
+      {reports}
+    </>
   );
 }

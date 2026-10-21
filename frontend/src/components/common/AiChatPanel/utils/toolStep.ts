@@ -52,6 +52,10 @@ export function describeToolStep(trace: AiToolTrace): string {
     }
     case 'update_plan':
       return locales.ai_step_plan;
+    case 'show_chart': {
+      const title = typeof args.title === 'string' ? args.title : '';
+      return (running ? locales.ai_step_drawing_chart : locales.ai_step_drew_chart).replace('{title}', title);
+    }
     default:
       return trace.name;
   }
