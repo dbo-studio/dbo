@@ -94,7 +94,8 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 			},
 			"required": []string{"table"},
 		}),
-		functionTool(ToolExecuteSQL, "Run a read-only SELECT query against the database. Returns rows as JSON.", shared.FunctionParameters{
+		functionTool(ToolExecuteSQL, "Run a read-only SELECT query against the database. Returns rows as JSON. "+
+			"To see why a query is slow use explain_query instead; to measure NULLs or distinct values use table_stats.", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
 				"sql": map[string]any{
@@ -210,7 +211,7 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 								"rename_table / rename_column: the new name. create_view / drop_view: the view. add_check / drop_constraint: the constraint name."},
 							"sql":          map[string]any{"type": "string", "description": "create_view: the view's SELECT. add_check: the boolean expression, e.g. \"price >= 0\"."},
 							"columns":      map[string]any{"type": "array", "items": column, "description": "create_table only: every column of the new table."},
-							"column":       column,
+							"column":       lo.Assign(column, map[string]any{"description": "add_column / alter_column: the column, as an object {name, type, notNull, primary, default}."}),
 							"columnName":   map[string]any{"type": "string", "description": "drop_column: the column to remove. rename_column: its current name."},
 							"indexColumns": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_index only: indexed columns."},
 							"unique":       map[string]any{"type": "boolean", "description": "add_index only: create a unique index."},

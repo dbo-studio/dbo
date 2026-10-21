@@ -166,7 +166,7 @@ func (op SchemaChangeOp) Validate() error {
 		}
 	case SchemaChangeAddColumn, SchemaChangeAlterColumn:
 		if op.Column == nil {
-			return fmt.Errorf("%s %q: column is required", op.Op, op.Table)
+			return fmt.Errorf(`%s %q: column is required, as an object like {"name": "phone", "type": "TEXT"}`, op.Op, op.Table)
 		}
 
 		if err := op.Column.Validate(); err != nil {

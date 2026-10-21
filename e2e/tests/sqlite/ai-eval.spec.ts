@@ -39,6 +39,7 @@ type Run = {
   errors: string[];
   answer: string;
   chatId?: number;
+  connectionId?: number;
   ms: number;
 };
 type EvalTask = {
@@ -74,11 +75,14 @@ const tasks: EvalTask[] = [
       const missing = usedTool(run, "save_report");
       if (missing) return missing;
       const list = (await (
-        await page.request.get("/api/questions")
-      ).json()) as { data: Array<{ name: string }> };
-      return list.data.some((item) => item.name === "Eval orders per customer")
+        await page.request.get(
+          `/api/questions?connectionId=${run.connectionId}`,
+        )
+      ).json()) as { data: Array<{ name: string }> | null };
+      const names = (list.data ?? []).map((item) => item.name);
+      return names.includes("Eval orders per customer")
         ? undefined
-        : "no saved report with that name";
+        : `no saved report with that name (saved: ${names.join(", ") || "none"})`;
     },
   },
   {
@@ -113,6 +117,38 @@ const tasks: EvalTask[] = [
         : `previewed ${JSON.stringify(write ?? ops)}`;
     },
   },
+  {
+    name: "explain",
+    prompt:
+      "Why might filtering orders by status be slow? Check the query plan.",
+    check: async (run) => usedTool(run, "explain_query"),
+  },
+  {
+    name: "data shape",
+    prompt:
+      "Measure the orders table: how many rows, and how many statuses are NULL?",
+    check: async (run) => usedTool(run, "table_stats"),
+  },
+  {
+    name: "schema review",
+    prompt: "Review my schema for design problems.",
+    check: async (run) => usedTool(run, "review_schema"),
+  },
+  {
+    name: "seed",
+    prompt: "Add 2 sample customers, each with one order, as one change.",
+    check: async (run, page) => {
+      const missing = usedTool(run, "preview_write");
+      if (missing) return missing;
+      const writes = (await changesetOps(page, run)).filter(
+        (op) => op.op === "write",
+      );
+      const inserted = writes
+        .filter((op) => /^insert/i.test(op.sql ?? ""))
+        .reduce((sum, op) => sum + (op.affectedRows ?? 0), 0);
+      return inserted >= 4 ? undefined : `previewed ${JSON.stringify(writes)}`;
+    },
+  },
 ];
 
 type Op = {
@@ -130,7 +166,7 @@ async function changesetOps(page: Page, run: Run): Promise<Op[]> {
   ).json()) as {
     data: Array<{ ops: Op[] }>;
   };
-  return list.data.flatMap((changeset) => changeset.ops);
+  return (list.data ?? []).flatMap((changeset) => changeset.ops);
 }
 
 async function chat(
@@ -161,6 +197,7 @@ async function chat(
       ),
     answer: done?.messages?.map((item) => item.content).join("\n") ?? "",
     chatId: done?.chatId,
+    connectionId,
     ms: Date.now() - started,
   };
 }
@@ -243,7 +280,12 @@ test.describe("AI real-model evaluation", () => {
             );
             const failure = await task.check(run, page);
             rows.push(
-              `| ${model} | ${task.name} | ${failure ? "fail" : "pass"} | ${run.tools.join(" → ")} | ${run.errors.length} | ${(run.ms / 1000).toFixed(1)}s | ${(failure ?? "").replace(/\|/g, "/")} |`,
+              `| ${model} | ${task.name} | ${failure ? "fail" : "pass"} | ${run.tools.join(" → ")} | ${
+                run.errors
+                  .map((error) => error.slice(0, 120))
+                  .join("; ")
+                  .replace(/\|/g, "/") || "0"
+              } | ${(run.ms / 1000).toFixed(1)}s | ${(failure ?? "").replace(/\|/g, "/")} |`,
             );
           }
         }
