@@ -134,7 +134,8 @@ export default function ChatDataTable({
         </Suspense>
       )}
       <ChatDataTableScroll>
-        <StyledTable width={tableWidth}>
+        {/* Fills the card when the columns are narrower than it; scrolls when wider. */}
+        <StyledTable style={{ width: '100%', minWidth: tableWidth }}>
           <colgroup>
             {columns.map((column, index) => (
               <StyledCol key={column} width={widths[index]} />

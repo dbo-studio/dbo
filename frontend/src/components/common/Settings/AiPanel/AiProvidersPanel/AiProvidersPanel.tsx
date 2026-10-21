@@ -38,7 +38,8 @@ type ProviderFormProps = { provider: AiProviderType; canEdit: boolean };
 function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
   const updateProviders = useAiStore((state) => state.updateProviders);
   const [url, setUrl] = useState(provider.url);
-  const [apiKey, setApiKey] = useState(provider.apiKey ?? '');
+  // Empty means "keep the saved key": the API returns it masked, and the mask sent back keeps it.
+  const [apiKey, setApiKey] = useState('');
   const [timeout, setTimeout] = useState(provider.timeout?.toString() ?? '');
   const [model, setModel] = useState(provider.model);
   const [saved, setSaved] = useState(provider.models);
@@ -47,9 +48,9 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
   const [touched, setTouched] = useState(false);
   const [connection, setConnection] = useState<{ ok: boolean; text: string } | undefined>();
 
-  const keySaved = apiKey.startsWith('****');
+  const effectiveKey = apiKey || provider.apiKey || '';
   const timeoutValue = timeout.trim() === '' ? undefined : Number(timeout);
-  const errors = validateProvider({ type: provider.type, url, apiKey, timeout: timeoutValue, model });
+  const errors = validateProvider({ type: provider.type, url, apiKey: effectiveKey, timeout: timeoutValue, model });
   const invalid = Object.keys(errors).length > 0;
   const shown = (field: keyof typeof errors): string | undefined => (touched ? errors[field] : undefined);
 
@@ -57,7 +58,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
     mutationFn: () =>
       api.aiProvider.updateProvider(provider.id, {
         url: url.trim(),
-        apiKey,
+        apiKey: effectiveKey,
         timeout: timeoutValue,
         models: saved.includes(model) ? saved : [...saved, model],
         model,
@@ -75,7 +76,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
 
   const { mutate: testConnection, isPending: testing } = useMutation({
     mutationFn: () =>
-      api.aiProvider.listProviderModels(provider.id, { url: url.trim(), apiKey, timeout: timeoutValue }),
+      api.aiProvider.listProviderModels(provider.id, { url: url.trim(), apiKey: effectiveKey, timeout: timeoutValue }),
     onSuccess: (result) => {
       if (result.error) {
         setConnection({ ok: false, text: result.error });
@@ -121,21 +122,22 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
 
       <FieldInput
         label={locales.api_key}
-        type={showKey || keySaved ? 'text' : 'password'}
+        type={showKey ? 'text' : 'password'}
         value={apiKey}
         disabled={!canEdit}
-        placeholder={provider.type === 'ollama' ? undefined : 'sk-…'}
+        placeholder={provider.apiKey ? locales.ai_key_saved : provider.type === 'ollama' ? undefined : 'sk-…'}
         error={!!shown('apiKey')}
-        helpertext={shown('apiKey') ?? (keySaved ? locales.ai_key_saved : undefined)}
+        helpertext={shown('apiKey')}
         onChange={(e) => setApiKey(e.target.value)}
-        onFocus={() => keySaved && setApiKey('')}
         inputProps={{ 'data-testid': 'ai-provider-api-key' }}
         endAdornment={
-          <InputAdornment position='end'>
-            <Button size='small' onClick={() => setShowKey((value) => !value)} data-testid='ai-provider-key-toggle'>
-              {showKey ? locales.ai_key_hide : locales.ai_key_show}
-            </Button>
-          </InputAdornment>
+          apiKey ? (
+            <InputAdornment position='end'>
+              <Button size='small' onClick={() => setShowKey((value) => !value)} data-testid='ai-provider-key-toggle'>
+                {showKey ? locales.ai_key_hide : locales.ai_key_show}
+              </Button>
+            </InputAdornment>
+          ) : undefined
         }
       />
 

@@ -42,7 +42,7 @@ test.describe("AI provider settings form", () => {
           await form.getByTestId("ai-provider-url").fill("not a url");
           await form.getByTestId("ai-provider-save").click();
           await expect(form).toContainText("Enter a valid http(s) URL");
-          await expect(form).toContainText("Api key is required");
+          await expect(form).toContainText("API key is required");
         });
 
         await test.step("A wrong key is reported by the connection test", async () => {
@@ -79,6 +79,25 @@ test.describe("AI provider settings form", () => {
             type: "openai",
             model: "fake-model-mini",
           });
+        });
+
+        await test.step("The saved key is kept when the field is only clicked and the form saved again", async () => {
+          await page.reload();
+          await settingsPage.open();
+          await settingsPage.navigateTo("AI");
+          const key = form.getByTestId("ai-provider-api-key");
+          await expect(key).toHaveValue("");
+          await expect(key).toHaveAttribute("placeholder", /Saved key/);
+          await key.click();
+          await form.getByTestId("ai-provider-url").click();
+          await form.getByTestId("ai-provider-test").click();
+          await expect(page.getByTestId("ai-connection-result")).toContainText("3 models available");
+          await form.getByTestId("ai-provider-save").click();
+          await expect(page.getByTestId("ai-provider-status-openai")).toHaveText("In use");
+          const body = (await (await page.request.get("/api/ai/providers")).json()) as {
+            data: Array<{ type: string; apiKey?: string }>;
+          };
+          expect(body.data.find((item) => item.type === "openai")?.apiKey).toBe("****");
         });
       });
     } finally {
