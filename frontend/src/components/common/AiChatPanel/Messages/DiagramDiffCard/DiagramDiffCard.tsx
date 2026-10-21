@@ -2,6 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
+import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -43,7 +44,7 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
       <Stack direction='row' spacing={0.75} sx={{ alignItems: 'center', px: 1, py: 0.75 }}>
         <CustomIcon type='network' size='xs' />
         <Typography variant='caption' sx={{ fontWeight: 600, flex: 1 }}>
-          {locales.ai_schema_proposal.replace('{n}', String(changeset.ops.length))}
+          {locales.ai_schema_proposal.replace('{changes}', changeCount(changeset.ops.length))}
         </Typography>
         <Chip
           size='small'

@@ -1,5 +1,6 @@
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import type { useChangesetReview } from '@/hooks';
+import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { type JSX } from 'react';
@@ -17,7 +18,7 @@ export default function ChangesetDock({ review, onReview }: ChangesetDockProps):
       data-testid='ai-changeset-dock'
     >
       <Typography variant='caption' sx={{ flex: 1 }}>
-        {locales.ai_changes_dock.replace('{n}', String(review.openCount))}
+        {locales.ai_changes_dock.replace('{changes}', changeCount(review.openCount))}
       </Typography>
       <Button size='small' variant='text' onClick={onReview} data-testid='ai-dock-review'>
         {locales.ai_changes_review}

@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
+import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -50,7 +51,7 @@ const parseSqlResult = (trace: AiToolTrace): SqlResult | undefined => {
 const summarizeArgs = (args: Record<string, unknown>): string => {
   if (typeof args.sql === 'string') return args.sql.replace(/\s+/g, ' ');
   if (typeof args.table === 'string') return args.table;
-  if (Array.isArray(args.ops)) return locales.ai_tool_ops_count.replace('{n}', String(args.ops.length));
+  if (Array.isArray(args.ops)) return changeCount(args.ops.length);
   if (typeof args.schema === 'string') return args.schema;
   return '';
 };

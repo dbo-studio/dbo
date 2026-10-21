@@ -111,7 +111,7 @@ test.describe("AI Agent Workspace changeset", () => {
           await composer.fill("add phone and a posts table");
           await composer.press("Enter");
 
-          await expect(dock).toContainText("2 pending change(s)", {
+          await expect(dock).toContainText("2 changes pending", {
             timeout: 15000,
           });
           await expect(surface).toBeVisible();
@@ -181,7 +181,7 @@ test.describe("AI Agent Workspace changeset", () => {
             "data-status",
             "rejected",
           );
-          await expect(dock).toContainText("1 pending change(s)");
+          await expect(dock).toContainText("1 change pending");
         });
 
         await test.step("Apply all previews the SQL, applies it and clears the dock", async () => {

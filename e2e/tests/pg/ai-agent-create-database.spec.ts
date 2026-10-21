@@ -86,7 +86,7 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
           await composer.fill("create a blog database");
           await composer.press("Enter");
           await expect(page.getByTestId("ai-changeset-dock")).toContainText(
-            "4 pending change(s)",
+            "4 changes pending",
             { timeout: 15000 },
           );
 

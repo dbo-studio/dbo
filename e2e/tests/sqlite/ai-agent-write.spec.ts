@@ -103,7 +103,7 @@ test.describe("AI Agent Workspace data changes", () => {
           };
           await send("raise book prices");
 
-          await expect(dock).toContainText("1 pending change(s)", {
+          await expect(dock).toContainText("1 change pending", {
             timeout: 15000,
           });
           await expect(page.getByTestId("ai-write-count")).toContainText(
@@ -129,7 +129,7 @@ test.describe("AI Agent Workspace data changes", () => {
           };
           await send("remove games");
 
-          await expect(dock).toContainText("2 pending change(s)", {
+          await expect(dock).toContainText("2 changes pending", {
             timeout: 15000,
           });
           expect(await prices()).toEqual([10, 20, 30, 40]);

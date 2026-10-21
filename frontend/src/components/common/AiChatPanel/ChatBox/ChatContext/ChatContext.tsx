@@ -122,7 +122,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           <ChatContextItem
             type='query'
             key='query-result'
-            name={`${locales.context_result}: ${context.queryResultSummary}`}
+            name={locales.context_result}
             onClick={() => updateContext({ ...context, queryResultSummary: undefined })}
           />
         )}

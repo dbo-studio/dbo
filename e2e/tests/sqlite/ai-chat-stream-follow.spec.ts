@@ -181,6 +181,20 @@ test.describe("AI chat streaming follow", () => {
           });
           await expect.poll(() => distanceFromBottom(page)).toBeLessThan(120);
         });
+
+        await test.step("A markdown table between paragraphs keeps every row inside the table", async () => {
+          llm.reply = {
+            text: "Rows by country:\n\n| country | customers |\n|---|---|\n| CN | 1 |\n| US | 2 |\n\nThat is all.",
+            wordDelayMs: 5,
+          };
+          await composer.fill("rows by country");
+          await composer.press("Enter");
+          const reply = message("That is all.");
+          await expect(reply).toHaveCount(1, { timeout: 20000 });
+          await expect(reply.getByTestId("ai-table-row-count")).toContainText("2");
+          // The last row once leaked out of the table as plain text.
+          await expect(reply.getByText("| US | 2 |")).toHaveCount(0);
+        });
       });
     } finally {
       removeSqliteDbFile(dbPath);

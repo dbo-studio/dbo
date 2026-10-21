@@ -83,7 +83,7 @@ test.describe("AI Agent Workspace changeset editing", () => {
         await composer.fill("add posts");
         await composer.press("Enter");
         await expect(page.getByTestId("ai-changeset-dock")).toContainText(
-          "3 pending change(s)",
+          "3 changes pending",
           { timeout: 15000 },
         );
 

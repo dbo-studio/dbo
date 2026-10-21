@@ -64,16 +64,17 @@ export default function Providers(): JSX.Element {
 
   return (
     <ProvidersStyled>
-      <Tooltip title={locales.ai_select_model}>
+      <Tooltip
+        title={active ? `${PROVIDER_NAMES[active.type]} · ${active.model}` : locales.ai_select_model}
+        enterDelay={700}
+      >
         <ModelButtonStyled
           size='small'
           disabled={isPending}
           onClick={(event) => setAnchorEl(event.currentTarget)}
           data-testid='ai-model-picker'
         >
-          <span className='model-label'>
-            {active ? `${PROVIDER_NAMES[active.type]} · ${active.model}` : locales.ai_select_model}
-          </span>
+          <span className='model-label'>{active ? active.model : locales.ai_select_model}</span>
           <CustomIcon type='chevronDown' size='xs' />
         </ModelButtonStyled>
       </Tooltip>
