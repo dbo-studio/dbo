@@ -4,6 +4,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/shared"
+	"github.com/samber/lo"
 )
 
 const (
@@ -28,18 +29,35 @@ var agentOnlyTools = map[string]bool{
 }
 
 // AllowedTool is the server-side source of truth for which tools a chat turn
-// may call. Ask mode is limited to read-only inspection tools.
-func AllowedTool(agent bool, name string) bool {
+// may call. Ask mode is limited to read-only inspection tools, and a connection
+// whose agent level is data_write never gets schema proposals.
+func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
 	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolShowChart, ToolSaveReport, ToolPinReport:
 		return true
+	case ToolProposeSchemaChange:
+		if tier == TierDataWrite {
+			return false
+		}
 	}
 
 	return agent && agentOnlyTools[name]
 }
 
-// ChatTools returns OpenAI tool definitions for the internal chat agent.
-func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
+// Agent levels of a connection (model.AgentTier values).
+const (
+	TierReadOnly  = "read_only"
+	TierDataWrite = "data_write"
+)
+
+// ChatTools returns the tool definitions a turn may use, filtered by AllowedTool.
+func ChatTools(agent bool, tier string) []openai.ChatCompletionToolUnionParam {
+	return lo.Filter(allChatTools(agent), func(tool openai.ChatCompletionToolUnionParam, _ int) bool {
+		return tool.OfFunction == nil || AllowedTool(agent, tier, tool.OfFunction.Function.Name)
+	})
+}
+
+func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 	tools := []openai.ChatCompletionToolUnionParam{
 		functionTool(ToolListTables, "List table names in the connected database.", shared.FunctionParameters{
 			"type": "object",

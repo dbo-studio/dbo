@@ -18,6 +18,11 @@ import (
 	"github.com/samber/lo"
 )
 
+var (
+	errTierReadOnly = errors.New("this connection allows the assistant to read only; change its agent level to apply changes")
+	errTierSchema   = errors.New("this connection allows the assistant to change data only, not the schema; change its agent level to apply this")
+)
+
 // describedChangesets caps how many recent changesets the agent is told about.
 const describedChangesets = 5
 
@@ -383,6 +388,10 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 		return nil, err
 	}
 
+	if err := s.allowedByTier(ctx, changeset, req.Ops); err != nil {
+		return nil, err
+	}
+
 	req.Confirmed = apply.Confirmed
 
 	// Read the SQL before it runs: the audit entry shows what was attempted even when the apply fails.
@@ -523,6 +532,10 @@ func (s IAiChangesetServiceImpl) Undo(ctx context.Context, chatID, changesetID u
 		return nil, apperror.InternalServerError(err)
 	}
 
+	if connection.AgentTier != model.AgentTierSchemaChange {
+		return nil, apperror.Forbidden(errTierSchema)
+	}
+
 	statements := serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
 	if len(statements) == 0 {
 		return nil, apperror.BadRequest(errors.New("nothing in this change can be undone"))
@@ -549,4 +562,24 @@ func (s IAiChangesetServiceImpl) Undo(ctx context.Context, chatID, changesetID u
 	}
 
 	return s.response(ctx, undo)
+}
+
+// allowedByTier refuses an apply the connection's agent level does not permit,
+// whatever the client sends: read-only allows nothing, data_write only data changes.
+func (s IAiChangesetServiceImpl) allowedByTier(ctx context.Context, changeset *model.AiChangeset, ops []dto.SchemaChangeOp) error {
+	connection, err := s.connectionRepo.Find(ctx, int32(changeset.ConnectionID))
+	if err != nil {
+		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	switch connection.AgentTier {
+	case model.AgentTierReadOnly:
+		return apperror.Forbidden(errTierReadOnly)
+	case model.AgentTierDataWrite:
+		if lo.SomeBy(ops, func(op dto.SchemaChangeOp) bool { return op.Op != dto.SchemaChangeWrite }) {
+			return apperror.Forbidden(errTierSchema)
+		}
+	}
+
+	return nil
 }

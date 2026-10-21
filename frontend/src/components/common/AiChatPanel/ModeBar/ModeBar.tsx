@@ -16,6 +16,7 @@ const MODES: { value: AiChatMode; label: string; desc: string; icon: 'message' |
 /** Ask/Agent picker in the composer footer, next to the model. */
 export default function ModeBar(): JSX.Element {
   const [mode, setMode] = useAiChatMode();
+  const readOnly = useConnectionStore((state) => state.currentConnection()?.agentTier === 'read_only');
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const current = MODES.find((item) => item.value === mode) ?? MODES[0];
 
@@ -45,6 +46,7 @@ export default function ModeBar(): JSX.Element {
             key={item.value}
             dense
             selected={item.value === mode}
+            disabled={item.value === 'agent' && readOnly}
             onClick={() => {
               setMode(item.value);
               setAnchorEl(null);
@@ -57,7 +59,7 @@ export default function ModeBar(): JSX.Element {
             </Box>
             <ListItemText
               primary={item.label}
-              secondary={item.desc}
+              secondary={item.value === 'agent' && readOnly ? locales.ai_mode_agent_blocked : item.desc}
               slotProps={{ secondary: { sx: { whiteSpace: 'normal', fontSize: variables.fontSize.xs } } }}
             />
           </MenuItem>

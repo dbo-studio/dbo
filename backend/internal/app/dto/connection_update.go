@@ -14,6 +14,7 @@ type (
 		Options          json.RawMessage `json:"options"`
 		SafeMode         *string         `json:"safeMode"`
 		SafeModePassword *string         `json:"safeModePassword,omitempty"`
+		AgentTier        *string         `json:"agentTier"`
 	}
 
 	UpdateConnectionResponse struct {
@@ -28,5 +29,6 @@ func (ccr UpdateConnectionRequest) Validate() error {
 			"silent", "alert", "alert_write", "safe", "safe_write",
 			"off", "full", "read_only", "disallow_drop", "",
 		)),
+		validation.Field(&ccr.AgentTier, validation.In("read_only", "data_write", "schema_change")),
 	)
 }

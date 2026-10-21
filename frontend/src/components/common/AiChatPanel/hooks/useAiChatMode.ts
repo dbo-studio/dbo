@@ -13,7 +13,10 @@ export const resolveAiChatMode = (): AiChatMode =>
 export const useAiChatMode = (): [AiChatMode, (mode: AiChatMode) => void] => {
   const stored = useSettingStore((state) => state.editor.aiChatMode);
   const guarded = useConnectionStore((state) => isGuardedConnection(state.currentConnection()));
+  const readOnly = useConnectionStore((state) => state.currentConnection()?.agentTier === 'read_only');
   const updateEditor = useSettingStore((state) => state.updateEditor);
 
-  return [stored ?? (guarded ? 'ask' : 'agent'), (mode) => updateEditor({ aiChatMode: mode })];
+  // A read-only connection always runs in Ask; the server enforces the same.
+  const mode = readOnly ? 'ask' : (stored ?? (guarded ? 'ask' : 'agent'));
+  return [mode, (next) => updateEditor({ aiChatMode: next })];
 };

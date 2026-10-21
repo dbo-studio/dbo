@@ -39,6 +39,12 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	// The connection's agent level is the ceiling: a read-only connection always runs in Ask.
+	req.AgentTier = string(conn.AgentTier)
+	if conn.AgentTier == model.AgentTierReadOnly {
+		req.Mode = dto.AiChatModeAsk
+	}
+
 	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
 	if err != nil {
 		return err
@@ -68,7 +74,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	})
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
-	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode())
+	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
 	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{

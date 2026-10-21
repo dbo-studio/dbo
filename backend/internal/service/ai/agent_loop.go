@@ -46,6 +46,13 @@ func (s *AiServiceImpl) modeInstructions(ctx context.Context, chatID uint, req *
 		return askModeInstructions
 	}
 
+	if req.AgentTier == serviceDbtools.TierDataWrite {
+		instructions := agentModeInstructions + " On this connection you may only propose data changes with preview_write; schema changes are not allowed, so give their SQL for the user to run instead."
+		state, _ := s.changesetService.Describe(ctx, chatID)
+
+		return strings.TrimSpace(instructions + "\n\n" + state)
+	}
+
 	state, err := s.changesetService.Describe(ctx, chatID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to describe changesets: %v", err))
@@ -186,7 +193,7 @@ func (s *AiServiceImpl) runToolCall(
 	)
 
 	switch {
-	case !serviceDbtools.AllowedTool(req.AgentMode(), call.Name):
+	case !serviceDbtools.AllowedTool(req.AgentMode(), req.AgentTier, call.Name):
 		err = blockedError{fmt.Sprintf("tool %q is not available in %s mode", call.Name, modeName(req.Mode))}
 	case call.Name == serviceDbtools.ToolProposeSchemaChange:
 		var changeset *dto.AiChangesetResponse

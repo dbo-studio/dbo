@@ -28,7 +28,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	ownerID := helper.CtxOwnerID(ctx)
 
 	optionsProvided := len(req.Options) > 0
-	metadataEdit := optionsProvided || req.Name != nil || req.SafeMode != nil
+	metadataEdit := optionsProvided || req.Name != nil || req.SafeMode != nil || req.AgentTier != nil
 
 	if metadataEdit && !access.canEdit() {
 		return nil, apperror.Forbidden(apperror.ErrConnectionEditForbidden)
