@@ -5,9 +5,14 @@ import (
 	"strings"
 )
 
+// toolNames are the chat tools a model may write out as text instead of calling them.
+const toolNames = `(execute_sql|list_tables|list_views|describe_table|explain_query|table_stats|review_schema|show_chart|save_report|pin_report|propose_schema_change|preview_write|update_plan)`
+
 var (
-	toolLeakPattern     = regexp.MustCompile(`"name"\s*:\s*"(execute_sql|list_tables|list_views|describe_table)"`)
-	toolCallJSONPattern = regexp.MustCompile(`(?s)\{\s*"name"\s*:\s*"(execute_sql|list_tables|list_views|describe_table)"\s*,\s*"(arguments|parameters)"\s*:\s*\{.*?\}\s*\}`)
+	toolLeakPattern = regexp.MustCompile(`"(name|action|tool|function)"\s*:\s*"` + toolNames + `"`)
+	// The call may sit in a code fence, which goes with it.
+	toolCallJSONPattern = regexp.MustCompile("(?s)(?:```(?:json)?\\s*)?\\{\\s*\"(?:name|action|tool|function)\"\\s*:\\s*\"" + toolNames +
+		"\"\\s*,\\s*\"(?:arguments|parameters)\"\\s*:\\s*\\{.*?\\}\\s*\\}(?:\\s*```)?")
 	multiNewlinePattern = regexp.MustCompile(`\n{3,}`)
 )
 

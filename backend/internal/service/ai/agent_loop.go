@@ -21,7 +21,8 @@ const (
 	maxAskToolRounds   = 5
 	maxAgentToolRounds = 10
 
-	maxToolArgsLen   = 2000
+	// Long enough for the largest SQL an op accepts; a cut would break the stored JSON.
+	maxToolArgsLen   = 10000
 	maxToolResultLen = 20000
 )
 

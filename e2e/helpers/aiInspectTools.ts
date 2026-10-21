@@ -103,6 +103,15 @@ export async function checkInspectTools(
         `INSERT INTO ${table} VALUES (1, 'a@x.io', 30), (2, 'b@x.io', NULL), (3, 'a@x.io', 50), (4, NULL, 20)`,
       );
 
+      if (engine === "postgresql") {
+        // Postgres-only syntax is a read like any other.
+        const pgRead = await callTool("execute_sql", {
+          sql: `SELECT id::text AS id FROM ${table} WHERE email ILIKE 'A@%'`,
+        });
+        expect(pgRead.type, pgRead.content).toBe("tool_result");
+        expect(pgRead.content).toContain('"count": 2');
+      }
+
       const plan = await callTool("explain_query", {
         sql: `SELECT id FROM ${table} WHERE email = 'a@x.io'`,
       });

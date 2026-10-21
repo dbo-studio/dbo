@@ -46,25 +46,8 @@ func (r *Registry) tableStats(ctx context.Context, args map[string]any, toolCtx 
 
 	connectionType := conn.ConnectionType
 	sqlite := !databaseContract.IsPostgresFamily(connectionType) && !databaseContract.IsMysqlFamily(connectionType)
-	ident := func(name string) string {
-		switch {
-		case databaseContract.IsPostgresFamily(connectionType):
-			return quote.PostgresIdent(name)
-		case databaseContract.IsMysqlFamily(connectionType):
-			return quote.MysqlIdent(name)
-		default:
-			return quote.SqliteIdent(name)
-		}
-	}
-
-	source := ident(table)
-
-	switch {
-	case databaseContract.IsPostgresFamily(connectionType):
-		source = quote.PostgresQualifiedTable(lo.CoalesceOrEmpty(lo.FromPtr(toolCtx.Schema), "public"), table)
-	case databaseContract.IsMysqlFamily(connectionType) && lo.FromPtr(toolCtx.Database) != "":
-		source = quote.MysqlQualifiedTable(lo.FromPtr(toolCtx.Database), table)
-	}
+	ident := func(name string) string { return quoteIdent(connectionType, name) }
+	source := qualifiedSource(connectionType, table, toolCtx)
 
 	shape, err := r.query(ctx, conn, "SELECT * FROM "+source+" WHERE 1 = 0", toolCtx)
 	if err != nil {
@@ -138,6 +121,29 @@ func (r *Registry) tableStats(ctx context.Context, args map[string]any, toolCtx 
 	}
 
 	return string(raw), nil
+}
+
+func quoteIdent(connectionType, name string) string {
+	switch {
+	case databaseContract.IsPostgresFamily(connectionType):
+		return quote.PostgresIdent(name)
+	case databaseContract.IsMysqlFamily(connectionType):
+		return quote.MysqlIdent(name)
+	default:
+		return quote.SqliteIdent(name)
+	}
+}
+
+// qualifiedSource is the table as a FROM clause names it, inside the tool's database or schema.
+func qualifiedSource(connectionType, table string, toolCtx ToolContext) string {
+	switch {
+	case databaseContract.IsPostgresFamily(connectionType):
+		return quote.PostgresQualifiedTable(lo.CoalesceOrEmpty(lo.FromPtr(toolCtx.Schema), "public"), table)
+	case databaseContract.IsMysqlFamily(connectionType) && lo.FromPtr(toolCtx.Database) != "":
+		return quote.MysqlQualifiedTable(lo.FromPtr(toolCtx.Database), table)
+	default:
+		return quoteIdent(connectionType, table)
+	}
 }
 
 // toInt reads a count, which drivers return as integers, floats, numeric strings or bytes,

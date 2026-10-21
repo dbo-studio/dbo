@@ -301,6 +301,7 @@ func (p *BaseProvider) appendQueryContext(sb *strings.Builder, req *ChatRequest)
 const chatRules = `How to work:
 - Base answers on the schema below and on the lookup tools. Before you use a table or column that is not listed below, check it with a tool. Never invent tables or columns.
 - If a tool fails, read the error, fix the cause (a wrong name or database) and try once more before you report it.
+- Read a query's rows before you answer. If a column you show is empty or NULL in every row, run it again with the column that holds those values (describe_table shows sample rows). Never fill gaps with placeholders.
 - If a request is ambiguous, or a name could mean more than one object, ask one short question instead of guessing.
 - Lead with the answer. Keep explanations short and do not restate the question.
 - Put SQL in fenced code blocks marked sql.

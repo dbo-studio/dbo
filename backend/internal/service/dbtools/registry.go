@@ -17,6 +17,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 	"github.com/goccy/go-json"
+	"github.com/samber/lo"
 )
 
 type ToolContext struct {
@@ -136,10 +137,44 @@ func (r *Registry) describeTable(ctx context.Context, args map[string]any, toolC
 		return "", err
 	}
 
-	database := r.resolveDatabase(args, toolCtx)
-	schema := r.resolveSchema(args, toolCtx)
+	toolCtx.Database = r.resolveDatabase(args, toolCtx)
+	toolCtx.Schema = r.resolveSchema(args, toolCtx)
 
-	return repo.DescribeTable(ctx, table, database, schema)
+	description, err := repo.DescribeTable(ctx, table, toolCtx.Database, toolCtx.Schema)
+	if err != nil {
+		return "", err
+	}
+
+	return description + r.sampleRows(ctx, table, toolCtx), nil
+}
+
+// describeSampleRows is how many rows describe_table shows, so the model sees which columns hold the values
+// (a name column that is always NULL looks like any other in the column list).
+const describeSampleRows = 3
+
+// sampleRows reads a few rows of the table for describe_table. It is a courtesy: when Safe Mode or an error
+// stops it, the description goes without.
+func (r *Registry) sampleRows(ctx context.Context, table string, toolCtx ToolContext) string {
+	conn, err := r.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return ""
+	}
+
+	sample, err := r.query(ctx, conn, fmt.Sprintf("SELECT * FROM %s LIMIT %d", qualifiedSource(conn.ConnectionType, table, toolCtx), describeSampleRows), toolCtx)
+	if err != nil || len(sample.Data) == 0 {
+		return ""
+	}
+
+	rows := lo.Map(sample.Data, func(row map[string]any, _ int) map[string]any {
+		return lo.OmitByKeys(row, []string{"dbo_index", "editable"})
+	})
+
+	raw, err := json.Marshal(rows)
+	if err != nil {
+		return ""
+	}
+
+	return "\nSample rows:\n" + truncateText(string(raw), 3000) + "\n"
 }
 
 func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
@@ -193,9 +228,14 @@ func (r *Registry) runReadOnly(ctx context.Context, conn *model.Connection, safe
 
 	resp.Data = TruncateQueryResult(resp.Data)
 
+	// The model and the chat only need names and types; the grid's editing metadata only costs tokens.
+	columns := lo.Map(resp.Columns, func(column databaseContract.Column, _ int) map[string]string {
+		return map[string]string{"name": column.Name, "type": column.Type}
+	})
+
 	raw, err := json.MarshalIndent(map[string]any{
 		"query":   resp.Query,
-		"columns": resp.Columns,
+		"columns": columns,
 		"rows":    resp.Data,
 		"count":   len(resp.Data),
 	}, "", "  ")
@@ -326,3 +366,11 @@ func formatStringList(items []string) string {
 }
 
 const queryTimeout = 10 * time.Second
+
+func truncateText(text string, limit int) string {
+	if len(text) <= limit {
+		return text
+	}
+
+	return text[:limit] + "…"
+}
