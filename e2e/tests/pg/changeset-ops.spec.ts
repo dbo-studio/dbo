@@ -120,6 +120,7 @@ test.describe("Persisted changeset ops (postgres)", () => {
         });
 
         let undone: string[] = [];
+        let appliedProposal: Awaited<ReturnType<typeof proposeChangeset>> | undefined;
 
         await test.step("Alter, index, add and drop apply together", async () => {
           const proposal = await proposeChangeset(
@@ -166,16 +167,20 @@ test.describe("Persisted changeset ops (postgres)", () => {
           ).toHaveLength(1);
 
           undone = await undoSql(page, proposal);
+          appliedProposal = proposal;
           expect(undone).toEqual([
             `ALTER TABLE "public"."${table}" DROP COLUMN "phone"`,
             `DROP INDEX "public"."idx_${table}_email"`,
           ]);
         });
 
-        await test.step("The undo SQL runs", async () => {
-          for (const statement of undone) {
-            await rows(page, connectionId, statement);
-          }
+        await test.step("Undo becomes a pending change that applies the undo SQL", async () => {
+          const { chatId, changeset } = appliedProposal as NonNullable<typeof appliedProposal>;
+          const response = await page.request.post(`/api/ai/chats/${chatId}/changesets/${changeset.id}/undo`);
+          expect(response.status()).toBe(200);
+          const undo = ((await response.json()) as { data: typeof changeset }).data;
+          expect(undo.ops.map((op) => op.sql)).toEqual(undone);
+          expect((await applyChangeset(page, { chatId, changeset: undo })).status()).toBe(200);
           expect((await columnsOf(table)).map((column) => column.name)).toEqual(
             ["id", "email"],
           );

@@ -56,6 +56,7 @@ export type SchemaChangeColumn = {
 export type SchemaChangeOp = {
   op:
     | 'write'
+    | 'undo'
     | 'create_database'
     | 'create_schema'
     | 'create_table'

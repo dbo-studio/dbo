@@ -38,7 +38,9 @@ export const diffRows = (op: AiChangesetOp, before: TableStructure | undefined):
 
   switch (op.op) {
     case 'write':
-      return [{ sign: '~', text: `${op.sql} — ${op.affectedRows ?? 0} row(s)` }];
+      return [{ sign: '~', text: `${op.sql} — ${op.affectedRows ?? 0} ${op.affectedRows === 1 ? 'row' : 'rows'}` }];
+    case 'undo':
+      return [{ sign: '−', text: op.sql ?? '' }];
     case 'create_database':
       return [{ sign: '+', text: `DATABASE ${op.name}` }];
     case 'create_schema':

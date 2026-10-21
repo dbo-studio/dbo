@@ -48,6 +48,13 @@ test.describe("AI workstation canvas", () => {
 
         // The app read the providers before the fake one was set up.
         await page.reload();
+        const columns = async (): Promise<string[]> => {
+          const response = await page.request.post("/api/query/raw", {
+            data: { connectionId, query: `SELECT name FROM pragma_table_info('${table}')` },
+          });
+          return ((await response.json()) as { data: { data: Array<{ name: string }> } }).data.data.map((row) => row.name);
+        };
+
         await settingsPage.openRightSidebar();
         await page.getByTestId("ai-expand-to-agent").click();
         const composer = page.getByTestId("ai-agent-workspace").getByTestId("ai-chat-input");
@@ -71,6 +78,22 @@ test.describe("AI workstation canvas", () => {
           await composer.fill("add a note column");
           await composer.press("Enter");
           await expect(canvas).toHaveAttribute("data-tab", "diff", { timeout: 15000 });
+        });
+
+        await test.step("Apply, then Undo from the chat card brings the column back out", async () => {
+          const dock = page.getByTestId("ai-changeset-dock");
+          await page.getByTestId("ai-dock-apply-all").click();
+          await page.getByTestId("ai-dock-execute").click();
+          await expect(dock).toHaveCount(0, { timeout: 15000 });
+          expect(await columns()).toContain("note");
+
+          await page.getByTestId("ai-undo").click();
+          await expect(dock).toContainText("1 change pending", { timeout: 15000 });
+          await page.getByTestId("ai-dock-apply-all").click();
+          await expect(page.getByTestId("ai-dock-preview-modal")).toContainText("DROP COLUMN");
+          await page.getByTestId("ai-dock-execute").click();
+          await expect(dock).toHaveCount(0, { timeout: 15000 });
+          expect(await columns()).not.toContain("note");
         });
 
         await test.step("Full screen hides the conversation behind a floating prompt; Esc returns", async () => {

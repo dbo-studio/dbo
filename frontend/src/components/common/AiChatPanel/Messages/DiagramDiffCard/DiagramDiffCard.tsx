@@ -4,26 +4,71 @@ import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
 import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
-import { useChangesetStore } from '@/store/changesetStore/changeset.store';
+import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
+import api from '@/api';
+import { toast } from 'sonner';
+import { IconButton, Tooltip } from '@mui/material';
+import type { AiChangesetOp } from '@/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import SqlBlock from '@/components/common/SqlBlock/SqlBlock';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 import { variables } from '@/core/theme/variables';
 
-/** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
+/** Keep or skip one change, like Cursor's per-change keep/undo. */
+function OpReview({
+  status,
+  onReview
+}: {
+  status: AiChangesetOp['status'];
+  onReview: (status: 'accepted' | 'rejected') => void;
+}): JSX.Element {
+  return (
+    <Box component='span' sx={{ display: 'inline-flex', ml: 0.5, verticalAlign: 'middle' }}>
+      <Tooltip title={locales.ai_keep_change}>
+        <IconButton
+          size='small'
+          sx={{ p: 0.25, color: status === 'accepted' ? 'success.main' : undefined }}
+          onClick={() => onReview('accepted')}
+          data-testid='ai-card-op-accept'
+        >
+          <CustomIcon type='check' size='xs' />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={locales.ai_drop_change}>
+        <IconButton size='small' sx={{ p: 0.25 }} onClick={() => onReview('rejected')} data-testid='ai-card-op-reject'>
+          <CustomIcon type='close' size='xs' />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+}
+
+/** Chat embed for an agent schema proposal: summary, keep/skip per change, apply, and Undo once applied. */
 export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
   const review = useChangesetReview(changesetId);
-  const [showUndo, setShowUndo] = useState(false);
+  const [undoing, setUndoing] = useState(false);
   const { changeset } = review;
   if (!changeset) return null;
 
   const pending = review.openCount > 0;
   const decision = pending ? undefined : changeset.ops.some((op) => op.status === 'applied') ? 'applied' : 'rejected';
   const lines = summarizeChangeset(changeset.ops);
+
+  // Undo becomes a new changeset of compensating SQL, reviewed and applied from the review bar.
+  const undo = async (): Promise<void> => {
+    setUndoing(true);
+    try {
+      useChangesetStore.getState().upsert([await api.aiChat.undoChangeset(changeset)]);
+      toast.success(locales.ai_undo_ready);
+    } catch {
+      /* the API layer shows the error */
+    } finally {
+      setUndoing(false);
+    }
+  };
 
   const openInDiagram = (): void => {
     if (pending) {
@@ -68,6 +113,12 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
                 {line.label}
               </Box>{' '}
               {line.detail}
+              {isOpen(changeset.ops[index].status) && (
+                <OpReview
+                  status={changeset.ops[index].status}
+                  onReview={(status) => void review.review(status, changeset.ops[index].position)}
+                />
+              )}
             </Typography>
           ))}
         </Box>
@@ -98,18 +149,19 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
               </Button>
             </>
           )}
-          {changeset.undoSql.length > 0 && (
+          {changeset.undoSql.length > 0 && !pending && (
             <Button
               size='small'
               variant='text'
-              onClick={() => setShowUndo((value) => !value)}
-              data-testid='ai-undo-toggle'
+              disabled={undoing}
+              onClick={() => void undo()}
+              startIcon={<CustomIcon type='undo' size='xs' />}
+              data-testid='ai-undo'
             >
-              {locales.ai_changes_undo}
+              {locales.ai_changes_undo_title}
             </Button>
           )}
         </CardActionsStyled>
-        {showUndo && <SqlBlock queries={changeset.undoSql} testIdPrefix='ai-undo-sql' />}
       </AgentCardBodyStyled>
       <QueryPreviewModal
         open={review.previewQueries !== undefined}

@@ -17,7 +17,10 @@ import (
 const maxIdentifierLen = 63
 
 const (
-	SchemaChangeWrite          = "write"
+	SchemaChangeWrite = "write"
+	// SchemaChangeUndo runs compensating SQL the server derived from applied ops.
+	// It is only created by the undo endpoint, never accepted from the agent.
+	SchemaChangeUndo           = "undo"
 	SchemaChangeCreateDatabase = "create_database"
 	SchemaChangeCreateSchema   = "create_schema"
 	SchemaChangeCreateTable    = "create_table"
@@ -116,9 +119,9 @@ func (c SchemaChangeColumn) Validate() error {
 
 func (op SchemaChangeOp) Validate() error {
 	err := validation.ValidateStruct(&op,
-		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeWrite, SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
+		validation.Field(&op.Op, validation.Required, validation.In(SchemaChangeWrite, SchemaChangeUndo, SchemaChangeCreateDatabase, SchemaChangeCreateSchema, SchemaChangeCreateTable, SchemaChangeAddColumn, SchemaChangeAlterColumn, SchemaChangeDropColumn, SchemaChangeAddIndex, SchemaChangeAddForeignKey)),
 		validation.Field(&op.Table, validation.When(op.HasTable(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
-		validation.Field(&op.SQL, validation.When(op.Op == SchemaChangeWrite, validation.Required), validation.Length(0, 10000)),
+		validation.Field(&op.SQL, validation.When(op.Op == SchemaChangeWrite || op.Op == SchemaChangeUndo, validation.Required), validation.Length(0, 10000)),
 		validation.Field(&op.Name, validation.When(op.IsScopeOp(), validation.Required), validation.Length(0, 63), validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.ColumnName, validation.Match(schemaChangeIdentifier)),
 		validation.Field(&op.IndexColumns, validation.Each(validation.Match(schemaChangeIdentifier))),
@@ -169,7 +172,7 @@ func (op SchemaChangeOp) Validate() error {
 
 // HasTable reports whether the op works on one table.
 func (op SchemaChangeOp) HasTable() bool {
-	return !op.IsScopeOp() && op.Op != SchemaChangeWrite
+	return !op.IsScopeOp() && op.Op != SchemaChangeWrite && op.Op != SchemaChangeUndo
 }
 
 // IsScopeOp reports whether the op creates the database or schema the other ops work in.

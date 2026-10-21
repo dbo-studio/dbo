@@ -9,6 +9,8 @@ export const summarizeChangeset = (ops: SchemaChangeOp[]): ChangesetLine[] =>
     switch (op.op) {
       case 'write':
         return { label: locales.ai_op_write, detail: op.sql ?? '' };
+      case 'undo':
+        return { label: locales.ai_op_undo, detail: op.sql ?? '' };
       case 'create_database':
         return { label: locales.ai_op_create_database, detail: op.name ?? '' };
       case 'create_schema':

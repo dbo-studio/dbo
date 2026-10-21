@@ -132,3 +132,13 @@ func (h AiChangesetHandler) Apply(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
+
+func (h AiChangesetHandler) Undo(c fiber.Ctx) error {
+	result, err := h.aiChangesetService.Undo(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "changesetId"))
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

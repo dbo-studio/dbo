@@ -6,6 +6,9 @@ import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import ChangesetDock from '@/components/common/AgentWorkspace/ChangesetDock/ChangesetDock';
+import { useChangesetReview } from '@/hooks';
+import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import AddChat from './AddChat/AddChat';
 import { AiChatPanelContainerStyled, ComposerContainerStyled, HeaderContainerStyled } from './AiChatPanel.styled';
 import ChatBox from './ChatBox/ChatBox';
@@ -39,6 +42,15 @@ export default function AiChatPanel() {
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
   const { useSidebarOverlay } = useLayoutMode();
+  // Pending changes of this chat get the same review bar as the workstation.
+  const openChangesetId = useChangesetStore(
+    (state) =>
+      Object.values(state.changesets)
+        .filter((changeset) => changeset.chatId === currentChat?.id && changeset.ops.some((op) => isOpen(op.status)))
+        .pop()?.id
+  );
+  const review = useChangesetReview(openChangesetId ?? 0);
+  const workspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
 
   return (
     <AiChatPanelContainerStyled>
@@ -99,6 +111,9 @@ export default function AiChatPanel() {
       )}
       {connectionId && (
         <ComposerContainerStyled>
+          {review.openCount > 0 && !workspaceOpen && (
+            <ChangesetDock review={review} onReview={() => updateUI({ agentWorkspaceOpen: true })} />
+          )}
           <ChatBox
             loading={chatPending}
             autocomplete={autocomplete}

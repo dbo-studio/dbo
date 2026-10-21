@@ -43,9 +43,9 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
           <DiffTableHeaderStyled>
             <CustomIcon type='structure' size='xs' />
             <Typography variant='subtitle2' sx={{ flex: 1 }}>
-              {table === 'write' ? locales.ai_changes_data : table}
+              {table === 'write' ? locales.ai_changes_data : table === 'undo' ? locales.ai_changes_undo_title : table}
             </Typography>
-            {!ops.some((op) => op.op === 'create_table' || op.name) && (
+            {!ops.some((op) => op.op === 'create_table' || op.op === 'undo' || op.name) && (
               <Button size='small' variant='text' onClick={() => openForm(ops[0])} data-testid='ai-diff-open-form'>
                 {locales.ai_changes_open_form}
               </Button>
@@ -94,7 +94,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               />
               {op.status !== 'applied' && (
                 <Stack direction='row'>
-                  {op.op !== 'drop_column' && op.op !== 'write' && (
+                  {op.op !== 'drop_column' && op.op !== 'write' && op.op !== 'undo' && (
                     <Tooltip title={locales.ai_changes_edit}>
                       <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
                         <CustomIcon type='pen' size='xs' />

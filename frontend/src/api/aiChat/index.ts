@@ -102,6 +102,12 @@ export const applyChangeset = async (changeset: AiChangeset, confirmed: boolean)
   ).data.data;
 };
 
+/** Turns the applied ops of a changeset into a new changeset of undo SQL, to review and apply like any other. */
+export const undoChangeset = async (changeset: AiChangeset): Promise<AiChangeset> => {
+  return (await api.post<{ data: AiChangeset }>(`${endpoint.changeset(changeset.chatId, changeset.id)}/undo`)).data
+    .data;
+};
+
 /** Sends a rating of the newest answer, with its question and answer, to the DBO team. Nothing is kept locally. */
 export const sendFeedback = async (
   chatId: string | number,

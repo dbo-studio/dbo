@@ -186,6 +186,18 @@ test.describe("AI Agent Mode", () => {
           await settings.close();
         });
 
+        await test.step("A change can be kept right on the chat card", async () => {
+          const card = page.getByTestId("ai-diagram-diff-card");
+          const reviewed = page.waitForResponse(
+            (response) =>
+              response.request().method() === "PATCH" &&
+              /\/api\/ai\/chats\/\d+\/changesets\/\d+$/.test(new URL(response.url()).pathname),
+          );
+          await card.getByTestId("ai-card-op-accept").first().click();
+          const body = (await (await reviewed).json()) as { data: { ops: Array<{ status: string }> } };
+          expect(body.data.ops[0].status).toBe("accepted");
+        });
+
         await test.step("Proposal shows as pending on the diagram", async () => {
           const card = page.getByTestId("ai-diagram-diff-card");
           await expect(card).toHaveAttribute("data-decision", "pending");
@@ -219,10 +231,13 @@ test.describe("AI Agent Mode", () => {
           await expect(tree.getTreeNode(postsTable)).toBeVisible({ timeout: 15000 });
         });
 
-        await test.step("The applied card offers SQL that takes the changes back", async () => {
-          await page.getByTestId("ai-undo-toggle").click();
-          await expect(page.getByTestId("ai-undo-sql")).toContainText(`DROP TABLE "${postsTable}"`);
-          await expect(page.getByTestId("ai-undo-sql-copy")).toBeEnabled();
+        await test.step("Undo on the applied card becomes a pending change of DROP TABLE", async () => {
+          const undone = page.waitForResponse((response) => /\/undo$/.test(new URL(response.url()).pathname));
+          await page.getByTestId("ai-undo").click();
+          const body = (await (await undone).json()) as { data: { ops: Array<{ op: string; sql: string; status: string }> } };
+          expect(body.data.ops).toEqual([
+            expect.objectContaining({ op: "undo", sql: `DROP TABLE "${postsTable}"`, status: "pending" }),
+          ]);
         });
       } finally {
         removeSqliteDbFile(dbPath);

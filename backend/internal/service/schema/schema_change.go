@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -99,7 +100,9 @@ func (s *ISchemaServiceImpl) ApplyChange(ctx context.Context, req *dto.SchemaCha
 	class := sqlguard.ClassDDL
 
 	switch {
-	case lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeDropColumn }):
+	case lo.ContainsBy(req.Ops, func(op dto.SchemaChangeOp) bool {
+		return op.Op == dto.SchemaChangeDropColumn || op.Op == dto.SchemaChangeUndo
+	}):
 		class = sqlguard.ClassCatastrophicDDL
 	case lo.EveryBy(req.Ops, func(op dto.SchemaChangeOp) bool { return op.Op == dto.SchemaChangeWrite }):
 		class = sqlguard.ClassWriteDML
@@ -200,6 +203,7 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 	editIndexes := map[string][]int{}
 	scopeIndexes := []int{}
 	writeIndexes := []int{}
+	undoIndexes := []int{}
 
 	for i, op := range req.Ops {
 		if op.Op != dto.SchemaChangeCreateTable {
@@ -223,6 +227,8 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 			scopeIndexes = append(scopeIndexes, i)
 		case op.Op == dto.SchemaChangeWrite:
 			writeIndexes = append(writeIndexes, i)
+		case op.Op == dto.SchemaChangeUndo:
+			undoIndexes = append(undoIndexes, i)
 		case op.Op == dto.SchemaChangeAddColumn && created:
 			spec.columns = append(spec.columns, *op.Column)
 			spec.opIndexes = append(spec.opIndexes, i)
@@ -303,6 +309,18 @@ func buildChangeSteps(connectionType string, req *dto.SchemaChangeRequest) ([]ch
 		}
 
 		steps = append(steps, changeStep{nodeID: containerID, action: contract.ExecuteSQLAction, params: params, opIndexes: []int{i}})
+	}
+
+	// Undo SQL comes from CompensatingSQL, already in the order it must run.
+	// Dropping a database cannot run inside a transaction.
+	for _, i := range undoIndexes {
+		params, err := json.Marshal(databaseCore.ExecuteSQLParams{SQL: req.Ops[i].SQL})
+		if err != nil {
+			return nil, err
+		}
+
+		outside := strings.HasPrefix(strings.ToUpper(strings.TrimSpace(req.Ops[i].SQL)), "DROP DATABASE")
+		steps = append(steps, changeStep{nodeID: containerID, action: contract.ExecuteSQLAction, params: params, opIndexes: []int{i}, outside: outside})
 	}
 
 	return steps, nil

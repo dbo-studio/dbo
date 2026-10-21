@@ -75,6 +75,13 @@ func (s *AiServiceImpl) proposeSchemaChange(ctx context.Context, chatID uint, ra
 		return nil, err
 	}
 
+	// Data changes go through preview_write, and undo SQL is only ever derived by the server.
+	for _, op := range args.Ops {
+		if op.Op == dto.SchemaChangeWrite || op.Op == dto.SchemaChangeUndo {
+			return nil, fmt.Errorf("op %q cannot be proposed here; use preview_write for data changes", op.Op)
+		}
+	}
+
 	// Tables proposed together with a new database or schema go inside it.
 	for _, op := range args.Ops {
 		switch op.Op {

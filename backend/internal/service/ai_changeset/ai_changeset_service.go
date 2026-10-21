@@ -35,6 +35,8 @@ type IAiChangesetService interface {
 	Apply(ctx context.Context, chatID, changesetID uint, req *dto.AiChangesetApplyRequest) (*dto.AiChangesetResponse, error)
 	// Describe tells the agent how the user reviewed its earlier proposals.
 	Describe(ctx context.Context, chatID uint) (string, error)
+	// Undo turns the applied ops of a changeset into a new changeset of compensating SQL for the user to review.
+	Undo(ctx context.Context, chatID, changesetID uint) (*dto.AiChangesetResponse, error)
 	// Audit lists the caller's apply attempts on a connection, newest first.
 	Audit(ctx context.Context, req *dto.AiAuditListRequest) ([]dto.AiAuditEntryResponse, error)
 }
@@ -248,6 +250,10 @@ func (s IAiChangesetServiceImpl) EditOp(ctx context.Context, chatID, changesetID
 	current, err := decodeOps([]*model.AiChangesetOp{&row})
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
+	}
+
+	if current[0].Op == dto.SchemaChangeUndo {
+		return nil, apperror.BadRequest(errors.New("an undo cannot be edited; reject it instead"))
 	}
 
 	if edited.Op != current[0].Op || edited.Table != current[0].Table {
@@ -497,4 +503,50 @@ func (s IAiChangesetServiceImpl) Describe(ctx context.Context, chatID uint) (str
 	}
 
 	return "Your earlier schema proposals and how the user reviewed them. Only \"applied\" changes exist in the database; do not propose rejected changes again unless asked:\n" + strings.Join(lines, "\n"), nil
+}
+
+func (s IAiChangesetServiceImpl) Undo(ctx context.Context, chatID, changesetID uint) (*dto.AiChangesetResponse, error) {
+	changeset, err := s.find(ctx, chatID, changesetID)
+	if err != nil {
+		return nil, err
+	}
+
+	connection, err := s.connectionRepo.Find(ctx, int32(changeset.ConnectionID))
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	applied := lo.Filter(changeset.Ops, func(op model.AiChangesetOp, _ int) bool { return op.Status == model.AiChangesetOpApplied })
+
+	ops, err := decodeOps(lo.Map(applied, func(_ model.AiChangesetOp, i int) *model.AiChangesetOp { return &applied[i] }))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	statements := serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
+	if len(statements) == 0 {
+		return nil, apperror.BadRequest(errors.New("nothing in this change can be undone"))
+	}
+
+	undo := &model.AiChangeset{
+		ChatID:       chatID,
+		ConnectionID: changeset.ConnectionID,
+		Database:     changeset.Database,
+		Schema:       changeset.Schema,
+	}
+
+	for i, statement := range statements {
+		raw, err := json.Marshal(dto.SchemaChangeOp{Op: dto.SchemaChangeUndo, SQL: statement})
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		undo.Ops = append(undo.Ops, model.AiChangesetOp{Position: i, OpJSON: string(raw), Status: model.AiChangesetOpPending})
+	}
+
+	if err := s.aiChangesetRepo.Create(ctx, undo); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return s.response(ctx, undo)
 }

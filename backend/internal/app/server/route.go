@@ -79,6 +79,7 @@ func (r *Server) routing() {
 	aiChat.Get("/:id/changesets/:changesetId/before", r.handlers.AiChangeset.Before)
 	aiChat.Post("/:id/changesets/:changesetId/preview", r.handlers.AiChangeset.Preview)
 	aiChat.Post("/:id/changesets/:changesetId/apply", r.handlers.AiChangeset.Apply)
+	aiChat.Post("/:id/changesets/:changesetId/undo", r.handlers.AiChangeset.Undo)
 	aiChat.Post("/:id/feedback", r.handlers.AiChat.Feedback)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
