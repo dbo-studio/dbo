@@ -8,11 +8,17 @@ import type { AddressInfo } from "node:net";
  * with no script) it answers "ok".
  */
 
-export type ToolCallScript = { name: string; args: Record<string, unknown>; delayMs?: number };
+export type ToolCallScript = {
+  name: string;
+  args: Record<string, unknown>;
+  delayMs?: number;
+};
 
 export class FakeLlm {
   /** Tool names offered to the model, one entry per completion request. */
   readonly offeredTools: string[][] = [];
+  /** How many chat summaries the server asked for; each is answered with the text it was asked to summarize. */
+  summaryRequests = 0;
   /** Text of every system message the model received, one entry per completion request. */
   readonly systemPrompts: string[] = [];
   script: ToolCallScript | null = null;
@@ -99,7 +105,16 @@ export class FakeLlm {
       this.offeredTools.push(tools);
     }
 
-    const afterToolResult = body.messages?.at(-1)?.role === "tool";
+    const last = body.messages?.at(-1);
+    const afterToolResult = last?.role === "tool";
+    // Echoing a summary request keeps what it lists, so a test can follow a decision into the summary.
+    const summary =
+      last?.role === "user" &&
+      typeof last.content === "string" &&
+      last.content.startsWith("Summarize this database chat")
+        ? last.content
+        : null;
+    if (summary) this.summaryRequests++;
     const call =
       tools.length > 0 && this.queue.length > 0
         ? (this.queue.shift() ?? null)
@@ -148,6 +163,9 @@ export class FakeLlm {
         null,
       );
       send({}, "tool_calls");
+    } else if (summary) {
+      send({ role: "assistant", content: summary }, null);
+      send({}, "stop");
     } else if (this.reply) {
       void this.streamReply(this.reply, send, res);
       return;

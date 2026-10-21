@@ -107,6 +107,12 @@ func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Save(chat).Error
 }
 
+// UpdateSummary stores the running summary without touching updated_at.
+func (r AiChatRepoImpl) UpdateSummary(ctx context.Context, chatID uint, summary string, upTo uint) error {
+	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
+		UpdateColumns(map[string]any{"summary": summary, "summary_up_to": upTo}).Error
+}
+
 // UpdateContext stores the chat context without touching updated_at, so history order is unchanged.
 func (r AiChatRepoImpl) UpdateContext(ctx context.Context, chatID uint, contextJSON string) error {
 	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).

@@ -327,6 +327,10 @@ func (p *BaseProvider) buildSystemPrompt(req *ChatRequest) string {
 		sb.WriteString("\n")
 	}
 
+	if req.Summary != "" {
+		sb.WriteString("\nEarlier in this chat (a summary of messages no longer shown):\n" + req.Summary + "\n")
+	}
+
 	p.appendQueryContext(&sb, req)
 
 	sb.WriteString("\nSchema:\n")

@@ -15,7 +15,8 @@ func buildProviderChatRequest(
 	engine string,
 ) *aiProvider.ChatRequest {
 	providerReq := &aiProvider.ChatRequest{
-		Messages: conversationHistory(chat.Messages),
+		Messages: conversationHistory(chat),
+		Summary:  chat.Summary,
 		Model:    modelName,
 		Context:  contextStr,
 		Engine:   engine,

@@ -42,6 +42,8 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
+	s.refreshSummary(ctx, provider, dbProvider.Model, chat)
+
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,

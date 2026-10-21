@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -155,18 +156,82 @@ const (
 // maxTitleRunes keeps a chat title short enough for the chat tabs.
 const maxTitleRunes = 40
 
-// conversationHistory drops agent trace rows (tool/diagram/permission cards)
-// and keeps the most recent conversational messages for the model.
-func conversationHistory(messages []model.AiChatMessage) []model.AiChatMessage {
-	history := lo.Filter(messages, func(m model.AiChatMessage, _ int) bool {
-		return m.Type.IsConversational()
+// summaryBatch is how many messages beyond historyTurnCount wait before they are folded
+// into the summary, so a long chat costs one summary call every few turns, not every turn.
+const (
+	summaryBatch      = 6
+	maxSummaryLen     = 4000
+	maxSummaryLineLen = 2000
+)
+
+const summaryPrompt = "Summarize this database chat for your own later reference. Keep every decision, chosen name, " +
+	"constraint, preference and open question; drop small talk. Write at most 15 short bullet points, and nothing else.\n\n"
+
+// conversationHistory drops agent trace rows (tool/diagram/permission cards) and the
+// messages already in the chat's summary, and keeps the recent conversational ones.
+func conversationHistory(chat *model.AiChat) []model.AiChatMessage {
+	history := lo.Filter(chat.Messages, func(m model.AiChatMessage, _ int) bool {
+		return m.Type.IsConversational() && (m.ID == 0 || m.ID > chat.SummaryUpTo)
 	})
 
-	if len(history) > historyTurnCount {
-		history = history[len(history)-historyTurnCount:]
+	// Without a summary (it failed or is waiting for its batch) the oldest messages are dropped.
+	if limit := historyTurnCount + summaryBatch + 1; len(history) > limit {
+		history = history[len(history)-limit:]
 	}
 
 	return history
+}
+
+// refreshSummary folds the stored messages that no longer fit the history into the chat's
+// running summary. A failure only costs memory of older messages, so it is logged, not returned.
+// shortcut: only the loaded rows (historyFetchCount) are folded; older unsummarized ones are lost, which a
+// chat that stopped summarizing for many turns could notice.
+func (s *AiServiceImpl) refreshSummary(ctx context.Context, provider aiProvider.IAiProvider, modelName string, chat *model.AiChat) {
+	pending := lo.Filter(chat.Messages, func(m model.AiChatMessage, _ int) bool {
+		return m.Type.IsConversational() && m.ID > chat.SummaryUpTo
+	})
+	if len(pending) <= historyTurnCount+summaryBatch {
+		return
+	}
+
+	fold := pending[:len(pending)-historyTurnCount]
+
+	var prompt strings.Builder
+
+	prompt.WriteString(summaryPrompt)
+
+	if chat.Summary != "" {
+		prompt.WriteString("Summary so far:\n" + chat.Summary + "\n\n")
+	}
+
+	prompt.WriteString("Messages to add:\n")
+
+	for _, message := range fold {
+		fmt.Fprintf(&prompt, "%s: %s\n", message.Role, truncate(message.Content, maxSummaryLineLen))
+	}
+
+	response, err := provider.StreamChat(ctx, &aiProvider.ChatRequest{
+		Model:    modelName,
+		Messages: []model.AiChatMessage{{Role: model.AiChatMessageRoleUser, Content: prompt.String()}},
+	}, func(aiProvider.StreamEvent) error { return nil })
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to summarize chat %d: %v", chat.ID, err))
+		return
+	}
+
+	summary := strings.TrimSpace(lo.CoalesceOrEmpty(response.Content, strings.Join(lo.Map(response.Contents,
+		func(content model.AiChatMessageContent, _ int) string { return content.Content }), "\n")))
+	if summary == "" {
+		return
+	}
+
+	upTo := fold[len(fold)-1].ID
+	if err := s.aiChatRepo.UpdateSummary(ctx, chat.ID, truncate(summary, maxSummaryLen), upTo); err != nil {
+		s.logger.Error(fmt.Sprintf("Failed to save the summary of chat %d: %v", chat.ID, err))
+		return
+	}
+
+	chat.Summary, chat.SummaryUpTo = truncate(summary, maxSummaryLen), upTo
 }
 
 func (s *AiServiceImpl) saveChatMessages(ctx context.Context, chat *model.AiChat, userMessage string, traces []model.AiChatMessage, aiMessage *aiProvider.ChatResponse, modelName string) error {
