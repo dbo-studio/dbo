@@ -55,7 +55,8 @@ export function describeToolStep(trace: AiToolTrace): string {
     }
     case 'preview_write': {
       if (running) return locales.ai_step_previewing;
-      const rows = Number(/(\d+) row/.exec(trace.result ?? '')?.[1] ?? 0);
+      // A batch lists a count per statement; the step shows their sum.
+      const rows = [...(trace.result ?? '').matchAll(/(\d+) row/g)].reduce((sum, match) => sum + Number(match[1]), 0);
       return locales.ai_step_previewed.replace('{rows}', count(rows, locales.ai_unit_row, locales.ai_unit_rows));
     }
     case 'update_plan':

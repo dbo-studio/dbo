@@ -14,6 +14,7 @@ import (
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/goccy/go-json"
 	"github.com/openai/openai-go/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -33,7 +34,8 @@ const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-
 const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 	`To design or change schema (create databases and schemas, create, rename or drop tables, add/alter/rename/drop columns, add indexes, foreign keys and checks, drop constraints, create or drop views) call propose_schema_change; the user reviews it and applies it. ` +
 	`Set NOT NULL with alter_column and UNIQUE with add_index unique. Dropping a table makes the user type its name to apply, so propose drop_table only when asked. ` +
-	`To change data call preview_write with one INSERT/UPDATE/DELETE; the user sees how many rows it changes and applies it. ` +
+	`To change data call preview_write with one INSERT/UPDATE/DELETE, or with statements for several that belong together; the user sees how many rows each changes and applies them together. ` +
+	`To seed data, inspect the tables, then call preview_write with statements that insert parent rows before the child rows that reference them, with realistic values of the right types and at most 50 rows per table unless asked. ` +
 	`Inspect the tables a change touches before you propose it; call table_stats before adding NOT NULL or UNIQUE to a column that has data. ` +
 	`Before you propose add_index, call explain_query on the slow query and cite what the plan shows (for example a full table scan). ` +
 	`When you design several new tables, call propose_schema_change once per table (with its keys and indexes), ` +
@@ -230,7 +232,7 @@ func (s *AiServiceImpl) runToolCall(
 	case call.Name == serviceDbtools.ToolPreviewWrite:
 		var written *previewWriteResult
 		if written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx); err == nil {
-			result = writePreviewText(written.Preview)
+			result = writePreviewText(written.Previews)
 			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, map[string]uint{"changesetId": written.Changeset.ID})
 			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(written.Changeset.ID), 10), written.Changeset)
 			extra, event = &msg, &ev
@@ -299,15 +301,24 @@ func modeName(mode string) string {
 }
 
 // writePreviewText tells the model what a previewed data change would do.
-func writePreviewText(preview *dto.WritePreviewResponse) string {
-	text := fmt.Sprintf("The statement would change %d row(s). It is added to the user's proposal for review and has NOT run.", preview.AffectedRows)
+func writePreviewText(previews []*dto.WritePreviewResponse) string {
+	if len(previews) == 1 {
+		text := fmt.Sprintf("The statement would change %d row(s). It is added to the user's proposal for review and has NOT run.", previews[0].AffectedRows)
 
-	if len(preview.Rows) > 0 {
-		rows, _ := json.Marshal(preview.Rows)
-		text += " Rows it touches now (sample): " + string(rows)
+		if len(previews[0].Rows) > 0 {
+			rows, _ := json.Marshal(previews[0].Rows)
+			text += " Rows it touches now (sample): " + string(rows)
+		}
+
+		return text
 	}
 
-	return text
+	counts := lo.Map(previews, func(preview *dto.WritePreviewResponse, i int) string {
+		return fmt.Sprintf("statement %d: %d row(s)", i+1, preview.AffectedRows)
+	})
+
+	return fmt.Sprintf("The %d statements would change %s. They are added to the user's proposal as one change for review and have NOT run; "+
+		"they apply together.", len(previews), strings.Join(counts, ", "))
 }
 
 type saveReportArgs struct {

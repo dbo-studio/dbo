@@ -128,25 +128,44 @@ func updatePlan(rawArgs string) (*dto.AiPlan, error) {
 // previewWriteResult is what the model learns about a data change it previewed.
 type previewWriteResult struct {
 	Changeset *dto.AiChangesetResponse
-	Preview   *dto.WritePreviewResponse
+	Previews  []*dto.WritePreviewResponse
 }
+
+const (
+	// maxWriteStatements bounds one batch of data changes.
+	maxWriteStatements = 20
+	// maxSeedRows bounds the rows one INSERT may add, so seed data stays a sample.
+	maxSeedRows = 1000
+)
 
 // previewWrite counts the rows a data change touches, without changing
 // anything, and adds the statement to the chat's changeset. The user applies it.
 func (s *AiServiceImpl) previewWrite(ctx context.Context, chatID uint, rawArgs string, toolCtx serviceDbtools.ToolContext) (*previewWriteResult, error) {
 	var args struct {
-		SQL string `json:"sql"`
+		SQL        string   `json:"sql"`
+		Statements []string `json:"statements"`
 	}
 	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
 		return nil, fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	if _, err := sqlguard.WriteStatement(args.SQL); err != nil {
-		if errors.Is(err, sqlguard.ErrBlocked) {
-			return nil, blockedError{strings.TrimPrefix(err.Error(), "blocked: ")}
-		}
+	statements := lo.Ternary(len(args.Statements) > 0, args.Statements, []string{args.SQL})
+	if len(statements) > maxWriteStatements {
+		return nil, fmt.Errorf("at most %d statements fit in one change; split the work", maxWriteStatements)
+	}
 
-		return nil, err
+	for i, statement := range statements {
+		if _, err := sqlguard.WriteStatement(statement); err != nil {
+			if len(statements) > 1 {
+				err = fmt.Errorf("statement %d: %w", i+1, err)
+			}
+
+			if errors.Is(err, sqlguard.ErrBlocked) {
+				return nil, blockedError{strings.Replace(err.Error(), "blocked: ", "", 1)}
+			}
+
+			return nil, err
+		}
 	}
 
 	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
@@ -159,27 +178,34 @@ func (s *AiServiceImpl) previewWrite(ctx context.Context, chatID uint, rawArgs s
 		return nil, err
 	}
 
-	preview, err := s.schemaService.PreviewWrite(ctx, &dto.WritePreviewRequest{
+	previews, err := s.schemaService.PreviewWrites(ctx, &dto.WritePreviewRequest{
 		ConnectionID: toolCtx.ConnectionID,
 		Database:     lo.EmptyableToPtr(database),
 		Schema:       lo.EmptyableToPtr(schema),
-		SQL:          args.SQL,
-	})
+	}, statements)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, preview := range previews {
+		if target, ok := sqlguard.ParseWriteTarget(preview.SQL); ok && target.Kind == "INSERT" && preview.AffectedRows > maxSeedRows {
+			return nil, fmt.Errorf("statement %d inserts %d rows; insert at most %d rows per statement", i+1, preview.AffectedRows, maxSeedRows)
+		}
 	}
 
 	changeset, err := s.changesetService.Create(ctx, chatID, &dto.SchemaChangeRequest{
 		ConnectionID: toolCtx.ConnectionID,
 		Database:     lo.EmptyableToPtr(database),
 		Schema:       lo.EmptyableToPtr(schema),
-		Ops:          []dto.SchemaChangeOp{{Op: dto.SchemaChangeWrite, SQL: preview.SQL, AffectedRows: preview.AffectedRows}},
+		Ops: lo.Map(previews, func(preview *dto.WritePreviewResponse, _ int) dto.SchemaChangeOp {
+			return dto.SchemaChangeOp{Op: dto.SchemaChangeWrite, SQL: preview.SQL, AffectedRows: preview.AffectedRows}
+		}),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &previewWriteResult{Changeset: changeset, Preview: preview}, nil
+	return &previewWriteResult{Changeset: changeset, Previews: previews}, nil
 }
 
 // ToolTrace is the persisted/streamed record of one tool call.

@@ -243,16 +243,21 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 			},
 			"required": []string{"steps"},
 		}),
-		functionTool(ToolPreviewWrite, "Preview one INSERT, UPDATE or DELETE (UPDATE/DELETE need a WHERE): how many rows it changes and a sample of them. "+
-			"Nothing changes now. The statement joins the user's proposal and runs only when the user applies it.", shared.FunctionParameters{
+		functionTool(ToolPreviewWrite, "Preview INSERT, UPDATE or DELETE statements (UPDATE/DELETE need a WHERE): how many rows each changes and a sample of them. "+
+			"Nothing changes now. The statements join the user's proposal and run only when the user applies them; several statements apply together, "+
+			"in order, so later ones may use rows earlier ones insert (seed parents before children).", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
 				"sql": map[string]any{
 					"type":        "string",
-					"description": "The data change. UPDATE/DELETE must have a WHERE clause.",
+					"description": "One data change. UPDATE/DELETE must have a WHERE clause.",
+				},
+				"statements": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "Several data changes that belong together, in the order they run (at most 20). Use instead of sql.",
 				},
 			},
-			"required": []string{"sql"},
 		}),
 	)
 }

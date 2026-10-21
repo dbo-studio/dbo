@@ -12,13 +12,13 @@ import (
 
 var errRollBack = errors.New("roll back the preview")
 
-func (r *PostgresRepository) PreviewWrite(ctx context.Context, sql string, database, schema *string) (int64, error) {
+func (r *PostgresRepository) PreviewWrite(ctx context.Context, statements []string, database, schema *string) ([]int64, error) {
 	conn, err := r.db(ctx, database)
 	if err != nil {
-		return 0, apperror.DriverError(err)
+		return nil, apperror.DriverError(err)
 	}
 
-	var affected int64
+	affected := make([]int64, 0, len(statements))
 
 	err = conn.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if name := lo.FromPtr(schema); name != "" {
@@ -27,17 +27,19 @@ func (r *PostgresRepository) PreviewWrite(ctx context.Context, sql string, datab
 			}
 		}
 
-		result := tx.Exec(sql)
-		affected = result.RowsAffected
+		for _, sql := range statements {
+			result := tx.Exec(sql)
+			if result.Error != nil {
+				return result.Error
+			}
 
-		if result.Error != nil {
-			return result.Error
+			affected = append(affected, result.RowsAffected)
 		}
 
 		return errRollBack
 	})
 	if err != nil && !errors.Is(err, errRollBack) {
-		return 0, apperror.DriverError(err)
+		return nil, apperror.DriverError(err)
 	}
 
 	return affected, nil

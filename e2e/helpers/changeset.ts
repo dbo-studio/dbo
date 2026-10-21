@@ -84,6 +84,23 @@ export function proposeChangeset(
 }
 
 /** Makes the agent preview a data change, which joins the chat's changeset. */
+/** Makes the agent preview several data changes as one change. */
+export function previewWrites(
+  page: Page,
+  llm: FakeLlm,
+  connectionId: number,
+  statements: string[],
+  contextOpts?: { database?: string; schema?: string },
+): Promise<ProposedChangeset> {
+  return runAgentTool(
+    page,
+    llm,
+    connectionId,
+    { name: "preview_write", args: { statements } },
+    contextOpts,
+  );
+}
+
 export function previewWrite(
   page: Page,
   llm: FakeLlm,
