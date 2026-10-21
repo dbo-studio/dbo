@@ -817,6 +817,8 @@
   "ai_step_previewing": "Previewing data change",
   "ai_step_previewed": "Previewed data change · {rows}",
   "ai_step_plan": "Updated the plan",
+  "ai_queued": "Queued",
+  "ai_queued_send_now": "Send now",
   "ai_steps": "{n} steps",
   "ai_unit_table": "table",
   "ai_unit_tables": "tables",

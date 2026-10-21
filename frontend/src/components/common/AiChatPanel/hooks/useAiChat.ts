@@ -194,90 +194,99 @@ export const useAiChat = (active = true): useAiChatReturnType => {
       };
 
       try {
-        const doneEvent = await sendStream(request);
-
-        if (doneEvent?.type === 'done') {
-          const streaming = useAiStore.getState().sessions[currentChat.id].streaming;
-          if (streaming.thinkingContent) {
-            thinkingSnapshot.content = streaming.thinkingContent;
-            thinkingSnapshot.durationMs = streaming.thinkingDurationMs ?? 0;
-          }
-
-          const messagesWithThinking = doneEvent.messages.map((msg, index) => {
-            if (index === 0 && msg.role === 'assistant' && thinkingSnapshot.content) {
-              return {
-                ...msg,
-                isNew: true,
-                thinking: thinkingSnapshot
-              };
-            }
-            return { ...msg, isNew: true };
-          });
-
-          const updatedChat = addMessage(currentChat, messagesWithThinking);
-          if (doneEvent.title !== currentChat.title) {
-            patchChat({ ...updatedChat, title: doneEvent.title });
-          }
-          useAiStore.getState().clearAgentItems(currentChat.id);
-          resetStreaming(currentChat.id);
-          if (useAiStore.getState().currentChat?.id !== currentChat.id) {
-            useAiStore.getState().markUnseen(currentChat.id, true);
-          }
-          return;
-        }
-
-        if (useAiStore.getState().sessions[currentChat.id].streaming.error) {
-          keepPartialTurn();
-          return;
-        }
-      } catch (error) {
-        // User cancel must not start the HTTP fallback (that re-shows the cancel button).
-        if (error instanceof Error && error.name === 'AbortError') {
-          keepPartialTurn();
-          return;
-        }
-        // A turn that already ran tools must not be replayed by the tool-less fallback.
-        if ((useAiStore.getState().sessions[currentChat.id]?.agentItems.length ?? 0) > 0) {
-          keepPartialTurn();
-          return;
-        }
+        await runTurn();
+      } finally {
+        // Only now is the answer stored, so a queued message can follow without overwriting it.
+        useAiStore.getState().markSettled(currentChat.id);
       }
 
-      const generation = fallbackGenerationRef.current;
-      fallbackAbortRef.current?.abort();
-      const controller = new AbortController();
-      fallbackAbortRef.current = controller;
+      async function runTurn(): Promise<void> {
+        try {
+          const doneEvent = await sendStream(request);
 
-      try {
-        setIsFallbackPending(true);
-        const chat = await api.ai.chat(request, controller.signal);
-        if (generation !== fallbackGenerationRef.current) {
-          return;
+          if (doneEvent?.type === 'done') {
+            const streaming = useAiStore.getState().sessions[currentChat.id].streaming;
+            if (streaming.thinkingContent) {
+              thinkingSnapshot.content = streaming.thinkingContent;
+              thinkingSnapshot.durationMs = streaming.thinkingDurationMs ?? 0;
+            }
+
+            const messagesWithThinking = doneEvent.messages.map((msg, index) => {
+              if (index === 0 && msg.role === 'assistant' && thinkingSnapshot.content) {
+                return {
+                  ...msg,
+                  isNew: true,
+                  thinking: thinkingSnapshot
+                };
+              }
+              return { ...msg, isNew: true };
+            });
+
+            const updatedChat = addMessage(currentChat, messagesWithThinking);
+            if (doneEvent.title !== currentChat.title) {
+              patchChat({ ...updatedChat, title: doneEvent.title });
+            }
+            useAiStore.getState().clearAgentItems(currentChat.id);
+            resetStreaming(currentChat.id);
+            if (useAiStore.getState().currentChat?.id !== currentChat.id) {
+              useAiStore.getState().markUnseen(currentChat.id, true);
+            }
+            return;
+          }
+
+          if (useAiStore.getState().sessions[currentChat.id].streaming.error) {
+            keepPartialTurn();
+            return;
+          }
+        } catch (error) {
+          // User cancel must not start the HTTP fallback (that re-shows the cancel button).
+          if (error instanceof Error && error.name === 'AbortError') {
+            keepPartialTurn();
+            return;
+          }
+          // A turn that already ran tools must not be replayed by the tool-less fallback.
+          if ((useAiStore.getState().sessions[currentChat.id]?.agentItems.length ?? 0) > 0) {
+            keepPartialTurn();
+            return;
+          }
         }
 
-        const updatedChat = addMessage(
-          currentChat,
-          chat.messages.map((m) => ({ ...m, isNew: true }))
-        );
-        if (chat.title !== currentChat.title) {
-          patchChat({ ...updatedChat, title: chat.title });
-        }
-        resetStreaming(currentChat.id);
-      } catch (error) {
-        if (generation !== fallbackGenerationRef.current) {
-          return;
-        }
+        const generation = fallbackGenerationRef.current;
+        fallbackAbortRef.current?.abort();
+        const controller = new AbortController();
+        fallbackAbortRef.current = controller;
 
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
+        try {
+          setIsFallbackPending(true);
+          const chat = await api.ai.chat(request, controller.signal);
+          if (generation !== fallbackGenerationRef.current) {
+            return;
+          }
 
-        const message = error instanceof Error ? error.message : 'Request failed';
-        useAiStore.getState().updateStreaming(currentChat.id, { error: message });
-      } finally {
-        if (generation === fallbackGenerationRef.current) {
-          fallbackAbortRef.current = null;
-          setIsFallbackPending(false);
+          const updatedChat = addMessage(
+            currentChat,
+            chat.messages.map((m) => ({ ...m, isNew: true }))
+          );
+          if (chat.title !== currentChat.title) {
+            patchChat({ ...updatedChat, title: chat.title });
+          }
+          resetStreaming(currentChat.id);
+        } catch (error) {
+          if (generation !== fallbackGenerationRef.current) {
+            return;
+          }
+
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+
+          const message = error instanceof Error ? error.message : 'Request failed';
+          useAiStore.getState().updateStreaming(currentChat.id, { error: message });
+        } finally {
+          if (generation === fallbackGenerationRef.current) {
+            fallbackAbortRef.current = null;
+            setIsFallbackPending(false);
+          }
         }
       }
     },

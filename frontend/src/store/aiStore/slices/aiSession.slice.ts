@@ -16,10 +16,11 @@ const initialStreamingState: AiStreamingState = {
 };
 
 /** What a chat shows before it has run a turn. Shared so selectors stay referentially stable. */
-export const IDLE_SESSION: AiSession = { streaming: initialStreamingState, agentItems: [], unseen: false };
+export const IDLE_SESSION: AiSession = { streaming: initialStreamingState, agentItems: [], unseen: false, settled: 0 };
 
 export const createAiSessionSlice: StateCreator<AiSessionSlice, [['zustand/devtools', never]], [], AiSessionSlice> = (
-  set
+  set,
+  get
 ) => {
   const patchSession = (chatId: number, patch: (session: AiSession) => Partial<AiSession>, action: string): void => {
     set(
@@ -85,6 +86,22 @@ export const createAiSessionSlice: StateCreator<AiSessionSlice, [['zustand/devto
     },
     clearAgentItems: (chatId) => {
       patchSession(chatId, () => ({ agentItems: [] }), 'clearAgentItems');
+    },
+    setQueued: (chatId, message) => {
+      patchSession(
+        chatId,
+        (session) => ({ queued: message === undefined ? undefined : { text: message, after: session.settled } }),
+        'setQueued'
+      );
+    },
+    takeQueued: (chatId) => {
+      const session = get().sessions[chatId];
+      if (!session?.queued || session.settled <= session.queued.after) return undefined;
+      patchSession(chatId, () => ({ queued: undefined }), 'takeQueued');
+      return session.queued.text;
+    },
+    markSettled: (chatId) => {
+      patchSession(chatId, (session) => ({ settled: session.settled + 1 }), 'markSettled');
     }
   };
 };

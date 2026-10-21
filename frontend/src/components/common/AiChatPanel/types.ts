@@ -59,7 +59,8 @@ export type CodeMessageProps = {
 };
 
 export type ChatBoxProps = {
-  onSend: () => void;
+  /** Sends the composer text, or `prompt` when given (a queued message). */
+  onSend: (prompt?: string) => void;
   onCancel: () => void;
   loading: boolean;
   autocomplete?: AutoCompleteType;

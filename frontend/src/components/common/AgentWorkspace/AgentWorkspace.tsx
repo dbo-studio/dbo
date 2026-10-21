@@ -146,7 +146,7 @@ export default function AgentWorkspace(): JSX.Element {
       <ChatBox
         loading={chatPending}
         autocomplete={autocomplete}
-        onSend={() => void handleSend()}
+        onSend={(prompt) => void handleSend(prompt)}
         onCancel={() => void handleCancel()}
       />
     </>

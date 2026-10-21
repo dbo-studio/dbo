@@ -32,6 +32,10 @@ export type AiSession = {
   agentItems: AiAgentItem[];
   /** A turn finished while the user was in another chat. */
   unseen: boolean;
+  /** A message typed while a turn ran, sent once that turn has settled (`settled` passed `after`). */
+  queued?: { text: string; after: number };
+  /** Turns of this chat that finished and stored their result. */
+  settled: number;
 };
 
 export type AiSessionSlice = {
@@ -46,6 +50,11 @@ export type AiSessionSlice = {
   setPlan: (chatId: number, steps: AiPlanStep[]) => void;
   updateToolTrace: (chatId: number, id: string, partial: Partial<AiToolTrace>) => void;
   clearAgentItems: (chatId: number) => void;
+  setQueued: (chatId: number, message: string | undefined) => void;
+  /** Returns the queued message once its turn has settled and clears it in one step, so only one caller sends it. */
+  takeQueued: (chatId: number) => string | undefined;
+  /** Called when a turn has stored its answer (or its partial result). */
+  markSettled: (chatId: number) => void;
 };
 
 export type AIThread = {

@@ -135,7 +135,6 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         <ChatTextInputStyled
           data-testid='ai-chat-input'
-          readOnly={loading}
           placeholder={locales.ask_anything}
           value={input}
           onChange={handleChange}
