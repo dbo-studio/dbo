@@ -244,15 +244,6 @@ export class SettingsPage extends BasePage {
     await expect(this.adminUserRow(email)).toBeVisible({ timeout: 10000 });
   }
 
-  async openMcpTab(): Promise<void> {
-    const mcpTab = this.page.getByRole("tab", { name: "MCP" });
-    await expect(mcpTab).toBeVisible({ timeout: 10000 });
-    await mcpTab.click();
-    await expect(
-      this.page.getByRole("switch", { name: /Enable MCP server/i }),
-    ).toBeVisible({ timeout: 10000 });
-  }
-
   async expectMcpPanelVisible(): Promise<void> {
     await expect(
       this.page.getByText(/Enabling MCP exposes database access/i),
