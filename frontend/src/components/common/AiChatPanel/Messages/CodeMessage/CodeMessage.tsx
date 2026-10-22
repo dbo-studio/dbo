@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import MermaidView from '@/components/base/MermaidView/MermaidView';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -19,6 +20,9 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   const isDark = useSettingStore((state) => state.theme.isDark);
   const baseline = use(DiffBaselineContext);
   const [showDiff, setShowDiff] = useState(false);
+  // A diagram block is drawn; its source is one click away. The SQL actions do not apply to it.
+  const isDiagram = message.language === 'mermaid';
+  const [showSource, setShowSource] = useState(false);
   const canDiff = message.language === 'sql' && !!baseline?.trim() && baseline.trim() !== message.content.trim();
 
   const handleCopy = async (): Promise<void> => {
@@ -57,6 +61,13 @@ export default function CodeMessage({ message }: CodeMessageProps) {
           </Typography>
         </Box>
         <Box>
+          {isDiagram && (
+            <Tooltip title={showSource ? locales.diagram_show_diagram : locales.diagram_show_source}>
+              <IconButton onClick={() => setShowSource((value) => !value)} data-testid='ai-diagram-source-toggle'>
+                <CustomIcon type={showSource ? 'structure' : 'code'} />
+              </IconButton>
+            </Tooltip>
+          )}
           {canDiff && (
             <Tooltip title={showDiff ? locales.ai_diff_hide : locales.ai_diff_show}>
               <IconButton onClick={() => setShowDiff((value) => !value)} data-testid='ai-code-diff-toggle'>
@@ -64,21 +75,25 @@ export default function CodeMessage({ message }: CodeMessageProps) {
               </IconButton>
             </Tooltip>
           )}
-          <Tooltip title={locales.insert_into_editor}>
-            <IconButton onClick={handleInsert}>
-              <CustomIcon type='pen' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={locales.ai_open_new_query_tab}>
-            <IconButton onClick={handleOpenNewTab} data-testid='ai-code-open-tab'>
-              <CustomIcon type='plus' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={locales.run_query}>
-            <IconButton onClick={handleRun}>
-              <CustomIcon type='play' />
-            </IconButton>
-          </Tooltip>
+          {!isDiagram && (
+            <>
+              <Tooltip title={locales.insert_into_editor}>
+                <IconButton onClick={handleInsert}>
+                  <CustomIcon type='pen' />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={locales.ai_open_new_query_tab}>
+                <IconButton onClick={handleOpenNewTab} data-testid='ai-code-open-tab'>
+                  <CustomIcon type='plus' />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={locales.run_query}>
+                <IconButton onClick={handleRun}>
+                  <CustomIcon type='play' />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
           <Tooltip title={locales.copy}>
             <IconButton onClick={() => void handleCopy()}>
               <CustomIcon type='copy' />
@@ -86,10 +101,12 @@ export default function CodeMessage({ message }: CodeMessageProps) {
           </Tooltip>
         </Box>
       </CodeMessageHeaderStyled>
-      {canDiff && showDiff && baseline ? (
+      {isDiagram && !showSource ? (
+        <MermaidView code={message.content} fallback={<SyntaxHighlighter value={message.content} lang='text' />} />
+      ) : canDiff && showDiff && baseline ? (
         <SqlDiffView before={baseline} after={message.content} />
       ) : (
-        <SyntaxHighlighter value={message.content} />
+        <SyntaxHighlighter value={message.content} lang={isDiagram ? 'text' : undefined} />
       )}
     </CodeMessageStyled>
   );

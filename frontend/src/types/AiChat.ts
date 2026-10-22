@@ -19,7 +19,7 @@ export type AiMessageType = {
   model?: string;
   /** Rating the user sent for this answer in this session; never stored or restored. */
   feedback?: 'up' | 'down';
-  language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'text';
+  language: 'sql' | 'go' | 'js' | 'python' | 'json' | 'yaml' | 'mermaid' | 'text';
   /** tool / diagram_diff / plan carry a JSON payload (see agent trace types below). */
   type: 'code' | 'explanation' | AiTraceMessageKind;
   isNew?: boolean;

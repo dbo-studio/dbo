@@ -55,4 +55,6 @@ const (
 	AiChatMessageLanguageJSON   AiChatMessageLanguage = "json"
 	AiChatMessageLanguageYaml   AiChatMessageLanguage = "yaml"
 	AiChatMessageLanguageText   AiChatMessageLanguage = "text"
+	// Mermaid blocks are drawn as diagrams in the chat.
+	AiChatMessageLanguageMermaid AiChatMessageLanguage = "mermaid"
 )
