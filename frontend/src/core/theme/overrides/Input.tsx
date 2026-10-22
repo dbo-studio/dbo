@@ -48,6 +48,11 @@ export default function Input(theme: Theme): Components {
             ':focus': {
               background: 'transparent'
             }
+          },
+          // The fixed height suits one line; a multiline field grows with its text instead of spilling out.
+          '&.MuiInputBase-multiline, &.MuiInputBase-multiline.MuiInputBase-sizeSmall': {
+            height: 'auto',
+            padding: '6px 8px'
           }
         }
       }
