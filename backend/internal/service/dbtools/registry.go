@@ -10,6 +10,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
@@ -174,7 +175,7 @@ func (r *Registry) sampleRows(ctx context.Context, table string, toolCtx ToolCon
 		return ""
 	}
 
-	return "\nSample rows:\n" + truncateText(string(raw), 3000) + "\n"
+	return "\nSample rows (any 3 rows, only to show what the columns hold; they are not an answer, so run a query for the rows the user asked for):\n" + truncateText(string(raw), 3000) + "\n"
 }
 
 func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
@@ -263,12 +264,22 @@ func (r *Registry) query(ctx context.Context, conn *model.Connection, safeSQL st
 	queryCtx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	return repo.RunRawQuery(queryCtx, &dto.RawQueryRequest{
+	resp, err := repo.RunRawQuery(queryCtx, &dto.RawQueryRequest{
 		ConnectionID: toolCtx.ConnectionID,
 		Query:        safeSQL,
 		Database:     toolCtx.Database,
 		Schema:       toolCtx.Schema,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// The editor shows a failed statement as a result row; a tool must fail, so the model fixes its SQL.
+	if err := databaseCore.CommandError(resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (r *Registry) listConnections(ctx context.Context) (string, error) {

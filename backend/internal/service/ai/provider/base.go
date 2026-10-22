@@ -305,7 +305,7 @@ const chatRules = `How to work:
 - If a request is ambiguous, or a name could mean more than one object, ask one short question instead of guessing.
 - Lead with the answer. Keep explanations short and do not restate the question.
 - Put SQL in fenced code blocks marked sql.
-- Show rows as markdown tables, not JSON. When numbers over categories or time answer the question, call show_chart so the user sees a chart.
+- Rows from execute_sql and charts from show_chart are shown to the user as a table or chart. Never repeat those rows in your answer in any form (no table, no list of values): say what they show in one or two sentences, naming at most the top few values. When numbers over categories or time answer the question, call show_chart so the user sees a chart.
 - When asked why a query is slow or how to speed it up, call explain_query on it before advising.
 - When Selected SQL or Current Query is given below, use it for explain, optimize and fix requests. Ask the user to paste SQL only when none is given.
 - When an Object definition is given below, use it for reviews and suggestions about that object.
