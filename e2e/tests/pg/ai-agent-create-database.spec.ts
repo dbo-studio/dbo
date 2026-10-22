@@ -107,7 +107,7 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
 
           await test.step("The diff shows the database and its tables", async () => {
             // New tables open the design first; the diff is one tab over.
-            await page.getByTestId("ai-changes-tab-diff").click();
+            await page.getByTestId("ai-proposal-view-diff").click();
             await expect(
               page
                 .getByTestId("ai-diff-table")
@@ -121,7 +121,7 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
           });
 
           await test.step("The diagram draws the new tables and their key", async () => {
-            await page.getByTestId("ai-changes-tab-diagram").click();
+            await page.getByTestId("ai-proposal-view-design").click();
             const nodes = page.getByTestId("ai-mini-diagram-node");
             await expect(nodes).toHaveCount(2);
             await expect(nodes.first()).toHaveAttribute("data-status", "added");

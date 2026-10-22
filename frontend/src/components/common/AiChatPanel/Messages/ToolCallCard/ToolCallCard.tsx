@@ -8,7 +8,6 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiToolTrace } from '@/types';
 import { Box, Button, Collapse, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
-import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from '../AgentCards.styled';
 import ToolStatusPill from '../ToolStatusPill/ToolStatusPill';
 import { describeToolStep, toolStepDetail } from '../../utils/toolStep';
@@ -144,14 +143,9 @@ export default function ToolCallCard({
               {trace.error}
             </Typography>
           )}
+          {/* Rows show once, below the steps (or on the canvas), so the step itself only says when there were none. */}
           {sqlResult ? (
-            sqlResult.rows.length > 0 ? (
-              <ChatDataTable
-                rows={sqlResult.rows}
-                columns={sqlResult.columns?.map((column) => column.name)}
-                query={sqlArg ?? sqlResult.query}
-              />
-            ) : (
+            sqlResult.rows.length === 0 && (
               <Typography variant='caption' color='textSubdued'>
                 {locales.ai_tool_no_rows}
               </Typography>

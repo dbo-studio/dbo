@@ -4,6 +4,7 @@ import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { CircularProgress, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { Resizer } from '@/components/common/DataGrid/DataGridTable.styled';
 import { lazy, Suspense, useState, type JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
@@ -73,13 +74,15 @@ const toCsv = (columns: string[], rows: Record<string, unknown>[]): string =>
 
 const MIN_COLUMN_WIDTH = 64;
 const MAX_COLUMN_WIDTH = 220;
+// On the canvas there is room for longer values before they are cut.
+const MAX_TALL_COLUMN_WIDTH = 420;
 const CHAR_WIDTH = 7.5;
 const CELL_PADDING = 28;
 
 /** Fits the header and the widest visible value, so small results fit the panel without sideways scrolling. */
-const columnWidth = (column: string, rows: Record<string, unknown>[]): number => {
-  const longest = rows.reduce((max, row) => Math.max(max, formatCellValue(row[column]).length), column.length);
-  return Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.ceil(longest * CHAR_WIDTH + CELL_PADDING)));
+const columnWidth = (column: string, rows: Record<string, unknown>[], max = MAX_COLUMN_WIDTH): number => {
+  const longest = rows.reduce((most, row) => Math.max(most, formatCellValue(row[column]).length), column.length);
+  return Math.min(max, Math.max(MIN_COLUMN_WIDTH, Math.ceil(longest * CHAR_WIDTH + CELL_PADDING)));
 };
 
 export default function ChatDataTable({
@@ -95,6 +98,7 @@ export default function ChatDataTable({
     types: Record<string, string>;
   }>();
   const [isRerunning, setIsRerunning] = useState(false);
+  const [resized, setResized] = useState<Record<string, number>>({});
   const [showChart, setShowChart] = useState(false);
   const [chartChoice, setChartChoice] = useState<{ rows: unknown; type: ChartType }>();
   // A picked chart type belongs to these rows; a reused table showing new rows starts from the auto pick.
@@ -126,17 +130,39 @@ export default function ChatDataTable({
   };
 
   const allColumns = deriveColumns(rows, rerun?.columns ?? initialColumns);
-  const columns = allColumns.slice(0, MAX_COLUMNS);
-  const displayRows = rows.slice(0, MAX_ROWS);
-  const truncated = rows.length > MAX_ROWS || allColumns.length > MAX_COLUMNS;
+  // The chat shows a preview; the canvas (tall) shows every row and column the query returned.
+  const columns = tall ? allColumns : allColumns.slice(0, MAX_COLUMNS);
+  const displayRows = tall ? rows : rows.slice(0, MAX_ROWS);
+  const truncated = !tall && (rows.length > MAX_ROWS || allColumns.length > MAX_COLUMNS);
   const auto = autoChart(rows, allColumns);
   const chartable = auto.type !== 'table' && auto.type !== 'number' && rows.length <= 200;
   const spec = { ...auto, type: chartType ?? auto.type };
-  const widths = columns.map((column) => columnWidth(column, displayRows));
+  const widths = columns.map(
+    (column) => resized[column] ?? columnWidth(column, displayRows, tall ? MAX_TALL_COLUMN_WIDTH : MAX_COLUMN_WIDTH)
+  );
+
+  const startResize = (column: string, startWidth: number, event: React.MouseEvent): void => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const move = (moveEvent: MouseEvent): void =>
+      setResized((current) => ({
+        ...current,
+        [column]: Math.max(MIN_COLUMN_WIDTH, startWidth + moveEvent.clientX - startX)
+      }));
+    const stop = (): void => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', stop);
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', stop);
+  };
   const tableWidth = widths.reduce((total, width) => total + width, 0);
 
   return (
-    <ChatDataTableWrapper>
+    <ChatDataTableWrapper
+      sx={tall ? { m: 0, height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+      data-testid='ai-data-table'
+    >
       {chartable && showChart && (
         <Suspense fallback={<CircularProgress size={16} />}>
           <ToggleButtonGroup
@@ -156,7 +182,7 @@ export default function ChatDataTable({
           <ChartView rows={rows} columns={allColumns} spec={spec} />
         </Suspense>
       )}
-      <ChatDataTableScroll sx={tall ? { maxHeight: 'none' } : undefined}>
+      <ChatDataTableScroll sx={tall ? { maxHeight: 'none', flex: 1, minHeight: 0 } : undefined}>
         {/* Fills the card when the columns are narrower than it; scrolls when wider. */}
         <StyledTable style={{ width: '100%', minWidth: tableWidth }}>
           <colgroup>
@@ -166,12 +192,18 @@ export default function ChatDataTable({
           </colgroup>
           <StyledTableHead>
             <StyledTableRow>
-              {columns.map((column) => (
+              {columns.map((column, index) => (
                 <ChatTableHeader
                   key={column}
                   title={rerun?.types[column] ? `${column} (${rerun.types[column]})` : column}
                 >
                   {column}
+                  {tall && (
+                    <Resizer
+                      data-testid='ai-data-column-resize'
+                      onMouseDown={(event) => startResize(column, widths[index], event)}
+                    />
+                  )}
                 </ChatTableHeader>
               ))}
             </StyledTableRow>

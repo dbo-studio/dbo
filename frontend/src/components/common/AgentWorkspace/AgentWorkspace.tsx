@@ -4,6 +4,8 @@ import ChatHistory from '@/components/common/AiChatPanel/ChatHistory/ChatHistory
 import { useAiChatController } from '@/components/common/AiChatPanel/hooks/useAiChatController';
 import Messages from '@/components/common/AiChatPanel/Messages/Messages';
 import { useChatActivity } from '@/components/common/AiChatPanel/hooks/useChatActivity';
+import { reportFromTrace } from '@/components/common/AiChatPanel/utils/chartReport';
+import { resultFromTrace } from '@/components/common/AiChatPanel/utils/queryResult';
 import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import { shortcuts } from '@/core/utils/shortcuts';
@@ -11,12 +13,12 @@ import { useShortcut } from '@/hooks/useShortcut';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Typography, useMediaQuery, useTheme } from '@mui/material';
+import ResizableXBox from '@/components/base/ResizableBox/ResizableXBox';
+import { Collapse, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 import {
   AgentWorkspaceStyled,
   WorkspaceBodyStyled,
-  FloatingPromptStyled,
   WorkspaceComposerStyled,
   WorkspaceConversationStyled,
   WorkspaceSessionsHeaderStyled,
@@ -32,6 +34,7 @@ import WorkspaceTopBar from './WorkspaceTopBar/WorkspaceTopBar';
 const OPEN_OVERLAY = '.MuiModal-root:not(.MuiModal-hidden)';
 
 const CHAT_WIDTHS = { narrow: 600, default: 720, wide: 1000 } as const;
+const EXPANDED_CHAT_WIDTH = 380;
 
 /**
  * Full-window agent surface over the main app (which stays mounted and inert
@@ -42,16 +45,13 @@ export default function AgentWorkspace(): JSX.Element {
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down('md'));
   const [showSessions, setShowSessions] = useState(!isNarrow);
-  const [showCanvas, setShowCanvas] = useState(true);
-  const canvasTab = useWorkspaceCanvas((state) => state.tab);
-  const setCanvasTab = useWorkspaceCanvas((state) => state.setTab);
-  const canvasRequested = useWorkspaceCanvas((state) => state.open);
-  const closeCanvasRequest = useWorkspaceCanvas((state) => state.closeRequest);
-  const showReport = useWorkspaceCanvas((state) => state.showReport);
-  const canvasReport = useWorkspaceCanvas((state) => state.report);
-  const canvasBoard = useWorkspaceCanvas((state) => state.boardId);
+  const showCanvas = useWorkspaceCanvas((state) => state.visible);
+  const artifactCount = useWorkspaceCanvas((state) => state.artifacts.length);
   const [fullScreen, setFullScreen] = useState(false);
   const chatWidth = useSettingStore((state) => state.editor.aiChatWidth ?? 'default');
+  const sessionsWidth = useSettingStore((state) => state.editor.aiSessionsWidth ?? 260);
+  const canvasWidth = useSettingStore((state) => state.editor.aiCanvasWidth ?? 520);
+  const updateEditor = useSettingStore((state) => state.updateEditor);
   const rootRef = useRef<HTMLElement>(null);
 
   const {
@@ -65,58 +65,61 @@ export default function AgentWorkspace(): JSX.Element {
     handleRegenerate
   } = useAiChatController();
   const currentChat = useAiStore((state) => state.currentChat);
-  // The newest proposal of this chat that still waits for the user, else its newest one.
+  // The newest proposal of this chat that still waits for the user.
   const openChangesetId = useChangesetStore(
     (state) =>
       Object.values(state.changesets)
         .filter((changeset) => changeset.chatId === currentChat?.id && changeset.ops.some((op) => isOpen(op.status)))
         .pop()?.id
   );
-  const latestChangesetId = useChangesetStore(
-    (state) =>
-      Object.values(state.changesets)
-        .filter((changeset) => changeset.chatId === currentChat?.id)
-        .pop()?.id
-  );
   const pending = useChangesetReview(openChangesetId ?? 0);
-  const review = useChangesetReview(openChangesetId ?? latestChangesetId ?? 0);
   const activity = useChatActivity();
-  const changesets = useChangesetStore((state) => state.changesets);
-  const hasCanvasContent =
-    !!review.changeset ||
-    !!canvasBoard ||
-    !!activity.lastResult ||
-    !!activity.lastReport ||
-    !!canvasReport ||
-    activity.statements.length > 0;
 
-  // The canvas follows the agent: a proposal opens Changes, a query result opens Data.
-  const [seenItems, setSeenItems] = useState(activity.items.length);
-  if (activity.items.length !== seenItems) {
-    setSeenItems(activity.items.length);
-    const last = activity.items.slice(seenItems).pop();
-    if (last?.kind === 'diagram_diff') {
+  // The canvas follows the agent: each finished query, chart or proposal opens as a tab. A step first shows as
+  // running and turns done in place, so follow the newest finished one by its id, not by the item count.
+  const focus = [...activity.items]
+    .reverse()
+    .find(
+      (item) =>
+        item.kind === 'diagram_diff' ||
+        (item.kind === 'tool' &&
+          item.trace.status === 'done' &&
+          (item.trace.name === 'execute_sql' || item.trace.name === 'show_chart'))
+    );
+  const focusKey =
+    focus?.kind === 'diagram_diff' ? `changeset-${focus.changesetId}` : focus?.kind === 'tool' ? focus.trace.id : '';
+  const focusRef = useRef(focus);
+  focusRef.current = focus;
+
+  // Another chat starts with its own tabs: its newest artifact.
+  useEffect(() => {
+    useWorkspaceCanvas.getState().reset();
+  }, [currentChat?.id]);
+
+  useEffect(() => {
+    const item = focusRef.current;
+    const canvas = useWorkspaceCanvas.getState();
+    if (item?.kind === 'diagram_diff') {
       // New tables are easiest to follow on the design; edits to existing ones on the diff.
-      const creates = changesets[last.changesetId]?.ops.some((op) => op.op === 'create_table');
-      setCanvasTab(creates ? 'diagram' : 'diff');
-      setShowCanvas(true);
-    } else if (last?.kind === 'tool' && last.trace.name === 'execute_sql' && last.trace.status === 'done') {
-      setCanvasTab('data');
-      setShowCanvas(true);
-    } else if (last?.kind === 'tool' && last.trace.name === 'show_chart' && last.trace.status === 'done') {
-      if (activity.lastReport) showReport(activity.lastReport);
-      setShowCanvas(true);
+      const creates = useChangesetStore
+        .getState()
+        .changesets[item.changesetId]?.ops.some((op) => op.op === 'create_table');
+      canvas.openProposal(item.changesetId, creates ? 'design' : 'diff');
+    } else if (item?.kind === 'tool' && item.trace.name === 'execute_sql') {
+      const result = resultFromTrace(item.trace);
+      if (result && result.rows.length > 0) canvas.open({ id: `result-${result.id}`, kind: 'result', result });
+    } else if (item?.kind === 'tool' && item.trace.name === 'show_chart') {
+      const report = reportFromTrace(item.trace);
+      if (report) canvas.showReport(report);
     }
-  }
-  // A chat card asked to show something on the canvas.
-  if (canvasRequested) {
-    closeCanvasRequest();
-    setShowCanvas(true);
-  }
+  }, [focusKey, currentChat?.id]);
+
   const updateUI = useSettingStore((state) => state.updateUI);
 
   useShortcut(shortcuts.toggleWorkspaceSessions, () => setShowSessions((value) => !value));
-  useShortcut(shortcuts.toggleWorkspaceChanges, () => setShowCanvas((value) => !value));
+  useShortcut(shortcuts.toggleWorkspaceChanges, () =>
+    useWorkspaceCanvas.getState().setVisible(!useWorkspaceCanvas.getState().visible)
+  );
   useShortcut(shortcuts.toggleWorkspaceFullScreen, () => setFullScreen((value) => !value));
 
   const close = useCallback(() => updateUI({ agentWorkspaceOpen: false }), [updateUI]);
@@ -160,8 +163,7 @@ export default function AgentWorkspace(): JSX.Element {
         <ChangesetDock
           review={pending}
           onReview={() => {
-            setCanvasTab('diff');
-            setShowCanvas(true);
+            if (openChangesetId) useWorkspaceCanvas.getState().openProposal(openChangesetId, 'diff');
           }}
         />
       )}
@@ -174,52 +176,71 @@ export default function AgentWorkspace(): JSX.Element {
     </>
   );
 
+  const canvasOpen = artifactCount > 0 && (showCanvas || fullScreen);
+  const canvas = (
+    <WorkspaceCanvas
+      fullScreen={fullScreen}
+      onToggleFullScreen={() => setFullScreen((value) => !value)}
+      onClose={() => {
+        setFullScreen(false);
+        useWorkspaceCanvas.getState().setVisible(false);
+      }}
+    />
+  );
+
   return (
     <AgentWorkspaceStyled ref={rootRef} aria-label={locales.ai_expand_to_agent} data-testid='ai-agent-workspace'>
       <WorkspaceTopBar onBack={close} onToggleSessions={() => setShowSessions((value) => !value)} />
       <WorkspaceBodyStyled>
-        {showSessions && !fullScreen && (
-          <WorkspaceSessionsStyled>
-            <WorkspaceSessionsHeaderStyled>
-              <Typography variant='subtitle2'>{locales.ai_workspace_sessions}</Typography>
-              <AddChat onClick={() => void handleCreateChat()} />
-            </WorkspaceSessionsHeaderStyled>
-            <ChatHistory variant='list' />
-            <SavedReports />
-          </WorkspaceSessionsStyled>
+        {/* Panels slide in and out instead of popping: the session list, and the canvas beside the chat. */}
+        <Collapse orientation='horizontal' in={showSessions && !fullScreen} sx={{ flexShrink: 0 }}>
+          <ResizableXBox
+            direction='rtl'
+            width={sessionsWidth}
+            maxWidth={480}
+            sx={{ height: '100%' }}
+            onChange={(width) => updateEditor({ aiSessionsWidth: Math.max(180, width) })}
+          >
+            <WorkspaceSessionsStyled>
+              <WorkspaceSessionsHeaderStyled>
+                <Typography variant='subtitle2'>{locales.ai_workspace_sessions}</Typography>
+                <AddChat onClick={() => void handleCreateChat()} />
+              </WorkspaceSessionsHeaderStyled>
+              <ChatHistory variant='list' />
+              <SavedReports />
+            </WorkspaceSessionsStyled>
+          </ResizableXBox>
+        </Collapse>
+        <WorkspaceConversationStyled>
+          <WorkspaceThreadStyled sx={{ maxWidth: CHAT_WIDTHS[chatWidth] }}>
+            <Messages
+              loading={chatPending}
+              messages={currentChat?.messages ?? []}
+              onLoadMore={() => void handleLoadMore()}
+              onSelectPrompt={(prompt) => void handleSend(prompt)}
+              onRetry={() => void handleRetry()}
+              onRegenerate={() => void handleRegenerate()}
+            />
+            <WorkspaceComposerStyled>{composer}</WorkspaceComposerStyled>
+          </WorkspaceThreadStyled>
+        </WorkspaceConversationStyled>
+        {isNarrow ? (
+          canvasOpen && canvas
+        ) : (
+          <Collapse orientation='horizontal' in={canvasOpen} unmountOnExit sx={{ flexShrink: 0 }}>
+            {/* Expanded, the canvas takes all but a narrow chat column; the width eases between the two. */}
+            <ResizableXBox
+              direction='ltr'
+              width={canvasWidth}
+              maxWidth={1400}
+              widthOverride={fullScreen ? `calc(100vw - ${EXPANDED_CHAT_WIDTH}px)` : undefined}
+              sx={{ height: '100%' }}
+              onChange={(width) => updateEditor({ aiCanvasWidth: Math.max(320, width) })}
+            >
+              {canvas}
+            </ResizableXBox>
+          </Collapse>
         )}
-        {!fullScreen && (
-          <WorkspaceConversationStyled>
-            <WorkspaceThreadStyled sx={{ maxWidth: CHAT_WIDTHS[chatWidth] }}>
-              <Messages
-                loading={chatPending}
-                messages={currentChat?.messages ?? []}
-                onLoadMore={() => void handleLoadMore()}
-                onSelectPrompt={(prompt) => void handleSend(prompt)}
-                onRetry={() => void handleRetry()}
-                onRegenerate={() => void handleRegenerate()}
-              />
-              <WorkspaceComposerStyled>{composer}</WorkspaceComposerStyled>
-            </WorkspaceThreadStyled>
-          </WorkspaceConversationStyled>
-        )}
-        {hasCanvasContent && (showCanvas || fullScreen) && (
-          <WorkspaceCanvas
-            tab={canvasTab}
-            onTabChange={setCanvasTab}
-            review={review}
-            activity={activity}
-            report={canvasReport ?? activity.lastReport}
-            fullScreen={fullScreen}
-            onToggleFullScreen={() => setFullScreen((value) => !value)}
-            onClose={() => {
-              setFullScreen(false);
-              setShowCanvas(false);
-            }}
-          />
-        )}
-        {/* Full screen: the conversation folds into a floating prompt bar over the canvas, like Cursor. */}
-        {fullScreen && <FloatingPromptStyled data-testid='ai-floating-prompt'>{composer}</FloatingPromptStyled>}
       </WorkspaceBodyStyled>
     </AgentWorkspaceStyled>
   );

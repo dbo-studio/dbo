@@ -55,6 +55,9 @@ export type EditorSettings = {
   aiToolDensity?: AiToolDensity;
   /** Max width of the workstation conversation. */
   aiChatWidth?: 'narrow' | 'default' | 'wide';
+  /** Widths the user dragged the workstation's chat list and canvas to. */
+  aiSessionsWidth?: number;
+  aiCanvasWidth?: number;
 };
 
 export type GeneralSettings = {

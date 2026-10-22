@@ -9,6 +9,10 @@ import ToolCallCard from '../ToolCallCard/ToolCallCard';
 import { describeToolStep } from '../../utils/toolStep';
 import { reportFromTrace } from '../../utils/chartReport';
 import ReportCard from '../ReportCard/ReportCard';
+import ArtifactChip, { useInWorkstation } from '../ArtifactChip/ArtifactChip';
+import ChatDataTable from '../ChatDataTable/ChatDataTable';
+import { resultFromTrace } from '../../utils/queryResult';
+import { useWorkspaceCanvas } from '@/components/common/AgentWorkspace/workspaceCanvas.store';
 import { reviewFromTrace } from '../../utils/schemaReview';
 import SchemaReviewCard from '../SchemaReviewCard/SchemaReviewCard';
 
@@ -28,17 +32,45 @@ export default function ToolCallGroup({ items, live = false }: { items: AiAgentI
   const steps = traces.map((trace) => (
     <ToolCallCard key={trace.id} trace={trace} defaultExpanded={density === 'detailed'} />
   ));
-  // Charts and schema reviews are the answer, not a step, so they show whatever the density.
-  const reports = traces
-    .map(reportFromTrace)
-    .filter((report) => report !== undefined)
-    .map((report) => <ReportCard key={report.id} report={report} />)
-    .concat(
-      traces
-        .map(reviewFromTrace)
-        .filter((review) => review !== undefined)
-        .map((review) => <SchemaReviewCard key={review.id} review={review} />)
-    );
+  // Results, charts and schema reviews are the answer, not a step, so they show whatever the density. In the
+  // workstation the canvas shows results and charts in full and the chat links to them.
+  const inWorkstation = useInWorkstation();
+  const canvas = useWorkspaceCanvas.getState;
+  const reports = traces.flatMap((trace) => {
+    const result = resultFromTrace(trace);
+    if (result && result.rows.length > 0) {
+      const rowCount = locales.ai_table_rows.replace('{n}', String(result.rows.length));
+      return inWorkstation
+        ? [
+            <ArtifactChip
+              key={trace.id}
+              icon='grid'
+              label={result.title}
+              detail={rowCount}
+              testId='ai-chip-result'
+              onOpen={() => canvas().open({ id: `result-${result.id}`, kind: 'result', result })}
+            />
+          ]
+        : [<ChatDataTable key={trace.id} rows={result.rows} columns={result.columns} query={result.sql} />];
+    }
+    const report = reportFromTrace(trace);
+    if (report) {
+      return inWorkstation
+        ? [
+            <ArtifactChip
+              key={trace.id}
+              icon='layout'
+              label={report.title}
+              detail={locales.ai_canvas_tab_report}
+              testId='ai-chip-report'
+              onOpen={() => canvas().showReport(report)}
+            />
+          ]
+        : [<ReportCard key={trace.id} report={report} />];
+    }
+    const review = reviewFromTrace(trace);
+    return review ? [<SchemaReviewCard key={trace.id} review={review} />] : [];
+  });
 
   if (density !== 'compact') {
     return (

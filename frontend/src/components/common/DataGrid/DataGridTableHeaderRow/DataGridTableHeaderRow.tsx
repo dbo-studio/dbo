@@ -36,6 +36,7 @@ export default function DataGridTableHeaderRow({
   startResize,
   resizingColumnId,
   editable = false,
+  sortable = true,
   onHeaderContextMenu
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
@@ -143,7 +144,7 @@ export default function DataGridTableHeaderRow({
           return (
             <SortableTableHeader
               key={column.name}
-              onClick={(e) => handleColumnSort(column.name, e)}
+              onClick={sortable ? (e) => handleColumnSort(column.name, e) : undefined}
               onContextMenu={(e): void => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -159,7 +160,7 @@ export default function DataGridTableHeaderRow({
                   }}
                 >
                   <Typography variant='body2'>{column.name}</Typography>
-                  <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>
+                  {column.type && <HeaderColumnTypeStyled>({column.type})</HeaderColumnTypeStyled>}
                   {column.isPrimaryKey && <CustomIcon type={'key'} size='xs' color={theme.palette.text.placeholder} />}
                   {column.isForeignKey && (
                     <HeaderBadgeStyled data-testid='grid-fk-badge' title={formatForeignKeyTooltip(column)}>
@@ -170,7 +171,7 @@ export default function DataGridTableHeaderRow({
                     <CustomIcon type='lock' size='xs' color={theme.palette.text.placeholder} />
                   )}
                 </Stack>
-                <CustomIcon type={sortIcon} size='xs' />
+                {sortable && <CustomIcon type={sortIcon} size='xs' />}
               </HeaderColumnContentStyled>
               <DataGridResizer columnId={column.name} isResizing={isResizing} onResizeStart={startResize} />
             </SortableTableHeader>

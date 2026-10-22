@@ -19,6 +19,7 @@ export const SidebarSectionTabStyled = styled(Box, {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  gap: theme.spacing(0.75),
   height: '100%',
   minWidth: 0,
   borderRadius: 0,
@@ -43,6 +44,21 @@ export const SidebarSectionTabStyled = styled(Box, {
     outline: `1px solid ${theme.palette.primary.main}`,
     outlineOffset: -1
   }
+}));
+
+export const SidebarSectionTabLabelStyled = styled('span')({
+  minWidth: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap'
+});
+
+export const SidebarSectionTabCloseStyled = styled('span')(({ theme }) => ({
+  display: 'inline-flex',
+  flexShrink: 0,
+  padding: 2,
+  borderRadius: theme.shape.borderRadius,
+  '&:hover': { background: theme.palette.action.hover }
 }));
 
 export const SidebarTabPanelStyled = styled(Box)(({ theme }) => ({

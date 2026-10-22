@@ -3,13 +3,8 @@ import type { AiAgentItem, AiToolTrace } from '@/types';
 import { useMemo } from 'react';
 import { isTraceMessage, traceMessageToItem } from '../utils/agentTrace';
 import { reportFromTrace, type ChartReport } from '../utils/chartReport';
+import { resultFromTrace, type QueryResult } from '../utils/queryResult';
 import { useAiSession } from './useAiSession';
-
-export type QueryResult = {
-  sql: string;
-  rows: Record<string, unknown>[];
-  columns?: string[];
-};
 
 export type ChatActivity = {
   /** Every tool call, proposal and plan of the open chat, saved and live, in order. */
@@ -20,21 +15,6 @@ export type ChatActivity = {
   lastReport?: ChartReport;
   /** Every SQL statement the agent ran or previewed, oldest first, keyed by its tool call. */
   statements: { id: string; sql: string }[];
-};
-
-const queryResult = (trace: AiToolTrace): QueryResult | undefined => {
-  if (trace.name !== 'execute_sql' || trace.status !== 'done' || !trace.result) return undefined;
-  try {
-    const parsed = JSON.parse(trace.result) as {
-      query?: string;
-      rows?: Record<string, unknown>[];
-      columns?: { name: string }[];
-    };
-    if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) return undefined;
-    return { sql: parsed.query ?? '', rows: parsed.rows, columns: parsed.columns?.map((column) => column.name) };
-  } catch {
-    return undefined;
-  }
 };
 
 const statementOf = (trace: AiToolTrace): { id: string; sql: string } | undefined => {
@@ -59,8 +39,8 @@ export function useChatActivity(): ChatActivity {
     return {
       items,
       lastResult: traces
-        .map(queryResult)
-        .filter((result) => result !== undefined)
+        .map(resultFromTrace)
+        .filter((result) => result !== undefined && result.rows.length > 0)
         .pop(),
       statements: traces.map(statementOf).filter((sql) => sql !== undefined),
       lastReport: traces

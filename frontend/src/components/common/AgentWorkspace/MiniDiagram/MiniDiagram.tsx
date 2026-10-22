@@ -5,10 +5,12 @@ import { EMPTY_DIAGRAM_GRAPH, type DiagramStatus } from '@/core/diagram/types';
 import locales from '@/locales';
 import { useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { AiChangeset } from '@/types';
-import { Box, Button, Typography, useTheme } from '@mui/material';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { Box, Button, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { TabMode } from '@/core/enums';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { keyframes } from '@mui/material';
@@ -24,6 +26,11 @@ const appear = keyframes`
 `;
 
 type Point = { x: number; y: number };
+
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 2;
+const ZOOM_STEP = 1.25;
+const clampZoom = (zoom: number): number => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
 /** The tables a changeset touches and their foreign key neighbours, with the pending changes drawn on them. */
 export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): JSX.Element {
@@ -101,7 +108,38 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
   const width = Math.max(...nodes.map((node) => node.position.x + NODE_WIDTH), NODE_WIDTH);
   const height = Math.max(...graph.nodes.map((node) => box(node.id).y + box(node.id).height), HEADER);
 
+  // Fit to the canvas width until the user zooms; the picked zoom then stays as tables are added.
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  const [zoom, setZoom] = useState<number>();
+  useEffect(() => {
+    const element = viewportRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => setViewportWidth(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const fit = viewportWidth > 0 ? clampZoom(Math.min(1, viewportWidth / (width + 24))) : 1;
+  const scale = zoom ?? fit;
+  const fitRef = useRef(fit);
+  fitRef.current = fit;
+  useEffect(() => {
+    const element = viewportRef.current;
+    if (!element) return;
+    // Ctrl/⌘ + wheel (and trackpad pinch) zooms, like the app's diagram. Passive React listeners cannot stop the page zoom.
+    const onWheel = (event: WheelEvent): void => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+      setZoom((current) => clampZoom((current ?? fitRef.current) * factor));
+    };
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, []);
+
   const open = (): void => {
+    // The full diagram is a tab of the app, under the workstation: leave the workstation to show it.
+    useSettingStore.getState().updateUI({ agentWorkspaceOpen: false });
     useChangesetStore.getState().stage(changeset);
     useTabStore.getState().addDiagramTab({ database: changeset.database ?? '', schema: changeset.schema ?? '' });
   };
@@ -112,6 +150,37 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
         <Button size='small' variant='text' onClick={open} data-testid='ai-mini-diagram-open'>
           {locales.ai_changes_open_diagram}
         </Button>
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 'auto', order: 1 }}>
+          <Tooltip title={locales.ai_diagram_zoom_out}>
+            <IconButton
+              size='small'
+              onClick={() => setZoom(clampZoom(scale / ZOOM_STEP))}
+              data-testid='ai-mini-diagram-zoom-out'
+            >
+              <CustomIcon type='mines' size='xs' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.ai_diagram_zoom_fit}>
+            <Button
+              size='small'
+              color='inherit'
+              onClick={() => setZoom(undefined)}
+              sx={{ minWidth: 48, px: 0.5 }}
+              data-testid='ai-mini-diagram-zoom'
+            >
+              {Math.round(scale * 100)}%
+            </Button>
+          </Tooltip>
+          <Tooltip title={locales.ai_diagram_zoom_in}>
+            <IconButton
+              size='small'
+              onClick={() => setZoom(clampZoom(scale * ZOOM_STEP))}
+              data-testid='ai-mini-diagram-zoom-in'
+            >
+              <CustomIcon type='plus' size='xs' />
+            </IconButton>
+          </Tooltip>
+        </Box>
         {(['added', 'changed', 'removed', 'unchanged'] as const).map((status) => (
           <Box key={status} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
             <Box sx={{ width: 10, height: 10, borderRadius: 0.5, border: 2, borderColor: color(status) }} />
@@ -121,8 +190,14 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
           </Box>
         ))}
       </Box>
-      <Box sx={{ overflow: 'auto', maxHeight: '60vh' }}>
-        <svg viewBox={`0 0 ${width + 24} ${height + 24}`} width={width + 24} height={height + 24} role='img'>
+      <Box ref={viewportRef} sx={{ overflow: 'auto', maxHeight: '70vh' }}>
+        <svg
+          viewBox={`0 0 ${width + 24} ${height + 24}`}
+          width={(width + 24) * scale}
+          height={(height + 24) * scale}
+          role='img'
+          data-zoom={scale.toFixed(2)}
+        >
           {graph.edges.map((edge) => {
             const from = box(edge.source);
             const to = box(edge.target);

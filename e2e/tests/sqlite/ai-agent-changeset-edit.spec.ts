@@ -89,7 +89,7 @@ test.describe("AI Agent Workspace changeset editing", () => {
 
         await test.step("A new table's columns can be changed, added and removed", async () => {
           // New tables open the design first; the diff is one tab over.
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
           await diffOp(0).getByTestId("ai-diff-edit").click();
           await diffOp(0)
             .getByTestId("ai-diff-edit-type")
@@ -127,7 +127,7 @@ test.describe("AI Agent Workspace changeset editing", () => {
         });
 
         await test.step("The SQL shows every edit", async () => {
-          await page.getByTestId("ai-changes-tab-sql").click();
+          await page.getByTestId("ai-proposal-view-sql").click();
           await expect(sql).toContainText("BIGINT");
           await expect(sql).toContainText("title");
           await expect(sql).toContainText("CREATE UNIQUE INDEX");

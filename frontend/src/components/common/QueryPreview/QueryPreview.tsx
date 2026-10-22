@@ -7,10 +7,15 @@ import { IconButton, Tooltip } from '@mui/material';
 import { type JSX, useRef } from 'react';
 import { QueryPreviewEditButtonStyled, QueryPreviewStyled } from './QueryPreview.styled';
 
-export default function QueryPreview(): JSX.Element {
-  const getQuery = useTabStore((state) => state.getQuery);
+type QueryPreviewProps = {
+  query: string;
+  /** Runs before the query opens in a new editor tab, e.g. to leave a screen that covers the tabs. */
+  onBeforeOpen?: () => void;
+};
+
+/** A query shown read-only and highlighted, with a button that opens it in a new editor tab. */
+export default function QueryPreview({ query, onBeforeOpen }: QueryPreviewProps): JSX.Element {
   const addEditorTab = useTabStore((state) => state.addEditorTab);
-  const query = getQuery();
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, true);
 
@@ -19,6 +24,7 @@ export default function QueryPreview(): JSX.Element {
       return;
     }
 
+    onBeforeOpen?.();
     addEditorTab(query);
   };
 

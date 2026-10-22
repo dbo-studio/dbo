@@ -118,8 +118,9 @@ test.describe("AI Agent Workspace changeset", () => {
           await expect(page.getByTestId("ai-dock-mysql-notice")).toHaveCount(0);
           await expect(surface).toBeVisible();
           // A new table opens the design first; the diff is one tab over.
-          await expect(surface).toHaveAttribute("data-tab", "diagram");
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await expect(surface).toHaveAttribute("data-tab", "proposal");
+          await expect(page.getByTestId("ai-proposal-view")).toHaveAttribute("data-view", "design");
+          await page.getByTestId("ai-proposal-view-diff").click();
           await expect(page.getByTestId("ai-diff-table")).toHaveCount(2);
           await expect(table(users)).toContainText("phone TEXT");
           expect(await columnNames(page, connectionId, posts)).toEqual([]);
@@ -137,21 +138,21 @@ test.describe("AI Agent Workspace changeset", () => {
         });
 
         await test.step("The Diagram tab draws the tables involved with the pending changes", async () => {
-          await page.getByTestId("ai-changes-tab-diagram").click();
+          await page.getByTestId("ai-proposal-view-design").click();
           const nodes = page.getByTestId("ai-mini-diagram-node");
           await expect(nodes.filter({ hasText: posts })).toHaveAttribute("data-status", "added");
           await expect(nodes.filter({ hasText: users })).toHaveAttribute("data-status", "changed");
           await expect(nodes.filter({ hasText: users })).toContainText("phone");
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
         });
 
         await test.step("The SQL tab shows what would run", async () => {
-          await page.getByTestId("ai-changes-tab-sql").click();
+          await page.getByTestId("ai-proposal-view-sql").click();
           const sql = page.getByTestId("ai-sql");
           await expect(sql).toContainText(`CREATE TABLE "${posts}"`);
           await expect(page.getByTestId("ai-sql-copy")).toBeEnabled();
           await expect(page.getByTestId("ai-sql-open-query")).toBeEnabled();
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
         });
 
         await test.step("The current structure of an existing table is available, a new table has none", async () => {
@@ -173,11 +174,11 @@ test.describe("AI Agent Workspace changeset", () => {
           await expect(op).toContainText("phone VARCHAR(20)");
           // An edited op needs a fresh review.
           await expect(op).toHaveAttribute("data-status", "pending");
-          await page.getByTestId("ai-changes-tab-sql").click();
+          await page.getByTestId("ai-proposal-view-sql").click();
           await expect(page.getByTestId("ai-sql")).toContainText(
             "VARCHAR(20)",
           );
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
         });
 
         await test.step("A rejected op is skipped and leaves the dock count", async () => {

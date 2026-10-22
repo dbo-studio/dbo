@@ -5,13 +5,13 @@ import { useChangesetReview } from '@/hooks';
 import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
-import api from '@/api';
-import { toast } from 'sonner';
 import { IconButton, Tooltip } from '@mui/material';
 import type { AiChangesetOp } from '@/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useWorkspaceCanvas } from '@/components/common/AgentWorkspace/workspaceCanvas.store';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
-import { type JSX, useState } from 'react';
+import type { JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 import { variables } from '@/core/theme/variables';
@@ -49,7 +49,6 @@ function OpReview({
 export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
   const review = useChangesetReview(changesetId);
-  const [undoing, setUndoing] = useState(false);
   const { changeset } = review;
   if (!changeset) return null;
 
@@ -57,20 +56,12 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
   const decision = pending ? undefined : changeset.ops.some((op) => op.status === 'applied') ? 'applied' : 'rejected';
   const lines = summarizeChangeset(changeset.ops);
 
-  // Undo becomes a new changeset of compensating SQL, reviewed and applied from the review bar.
-  const undo = async (): Promise<void> => {
-    setUndoing(true);
-    try {
-      useChangesetStore.getState().upsert([await api.aiChat.undoChangeset(changeset)]);
-      toast.success(locales.ai_undo_ready);
-    } catch {
-      /* the API layer shows the error */
-    } finally {
-      setUndoing(false);
-    }
-  };
-
   const openInDiagram = (): void => {
+    // The workstation covers the app, so a diagram tab would open out of sight; its canvas draws the design instead.
+    if (useSettingStore.getState().ui.agentWorkspaceOpen) {
+      useWorkspaceCanvas.getState().openProposal(changeset.id, 'design');
+      return;
+    }
     if (pending) {
       useChangesetStore.getState().stage(changeset);
     }
@@ -153,8 +144,8 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
             <Button
               size='small'
               variant='text'
-              disabled={undoing}
-              onClick={() => void undo()}
+              disabled={review.isUndoing}
+              onClick={() => void review.undo()}
               startIcon={<CustomIcon type='undo' size='xs' />}
               data-testid='ai-undo'
             >

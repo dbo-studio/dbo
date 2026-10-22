@@ -21,6 +21,9 @@ type ChangesetReview = {
   apply: () => Promise<void>;
   /** Replaces an op's definition; the op goes back to pending. */
   edit: (position: number, op: SchemaChangeOp) => Promise<void>;
+  /** Turns what was applied into a new changeset of compensating SQL, reviewed and applied from the review bar. */
+  undo: () => Promise<void>;
+  isUndoing: boolean;
   /** Accepts, rejects or resets one op, or every open op when `position` is omitted. */
   review: (status: Exclude<AiChangesetOpStatus, 'applied' | 'failed'>, position?: number) => Promise<void>;
 };
@@ -37,6 +40,20 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
   const [previewQueries, setPreviewQueries] = useState<string[]>();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
+
+  const undo = async (): Promise<void> => {
+    if (!changeset) return;
+    setIsUndoing(true);
+    try {
+      upsert([await api.aiChat.undoChangeset(changeset)]);
+      toast.success(locales.ai_undo_ready);
+    } catch {
+      /* the API layer shows the error */
+    } finally {
+      setIsUndoing(false);
+    }
+  };
 
   const review: ChangesetReview['review'] = async (status, position) => {
     if (changeset) upsert([await api.aiChat.reviewChangeset(changeset, status, position)]);
@@ -98,6 +115,8 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
     openPreview,
     closePreview: () => setPreviewQueries(undefined),
     apply,
+    undo,
+    isUndoing,
     edit,
     review
   };

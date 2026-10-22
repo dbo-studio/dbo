@@ -101,7 +101,7 @@ test.describe("AI Agent partial apply (mysql)", () => {
               },
             );
 
-            await page.getByTestId("ai-changes-tab-diff").click();
+            await page.getByTestId("ai-proposal-view-diff").click();
             const ops = page.getByTestId("ai-diff-op");
             await expect(
               ops.and(page.locator('[data-status="applied"]')),

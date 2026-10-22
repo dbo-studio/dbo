@@ -1,5 +1,7 @@
 import api from '@/api';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
@@ -9,18 +11,11 @@ import { CHART_TYPES, numericColumns, type ChartType } from '@/core/charts/chart
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography
-} from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
+import { Box, Button, CircularProgress, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
+
+const EMPTY_AUTOCOMPLETE = { databases: [], views: [], schemas: [], tables: [], columns: {} };
 
 /** The canvas's Report tab: the agent's chart large, with its SQL, type and axes editable, like a Metabase question. */
 export default function ReportEditor({ report }: { report: ChartReport }): JSX.Element {
@@ -34,6 +29,14 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
     setEdited(report);
     setSql(report.sql);
   }
+
+  const { database, schema } = useAiStore((state) => state.context);
+  // The chat already loads this for its @ menu; the editor shares the cached copy.
+  const { data: autocomplete } = useQuery({
+    queryKey: ['ai_autocomplete', connectionId, database, schema],
+    queryFn: () => api.query.autoComplete({ connectionId: Number(connectionId), database, schema }),
+    enabled: !!connectionId
+  });
 
   const { mutate: save, isPending: saving } = useSaveReport();
   const {
@@ -56,11 +59,11 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
 
   return (
     <Stack spacing={1.5} data-testid='ai-report-editor'>
-      <TextField
-        size='small'
+      <FieldInput
         value={edited.title}
         onChange={(event) => setEdited({ ...edited, title: event.target.value })}
-        slotProps={{ htmlInput: { 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' } }}
+        inputProps={{ 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' }}
+        mb={0}
       />
       <ToggleButtonGroup
         exclusive
@@ -100,14 +103,18 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
         </Box>
       </Stack>
       <ChartView rows={edited.rows} columns={edited.columns} spec={edited.spec} height={320} />
-      <TextField
-        multiline
-        minRows={3}
-        value={sql}
-        onChange={(event) => setSql(event.target.value)}
-        slotProps={{ htmlInput: { 'data-testid': 'ai-report-sql', spellCheck: false } }}
-        sx={{ '& textarea': { fontFamily: 'monospace' } }}
-      />
+      <Box
+        data-testid='ai-report-sql'
+        sx={{ display: 'flex', height: 160, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}
+      >
+        <SqlEditor
+          editorHeight={160}
+          value={sql}
+          onChange={setSql}
+          autocomplete={autocomplete ?? EMPTY_AUTOCOMPLETE}
+          onRunQuery={() => run()}
+        />
+      </Box>
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
         <Button
           size='small'

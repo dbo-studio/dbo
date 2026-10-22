@@ -1,4 +1,11 @@
-import { formatAxisNumber, formatNumber, MAX_CHART_POINTS, toPlotRows, type ChartSpec } from '@/core/charts/chartSpec';
+import {
+  formatAxisNumber,
+  formatNumber,
+  MAX_CHART_POINTS,
+  numericColumns,
+  toPlotRows,
+  type ChartSpec
+} from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
@@ -72,7 +79,9 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
     );
   }
 
-  if (spec.type === 'table') {
+  // A chart needs a number column; text-only rows (or a measure that is gone) read as a table instead of a blank plot.
+  const plottable = spec.y.some((column) => columns.includes(column) && numericColumns(rows, columns).includes(column));
+  if (spec.type === 'table' || (spec.type !== 'number' && !plottable)) {
     return (
       <Box data-testid='ai-chart' data-type='table'>
         <ChatDataTable rows={rows} columns={columns} />

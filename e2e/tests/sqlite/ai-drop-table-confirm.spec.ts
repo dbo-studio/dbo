@@ -92,7 +92,7 @@ test.describe("AI Agent drop table confirmation", () => {
         });
 
         await test.step("The review says the drop cannot be undone", async () => {
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
           await expect(page.getByTestId("ai-undo-note").first()).toContainText(
             "Can't be undone",
           );

@@ -136,10 +136,10 @@ test.describe("AI Agent Workspace data changes", () => {
         });
 
         await test.step("The SQL tab lists both statements", async () => {
-          await page.getByTestId("ai-changes-tab-sql").click();
+          await page.getByTestId("ai-proposal-view-sql").click();
           await expect(page.getByTestId("ai-sql")).toContainText("price + 10");
           await expect(page.getByTestId("ai-sql")).toContainText("DELETE FROM");
-          await page.getByTestId("ai-changes-tab-diff").click();
+          await page.getByTestId("ai-proposal-view-diff").click();
         });
 
         await test.step("Apply all runs both in one go", async () => {

@@ -13,12 +13,13 @@ import { type JSX, useState } from 'react';
 import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
 import Filters from '@/components/common/Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
-import QueryPreview from './QueryPreview/QueryPreview';
+import QueryPreview from '@/components/common/QueryPreview/QueryPreview';
 import Sorts from '@/components/common/Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
+  const getQuery = useTabStore((state) => state.getQuery);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const columns = useDataStore((state) => state.columns);
 
@@ -187,7 +188,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
       {showFilters && <Filters />}
       {showSorts && <Sorts />}
-      {showQuery && <QueryPreview />}
+      {showQuery && <QueryPreview query={getQuery()} />}
     </Box>
   );
 }

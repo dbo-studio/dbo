@@ -85,7 +85,8 @@ test.describe("AI Agent Workspace sessions", () => {
           const sessions = page.getByTestId("ai-workspace-sessions");
           await expect(sessions).toBeVisible();
           await page.keyboard.press("Alt+Shift+B");
-          await expect(sessions).toHaveCount(0);
+          // It slides away but stays mounted, so its list keeps up with the chats.
+          await expect(sessions).toBeHidden();
           await page.keyboard.press("Alt+Shift+B");
           await expect(sessions).toBeVisible();
         });

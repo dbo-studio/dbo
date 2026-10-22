@@ -63,7 +63,8 @@ test.describe("AI workstation live design", () => {
         await composer.press("Enter");
 
         await test.step("The first table shows on the design while the agent is still working", async () => {
-          await expect(canvas).toHaveAttribute("data-tab", "diagram", { timeout: 15000 });
+          await expect(canvas).toHaveAttribute("data-tab", "proposal", { timeout: 15000 });
+          await expect(page.getByTestId("ai-proposal-view")).toHaveAttribute("data-view", "design");
           await expect(nodes).toHaveCount(1);
           await expect(nodes.first()).toHaveAttribute("data-table", authors);
           await expect(nodes.first()).toHaveAttribute("data-status", "added");
