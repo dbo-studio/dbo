@@ -78,4 +78,66 @@ test.describe("Dashboards in the tree", () => {
       removeSqliteDbFile(dbPath);
     }
   });
+
+  test("create, edit, save and delete a question", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+    const connectionName = `question-tree-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-question-tree-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+        const tree = new ObjectTreePage(page);
+
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(
+          getDbConfig("sqlite", connectionName, dbPath),
+        );
+        await tree.waitForTreeLoad();
+
+        const name = `Signups ${suffix}`;
+
+        await test.step("New question from the group menu opens its editor", async () => {
+          await tree.runTreeAction("Reports", "New question");
+          await expect(page.getByTestId("question-tab")).toBeVisible();
+          await expect(page.getByTestId("ai-report-editor")).toBeVisible();
+        });
+
+        await test.step("Rename, change the chart and save", async () => {
+          await page.getByTestId("ai-report-title").fill(name);
+          await page.getByTestId("ai-report-type-number").click();
+          await page.getByTestId("ai-report-run").click();
+          await page.getByTestId("ai-report-save-canvas").click();
+          await tree.getTreeNode("Reports").click();
+          await expect(tree.getTreeNode(name)).toBeVisible();
+        });
+
+        await test.step("Saved changes survive a reload", async () => {
+          await page.reload();
+          await tree.waitForTreeLoad();
+          await tree.getTreeNode("Reports").click();
+          await tree.getTreeNode(name).click();
+          await expect(page.getByTestId("ai-report-title")).toHaveValue(name);
+          await expect(page.getByTestId("ai-report-type-number")).toHaveAttribute(
+            "aria-pressed",
+            "true",
+          );
+        });
+
+        await test.step("Delete asks first, then removes it and its tab", async () => {
+          await tree.runTreeAction(name, "Delete");
+          await tree.confirmDangerAction();
+          await expect(tree.getTreeNode(name)).toHaveCount(0);
+          await expect(page.getByTestId("question-tab")).toHaveCount(0);
+        });
+      });
+    } finally {
+      removeSqliteDbFile(dbPath);
+    }
+  });
 });

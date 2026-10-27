@@ -64,7 +64,7 @@ function reportNode(question: QuestionType): TreeNodeType {
     hasChildren: false,
     children: [],
     action: { title: locales.dashboard_open, name: 'openReport', type: 'tab', params: { path: 'question', ...params } },
-    contextMenu: [command(locales.dashboard_open, 'openReport', params), command(locales.dashboard_delete, 'deleteReport', params)]
+    contextMenu: [command(locales.question_open, 'openReport', params), command(locales.question_delete, 'deleteReport', params)]
   };
 }
 
@@ -78,6 +78,6 @@ export function buildReportGroup(connectionId: number, questions: QuestionType[]
     hasChildren: true,
     children: questions.map(reportNode),
     action: undefined as unknown as TreeNodeActionType,
-    contextMenu: []
+    contextMenu: [command(locales.question_new, 'newReport')]
   };
 }

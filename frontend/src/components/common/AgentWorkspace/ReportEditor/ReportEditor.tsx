@@ -13,7 +13,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box, Button, CircularProgress, FormControlLabel, Stack, Switch, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState, type JSX } from 'react';
+import { useRef, useState, type JSX } from 'react';
 
 const EMPTY_AUTOCOMPLETE = { databases: [], views: [], schemas: [], tables: [], columns: {} };
 
@@ -47,6 +47,7 @@ export default function ReportEditor({
   });
 
   const { mutate: save, isPending: saving } = useSaveReport();
+  const runControllerRef = useRef<AbortController | null>(null);
   const {
     mutate: run,
     isPending,
@@ -54,7 +55,11 @@ export default function ReportEditor({
   } = useMutation({
     mutationFn: async () => {
       const { database, schema } = scope ?? useAiStore.getState().context;
-      return api.query.runRawQuery({ connectionId: Number(connectionId), query: sql, database, schema });
+      runControllerRef.current = new AbortController();
+      return api.query.runRawQuery(
+        { connectionId: Number(connectionId), query: sql, database, schema },
+        runControllerRef.current.signal
+      );
     },
     onSuccess: (result) => {
       const columns = result.columns?.map((column) => column.name) ?? Object.keys(result.data[0] ?? {});
@@ -147,6 +152,11 @@ export default function ReportEditor({
         >
           {locales.ai_report_run}
         </Button>
+        {isPending && (
+          <Button size='small' onClick={() => runControllerRef.current?.abort()} data-testid='ai-report-cancel'>
+            {locales.cancel}
+          </Button>
+        )}
         <Button
           size='small'
           variant='outlined'
