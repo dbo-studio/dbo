@@ -83,6 +83,8 @@ test.describe("AI boards", () => {
           await expect(cards.first().getByTestId("ai-chart")).toHaveAttribute("data-type", "bar");
           await expect(cards.nth(1).getByTestId("ai-chart")).toContainText("30");
 
+          await expect(cards.first().getByTestId("ai-board-card-resize")).toHaveCount(0);
+          await board.getByTestId("dashboard-edit").click();
           await cards.first().getByTestId("ai-board-card-resize").click();
           await expect(cards.first()).toHaveAttribute("data-width", "2");
 
@@ -90,8 +92,30 @@ test.describe("AI boards", () => {
           await board.getByTestId("ai-board-refresh").click();
           await expect(cards.nth(1).getByTestId("ai-chart")).toContainText("35", { timeout: 15000 });
 
+          const [first, second] = await Promise.all([
+            cards.first().getAttribute("data-card"),
+            cards.nth(1).getAttribute("data-card"),
+          ]);
+          const from = await cards.nth(1).getByTestId("ai-board-card-drag").boundingBox();
+          const to = await cards.first().getByTestId("ai-board-card-drag").boundingBox();
+          await page.mouse.move(from!.x + 5, from!.y + 5);
+          await page.mouse.down();
+          await page.mouse.move(to!.x + 5, to!.y + 5, { steps: 10 });
+          await page.mouse.up();
+          await expect(cards.first()).toHaveAttribute("data-card", second!);
+          await expect(cards.nth(1)).toHaveAttribute("data-card", first!);
+
           await cards.nth(1).getByTestId("ai-board-card-unpin").click();
           await expect(cards).toHaveCount(1);
+
+          await board.getByTestId("dashboard-add-card").click();
+          await page.getByRole("option", { name: first! }).click();
+          await expect(cards).toHaveCount(2);
+
+          // The saved order, not only the one on screen.
+          const saved = await page.request.get(`/api/dashboards?connectionId=${connectionId}`);
+          const salesBoard = (await saved.json()).data.find((item: { name: string }) => item.name === "Sales");
+          expect(salesBoard.cards.map((card: { question: { name: string } }) => card.question.name)).toEqual([second, first]);
         });
 
         await test.step("Deleting the board removes it from the list", async () => {

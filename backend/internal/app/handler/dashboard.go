@@ -112,6 +112,21 @@ func (h DashboardHandler) UpdateCard(c fiber.Ctx) error {
 	return h.send(c, item, err)
 }
 
+func (h DashboardHandler) ReorderCards(c fiber.Ctx) error {
+	req := new(dto.DashboardCardOrderRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	item, err := h.dashboardService.ReorderCards(c, fiber.Params[uint](c, "id"), req)
+
+	return h.send(c, item, err)
+}
+
 func (h DashboardHandler) Unpin(c fiber.Ctx) error {
 	item, err := h.dashboardService.Unpin(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "cardId"))
 

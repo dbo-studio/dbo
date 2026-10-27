@@ -75,7 +75,7 @@ func (r DashboardRepoImpl) AddCard(ctx context.Context, card *model.DashboardCar
 }
 
 func (r DashboardRepoImpl) SaveCard(ctx context.Context, card *model.DashboardCard) error {
-	return r.db.WithContext(ctx).Model(card).Select("width").Updates(card).Error
+	return r.db.WithContext(ctx).Model(card).Select("width", "position").Updates(card).Error
 }
 
 func (r DashboardRepoImpl) DeleteCard(ctx context.Context, card *model.DashboardCard) error {

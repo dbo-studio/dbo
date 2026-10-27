@@ -136,6 +136,7 @@ func (r *Server) routing() {
 	dashboards.Post("/:id/duplicate", r.handlers.Dashboard.Duplicate)
 	dashboards.Delete("/:id", r.handlers.Dashboard.Delete)
 	dashboards.Post("/:id/cards", r.handlers.Dashboard.Pin)
+	dashboards.Put("/:id/cards/order", r.handlers.Dashboard.ReorderCards)
 	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)
 	dashboards.Delete("/:id/cards/:cardId", r.handlers.Dashboard.Unpin)
 

@@ -25,3 +25,7 @@ export const resizeCard = async (id: number, cardId: number, width: 1 | 2): Prom
 
 export const unpinCard = async (id: number, cardId: number): Promise<DashboardType> =>
   (await api.delete<{ data: DashboardType }>(`/dashboards/${id}/cards/${cardId}`)).data.data;
+
+/** Saves the card order; `cardIds` must list every card of the board. */
+export const reorderCards = async (id: number, cardIds: number[]): Promise<DashboardType> =>
+  (await api.put<{ data: DashboardType }>(`/dashboards/${id}/cards/order`, { cardIds })).data.data;

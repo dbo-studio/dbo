@@ -16,6 +16,7 @@ var (
 	errDashboardNotFound = errors.New("board not found")
 	errCardNotFound      = errors.New("card not found")
 	errQuestionNotFound  = errors.New("report not found")
+	errCardOrder         = errors.New("the order must list each card of the board once")
 )
 
 type IDashboardService interface {
@@ -25,6 +26,7 @@ type IDashboardService interface {
 	// Duplicate copies a board and its card layout; the cards keep pointing at the same reports.
 	Duplicate(ctx context.Context, id uint) (*dto.DashboardResponse, error)
 	Delete(ctx context.Context, id uint) error
+	ReorderCards(ctx context.Context, id uint, req *dto.DashboardCardOrderRequest) (*dto.DashboardResponse, error)
 	Pin(ctx context.Context, id uint, req *dto.DashboardPinRequest) (*dto.DashboardResponse, error)
 	// PinByName pins a report to the board of that name on the report's connection, creating the board when needed.
 	PinByName(ctx context.Context, name string, questionID uint) (*dto.DashboardResponse, error)
@@ -172,7 +174,13 @@ func (s IDashboardServiceImpl) Pin(ctx context.Context, id uint, req *dto.Dashbo
 		return s.reload(ctx, dashboard.ID)
 	}
 
-	card := &model.DashboardCard{DashboardID: dashboard.ID, QuestionID: question.ID, Position: len(dashboard.Cards), Width: 1}
+	// Cards come ordered by position; after a removal positions have gaps, so append after the last one.
+	position := 0
+	if len(dashboard.Cards) > 0 {
+		position = dashboard.Cards[len(dashboard.Cards)-1].Position + 1
+	}
+
+	card := &model.DashboardCard{DashboardID: dashboard.ID, QuestionID: question.ID, Position: position, Width: 1}
 	if err := s.dashboardRepo.AddCard(ctx, card); err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -222,6 +230,33 @@ func (s IDashboardServiceImpl) UpdateCard(ctx context.Context, id, cardID uint, 
 	card.Width = req.Width
 	if err := s.dashboardRepo.SaveCard(ctx, card); err != nil {
 		return nil, apperror.InternalServerError(err)
+	}
+
+	return s.reload(ctx, id)
+}
+
+func (s IDashboardServiceImpl) ReorderCards(ctx context.Context, id uint, req *dto.DashboardCardOrderRequest) (*dto.DashboardResponse, error) {
+	dashboard, err := s.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// The list must be exactly this board's cards, so a stale client cannot drop or duplicate one.
+	cards := lo.KeyBy(dashboard.Cards, func(card model.DashboardCard) uint { return card.ID })
+	if len(req.CardIDs) != len(cards) || len(lo.Uniq(req.CardIDs)) != len(cards) {
+		return nil, apperror.BadRequest(errCardOrder)
+	}
+
+	for position, cardID := range req.CardIDs {
+		card, found := cards[cardID]
+		if !found {
+			return nil, apperror.BadRequest(errCardOrder)
+		}
+
+		card.Position = position
+		if err := s.dashboardRepo.SaveCard(ctx, &card); err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
 	}
 
 	return s.reload(ctx, id)

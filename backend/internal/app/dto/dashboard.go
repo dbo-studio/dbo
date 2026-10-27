@@ -20,6 +20,11 @@ type (
 		QuestionID uint `json:"questionId"`
 	}
 
+	// DashboardCardOrderRequest lists every card of the board, in the new order.
+	DashboardCardOrderRequest struct {
+		CardIDs []uint `json:"cardIds"`
+	}
+
 	DashboardCardUpdateRequest struct {
 		Width int `json:"width"`
 	}
@@ -56,6 +61,10 @@ func (req DashboardPinRequest) Validate() error {
 
 func (req DashboardCardUpdateRequest) Validate() error {
 	return validation.ValidateStruct(&req, validation.Field(&req.Width, validation.Required, validation.In(1, 2)))
+}
+
+func (req DashboardCardOrderRequest) Validate() error {
+	return validation.ValidateStruct(&req, validation.Field(&req.CardIDs, validation.Required, validation.Length(1, 500)))
 }
 
 func (req DashboardRenameRequest) Validate() error {
