@@ -1,4 +1,4 @@
-export const CHART_TYPES = ['table', 'number', 'bar', 'line', 'area', 'pie'] as const;
+export const CHART_TYPES = ['table', 'number', 'bar', 'row', 'line', 'area', 'pie'] as const;
 
 export type ChartType = (typeof CHART_TYPES)[number];
 

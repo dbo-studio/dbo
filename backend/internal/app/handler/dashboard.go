@@ -57,6 +57,27 @@ func (h DashboardHandler) Create(c fiber.Ctx) error {
 	return h.send(c, item, err)
 }
 
+func (h DashboardHandler) Rename(c fiber.Ctx) error {
+	req := new(dto.DashboardRenameRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	item, err := h.dashboardService.Rename(c, fiber.Params[uint](c, "id"), req)
+
+	return h.send(c, item, err)
+}
+
+func (h DashboardHandler) Duplicate(c fiber.Ctx) error {
+	item, err := h.dashboardService.Duplicate(c, fiber.Params[uint](c, "id"))
+
+	return h.send(c, item, err)
+}
+
 func (h DashboardHandler) Delete(c fiber.Ctx) error {
 	return h.send(c, nil, h.dashboardService.Delete(c, fiber.Params[uint](c, "id")))
 }

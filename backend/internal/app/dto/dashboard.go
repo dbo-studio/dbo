@@ -12,6 +12,10 @@ type (
 		Name         string `json:"name"`
 	}
 
+	DashboardRenameRequest struct {
+		Name string `json:"name"`
+	}
+
 	DashboardPinRequest struct {
 		QuestionID uint `json:"questionId"`
 	}
@@ -52,4 +56,8 @@ func (req DashboardPinRequest) Validate() error {
 
 func (req DashboardCardUpdateRequest) Validate() error {
 	return validation.ValidateStruct(&req, validation.Field(&req.Width, validation.Required, validation.In(1, 2)))
+}
+
+func (req DashboardRenameRequest) Validate() error {
+	return validation.ValidateStruct(&req, validation.Field(&req.Name, validation.Required, validation.Length(1, 255)))
 }

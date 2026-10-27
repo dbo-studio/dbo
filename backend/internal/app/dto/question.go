@@ -6,7 +6,7 @@ import (
 	"github.com/invopop/validation"
 )
 
-var questionChartTypes = []any{"table", "number", "bar", "line", "area", "pie"}
+var questionChartTypes = []any{"table", "number", "bar", "row", "line", "area", "pie"}
 
 type (
 	// QuestionChart is how a report is drawn; the frontend chart kit reads it as is.

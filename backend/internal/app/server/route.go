@@ -55,6 +55,7 @@ func (r *Server) routing() {
 	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
+
 	ai := api.Group("ai")
 	ai.Post("/chat", r.handlers.AI.Chat)
 	ai.Post("/chat/stream", r.handlers.AI.ChatStream)
@@ -131,6 +132,8 @@ func (r *Server) routing() {
 	dashboards := api.Group("dashboards")
 	dashboards.Get("/", r.handlers.Dashboard.Dashboards)
 	dashboards.Post("/", r.handlers.Dashboard.Create)
+	dashboards.Patch("/:id", r.handlers.Dashboard.Rename)
+	dashboards.Post("/:id/duplicate", r.handlers.Dashboard.Duplicate)
 	dashboards.Delete("/:id", r.handlers.Dashboard.Delete)
 	dashboards.Post("/:id/cards", r.handlers.Dashboard.Pin)
 	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)

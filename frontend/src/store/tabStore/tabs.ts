@@ -11,6 +11,8 @@ const knownModes = new Set<string>([
   TabMode.Object,
   TabMode.ObjectDetail,
   TabMode.Diagram,
+  TabMode.Dashboard,
+  TabMode.Question,
   TabMode.Settings
 ]);
 

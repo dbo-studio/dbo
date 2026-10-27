@@ -7,6 +7,12 @@ export const getDashboards = async (connectionId: number): Promise<DashboardType
 export const createDashboard = async (connectionId: number, name: string): Promise<DashboardType> =>
   (await api.post<{ data: DashboardType }>('/dashboards', { connectionId, name })).data.data;
 
+export const renameDashboard = async (id: number, name: string): Promise<DashboardType> =>
+  (await api.patch<{ data: DashboardType }>(`/dashboards/${id}`, { name })).data.data;
+
+export const duplicateDashboard = async (id: number): Promise<DashboardType> =>
+  (await api.post<{ data: DashboardType }>(`/dashboards/${id}/duplicate`)).data.data;
+
 export const deleteDashboard = async (id: number): Promise<void> => {
   await api.delete(`/dashboards/${id}`);
 };

@@ -153,6 +153,7 @@ type IDashboardRepo interface {
 	Find(ctx context.Context, id uint) (*model.Dashboard, error)
 	FindByName(ctx context.Context, connectionID uint, name string) (*model.Dashboard, error)
 	Create(ctx context.Context, dashboard *model.Dashboard) error
+	Rename(ctx context.Context, dashboard *model.Dashboard) error
 	Delete(ctx context.Context, dashboard *model.Dashboard) error
 	AddCard(ctx context.Context, card *model.DashboardCard) error
 	SaveCard(ctx context.Context, card *model.DashboardCard) error

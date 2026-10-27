@@ -61,6 +61,7 @@ export const IconTypes = {
   light: 'Sun',
   dark: 'Moon',
   sheet: 'Sheet',
+  chart: 'ChartColumn',
   databaseZap: 'DatabaseZap',
   theme: 'Palette',
   shortcuts: 'SquareSlash',

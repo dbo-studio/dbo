@@ -21,6 +21,9 @@ var (
 type IDashboardService interface {
 	Index(ctx context.Context, req *dto.DashboardListRequest) ([]dto.DashboardResponse, error)
 	Create(ctx context.Context, req *dto.DashboardCreateRequest) (*dto.DashboardResponse, error)
+	Rename(ctx context.Context, id uint, req *dto.DashboardRenameRequest) (*dto.DashboardResponse, error)
+	// Duplicate copies a board and its card layout; the cards keep pointing at the same reports.
+	Duplicate(ctx context.Context, id uint) (*dto.DashboardResponse, error)
 	Delete(ctx context.Context, id uint) error
 	Pin(ctx context.Context, id uint, req *dto.DashboardPinRequest) (*dto.DashboardResponse, error)
 	// PinByName pins a report to the board of that name on the report's connection, creating the board when needed.
@@ -103,6 +106,41 @@ func (s IDashboardServiceImpl) Create(ctx context.Context, req *dto.DashboardCre
 	response := toResponse(dashboard)
 
 	return &response, nil
+}
+
+func (s IDashboardServiceImpl) Rename(ctx context.Context, id uint, req *dto.DashboardRenameRequest) (*dto.DashboardResponse, error) {
+	dashboard, err := s.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	dashboard.Name = req.Name
+	if err := s.dashboardRepo.Rename(ctx, dashboard); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return s.reload(ctx, id)
+}
+
+func (s IDashboardServiceImpl) Duplicate(ctx context.Context, id uint) (*dto.DashboardResponse, error) {
+	source, err := s.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	copied := &model.Dashboard{ConnectionID: source.ConnectionID, Name: source.Name + " (copy)"}
+	if err := s.dashboardRepo.Create(ctx, copied); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	for _, card := range source.Cards {
+		next := &model.DashboardCard{DashboardID: copied.ID, QuestionID: card.QuestionID, Position: card.Position, Width: card.Width}
+		if err := s.dashboardRepo.AddCard(ctx, next); err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+	}
+
+	return s.reload(ctx, copied.ID)
 }
 
 func (s IDashboardServiceImpl) Delete(ctx context.Context, id uint) error {

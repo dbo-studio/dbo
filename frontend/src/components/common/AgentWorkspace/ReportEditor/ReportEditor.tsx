@@ -11,14 +11,21 @@ import { CHART_TYPES, numericColumns, type ChartType } from '@/core/charts/chart
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Box, Button, CircularProgress, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, FormControlLabel, Stack, Switch, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 
 const EMPTY_AUTOCOMPLETE = { databases: [], views: [], schemas: [], tables: [], columns: {} };
 
 /** The canvas's Report tab: the agent's chart large, with its SQL, type and axes editable, like a Metabase question. */
-export default function ReportEditor({ report }: { report: ChartReport }): JSX.Element {
+export default function ReportEditor({
+  report,
+  scope
+}: {
+  report: ChartReport;
+  /** Database and schema to run in. The workstation omits it and follows the chat's context. */
+  scope?: { database?: string; schema?: string };
+}): JSX.Element {
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const [edited, setEdited] = useState<ChartReport>(report);
   const [sql, setSql] = useState(report.sql);
@@ -30,7 +37,8 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
     setSql(report.sql);
   }
 
-  const { database, schema } = useAiStore((state) => state.context);
+  const chatContext = useAiStore((state) => state.context);
+  const { database, schema } = scope ?? chatContext;
   // The chat already loads this for its @ menu; the editor shares the cached copy.
   const { data: autocomplete } = useQuery({
     queryKey: ['ai_autocomplete', connectionId, database, schema],
@@ -45,7 +53,7 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
     error
   } = useMutation({
     mutationFn: async () => {
-      const { database, schema } = useAiStore.getState().context;
+      const { database, schema } = scope ?? useAiStore.getState().context;
       return api.query.runRawQuery({ connectionId: Number(connectionId), query: sql, database, schema });
     },
     onSuccess: (result) => {
@@ -78,6 +86,19 @@ export default function ReportEditor({ report }: { report: ChartReport }): JSX.E
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
+      {['bar', 'row', 'area'].includes(edited.spec.type) && (
+        <FormControlLabel
+          label={locales.ai_report_stacked}
+          control={
+            <Switch
+              size='small'
+              checked={!!edited.spec.stacked}
+              onChange={(event) => setEdited({ ...edited, spec: { ...edited.spec, stacked: event.target.checked } })}
+              slotProps={{ input: { 'data-testid': 'ai-report-stacked' } as React.InputHTMLAttributes<HTMLInputElement> }}
+            />
+          }
+        />
+      )}
       <Stack direction='row' spacing={1}>
         <Box sx={{ flex: 1 }}>
           <SelectInput

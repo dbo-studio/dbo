@@ -62,6 +62,10 @@ func (r DashboardRepoImpl) Create(ctx context.Context, dashboard *model.Dashboar
 	return r.db.WithContext(ctx).Create(dashboard).Error
 }
 
+func (r DashboardRepoImpl) Rename(ctx context.Context, dashboard *model.Dashboard) error {
+	return r.db.WithContext(ctx).Model(dashboard).Select("name").Updates(dashboard).Error
+}
+
 func (r DashboardRepoImpl) Delete(ctx context.Context, dashboard *model.Dashboard) error {
 	return r.db.WithContext(ctx).Select("Cards").Delete(dashboard).Error
 }
