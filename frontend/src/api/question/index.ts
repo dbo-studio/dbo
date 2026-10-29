@@ -1,5 +1,5 @@
 import { api } from '@/core/api';
-import type { QuestionResultType, QuestionType, SaveQuestionRequestType } from './types';
+import type { PreviewQuestionRequestType, QuestionParams, QuestionResultType, QuestionType, SaveQuestionRequestType } from './types';
 
 export const getQuestions = async (connectionId: number): Promise<QuestionType[]> =>
   (await api.get<{ data: QuestionType[] }>('/questions', { params: { connectionId } })).data.data;
@@ -14,6 +14,10 @@ export const deleteQuestion = async (id: number): Promise<void> => {
   await api.delete(`/questions/${id}`);
 };
 
-/** Runs the saved query read-only, with fresh data. */
-export const runQuestion = async (id: number): Promise<QuestionResultType> =>
-  (await api.post<{ data: QuestionResultType }>(`/questions/${id}/run`)).data.data;
+/** Runs the saved query read-only, with fresh data; `params` fill its {{name}} filters. */
+export const runQuestion = async (id: number, params?: QuestionParams): Promise<QuestionResultType> =>
+  (await api.post<{ data: QuestionResultType }>(`/questions/${id}/run`, { params })).data.data;
+
+/** Runs unsaved SQL from the editor the way a saved report runs. */
+export const previewQuestion = async (data: PreviewQuestionRequestType, signal?: AbortSignal): Promise<QuestionResultType> =>
+  (await api.post<{ data: QuestionResultType }>('/questions/preview', data, { signal })).data.data;

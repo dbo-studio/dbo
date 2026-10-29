@@ -65,3 +65,8 @@ const full = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 export const formatAxisNumber = (value: unknown): string =>
   isNumeric(value) ? compact.format(Number(value)) : asText(value);
 export const formatNumber = (value: unknown): string => (isNumeric(value) ? full.format(Number(value)) : asText(value));
+
+const PARAM = /\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g;
+
+/** Names of the {{name}} filters in a report's SQL, in order, each once. The backend fills them the same way. */
+export const questionParams = (sql: string): string[] => [...new Set([...sql.matchAll(PARAM)].map((match) => match[1]))];

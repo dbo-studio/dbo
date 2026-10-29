@@ -140,4 +140,77 @@ test.describe("Dashboards in the tree", () => {
       removeSqliteDbFile(dbPath);
     }
   });
+
+  test("{{filters}} in report SQL: the editor and the board fill them", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+    const connectionName = `filters-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-filters-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+        const tree = new ObjectTreePage(page);
+
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(
+          getDbConfig("sqlite", connectionName, dbPath),
+        );
+        await tree.waitForTreeLoad();
+
+        const connections = (await (await page.request.get("/api/connections")).json()) as {
+          data: Array<{ id: number; name: string }>;
+        };
+        const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+        const create = async (name: string, sql: string, type: string): Promise<number> =>
+          (
+            await (
+              await page.request.post("/api/questions", {
+                data: { connectionId, name, sql, chart: { type, y: [] } },
+              })
+            ).json()
+          ).data.id;
+        const echo = await create(`Echo ${suffix}`, "SELECT {{label}} AS label, {{n}} AS v", "table");
+        const double = await create(`Double ${suffix}`, "SELECT {{ n }} * 2 AS doubled", "table");
+        const boardName = `Filtered ${suffix}`;
+        const board = (
+          await (await page.request.post("/api/dashboards", { data: { connectionId, name: boardName } })).json()
+        ).data.id;
+        await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: echo } });
+        await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: double } });
+
+        await page.reload();
+        await tree.waitForTreeLoad();
+
+        await test.step("One board filter feeds every card with that name", async () => {
+          await tree.getTreeNode("Dashboards").click();
+          await tree.getTreeNode(boardName).dblclick();
+          const cards = page.getByTestId("ai-board-card");
+          await expect(cards).toHaveCount(2);
+          await expect(cards.first().getByTestId("ai-board-card-needs-filter")).toContainText("label, n");
+
+          await page.getByTestId("dashboard-filter-n").fill("21");
+          await page.getByTestId("dashboard-filter-label").fill("it's");
+          await page.getByTestId("dashboard-filter-label").press("Enter");
+          await expect(cards.first().getByTestId("ai-chart")).toContainText("it's");
+          await expect(cards.nth(1).getByTestId("ai-chart")).toContainText("42");
+        });
+
+        await test.step("The editor asks for the filters of the SQL it runs", async () => {
+          await tree.getTreeNode("Reports").click();
+          await tree.getTreeNode(`Double ${suffix}`).dblclick();
+          await expect(page.getByTestId("question-tab")).toBeVisible();
+          await page.getByTestId("ai-report-param-n").fill("5");
+          await page.getByTestId("ai-report-run").click();
+          await expect(page.getByTestId("question-tab").getByTestId("ai-chart")).toContainText("10");
+        });
+      });
+    } finally {
+      removeSqliteDbFile(dbPath);
+    }
+  });
 });

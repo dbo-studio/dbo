@@ -85,7 +85,38 @@ func (h QuestionHandler) Delete(c fiber.Ctx) error {
 }
 
 func (h QuestionHandler) Run(c fiber.Ctx) error {
-	result, err := h.questionService.Run(c, fiber.Params[uint](c, "id"))
+	req := new(dto.QuestionRunRequest)
+	// The body is optional: a report without filters runs with none.
+	if len(c.Body()) > 0 {
+		if err := c.Bind().Body(req); err != nil {
+			return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+		}
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.questionService.Run(c, fiber.Params[uint](c, "id"), req.Params)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+func (h QuestionHandler) Preview(c fiber.Ctx) error {
+	req := new(dto.QuestionPreviewRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.questionService.Preview(c, req)
 	if err != nil {
 		h.logger.Error(err.Error())
 		return response.ErrorBuilder().FromError(err).Send(c)

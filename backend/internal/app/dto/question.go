@@ -36,6 +36,20 @@ type (
 		Chart *QuestionChart `json:"chart"`
 	}
 
+	// QuestionRunRequest carries values for the {{name}} filters in the report's SQL.
+	QuestionRunRequest struct {
+		Params map[string]string `json:"params"`
+	}
+
+	// QuestionPreviewRequest runs SQL from the editor before it is saved, the same read-only way a report runs.
+	QuestionPreviewRequest struct {
+		ConnectionID int32             `json:"connectionId"`
+		Database     *string           `json:"database"`
+		Schema       *string           `json:"schema"`
+		SQL          string            `json:"sql"`
+		Params       map[string]string `json:"params"`
+	}
+
 	QuestionResponse struct {
 		ID           uint          `json:"id"`
 		ConnectionID uint          `json:"connectionId"`
@@ -73,5 +87,17 @@ func (req QuestionUpdateRequest) Validate() error {
 		validation.Field(&req.Name, validation.NilOrNotEmpty, validation.Length(1, 255)),
 		validation.Field(&req.SQL, validation.NilOrNotEmpty, validation.Length(1, 20000)),
 		validation.Field(&req.Chart),
+	)
+}
+
+func (req QuestionRunRequest) Validate() error {
+	return validation.ValidateStruct(&req, validation.Field(&req.Params, validation.Length(0, 50)))
+}
+
+func (req QuestionPreviewRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.SQL, validation.Required, validation.Length(1, 20000)),
+		validation.Field(&req.Params, validation.Length(0, 50)),
 	)
 }

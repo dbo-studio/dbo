@@ -8,6 +8,7 @@ import type { QuestionTabType } from '@/types/Tab';
 import { Box, CircularProgress } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
+import { questionParams } from '@/core/charts/chartSpec';
 
 /** A saved question opened from the tree: SQL, chart settings and a live preview. */
 export default function Question(): JSX.Element {
@@ -18,13 +19,14 @@ export default function Question(): JSX.Element {
     queryFn: () => api.question.getQuestions(connectionId)
   });
   const question = questions?.find((item) => item.id === tab.questionId);
-  const { data: result } = useQuery({
+  const { data: result, isFetching: running } = useQuery({
     queryKey: ['question-run', tab.questionId],
     queryFn: () => api.question.runQuestion(tab.questionId),
-    enabled: !!question
+    // A report with {{filters}} waits for the user to fill them in the editor.
+    enabled: !!question && questionParams(question.sql).length === 0
   });
 
-  if (isLoading || (question && !result)) {
+  if (isLoading || (question && running && !result)) {
     return (
       <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}>
         <CircularProgress size={20} />
@@ -32,7 +34,7 @@ export default function Question(): JSX.Element {
     );
   }
 
-  if (!question || !result) {
+  if (!question) {
     return <EmptyState title={locales.question_not_found} />;
   }
 
@@ -41,8 +43,8 @@ export default function Question(): JSX.Element {
     title: question.name,
     sql: question.sql,
     spec: question.chart,
-    rows: result.rows,
-    columns: result.columns?.map((column) => column.name) ?? Object.keys(result.rows[0] ?? {}),
+    rows: result?.rows ?? [],
+    columns: result?.columns?.map((column) => column.name) ?? Object.keys(result?.rows[0] ?? {}),
     questionId: question.id
   };
 

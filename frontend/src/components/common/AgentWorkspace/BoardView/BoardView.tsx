@@ -3,7 +3,9 @@ import type { DashboardCardType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import ChartView from '@/components/common/ChartView/ChartView';
+import { questionParams } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -25,20 +27,27 @@ const useSetBoard = (connectionId: number): ((next: DashboardType) => void) => {
 function BoardCard({
   board,
   card,
-  editing
+  editing,
+  filters
 }: {
   board: DashboardType;
   card: DashboardCardType;
   editing: boolean;
+  filters: Record<string, string>;
 }): JSX.Element {
+  // A filter reaches each card whose SQL has a {{param}} of the same name.
+  const params = Object.fromEntries(questionParams(card.question.sql).map((name) => [name, filters[name] ?? '']));
+  // Without every value the server would only refuse, so the card waits for the filters instead.
+  const missing = Object.keys(params).filter((name) => !params[name]);
   const setBoard = useSetBoard(board.connectionId);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     disabled: !editing
   });
   const { data, error, isFetching, refetch } = useQuery({
-    queryKey: ['question-run', card.question.id],
-    queryFn: () => api.question.runQuestion(card.question.id),
+    queryKey: ['question-run', card.question.id, params],
+    queryFn: () => api.question.runQuestion(card.question.id, params),
+    enabled: missing.length === 0,
     // Opening a board shows fresh numbers.
     refetchOnMount: true
   });
@@ -106,7 +115,11 @@ function BoardCard({
           </>
         )}
       </Stack>
-      {error ? (
+      {missing.length > 0 ? (
+        <Typography variant='caption' color='textSubdued' data-testid='ai-board-card-needs-filter'>
+          {locales.dashboard_filter_needed.replace('{names}', missing.join(', '))}
+        </Typography>
+      ) : error ? (
         <Typography variant='caption' color='error' data-testid='ai-board-card-error'>
           {error.message}
         </Typography>
@@ -158,6 +171,10 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const queryClient = useQueryClient();
   const setBoard = useSetBoard(board.connectionId);
   const [editing, setEditing] = useState(false);
+  // Typed values are applied on Enter or blur, so cards do not rerun on every key.
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const filterNames = [...new Set(board.cards.flatMap((card) => questionParams(card.question.sql)))];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const { mutate: reorder } = useMutation({
     mutationFn: (cards: DashboardCardType[]) =>
@@ -202,6 +219,23 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           {editing ? locales.dashboard_done : locales.dashboard_edit}
         </Button>
       </Stack>
+      {filterNames.length > 0 && (
+        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }} data-testid='dashboard-filters'>
+          {filterNames.map((name) => (
+            <FieldInput
+              key={name}
+              size='small'
+              placeholder={name}
+              value={draft[name] ?? ''}
+              onChange={(event) => setDraft({ ...draft, [name]: event.target.value })}
+              onBlur={() => setFilters(draft)}
+              onKeyDown={(event) => event.key === 'Enter' && setFilters(draft)}
+              inputProps={{ 'aria-label': name, 'data-testid': `dashboard-filter-${name}` }}
+              mb={0}
+            />
+          ))}
+        </Stack>
+      )}
       {board.cards.length === 0 ? (
         <Typography variant='body2' color='textSubdued'>
           {locales.ai_boards_empty}
@@ -211,7 +245,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
               {board.cards.map((card) => (
-                <BoardCard key={card.id} board={board} card={card} editing={editing} />
+                <BoardCard key={card.id} board={board} card={card} editing={editing} filters={filters} />
               ))}
             </Box>
           </SortableContext>

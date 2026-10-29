@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
@@ -20,8 +21,10 @@ type IQuestionService interface {
 	Create(ctx context.Context, req *dto.QuestionCreateRequest) (*dto.QuestionResponse, error)
 	Update(ctx context.Context, id uint, req *dto.QuestionUpdateRequest) (*dto.QuestionResponse, error)
 	Delete(ctx context.Context, id uint) error
-	// Run executes the report's query read-only and returns the rows as the execute_sql tool does.
-	Run(ctx context.Context, id uint) (json.RawMessage, error)
+	// Run executes the report's query read-only, its {{name}} filters filled from params, and returns the rows as the execute_sql tool does.
+	Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error)
+	// Preview runs unsaved SQL the same way, for the editor.
+	Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error)
 }
 
 var _ IQuestionService = (*IQuestionServiceImpl)(nil)
@@ -156,17 +159,39 @@ func (s IQuestionServiceImpl) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (s IQuestionServiceImpl) Run(ctx context.Context, id uint) (json.RawMessage, error) {
+func (s IQuestionServiceImpl) Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error) {
 	question, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := s.toolRegistry.Execute(ctx, serviceDbtools.ToolExecuteSQL, map[string]any{"sql": question.SQL}, serviceDbtools.ToolContext{
+	return s.run(ctx, serviceDbtools.ToolContext{
 		ConnectionID: int32(question.ConnectionID),
 		Database:     lo.EmptyableToPtr(question.Database),
 		Schema:       lo.EmptyableToPtr(question.Schema),
-	})
+	}, question.SQL, params)
+}
+
+func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error) {
+	return s.run(ctx, serviceDbtools.ToolContext{
+		ConnectionID: req.ConnectionID,
+		Database:     req.Database,
+		Schema:       req.Schema,
+	}, req.SQL, req.Params)
+}
+
+func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.ToolContext, sql string, params map[string]string) (json.RawMessage, error) {
+	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	rendered, err := RenderParams(sql, params, databaseContract.IsMysqlFamily(conn.ConnectionType))
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	result, err := s.toolRegistry.Execute(ctx, serviceDbtools.ToolExecuteSQL, map[string]any{"sql": rendered}, toolCtx)
 	if err != nil {
 		return nil, apperror.BadRequest(err)
 	}

@@ -7,7 +7,7 @@ import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import PinReportButton from '../PinReportButton/PinReportButton';
-import { CHART_TYPES, numericColumns, type ChartType } from '@/core/charts/chartSpec';
+import { CHART_TYPES, numericColumns, questionParams, type ChartType } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -29,6 +29,8 @@ export default function ReportEditor({
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const [edited, setEdited] = useState<ChartReport>(report);
   const [sql, setSql] = useState(report.sql);
+  // Values for the {{name}} filters; they only feed runs here, the saved report keeps the placeholders.
+  const [params, setParams] = useState<Record<string, string>>({});
   // A newer chart from the agent replaces what was being edited.
   const [shownId, setShownId] = useState(report.id);
   if (shownId !== report.id) {
@@ -56,14 +58,14 @@ export default function ReportEditor({
     mutationFn: async () => {
       const { database, schema } = scope ?? useAiStore.getState().context;
       runControllerRef.current = new AbortController();
-      return api.query.runRawQuery(
-        { connectionId: Number(connectionId), query: sql, database, schema },
+      return api.question.previewQuestion(
+        { connectionId: Number(connectionId), sql, params, database, schema },
         runControllerRef.current.signal
       );
     },
     onSuccess: (result) => {
-      const columns = result.columns?.map((column) => column.name) ?? Object.keys(result.data[0] ?? {});
-      setEdited((current) => ({ ...current, sql, rows: result.data, columns }));
+      const columns = result.columns?.map((column) => column.name) ?? Object.keys(result.rows[0] ?? {});
+      setEdited((current) => ({ ...current, sql, rows: result.rows, columns }));
     }
   });
 
@@ -141,6 +143,22 @@ export default function ReportEditor({
           onRunQuery={() => run()}
         />
       </Box>
+      {questionParams(sql).length > 0 && (
+        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }} data-testid='ai-report-params'>
+          {questionParams(sql).map((name) => (
+            <FieldInput
+              key={name}
+              size='small'
+              placeholder={name}
+              value={params[name] ?? ''}
+              onChange={(event) => setParams({ ...params, [name]: event.target.value })}
+              onKeyDown={(event) => event.key === 'Enter' && run()}
+              inputProps={{ 'aria-label': name, 'data-testid': `ai-report-param-${name}` }}
+              mb={0}
+            />
+          ))}
+        </Stack>
+      )}
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
         <Button
           size='small'
