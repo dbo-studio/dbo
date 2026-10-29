@@ -22,18 +22,28 @@ type (
 	}
 
 	QuestionCreateRequest struct {
-		ConnectionID int32         `json:"connectionId"`
-		Database     *string       `json:"database"`
-		Schema       *string       `json:"schema"`
-		Name         string        `json:"name"`
-		SQL          string        `json:"sql"`
-		Chart        QuestionChart `json:"chart"`
+		ConnectionID int32             `json:"connectionId"`
+		Database     *string           `json:"database"`
+		Schema       *string           `json:"schema"`
+		Name         string            `json:"name"`
+		SQL          string            `json:"sql"`
+		Chart        QuestionChart     `json:"chart"`
+		Params       map[string]string `json:"params"`
 	}
 
 	QuestionUpdateRequest struct {
-		Name  *string        `json:"name"`
-		SQL   *string        `json:"sql"`
-		Chart *QuestionChart `json:"chart"`
+		Name   *string            `json:"name"`
+		SQL    *string            `json:"sql"`
+		Chart  *QuestionChart     `json:"chart"`
+		Params *map[string]string `json:"params"`
+	}
+
+	// QuestionFieldValuesRequest asks for the distinct values of a field filter's column, for its dropdown.
+	QuestionFieldValuesRequest struct {
+		ConnectionID int32   `json:"connectionId"`
+		Database     *string `json:"database"`
+		Schema       *string `json:"schema"`
+		Field        string  `json:"field"`
 	}
 
 	// QuestionRunRequest carries values for the {{name}} filters in the report's SQL.
@@ -51,14 +61,15 @@ type (
 	}
 
 	QuestionResponse struct {
-		ID           uint          `json:"id"`
-		ConnectionID uint          `json:"connectionId"`
-		Database     string        `json:"database,omitempty"`
-		Schema       string        `json:"schema,omitempty"`
-		Name         string        `json:"name"`
-		SQL          string        `json:"sql"`
-		Chart        QuestionChart `json:"chart"`
-		UpdatedAt    time.Time     `json:"updatedAt"`
+		ID           uint              `json:"id"`
+		ConnectionID uint              `json:"connectionId"`
+		Database     string            `json:"database,omitempty"`
+		Schema       string            `json:"schema,omitempty"`
+		Name         string            `json:"name"`
+		SQL          string            `json:"sql"`
+		Chart        QuestionChart     `json:"chart"`
+		Params       map[string]string `json:"params"`
+		UpdatedAt    time.Time         `json:"updatedAt"`
 	}
 )
 
@@ -79,6 +90,7 @@ func (req QuestionCreateRequest) Validate() error {
 		validation.Field(&req.Name, validation.Required, validation.Length(1, 255)),
 		validation.Field(&req.SQL, validation.Required, validation.Length(1, 20000)),
 		validation.Field(&req.Chart),
+		validation.Field(&req.Params, validation.Length(0, 50)),
 	)
 }
 
@@ -87,6 +99,7 @@ func (req QuestionUpdateRequest) Validate() error {
 		validation.Field(&req.Name, validation.NilOrNotEmpty, validation.Length(1, 255)),
 		validation.Field(&req.SQL, validation.NilOrNotEmpty, validation.Length(1, 20000)),
 		validation.Field(&req.Chart),
+		validation.Field(&req.Params, validation.Length(0, 50)),
 	)
 }
 
@@ -99,5 +112,12 @@ func (req QuestionPreviewRequest) Validate() error {
 		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
 		validation.Field(&req.SQL, validation.Required, validation.Length(1, 20000)),
 		validation.Field(&req.Params, validation.Length(0, 50)),
+	)
+}
+
+func (req QuestionFieldValuesRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.Field, validation.Required, validation.Length(1, 255)),
 	)
 }

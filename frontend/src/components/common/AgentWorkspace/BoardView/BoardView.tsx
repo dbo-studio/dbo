@@ -3,9 +3,9 @@ import type { DashboardCardType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import ChartView from '@/components/common/ChartView/ChartView';
-import { questionParams } from '@/core/charts/chartSpec';
+import { missingParams, questionParams, type QuestionParam } from '@/core/charts/chartSpec';
+import ParamInput from '../ParamInput/ParamInput';
 import locales from '@/locales';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -36,9 +36,10 @@ function BoardCard({
   filters: Record<string, string>;
 }): JSX.Element {
   // A filter reaches each card whose SQL has a {{param}} of the same name.
-  const params = Object.fromEntries(questionParams(card.question.sql).map((name) => [name, filters[name] ?? '']));
+  const declared = questionParams(card.question.sql);
+  const params = Object.fromEntries(declared.map((param) => [param.name, filters[param.name] ?? '']));
   // Without every value the server would only refuse, so the card waits for the filters instead.
-  const missing = Object.keys(params).filter((name) => !params[name]);
+  const missing = missingParams(declared, params);
   const setBoard = useSetBoard(board.connectionId);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -173,8 +174,19 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const [editing, setEditing] = useState(false);
   // Typed values are applied on Enter or blur, so cards do not rerun on every key.
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const filterNames = [...new Set(board.cards.flatMap((card) => questionParams(card.question.sql)))];
+  const [applied, setApplied] = useState<Record<string, string>>({});
+  // One widget per filter name; the first card that declares it sets its type, any card's saved default fills it.
+  const filterParams = [
+    ...new Map(
+      board.cards
+        .flatMap((card) => questionParams(card.question.sql))
+        .reverse()
+        .map((param): [string, QuestionParam] => [param.name, param])
+    ).values()
+  ].reverse();
+  const defaults = board.cards.reduce<Record<string, string>>((all, card) => ({ ...all, ...card.question.params }), {});
+  const filters = { ...defaults, ...applied };
+  const shown = { ...filters, ...draft };
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const { mutate: reorder } = useMutation({
     mutationFn: (cards: DashboardCardType[]) =>
@@ -219,19 +231,17 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           {editing ? locales.dashboard_done : locales.dashboard_edit}
         </Button>
       </Stack>
-      {filterNames.length > 0 && (
-        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }} data-testid='dashboard-filters'>
-          {filterNames.map((name) => (
-            <FieldInput
-              key={name}
-              size='small'
-              placeholder={name}
-              value={draft[name] ?? ''}
-              onChange={(event) => setDraft({ ...draft, [name]: event.target.value })}
-              onBlur={() => setFilters(draft)}
-              onKeyDown={(event) => event.key === 'Enter' && setFilters(draft)}
-              inputProps={{ 'aria-label': name, 'data-testid': `dashboard-filter-${name}` }}
-              mb={0}
+      {filterParams.length > 0 && (
+        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} data-testid='dashboard-filters'>
+          {filterParams.map((param) => (
+            <ParamInput
+              key={param.name}
+              param={param}
+              value={shown[param.name] ?? ''}
+              onChange={(value) => setDraft((current) => ({ ...current, [param.name]: value }))}
+              onCommit={(value) => setApplied((current) => ({ ...current, [param.name]: value }))}
+              connectionId={board.connectionId}
+              scope={{ database: board.cards[0]?.question.database, schema: board.cards[0]?.question.schema }}
             />
           ))}
         </Stack>

@@ -14,7 +14,10 @@ import (
 	"github.com/samber/lo"
 )
 
-var errQuestionNotFound = errors.New("report not found")
+var (
+	errQuestionNotFound = errors.New("report not found")
+	errFieldFormat      = errors.New("a field filter names its column as table.column")
+)
 
 type IQuestionService interface {
 	Index(ctx context.Context, req *dto.QuestionListRequest) ([]dto.QuestionResponse, error)
@@ -23,6 +26,8 @@ type IQuestionService interface {
 	Delete(ctx context.Context, id uint) error
 	// Run executes the report's query read-only, its {{name}} filters filled from params, and returns the rows as the execute_sql tool does.
 	Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error)
+	// FieldValues lists the distinct values of a field filter's column, for its dropdown.
+	FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error)
 	// Preview runs unsaved SQL the same way, for the editor.
 	Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error)
 }
@@ -92,6 +97,11 @@ func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreat
 		return nil, apperror.InternalServerError(err)
 	}
 
+	params, err := json.Marshal(lo.CoalesceMapOrEmpty(req.Params))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
 	question := &model.Question{
 		ConnectionID: uint(req.ConnectionID),
 		Database:     lo.FromPtr(req.Database),
@@ -99,6 +109,7 @@ func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreat
 		Name:         req.Name,
 		SQL:          req.SQL,
 		ChartJSON:    string(chart),
+		ParamsJSON:   string(params),
 	}
 
 	if err := s.questionRepo.Create(ctx, question); err != nil {
@@ -135,6 +146,15 @@ func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.Ques
 		}
 
 		question.ChartJSON = string(chart)
+	}
+
+	if req.Params != nil {
+		params, err := json.Marshal(lo.CoalesceMapOrEmpty(*req.Params))
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		question.ParamsJSON = string(params)
 	}
 
 	if err := s.questionRepo.Save(ctx, question); err != nil {
@@ -180,6 +200,21 @@ func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPrev
 	}, req.SQL, req.Params)
 }
 
+func (s IQuestionServiceImpl) FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error) {
+	parts := FieldPattern.FindStringSubmatch(req.Field)
+	if parts == nil {
+		return nil, apperror.BadRequest(errFieldFormat)
+	}
+
+	table, column := parts[1], parts[2]
+
+	return s.run(ctx, serviceDbtools.ToolContext{
+		ConnectionID: req.ConnectionID,
+		Database:     req.Database,
+		Schema:       req.Schema,
+	}, "SELECT DISTINCT "+column+" AS value FROM "+table+" WHERE "+column+" IS NOT NULL ORDER BY 1", nil)
+}
+
 func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.ToolContext, sql string, params map[string]string) (json.RawMessage, error) {
 	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
 	if err != nil {
@@ -201,9 +236,13 @@ func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.To
 
 // ToResponse maps a stored report; boards reuse it for their cards.
 func ToResponse(question *model.Question) dto.QuestionResponse {
-	var chart dto.QuestionChart
+	var (
+		chart  dto.QuestionChart
+		params map[string]string
+	)
 
 	_ = json.Unmarshal([]byte(question.ChartJSON), &chart)
+	_ = json.Unmarshal([]byte(question.ParamsJSON), &params)
 
 	return dto.QuestionResponse{
 		ID:           question.ID,
@@ -213,6 +252,7 @@ func ToResponse(question *model.Question) dto.QuestionResponse {
 		Name:         question.Name,
 		SQL:          question.SQL,
 		Chart:        chart,
+		Params:       lo.CoalesceMapOrEmpty(params),
 		UpdatedAt:    lo.FromPtr(question.UpdatedAt),
 	}
 }

@@ -8,7 +8,7 @@ import type { QuestionTabType } from '@/types/Tab';
 import { Box, CircularProgress } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
-import { questionParams } from '@/core/charts/chartSpec';
+import { missingParams, questionParams } from '@/core/charts/chartSpec';
 
 /** A saved question opened from the tree: SQL, chart settings and a live preview. */
 export default function Question(): JSX.Element {
@@ -20,10 +20,10 @@ export default function Question(): JSX.Element {
   });
   const question = questions?.find((item) => item.id === tab.questionId);
   const { data: result, isFetching: running } = useQuery({
-    queryKey: ['question-run', tab.questionId],
-    queryFn: () => api.question.runQuestion(tab.questionId),
-    // A report with {{filters}} waits for the user to fill them in the editor.
-    enabled: !!question && questionParams(question.sql).length === 0
+    queryKey: ['question-run', tab.questionId, question?.params],
+    queryFn: () => api.question.runQuestion(tab.questionId, question?.params),
+    // A report whose {{filters}} lack defaults waits for the user to fill them in the editor.
+    enabled: !!question && missingParams(questionParams(question.sql), question.params).length === 0
   });
 
   if (isLoading || (question && running && !result)) {
@@ -45,7 +45,8 @@ export default function Question(): JSX.Element {
     spec: question.chart,
     rows: result?.rows ?? [],
     columns: result?.columns?.map((column) => column.name) ?? Object.keys(result?.rows[0] ?? {}),
-    questionId: question.id
+    questionId: question.id,
+    params: question.params
   };
 
   return (

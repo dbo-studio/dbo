@@ -166,22 +166,35 @@ test.describe("Dashboards in the tree", () => {
           data: Array<{ id: number; name: string }>;
         };
         const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
-        const create = async (name: string, sql: string, type: string): Promise<number> =>
+        const create = async (name: string, sql: string, params: Record<string, string> = {}): Promise<number> =>
           (
             await (
               await page.request.post("/api/questions", {
-                data: { connectionId, name, sql, chart: { type, y: [] } },
+                data: { connectionId, name, sql, chart: { type: "table", y: [] }, params },
               })
             ).json()
           ).data.id;
-        const echo = await create(`Echo ${suffix}`, "SELECT {{label}} AS label, {{n}} AS v", "table");
-        const double = await create(`Double ${suffix}`, "SELECT {{ n }} * 2 AS doubled", "table");
+        const sales = `sales_${suffix}`;
+        await page.request.post("/api/query/raw", {
+          data: { connectionId, query: `CREATE TABLE ${sales} (region TEXT, amount REAL)` },
+        });
+        await page.request.post("/api/query/raw", {
+          data: { connectionId, query: `INSERT INTO ${sales} VALUES ('east',10),('west',20),('east',500)` },
+        });
+        const echo = await create(`Echo ${suffix}`, "SELECT {{label}} AS label, {{n:number}} AS v");
+        const double = await create(`Double ${suffix}`, "SELECT {{ n }} * 2 AS doubled");
+        const counted = await create(
+          `Count ${suffix}`,
+          `SELECT COUNT(*) AS rows_in FROM ${sales} WHERE {{region:field=${sales}.region}} AND amount BETWEEN {{amount:range}}`,
+          { amount: "0..100" },
+        );
         const boardName = `Filtered ${suffix}`;
         const board = (
           await (await page.request.post("/api/dashboards", { data: { connectionId, name: boardName } })).json()
         ).data.id;
         await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: echo } });
         await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: double } });
+        await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: counted } });
 
         await page.reload();
         await tree.waitForTreeLoad();
@@ -190,23 +203,49 @@ test.describe("Dashboards in the tree", () => {
           await tree.getTreeNode("Dashboards").click();
           await tree.getTreeNode(boardName).dblclick();
           const cards = page.getByTestId("ai-board-card");
-          await expect(cards).toHaveCount(2);
+          await expect(cards).toHaveCount(3);
           await expect(cards.first().getByTestId("ai-board-card-needs-filter")).toContainText("label, n");
+          // The saved range default runs it at once; the empty field filter matches every region.
+          await expect(cards.nth(2).getByTestId("ai-chart")).toContainText("2");
 
-          await page.getByTestId("dashboard-filter-n").fill("21");
-          await page.getByTestId("dashboard-filter-label").fill("it's");
-          await page.getByTestId("dashboard-filter-label").press("Enter");
+          await page.getByTestId("param-n").fill("21");
+          await page.getByTestId("param-label").fill("it's");
+          await page.getByTestId("param-label").press("Enter");
           await expect(cards.first().getByTestId("ai-chart")).toContainText("it's");
           await expect(cards.nth(1).getByTestId("ai-chart")).toContainText("42");
+        });
+
+        await test.step("A field filter offers the column's values; a range takes both ends", async () => {
+          const cards = page.getByTestId("ai-board-card");
+          await page.getByTestId("param-region").click();
+          await expect(page.getByRole("option", { name: "west" })).toBeVisible();
+          await page.getByRole("option", { name: "east" }).click();
+          await expect(cards.nth(2).getByTestId("ai-chart")).toContainText("1");
+
+          await page.getByTestId("param-amount-high").fill("1000");
+          await page.getByTestId("param-amount-high").press("Enter");
+          await expect(cards.nth(2).getByTestId("ai-chart")).toContainText("2");
         });
 
         await test.step("The editor asks for the filters of the SQL it runs", async () => {
           await tree.getTreeNode("Reports").click();
           await tree.getTreeNode(`Double ${suffix}`).dblclick();
           await expect(page.getByTestId("question-tab")).toBeVisible();
-          await page.getByTestId("ai-report-param-n").fill("5");
+          await page.getByTestId("param-n").fill("5");
           await page.getByTestId("ai-report-run").click();
           await expect(page.getByTestId("question-tab").getByTestId("ai-chart")).toContainText("10");
+        });
+
+        await test.step("Saving keeps the filter values as the report's defaults", async () => {
+          await page.getByTestId("ai-report-save-canvas").click();
+          await expect
+            .poll(async () => {
+              const list = (await (await page.request.get(`/api/questions?connectionId=${connectionId}`)).json()) as {
+                data: Array<{ id: number; params: Record<string, string> }>;
+              };
+              return list.data.find((item) => item.id === double)?.params;
+            })
+            .toEqual({ n: "5" });
         });
       });
     } finally {

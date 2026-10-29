@@ -11,6 +11,8 @@ export type ChartReport = {
   columns: string[];
   /** Set once the report is saved. */
   questionId?: number;
+  /** Default values of the {{filters}} in sql. */
+  params?: Record<string, string>;
 };
 
 type ShowChartArgs = { sql?: string; title?: string; type?: string; x?: string; y?: string[]; stacked?: boolean };

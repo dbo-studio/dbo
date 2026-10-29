@@ -18,7 +18,7 @@ export const useSaveReport = () => {
         useAiStore.getState().context,
         useConnectionStore.getState().currentConnection()
       );
-      const body = { name: report.title, sql: report.sql, chart: report.spec };
+      const body = { name: report.title, sql: report.sql, chart: report.spec, params: report.params ?? {} };
       const saved = report.questionId
         ? await api.question.updateQuestion(report.questionId, body)
         : await api.question.createQuestion({ ...body, connectionId: Number(connectionId), database, schema });

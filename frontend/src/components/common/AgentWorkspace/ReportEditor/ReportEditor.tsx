@@ -7,6 +7,7 @@ import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import PinReportButton from '../PinReportButton/PinReportButton';
+import ParamInput from '../ParamInput/ParamInput';
 import { CHART_TYPES, numericColumns, questionParams, type ChartType } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -29,14 +30,15 @@ export default function ReportEditor({
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const [edited, setEdited] = useState<ChartReport>(report);
   const [sql, setSql] = useState(report.sql);
-  // Values for the {{name}} filters; they only feed runs here, the saved report keeps the placeholders.
-  const [params, setParams] = useState<Record<string, string>>({});
+  // Values for the {{filters}}; saving keeps them as the report's defaults.
+  const [params, setParams] = useState<Record<string, string>>(report.params ?? {});
   // A newer chart from the agent replaces what was being edited.
   const [shownId, setShownId] = useState(report.id);
   if (shownId !== report.id) {
     setShownId(report.id);
     setEdited(report);
     setSql(report.sql);
+    setParams(report.params ?? {});
   }
 
   const chatContext = useAiStore((state) => state.context);
@@ -145,16 +147,15 @@ export default function ReportEditor({
       </Box>
       {questionParams(sql).length > 0 && (
         <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }} data-testid='ai-report-params'>
-          {questionParams(sql).map((name) => (
-            <FieldInput
-              key={name}
-              size='small'
-              placeholder={name}
-              value={params[name] ?? ''}
-              onChange={(event) => setParams({ ...params, [name]: event.target.value })}
-              onKeyDown={(event) => event.key === 'Enter' && run()}
-              inputProps={{ 'aria-label': name, 'data-testid': `ai-report-param-${name}` }}
-              mb={0}
+          {questionParams(sql).map((param) => (
+            <ParamInput
+              key={param.name}
+              param={param}
+              value={params[param.name] ?? ''}
+              onChange={(value) => setParams((current) => ({ ...current, [param.name]: value }))}
+              onCommit={() => undefined}
+              connectionId={Number(connectionId)}
+              scope={{ database, schema }}
             />
           ))}
         </Stack>
@@ -179,12 +180,12 @@ export default function ReportEditor({
           size='small'
           variant='outlined'
           disabled={saving || !edited.title.trim()}
-          onClick={() => save({ ...edited, sql }, { onSuccess: (saved) => setEdited(saved) })}
+          onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}
           data-testid='ai-report-save-canvas'
         >
           {locales.ai_report_save}
         </Button>
-        <PinReportButton report={{ ...edited, sql }} onSaved={setEdited} />
+        <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
         {error && (
           <Typography variant='caption' color='error'>
             {error.message}

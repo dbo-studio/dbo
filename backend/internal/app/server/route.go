@@ -128,6 +128,7 @@ func (r *Server) routing() {
 	questions.Patch("/:id", r.handlers.Question.Update)
 	questions.Delete("/:id", r.handlers.Question.Delete)
 	questions.Post("/preview", r.handlers.Question.Preview)
+	questions.Post("/field-values", r.handlers.Question.FieldValues)
 	questions.Post("/:id/run", r.handlers.Question.Run)
 
 	dashboards := api.Group("dashboards")

@@ -9,6 +9,8 @@ export type QuestionType = {
   name: string;
   sql: string;
   chart: ChartSpec;
+  /** Default values of the {{filters}} in its SQL. */
+  params: Record<string, string>;
   updatedAt: string;
 };
 
@@ -19,6 +21,7 @@ export type SaveQuestionRequestType = {
   name: string;
   sql: string;
   chart: ChartSpec;
+  params?: Record<string, string>;
 };
 
 export type QuestionResultType = {
@@ -35,4 +38,12 @@ export type PreviewQuestionRequestType = {
   schema?: string;
   sql: string;
   params?: QuestionParams;
+};
+
+export type FieldValuesRequestType = {
+  connectionId: number;
+  database?: string;
+  schema?: string;
+  /** table.column of a field filter. */
+  field: string;
 };
