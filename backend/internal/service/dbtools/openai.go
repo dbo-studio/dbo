@@ -21,6 +21,7 @@ const (
 	ToolShowChart           = "show_chart"
 	ToolSaveReport          = "save_report"
 	ToolPinReport           = "pin_report"
+	ToolListReports         = "list_reports"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -36,7 +37,7 @@ var agentOnlyTools = map[string]bool{
 // whose agent level is data_write never gets schema proposals.
 func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolReviewSchema, ToolShowChart, ToolSaveReport, ToolPinReport:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolReviewSchema, ToolShowChart, ToolSaveReport, ToolPinReport, ToolListReports:
 		return true
 	case ToolProposeSchemaChange:
 		if tier == TierDataWrite {
@@ -142,7 +143,7 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				"title": map[string]any{"type": "string", "description": "Short chart title, e.g. \"Revenue by month\"."},
 				"type": map[string]any{
 					"type":        "string",
-					"enum":        []string{"bar", "line", "area", "pie", "number", "table"},
+					"enum":        []string{"bar", "row", "line", "area", "pie", "number", "table"},
 					"description": "line or area for time, bar for categories, pie for a few shares of a whole, number for a single value.",
 				},
 				"x":       map[string]any{"type": "string", "description": "Column for categories or time."},
@@ -157,13 +158,16 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				"properties": map[string]any{
 					"title":   map[string]any{"type": "string"},
 					"sql":     map[string]any{"type": "string", "description": "The SELECT the report runs."},
-					"type":    map[string]any{"type": "string", "enum": []string{"bar", "line", "area", "pie", "number", "table"}},
+					"type":    map[string]any{"type": "string", "enum": []string{"bar", "row", "line", "area", "pie", "number", "table"}},
 					"x":       map[string]any{"type": "string"},
 					"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 					"stacked": map[string]any{"type": "boolean"},
 				},
 				"required": []string{"title", "sql", "type"},
 			}),
+		functionTool(ToolListReports, "List the saved reports of this connection and the boards (dashboards) they are pinned to. "+
+			"Call it before save_report or pin_report so you reuse a report or board that exists instead of making a copy.",
+			shared.FunctionParameters{"type": "object", "properties": map[string]any{}}),
 		functionTool(ToolPinReport, "Pin a saved report to a board (a simple dashboard) by board name; the board is created when it does not exist. "+
 			"Save the report with save_report first and use the id it returns.", shared.FunctionParameters{
 			"type": "object",

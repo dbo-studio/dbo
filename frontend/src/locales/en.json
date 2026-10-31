@@ -908,6 +908,8 @@
   "ai_reports_empty": "Saved reports show here.",
   "ai_report_delete": "Delete report",
   "ai_report_name": "Report name",
+  "ai_step_listing_reports": "Looking at reports and boards",
+  "ai_step_listed_reports": "Looked at reports and boards",
   "ai_step_saving_report": "Saving report",
   "ai_step_saved_report": "Saved report {title}",
   "ai_chart_type_table": "Table",

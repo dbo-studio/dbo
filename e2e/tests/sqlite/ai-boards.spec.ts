@@ -73,6 +73,14 @@ test.describe("AI boards", () => {
           await expect(page.getByTestId("ai-tool-step").last()).toHaveText("Pinned to Sales", { timeout: 15000 });
         });
 
+        await test.step("The agent lists the reports and boards that exist", async () => {
+          llm.script = { name: "list_reports", args: {} };
+          await composer.fill("what reports do I have");
+          await composer.press("Enter");
+          const step = page.getByTestId("ai-tool-step").last();
+          await expect(step).toHaveText("Looked at reports and boards", { timeout: 15000 });
+        });
+
         await test.step("The board shows both reports, resizes, refreshes and unpins", async () => {
           await page.getByTestId("ai-expand-to-agent").click();
           await page.getByTestId("ai-board-item").filter({ hasText: "Sales" }).click();

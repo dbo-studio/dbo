@@ -225,6 +225,8 @@ func (s *AiServiceImpl) runToolCall(
 		if saved, err = s.saveReport(ctx, call.Arguments, toolCtx); err == nil {
 			result = fmt.Sprintf("Saved the report %q (id %d). The user can reopen it from Reports.", saved.Name, saved.ID)
 		}
+	case call.Name == serviceDbtools.ToolListReports:
+		result, err = s.listReports(ctx, toolCtx)
 	case call.Name == serviceDbtools.ToolPinReport:
 		var board *dto.DashboardResponse
 		if board, err = s.pinReport(ctx, call.Arguments); err == nil {
@@ -351,6 +353,52 @@ func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx 
 	}
 
 	return s.questionService.Create(ctx, req)
+}
+
+// listReports tells the agent what already exists: each report with its id, and each board with the reports on it.
+func (s *AiServiceImpl) listReports(ctx context.Context, toolCtx serviceDbtools.ToolContext) (string, error) {
+	reports, err := s.questionService.Index(ctx, &dto.QuestionListRequest{ConnectionID: toolCtx.ConnectionID})
+	if err != nil {
+		return "", err
+	}
+
+	boards, err := s.dashboardService.Index(ctx, &dto.DashboardListRequest{ConnectionID: toolCtx.ConnectionID})
+	if err != nil {
+		return "", err
+	}
+
+	type report struct {
+		ID    uint   `json:"id"`
+		Title string `json:"title"`
+		Type  string `json:"type"`
+	}
+
+	type board struct {
+		Name    string   `json:"name"`
+		Reports []string `json:"reports"`
+	}
+
+	out := struct {
+		Reports []report `json:"reports"`
+		Boards  []board  `json:"boards"`
+	}{Reports: []report{}, Boards: []board{}}
+
+	for _, item := range reports {
+		out.Reports = append(out.Reports, report{ID: item.ID, Title: item.Name, Type: item.Chart.Type})
+	}
+
+	for _, item := range boards {
+		names := []string{}
+		for _, card := range item.Cards {
+			names = append(names, card.Question.Name)
+		}
+
+		out.Boards = append(out.Boards, board{Name: item.Name, Reports: names})
+	}
+
+	encoded, err := json.Marshal(out)
+
+	return string(encoded), err
 }
 
 type pinReportArgs struct {
