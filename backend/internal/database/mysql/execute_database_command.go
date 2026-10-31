@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -23,9 +24,9 @@ func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabID con
 	params := dto[tabID]
 
 	if action == contract.CreateDatabaseAction {
-		query := fmt.Sprintf("CREATE DATABASE `%s`", *params.New.Name)
+		query := fmt.Sprintf("CREATE DATABASE %s", quote.MysqlIdent(*params.New.Name))
 		if params.New.Comment != nil {
-			query += fmt.Sprintf(" COMMENT '%s'", *params.New.Comment)
+			query += fmt.Sprintf(" COMMENT %s", quote.MysqlLiteral(*params.New.Comment))
 		}
 
 		queries = append(queries, query)
@@ -39,17 +40,17 @@ func (r *MySQLRepository) handleDatabaseCommands(node contract.DBNode, tabID con
 		dbName := *params.Old.Name
 
 		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE `%s` RENAME TO `%s`", dbName, *params.New.Name))
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", quote.MysqlIdent(dbName), quote.MysqlIdent(*params.New.Name)))
 			dbName = *params.New.Name
 		}
 
 		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE `%s` COMMENT '%s'", dbName, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s COMMENT %s", quote.MysqlIdent(dbName), quote.MysqlLiteral(*params.New.Comment)))
 		}
 	}
 
 	if action == contract.DropDatabaseAction {
-		query := fmt.Sprintf("DROP DATABASE `%s`", node.Database)
+		query := fmt.Sprintf("DROP DATABASE %s", quote.MysqlIdent(node.Database))
 		queries = append(queries, query)
 	}
 
