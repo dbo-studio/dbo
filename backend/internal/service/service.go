@@ -36,6 +36,7 @@ type Service struct {
 	SavedQueryService       serviceSavedQuery.ISavedQueryService
 	QuestionService         serviceQuestion.IQuestionService
 	DashboardService        serviceDashboard.IDashboardService
+	DashboardShareService   serviceDashboard.IShareService
 	TreeService             serviceTree.ITreeService
 	QueryService            serviceQuery.IQueryService
 	ImportExportService     serviceImportExport.IImportExport
@@ -72,6 +73,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
 	questionService := serviceQuestion.NewQuestionService(repo.QuestionRepo, repo.ConnectionRepo, toolRegistry)
 	dashboardService := serviceDashboard.NewDashboardService(repo.DashboardRepo, repo.QuestionRepo, repo.ConnectionRepo)
+	dashboardShareService := serviceDashboard.NewShareService(repo.DashboardShareRepo, repo.DashboardRepo, questionService, deps.Config, deps.Logger)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
 	authService := serviceAuth.NewAuthService(
@@ -92,6 +94,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo, repo.ConnectionRepo),
 		QuestionService:         questionService,
 		DashboardService:        dashboardService,
+		DashboardShareService:   dashboardShareService,
 		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
 		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
 		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),

@@ -1,6 +1,10 @@
 package server
 
 import (
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/static"
 
 	"github.com/dbo-studio/dbo/internal/app/handler"
@@ -54,7 +58,6 @@ func (r *Server) routing() {
 	query.Post("/raw", clearBody, r.handlers.QueryHandler.Raw)
 	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
-
 
 	ai := api.Group("ai")
 	ai.Post("/chat", r.handlers.AI.Chat)
@@ -141,6 +144,21 @@ func (r *Server) routing() {
 	dashboards.Put("/:id/cards/order", r.handlers.Dashboard.ReorderCards)
 	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)
 	dashboards.Delete("/:id/cards/:cardId", r.handlers.Dashboard.Unpin)
+	dashboards.Get("/:id/shares", r.handlers.DashboardShare.List)
+	dashboards.Post("/:id/shares", r.handlers.DashboardShare.Create)
+	dashboards.Patch("/:id/shares/:shareId", r.handlers.DashboardShare.Update)
+	dashboards.Delete("/:id/shares/:shareId", r.handlers.DashboardShare.Revoke)
+
+	// Visitors of a share link have no session: the token is their proof, so this group skips sign-in
+	// (see OwnerSessionMiddleware) and is rate limited per address and link.
+	public := api.Group("public", limiter.New(limiter.Config{
+		Max:        30,
+		Expiration: time.Minute,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return c.IP() + c.Path()
+		},
+	}))
+	public.Post("/dashboards/:token", r.handlers.DashboardShare.View)
 
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
@@ -156,5 +174,7 @@ func (r *Server) routing() {
 
 	// The SPA catch-all is registered last so it can never shadow an API
 	// route regardless of registration order.
+	// A share link is a page of the SPA: serve its shell for any token.
+	r.app.Get("/share/*", func(c fiber.Ctx) error { return c.SendFile("out/index.html") })
 	r.app.Get("/*", static.New("out"))
 }

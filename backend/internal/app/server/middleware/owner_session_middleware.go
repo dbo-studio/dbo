@@ -23,6 +23,7 @@ import (
 const (
 	sessionTouchInterval = 60 * time.Second
 	mcpProxyPrefix       = "/api/mcp"
+	publicPrefix         = "/api/public/"
 	healthzPath          = "/healthz"
 	apiPrefix            = "/api"
 )
@@ -42,6 +43,11 @@ func OwnerSessionMiddleware(
 		path := c.Path()
 
 		if path == healthzPath {
+			return c.Next()
+		}
+
+		// A share link's visitors have no account; the link's token is checked by its handler.
+		if strings.HasPrefix(path, publicPrefix) {
 			return c.Next()
 		}
 

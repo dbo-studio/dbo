@@ -17,6 +17,7 @@ import { tools } from '@/core/utils';
 import { toPng } from 'html-to-image';
 import { useRef, useState, type JSX } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import ShareDialog from '../ShareDialog/ShareDialog';
 import { exportBoard } from './boardJson';
 
 /** How long a card's result is reused before opening the board runs it again. */
@@ -219,6 +220,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const queryClient = useQueryClient();
   const setBoard = useSetBoard(board.connectionId);
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [refreshMs, setRefreshMs] = useLocalStorage(`dashboard-refresh-${board.id}`, 0);
   // Typed values are applied on Enter or blur, so cards do not rerun on every key.
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -277,6 +279,10 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
             onChange={(picked) => setRefreshMs((picked as SelectInputOption).value as number)}
           />
         </Box>
+        <Button size='small' onClick={() => setSharing(true)} data-testid='dashboard-share'>
+          {locales.share_title}
+        </Button>
+        <ShareDialog board={board} open={sharing} onClose={() => setSharing(false)} />
         <Tooltip title={locales.dashboard_export}>
           <IconButton size='small' onClick={() => exportBoard(board)} data-testid='dashboard-export'>
             <CustomIcon type='export' size='xs' />

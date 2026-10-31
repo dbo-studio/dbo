@@ -160,6 +160,15 @@ type IDashboardRepo interface {
 	DeleteCard(ctx context.Context, card *model.DashboardCard) error
 }
 
+type IDashboardShareRepo interface {
+	List(ctx context.Context, dashboardID uint) ([]model.DashboardShare, error)
+	Find(ctx context.Context, dashboardID, id uint) (*model.DashboardShare, error)
+	FindByTokenHash(ctx context.Context, hash string) (*model.DashboardShare, error)
+	Create(ctx context.Context, share *model.DashboardShare) error
+	Save(ctx context.Context, share *model.DashboardShare) error
+	RecordView(ctx context.Context, id uint) error
+}
+
 type IAiAuditRepo interface {
 	Create(ctx context.Context, entry *model.AiAuditEntry) error
 	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
@@ -181,6 +190,7 @@ type Repository struct {
 	AiAuditRepo                IAiAuditRepo
 	QuestionRepo               IQuestionRepo
 	DashboardRepo              IDashboardRepo
+	DashboardShareRepo         IDashboardShareRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -204,6 +214,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		AiAuditRepo:                NewAiAuditRepo(db),
 		QuestionRepo:               NewQuestionRepo(db),
 		DashboardRepo:              NewDashboardRepo(db),
+		DashboardShareRepo:         NewDashboardShareRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),
