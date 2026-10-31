@@ -49,7 +49,7 @@ export function buildDashboardGroup(connectionId: number, boards: DashboardType[
     hasChildren: true,
     children: boards.map(dashboardNode),
     action: undefined as unknown as TreeNodeActionType,
-    contextMenu: [command(locales.dashboard_new, 'newDashboard')]
+    contextMenu: [command(locales.dashboard_new, 'newDashboard'), command(locales.dashboard_import, 'importDashboard')]
   };
 }
 

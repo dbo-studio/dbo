@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
@@ -246,6 +247,107 @@ test.describe("Dashboards in the tree", () => {
               return list.data.find((item) => item.id === double)?.params;
             })
             .toEqual({ n: "5" });
+        });
+      });
+    } finally {
+      removeSqliteDbFile(dbPath);
+    }
+  });
+
+  test("export a card as CSV and PNG, the board as JSON, and import it back", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+    const connectionName = `board-files-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-board-files-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+        const tree = new ObjectTreePage(page);
+
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(
+          getDbConfig("sqlite", connectionName, dbPath),
+        );
+        await tree.waitForTreeLoad();
+
+        const connections = (await (await page.request.get("/api/connections")).json()) as {
+          data: Array<{ id: number; name: string }>;
+        };
+        const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+        const reportName = `Totals ${suffix}`;
+        const question = (
+          await (
+            await page.request.post("/api/questions", {
+              data: { connectionId, name: reportName, sql: "SELECT 'a,b' AS label, 7 AS v", chart: { type: "table", y: [] } },
+            })
+          ).json()
+        ).data.id;
+        const boardName = `Files ${suffix}`;
+        const board = (
+          await (await page.request.post("/api/dashboards", { data: { connectionId, name: boardName } })).json()
+        ).data.id;
+        const pinned = (
+          await (await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: question } })).json()
+        ).data.cards[0].id;
+        await page.request.patch(`/api/dashboards/${board}/cards/${pinned}`, { data: { width: 2 } });
+
+        await page.reload();
+        await tree.waitForTreeLoad();
+        await tree.getTreeNode("Dashboards").click();
+        await tree.getTreeNode(boardName).dblclick();
+        const card = page.getByTestId("ai-board-card");
+        await expect(card.getByTestId("ai-board-card-updated")).toBeVisible();
+
+        await test.step("A card downloads as CSV and PNG", async () => {
+          const csv = page.waitForEvent("download");
+          await card.getByTestId("ai-board-card-csv").click();
+          const csvFile = await csv;
+          expect(csvFile.suggestedFilename()).toBe(`${reportName}.csv`);
+          expect(readFileSync(await csvFile.path(), "utf8")).toBe('label,v\n"a,b",7');
+
+          const png = page.waitForEvent("download");
+          await card.getByTestId("ai-board-card-png").click();
+          expect((await png).suggestedFilename()).toBe(`${reportName}.png`);
+        });
+
+        await test.step("The auto-refresh choice is kept per board", async () => {
+          await page.getByTestId("dashboard-auto-refresh").click();
+          await page.getByRole("option", { name: "Every 5 min" }).click();
+          await page.reload();
+          await tree.waitForTreeLoad();
+          await tree.getTreeNode("Dashboards").click();
+          await tree.getTreeNode(boardName).dblclick();
+          await expect(page.getByTestId("dashboard-auto-refresh")).toContainText("Every 5 min");
+        });
+
+        const exported = await test.step("The board exports as JSON", async () => {
+          const download = page.waitForEvent("download");
+          await page.getByTestId("dashboard-export").click();
+          const file = await download;
+          expect(file.suggestedFilename()).toBe(`${boardName}.dashboard.json`);
+          const text = readFileSync(await file.path(), "utf8");
+          expect(JSON.parse(text)).toMatchObject({
+            version: 1,
+            name: boardName,
+            cards: [{ width: 2, question: { name: reportName, sql: "SELECT 'a,b' AS label, 7 AS v" } }],
+          });
+          return text;
+        });
+
+        await test.step("Importing the file recreates the board and its report", async () => {
+          await page.request.delete(`/api/dashboards/${board}`);
+          await page.request.delete(`/api/questions/${question}`);
+          const chooser = page.waitForEvent("filechooser");
+          await tree.runTreeAction("Dashboards", "Import dashboard");
+          await (await chooser).setFiles({ name: "board.json", mimeType: "application/json", buffer: Buffer.from(exported) });
+          await expect(page.getByTestId("ai-board")).toHaveAttribute("data-board", boardName);
+          await expect(card).toHaveAttribute("data-width", "2");
+          await expect(card.getByTestId("ai-chart")).toContainText("a,b");
         });
       });
     } finally {

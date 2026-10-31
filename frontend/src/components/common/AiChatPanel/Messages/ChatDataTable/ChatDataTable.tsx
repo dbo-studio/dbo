@@ -1,4 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { formatCellValue, toCsv } from '@/core/utils/csv';
 import locales from '@/locales';
 import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -52,25 +53,6 @@ const deriveColumns = (rows: Record<string, unknown>[], ordered?: string[]): str
 
   return columns;
 };
-
-const formatCellValue = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  return JSON.stringify(value);
-};
-
-const csvCell = (value: string): string => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
-
-const toCsv = (columns: string[], rows: Record<string, unknown>[]): string =>
-  [columns, ...rows.map((row) => columns.map((column) => formatCellValue(row[column])))]
-    .map((cells) => cells.map(csvCell).join(','))
-    .join('\n');
 
 const MIN_COLUMN_WIDTH = 64;
 const MAX_COLUMN_WIDTH = 220;

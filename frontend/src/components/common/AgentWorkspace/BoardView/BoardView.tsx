@@ -10,9 +10,23 @@ import locales from '@/locales';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Box, Button, CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type JSX } from 'react';
+import { toCsv } from '@/core/utils/csv';
+import { tools } from '@/core/utils';
+import { toPng } from 'html-to-image';
+import { useRef, useState, type JSX } from 'react';
+import { useLocalStorage } from 'usehooks-ts';
+import { exportBoard } from './boardJson';
+
+/** How long a card's result is reused before opening the board runs it again. */
+const RESULT_TTL_MS = 5 * 60_000;
+const REFRESH_OPTIONS: SelectInputOption[] = [
+  { value: 0, label: locales.dashboard_refresh_off },
+  { value: 60_000, label: locales.dashboard_refresh_1m },
+  { value: 5 * 60_000, label: locales.dashboard_refresh_5m },
+  { value: 15 * 60_000, label: locales.dashboard_refresh_15m }
+];
 
 /** Writes a board the server returned into the cached list, so every view of it updates. */
 const useSetBoard = (connectionId: number): ((next: DashboardType) => void) => {
@@ -28,13 +42,17 @@ function BoardCard({
   board,
   card,
   editing,
-  filters
+  filters,
+  refreshMs
 }: {
   board: DashboardType;
   card: DashboardCardType;
   editing: boolean;
   filters: Record<string, string>;
+  refreshMs: number;
 }): JSX.Element {
+  const theme = useTheme();
+  const chartRef = useRef<HTMLDivElement>(null);
   // A filter reaches each card whose SQL has a {{param}} of the same name.
   const declared = questionParams(card.question.sql);
   const params = Object.fromEntries(declared.map((param) => [param.name, filters[param.name] ?? '']));
@@ -45,13 +63,22 @@ function BoardCard({
     id: card.id,
     disabled: !editing
   });
-  const { data, error, isFetching, refetch } = useQuery({
+  const { data, error, isFetching, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['question-run', card.question.id, params],
     queryFn: () => api.question.runQuestion(card.question.id, params),
     enabled: missing.length === 0,
-    // Opening a board shows fresh numbers.
-    refetchOnMount: true
+    staleTime: RESULT_TTL_MS,
+    // React Query skips interval runs while the window is hidden.
+    refetchInterval: refreshMs || false
   });
+  const columns = data ? (data.columns?.map((column) => column.name) ?? Object.keys(data.rows[0] ?? {})) : [];
+  const exportPng = async (): Promise<void> => {
+    if (!chartRef.current) return;
+    const link = document.createElement('a');
+    link.href = await toPng(chartRef.current, { backgroundColor: theme.palette.background.paper });
+    link.download = `${card.question.name}.png`;
+    link.click();
+  };
   const { mutate: resize } = useMutation({
     mutationFn: () => api.dashboard.resizeCard(board.id, card.id, card.width === 2 ? 1 : 2),
     onSuccess: setBoard
@@ -96,6 +123,29 @@ function BoardCard({
           {card.question.name}
         </Typography>
         {isFetching && <CircularProgress size={12} />}
+        {data && !editing && (
+          <>
+            <Typography variant='caption' color='textSubdued' data-testid='ai-board-card-updated'>
+              {new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Typography>
+            <Tooltip title={locales.dashboard_card_csv}>
+              <IconButton
+                size='small'
+                onClick={() =>
+                  tools.fileDownload(new Blob([toCsv(columns, data.rows)], { type: 'text/csv' }), `${card.question.name}.csv`)
+                }
+                data-testid='ai-board-card-csv'
+              >
+                <CustomIcon type='sheet' size='xs' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={locales.dashboard_card_png}>
+              <IconButton size='small' onClick={() => void exportPng()} data-testid='ai-board-card-png'>
+                <CustomIcon type='download' size='xs' />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
         <Tooltip title={locales.dashboard_card_refresh}>
           <IconButton size='small' onClick={() => void refetch()} data-testid='ai-board-card-refresh'>
             <CustomIcon type='refresh' size='xs' />
@@ -125,12 +175,9 @@ function BoardCard({
           {error.message}
         </Typography>
       ) : data ? (
-        <ChartView
-          rows={data.rows}
-          columns={data.columns?.map((column) => column.name) ?? Object.keys(data.rows[0] ?? {})}
-          spec={card.question.chart}
-          height={200}
-        />
+        <Box ref={chartRef}>
+          <ChartView rows={data.rows} columns={columns} spec={card.question.chart} height={200} />
+        </Box>
       ) : (
         <CircularProgress size={16} />
       )}
@@ -172,6 +219,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const queryClient = useQueryClient();
   const setBoard = useSetBoard(board.connectionId);
   const [editing, setEditing] = useState(false);
+  const [refreshMs, setRefreshMs] = useLocalStorage(`dashboard-refresh-${board.id}`, 0);
   // Typed values are applied on Enter or blur, so cards do not rerun on every key.
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [applied, setApplied] = useState<Record<string, string>>({});
@@ -221,6 +269,19 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
         >
           {locales.ai_board_refresh}
         </Button>
+        <Box sx={{ width: 120 }}>
+          <SelectInput
+            testId='dashboard-auto-refresh'
+            value={refreshMs as unknown as string}
+            options={REFRESH_OPTIONS}
+            onChange={(picked) => setRefreshMs((picked as SelectInputOption).value as number)}
+          />
+        </Box>
+        <Tooltip title={locales.dashboard_export}>
+          <IconButton size='small' onClick={() => exportBoard(board)} data-testid='dashboard-export'>
+            <CustomIcon type='export' size='xs' />
+          </IconButton>
+        </Tooltip>
         <Button
           size='small'
           variant={editing ? 'contained' : 'text'}
@@ -255,7 +316,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
               {board.cards.map((card) => (
-                <BoardCard key={card.id} board={board} card={card} editing={editing} filters={filters} />
+                <BoardCard key={card.id} board={board} card={card} editing={editing} filters={filters} refreshMs={refreshMs} />
               ))}
             </Box>
           </SortableContext>

@@ -170,6 +170,26 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
             <Legend wrapperStyle={{ fontSize: theme.typography.caption.fontSize }} />
           </PieChart>
         );
+      case 'row':
+        return (
+          <BarChart data={data} layout='vertical'>
+            <CartesianGrid stroke={theme.palette.divider} horizontal={false} />
+            <XAxis type='number' tick={axis} stroke={theme.palette.divider} tickFormatter={formatAxisNumber} />
+            <YAxis type='category' dataKey={spec.x} tick={axis} stroke={theme.palette.divider} width={96} />
+            {spec.y.map((key, index) => (
+              <Bar
+                key={key}
+                dataKey={key}
+                stackId={spec.stacked ? 'stack' : undefined}
+                fill={palette[index % palette.length]}
+                radius={[0, 3, 3, 0]}
+                animationDuration={600}
+              />
+            ))}
+            {tooltip}
+            {legend}
+          </BarChart>
+        );
       default:
         return (
           <BarChart data={data}>

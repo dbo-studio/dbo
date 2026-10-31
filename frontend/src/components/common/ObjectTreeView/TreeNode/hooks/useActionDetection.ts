@@ -1,6 +1,7 @@
 import api from '@/api';
 import { TabMode } from '@/core/enums';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
+import { importBoard } from '@/components/common/AgentWorkspace/BoardView/boardJson';
 import { contextScope } from '@/components/common/AiChatPanel/utils/contextScope';
 import { useCurrentConnection } from '@/hooks';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
@@ -73,6 +74,25 @@ export const useActionDetection = (
         case 'newDashboard':
           dialog.openNew();
           break;
+        case 'importDashboard': {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'application/json,.json';
+          input.onchange = async (): Promise<void> => {
+            const file = input.files?.[0];
+            if (!file || !currentConnection) return;
+            try {
+              const board = await importBoard(Number(currentConnection.id), await file.text());
+              await Promise.all([refresh(), queryClient.invalidateQueries({ queryKey: ['questions'], refetchType: 'all' })]);
+              addDashboardTab({ id: board.id, name: board.name });
+              toast.success(locales.dashboard_imported.replace('{name}', board.name));
+            } catch {
+              toast.error(locales.action_failed);
+            }
+          };
+          input.click();
+          break;
+        }
         case 'openDashboard':
           addDashboardTab({ id, name: boardName });
           closeLeftSidebar();
