@@ -144,6 +144,12 @@ func (r *Server) routing() {
 	dashboards.Put("/:id/cards/order", r.handlers.Dashboard.ReorderCards)
 	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)
 	dashboards.Delete("/:id/cards/:cardId", r.handlers.Dashboard.Unpin)
+	dashboards.Get("/:id/subscriptions", r.handlers.DashboardSubscription.List)
+	dashboards.Post("/:id/subscriptions", r.handlers.DashboardSubscription.Create)
+	dashboards.Patch("/:id/subscriptions/:subId", r.handlers.DashboardSubscription.Update)
+	dashboards.Delete("/:id/subscriptions/:subId", r.handlers.DashboardSubscription.Delete)
+	dashboards.Post("/:id/subscriptions/:subId/run", r.handlers.DashboardSubscription.RunNow)
+	dashboards.Get("/:id/subscriptions/:subId/runs", r.handlers.DashboardSubscription.Runs)
 	dashboards.Get("/:id/shares", r.handlers.DashboardShare.List)
 	dashboards.Post("/:id/shares", r.handlers.DashboardShare.Create)
 	dashboards.Patch("/:id/shares/:shareId", r.handlers.DashboardShare.Update)
@@ -159,6 +165,10 @@ func (r *Server) routing() {
 		},
 	}))
 	public.Post("/dashboards/:token", r.handlers.DashboardShare.View)
+
+	// The one outgoing mail account the schedules send through; an instance admin sets it.
+	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSmtp)
+	api.Put("/subscriptions/smtp", r.handlers.DashboardSubscription.SaveSmtp)
 
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)

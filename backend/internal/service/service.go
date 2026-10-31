@@ -31,27 +31,28 @@ import (
 )
 
 type Service struct {
-	ConnectionService       serviceConnection.IConnectionService
-	HistoryService          serviceHistory.IHistoryService
-	SavedQueryService       serviceSavedQuery.ISavedQueryService
-	QuestionService         serviceQuestion.IQuestionService
-	DashboardService        serviceDashboard.IDashboardService
-	DashboardShareService   serviceDashboard.IShareService
-	TreeService             serviceTree.ITreeService
-	QueryService            serviceQuery.IQueryService
-	ImportExportService     serviceImportExport.IImportExport
-	JobService              serviceJob.IJobService
-	JobManager              serviceJob.IJobManager
-	AiService               serviceAI.IAiService
-	AiProviderService       serviceAiProvider.IAiProviderService
-	AiChatService           serviceAiChat.IAiChatService
-	AiChangesetService      serviceAiChangeset.IAiChangesetService
-	ConfigService           serviceConfig.IConfigService
-	McpService              serviceMCP.IMcpService
-	SchemaService           serviceSchema.ISchemaService
-	SafeModePasswordService serviceSafemode.ISafeModePasswordService
-	AuthService             serviceAuth.IAuthService
-	AdminUsersService       serviceAdminUsers.IAdminUsersService
+	ConnectionService            serviceConnection.IConnectionService
+	HistoryService               serviceHistory.IHistoryService
+	SavedQueryService            serviceSavedQuery.ISavedQueryService
+	QuestionService              serviceQuestion.IQuestionService
+	DashboardService             serviceDashboard.IDashboardService
+	DashboardShareService        serviceDashboard.IShareService
+	DashboardSubscriptionService serviceDashboard.ISubscriptionService
+	TreeService                  serviceTree.ITreeService
+	QueryService                 serviceQuery.IQueryService
+	ImportExportService          serviceImportExport.IImportExport
+	JobService                   serviceJob.IJobService
+	JobManager                   serviceJob.IJobManager
+	AiService                    serviceAI.IAiService
+	AiProviderService            serviceAiProvider.IAiProviderService
+	AiChatService                serviceAiChat.IAiChatService
+	AiChangesetService           serviceAiChangeset.IAiChangesetService
+	ConfigService                serviceConfig.IConfigService
+	McpService                   serviceMCP.IMcpService
+	SchemaService                serviceSchema.ISchemaService
+	SafeModePasswordService      serviceSafemode.ISafeModePasswordService
+	AuthService                  serviceAuth.IAuthService
+	AdminUsersService            serviceAdminUsers.IAdminUsersService
 }
 
 // Deps carries the process-wide dependencies services used to fetch from the
@@ -74,6 +75,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	questionService := serviceQuestion.NewQuestionService(repo.QuestionRepo, repo.ConnectionRepo, toolRegistry)
 	dashboardService := serviceDashboard.NewDashboardService(repo.DashboardRepo, repo.QuestionRepo, repo.ConnectionRepo)
 	dashboardShareService := serviceDashboard.NewShareService(repo.DashboardShareRepo, repo.DashboardRepo, questionService, deps.Config, deps.Logger)
+	dashboardSubscriptionService := serviceDashboard.NewSubscriptionService(repo.DashboardSubscriptionRepo, repo.DashboardRepo, questionService, deps.Config, deps.CipherKey, deps.Logger)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
 	authService := serviceAuth.NewAuthService(
@@ -89,26 +91,27 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
 	return &Service{
-		ConnectionService:       serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.ConnectionShareRepo, repo.UserRepo, cm, ss, safeModePasswordService, deps.Cache, deps.Logger),
-		HistoryService:          serviceHistory.NewHistoryService(repo.HistoryRepo, repo.ConnectionRepo),
-		SavedQueryService:       serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo, repo.ConnectionRepo),
-		QuestionService:         questionService,
-		DashboardService:        dashboardService,
-		DashboardShareService:   dashboardShareService,
-		TreeService:             serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
-		QueryService:            serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
-		ImportExportService:     serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
-		JobService:              serviceJob.NewJobService(repo.JobRepo, jobManager),
-		JobManager:              jobManager,
-		AiService:               serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
-		AiProviderService:       aiProviderService,
-		AiChatService:           serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
-		AiChangesetService:      aiChangesetService,
-		ConfigService:           serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
-		McpService:              mcpService,
-		SchemaService:           schemaService,
-		SafeModePasswordService: safeModePasswordService,
-		AuthService:             authService,
-		AdminUsersService:       adminUsersService,
+		ConnectionService:            serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.ConnectionShareRepo, repo.UserRepo, cm, ss, safeModePasswordService, deps.Cache, deps.Logger),
+		HistoryService:               serviceHistory.NewHistoryService(repo.HistoryRepo, repo.ConnectionRepo),
+		SavedQueryService:            serviceSavedQuery.NewSavedQueryService(repo.SavedQueryRepo, repo.ConnectionRepo),
+		QuestionService:              questionService,
+		DashboardService:             dashboardService,
+		DashboardShareService:        dashboardShareService,
+		DashboardSubscriptionService: dashboardSubscriptionService,
+		TreeService:                  serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
+		QueryService:                 serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
+		ImportExportService:          serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
+		JobService:                   serviceJob.NewJobService(repo.JobRepo, jobManager),
+		JobManager:                   jobManager,
+		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
+		AiProviderService:            aiProviderService,
+		AiChatService:                serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
+		AiChangesetService:           aiChangesetService,
+		ConfigService:                serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
+		McpService:                   mcpService,
+		SchemaService:                schemaService,
+		SafeModePasswordService:      safeModePasswordService,
+		AuthService:                  authService,
+		AdminUsersService:            adminUsersService,
 	}
 }

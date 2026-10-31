@@ -56,3 +56,67 @@ export type PublicCardType = {
 };
 
 export type PublicDashboardType = { name: string; generatedAt: string; cards: PublicCardType[] };
+
+export type SubscriptionKind = 'email' | 'webhook';
+export type SubscriptionFrequency = 'hourly' | 'daily' | 'weekly';
+
+/** A schedule that sends a board's snapshot by email or to a webhook. */
+export type SubscriptionType = {
+  id: number;
+  kind: SubscriptionKind;
+  target: string;
+  hasSecret: boolean;
+  frequency: SubscriptionFrequency;
+  hour: number;
+  minute: number;
+  /** 0 is Sunday. */
+  weekday: number;
+  timezone: string;
+  enabled: boolean;
+  nextRunAt: string;
+  lastRunAt: string | null;
+  lastStatus: '' | 'ok' | 'failed';
+  lastError: string;
+  consecutiveFailures: number;
+};
+
+export type SubscriptionListType = {
+  /** False until an admin sets the outgoing mail account. */
+  emailConfigured: boolean;
+  items: SubscriptionType[];
+};
+
+export type SubscriptionRequestType = {
+  kind: SubscriptionKind;
+  target: string;
+  /** Webhook signing secret: absent keeps it, empty removes it. */
+  secret?: string;
+  frequency: SubscriptionFrequency;
+  hour: number;
+  minute: number;
+  weekday: number;
+  timezone: string;
+  enabled?: boolean;
+};
+
+export type SubscriptionRunType = {
+  id: number;
+  startedAt: string;
+  finishedAt: string;
+  status: 'ok' | 'failed';
+  error: string;
+  reports: number;
+  manual: boolean;
+};
+
+export type SmtpSettingsType = {
+  host: string;
+  port: number;
+  username: string;
+  hasPassword: boolean;
+  fromAddress: string;
+  security: 'starttls' | 'tls' | 'none';
+  configured: boolean;
+};
+
+export type SmtpRequestType = Omit<SmtpSettingsType, 'hasPassword' | 'configured'> & { password?: string };

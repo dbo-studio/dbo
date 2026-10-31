@@ -169,6 +169,24 @@ type IDashboardShareRepo interface {
 	RecordView(ctx context.Context, id uint) error
 }
 
+type IDashboardSubscriptionRepo interface {
+	List(ctx context.Context, dashboardID uint) ([]model.DashboardSubscription, error)
+	Find(ctx context.Context, dashboardID, id uint) (*model.DashboardSubscription, error)
+	Due(ctx context.Context, now time.Time, limit int) ([]model.DashboardSubscription, error)
+	Overdue(ctx context.Context, cutoff time.Time) ([]model.DashboardSubscription, error)
+	Create(ctx context.Context, sub *model.DashboardSubscription) error
+	Save(ctx context.Context, sub *model.DashboardSubscription) error
+	// SetNextRun moves only the next run; the scheduler uses it so a user's edit is not overwritten.
+	SetNextRun(ctx context.Context, id uint, next time.Time) error
+	// SaveResult stores what a run left behind (last run, status, failures, and whether it was paused).
+	SaveResult(ctx context.Context, sub *model.DashboardSubscription) error
+	Delete(ctx context.Context, sub *model.DashboardSubscription) error
+	AddRun(ctx context.Context, run *model.DashboardSubscriptionRun) error
+	Runs(ctx context.Context, subscriptionID uint) ([]model.DashboardSubscriptionRun, error)
+	GetSmtp(ctx context.Context) (*model.SmtpSettings, error)
+	SaveSmtp(ctx context.Context, settings *model.SmtpSettings) error
+}
+
 type IAiAuditRepo interface {
 	Create(ctx context.Context, entry *model.AiAuditEntry) error
 	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
@@ -191,6 +209,7 @@ type Repository struct {
 	QuestionRepo               IQuestionRepo
 	DashboardRepo              IDashboardRepo
 	DashboardShareRepo         IDashboardShareRepo
+	DashboardSubscriptionRepo  IDashboardSubscriptionRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -215,6 +234,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		QuestionRepo:               NewQuestionRepo(db),
 		DashboardRepo:              NewDashboardRepo(db),
 		DashboardShareRepo:         NewDashboardShareRepo(db),
+		DashboardSubscriptionRepo:  NewDashboardSubscriptionRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),

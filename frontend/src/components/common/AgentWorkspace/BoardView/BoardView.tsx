@@ -17,6 +17,7 @@ import { tools } from '@/core/utils';
 import { toPng } from 'html-to-image';
 import { useRef, useState, type JSX } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import ScheduleDialog from '../ScheduleDialog/ScheduleDialog';
 import ShareDialog from '../ShareDialog/ShareDialog';
 import { exportBoard } from './boardJson';
 
@@ -221,6 +222,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const setBoard = useSetBoard(board.connectionId);
   const [editing, setEditing] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
   const [refreshMs, setRefreshMs] = useLocalStorage(`dashboard-refresh-${board.id}`, 0);
   // Typed values are applied on Enter or blur, so cards do not rerun on every key.
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -283,6 +285,10 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           {locales.share_title}
         </Button>
         <ShareDialog board={board} open={sharing} onClose={() => setSharing(false)} />
+        <Button size='small' onClick={() => setScheduling(true)} data-testid='dashboard-schedule'>
+          {locales.schedule_title}
+        </Button>
+        <ScheduleDialog board={board} open={scheduling} onClose={() => setScheduling(false)} />
         <Tooltip title={locales.dashboard_export}>
           <IconButton size='small' onClick={() => exportBoard(board)} data-testid='dashboard-export'>
             <CustomIcon type='export' size='xs' />

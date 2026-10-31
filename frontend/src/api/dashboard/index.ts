@@ -5,6 +5,12 @@ import type {
   DashboardShareType,
   DashboardType,
   PublicDashboardType,
+  SmtpRequestType,
+  SmtpSettingsType,
+  SubscriptionListType,
+  SubscriptionRequestType,
+  SubscriptionRunType,
+  SubscriptionType,
   UpdateShareRequestType
 } from './types';
 
@@ -52,3 +58,29 @@ export const revokeShare = async (id: number, shareId: number): Promise<Dashboar
 /** The page behind a share link. A wrong or missing password answers 401 `share_password_required` / `share_password_invalid`. */
 export const viewSharedDashboard = async (token: string, password?: string): Promise<PublicDashboardType> =>
   (await api.post<{ data: PublicDashboardType }>(`/public/dashboards/${encodeURIComponent(token)}`, { password })).data.data;
+
+export const getSubscriptions = async (id: number): Promise<SubscriptionListType> =>
+  (await api.get<{ data: SubscriptionListType }>(`/dashboards/${id}/subscriptions`)).data.data;
+
+export const createSubscription = async (id: number, data: SubscriptionRequestType): Promise<SubscriptionType> =>
+  (await api.post<{ data: SubscriptionType }>(`/dashboards/${id}/subscriptions`, data)).data.data;
+
+export const updateSubscription = async (id: number, subId: number, data: SubscriptionRequestType): Promise<SubscriptionType> =>
+  (await api.patch<{ data: SubscriptionType }>(`/dashboards/${id}/subscriptions/${subId}`, data)).data.data;
+
+export const deleteSubscription = async (id: number, subId: number): Promise<void> => {
+  await api.delete(`/dashboards/${id}/subscriptions/${subId}`);
+};
+
+/** Sends one snapshot now, without moving the schedule. A failed delivery is a run with status `failed`, not an error. */
+export const runSubscription = async (id: number, subId: number): Promise<SubscriptionRunType> =>
+  (await api.post<{ data: SubscriptionRunType }>(`/dashboards/${id}/subscriptions/${subId}/run`)).data.data;
+
+export const getSubscriptionRuns = async (id: number, subId: number): Promise<SubscriptionRunType[]> =>
+  (await api.get<{ data: SubscriptionRunType[] }>(`/dashboards/${id}/subscriptions/${subId}/runs`)).data.data;
+
+export const getSmtpSettings = async (): Promise<SmtpSettingsType> =>
+  (await api.get<{ data: SmtpSettingsType }>('/subscriptions/smtp')).data.data;
+
+export const saveSmtpSettings = async (data: SmtpRequestType): Promise<SmtpSettingsType> =>
+  (await api.put<{ data: SmtpSettingsType }>('/subscriptions/smtp', data)).data.data;

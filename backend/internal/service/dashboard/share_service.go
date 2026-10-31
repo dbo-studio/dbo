@@ -338,25 +338,35 @@ func (s *IShareServiceImpl) build(ctx context.Context, share *model.DashboardSha
 		return nil, apperror.NotFound(errShareNotFound)
 	}
 
-	view := &dto.PublicDashboardResponse{Name: dashboard.Name, GeneratedAt: time.Now(), Cards: []dto.PublicCardResponse{}}
+	return &dto.PublicDashboardResponse{
+		Name:        dashboard.Name,
+		GeneratedAt: time.Now(),
+		Cards:       runCards(ownerCtx, s.questionService, s.logger, fmt.Sprintf("dashboard share %d", share.ID), dashboard),
+	}, nil
+}
+
+// runCards runs each report of a dashboard as the owner in ctx, with its saved filter values, and keeps
+// what may leave the app: rows and column names, never the SQL. A failed report becomes a card with a generic
+// message; the reason stays in the log, since a driver error can name tables and columns.
+func runCards(ctx context.Context, questions serviceQuestion.IQuestionService, log logger.Logger, label string, dashboard *model.Dashboard) []dto.PublicCardResponse {
+	cards := []dto.PublicCardResponse{}
 
 	for i := range dashboard.Cards {
 		card := &dashboard.Cards[i]
 		question := serviceQuestion.ToResponse(&card.Question)
 		out := dto.PublicCardResponse{ID: card.ID, Name: question.Name, Width: card.Width, Chart: question.Chart}
 
-		result, err := s.questionService.Run(ownerCtx, card.QuestionID, question.Params)
+		result, err := questions.Run(ctx, card.QuestionID, question.Params)
 		if err != nil {
-			// The reason stays in the log: a driver error can name tables and columns.
-			s.logger.Warn(fmt.Sprintf("dashboard share %d: report %d failed: %v", share.ID, card.QuestionID, err))
+			log.Warn(fmt.Sprintf("%s: report %d failed: %v", label, card.QuestionID, err))
 			out.Error = errShareReportFailed.Error()
 		} else if out.Result, err = publicResult(result); err != nil {
-			s.logger.Warn(fmt.Sprintf("dashboard share %d: report %d result: %v", share.ID, card.QuestionID, err))
+			log.Warn(fmt.Sprintf("%s: report %d result: %v", label, card.QuestionID, err))
 			out.Error = errShareReportFailed.Error()
 		}
 
-		view.Cards = append(view.Cards, out)
+		cards = append(cards, out)
 	}
 
-	return view, nil
+	return cards
 }

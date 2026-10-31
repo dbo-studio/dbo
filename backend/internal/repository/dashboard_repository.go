@@ -67,7 +67,15 @@ func (r DashboardRepoImpl) Rename(ctx context.Context, dashboard *model.Dashboar
 }
 
 func (r DashboardRepoImpl) Delete(ctx context.Context, dashboard *model.Dashboard) error {
-	return r.db.WithContext(ctx).Select("Cards", "Shares").Delete(dashboard).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// The runs of its subscriptions go first: they hang off the subscriptions, not the dashboard.
+		runs := tx.Model(&model.DashboardSubscription{}).Select("id").Where("dashboard_id = ?", dashboard.ID)
+		if err := tx.Where("subscription_id IN (?)", runs).Delete(&model.DashboardSubscriptionRun{}).Error; err != nil {
+			return err
+		}
+
+		return tx.Select("Cards", "Shares", "Subscriptions").Delete(dashboard).Error
+	})
 }
 
 func (r DashboardRepoImpl) AddCard(ctx context.Context, card *model.DashboardCard) error {
