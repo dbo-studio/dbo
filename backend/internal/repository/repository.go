@@ -187,6 +187,15 @@ type IDashboardSubscriptionRepo interface {
 	SaveSmtp(ctx context.Context, settings *model.SmtpSettings) error
 }
 
+type INotificationRepo interface {
+	Create(ctx context.Context, n *model.Notification) error
+	List(ctx context.Context, ownerID string, limit, offset int) ([]model.Notification, error)
+	CountUnread(ctx context.Context, ownerID string) (int64, error)
+	MarkRead(ctx context.Context, ownerID string, id uint) error
+	MarkAllRead(ctx context.Context, ownerID string) error
+	Delete(ctx context.Context, ownerID string, id uint) error
+}
+
 type IAiAuditRepo interface {
 	Create(ctx context.Context, entry *model.AiAuditEntry) error
 	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
@@ -209,6 +218,7 @@ type Repository struct {
 	QuestionRepo               IQuestionRepo
 	DashboardRepo              IDashboardRepo
 	DashboardShareRepo         IDashboardShareRepo
+	NotificationRepo           INotificationRepo
 	DashboardSubscriptionRepo  IDashboardSubscriptionRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
@@ -234,6 +244,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		QuestionRepo:               NewQuestionRepo(db),
 		DashboardRepo:              NewDashboardRepo(db),
 		DashboardShareRepo:         NewDashboardShareRepo(db),
+		NotificationRepo:           NewNotificationRepo(db),
 		DashboardSubscriptionRepo:  NewDashboardSubscriptionRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),

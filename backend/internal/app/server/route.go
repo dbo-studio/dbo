@@ -170,6 +170,14 @@ func (r *Server) routing() {
 	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSmtp)
 	api.Put("/subscriptions/smtp", r.handlers.DashboardSubscription.SaveSmtp)
 
+	// One live stream per client replaces polling jobs, and the inbox of finished jobs.
+	api.Get("/events", r.handlers.Notification.Stream)
+	notifications := api.Group("notifications")
+	notifications.Get("/", r.handlers.Notification.List)
+	notifications.Post("/read", r.handlers.Notification.MarkAllRead)
+	notifications.Post("/:id/read", r.handlers.Notification.MarkRead)
+	notifications.Delete("/:id", r.handlers.Notification.Delete)
+
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
 	history.Delete("/", r.handlers.History.Delete)

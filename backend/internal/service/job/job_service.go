@@ -72,6 +72,7 @@ func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) 
 	// Abort the running processor; the manager skips terminal status writes
 	// when the job was canceled concurrently.
 	i.jobManager.CancelRunning(uint(req.JobID))
+	i.jobManager.Announce(ctx, uint(req.JobID))
 
 	return nil
 }

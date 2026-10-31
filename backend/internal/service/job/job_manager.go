@@ -10,6 +10,8 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceEvents "github.com/dbo-studio/dbo/internal/service/events"
+	serviceNotification "github.com/dbo-studio/dbo/internal/service/notification"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"gorm.io/gorm"
@@ -20,6 +22,9 @@ type IJobManager interface {
 	CreateJob(jobType model.JobType, ownerID string, data string) (*model.Job, error)
 	UpdateJobProgress(ctx context.Context, job *model.Job, progress int, message string) error
 	CancelRunning(jobID uint)
+	// Announce tells the job's owner how it ended: an event for any end, and a notification for a finish or
+	// a failure. Every writer of a terminal status calls it, so there is one path to the user.
+	Announce(ctx context.Context, jobID uint)
 	Shutdown() error
 	CancelAllJobs() error
 }
@@ -35,9 +40,11 @@ type IJobManagerImpl struct {
 	workerWg     sync.WaitGroup
 	mu           sync.RWMutex
 	logger       logger.Logger
+	hub          serviceEvents.IHub
+	notifier     serviceNotification.INotifier
 }
 
-func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger) IJobManager {
+func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger, hub serviceEvents.IHub, notifier serviceNotification.INotifier) IJobManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	jm := IJobManagerImpl{
@@ -47,6 +54,8 @@ func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger) IJobMan
 		workerCtx:    ctx,
 		workerCancel: cancel,
 		logger:       appLogger,
+		hub:          hub,
+		notifier:     notifier,
 	}
 
 	jm.workerWg.Add(1)
@@ -85,7 +94,75 @@ func (jm *IJobManagerImpl) CreateJob(jobType model.JobType, ownerID string, data
 func (jm *IJobManagerImpl) UpdateJobProgress(ctx context.Context, job *model.Job, progress int, message string) error {
 	// Column-scoped update: a progress tick from a stale in-memory copy must
 	// never overwrite a status change (e.g. a concurrent user cancel).
-	return jm.jobRepo.UpdateProgress(ctx, job.ID, progress, message)
+	if err := jm.jobRepo.UpdateProgress(ctx, job.ID, progress, message); err != nil {
+		return err
+	}
+
+	jm.hub.Publish(job.OwnerID, serviceEvents.Event{Type: "job.progress", Data: jobEvent{
+		ID: job.ID, Type: job.Type, Status: model.JobStatusRunning, Progress: progress, Message: message,
+	}})
+
+	return nil
+}
+
+// jobEvent is what a stream sees of a job; the result payload stays in the database.
+type jobEvent struct {
+	ID       uint            `json:"id"`
+	Type     model.JobType   `json:"type"`
+	Status   model.JobStatus `json:"status"`
+	Progress int             `json:"progress"`
+	Message  string          `json:"message"`
+	Error    string          `json:"error,omitempty"`
+}
+
+func (jm *IJobManagerImpl) Announce(ctx context.Context, jobID uint) {
+	job, err := jm.jobRepo.Find(ctx, int32(jobID))
+	if err != nil {
+		jm.logger.Error(fmt.Sprintf("announce job %d: %v", jobID, err))
+
+		return
+	}
+
+	event := "job." + string(job.Status)
+	if job.Status != model.JobStatusCompleted && job.Status != model.JobStatusFailed && job.Status != model.JobStatusCancelled {
+		return
+	}
+
+	jm.hub.Publish(job.OwnerID, serviceEvents.Event{Type: event, Data: jobEvent{
+		ID: job.ID, Type: job.Type, Status: job.Status, Progress: job.Progress, Message: job.Message, Error: job.Error,
+	}})
+
+	// A cancel is the user's own act: it gets an event so screens update, but no entry in the inbox.
+	if job.Status == model.JobStatusCancelled {
+		return
+	}
+
+	kind, title, body := model.NotificationJobCompleted, jobLabel(job.Type)+" finished", ""
+	if job.Status == model.JobStatusFailed {
+		kind, title, body = model.NotificationJobFailed, jobLabel(job.Type)+" failed", job.Error
+	}
+
+	if len(body) > 300 {
+		body = body[:300]
+	}
+
+	jobID = job.ID
+	if err := jm.notifier.Notify(ctx, &model.Notification{
+		OwnerID: job.OwnerID, Kind: kind, JobType: string(job.Type), Title: title, Body: body, JobID: &jobID,
+	}); err != nil {
+		jm.logger.Error(fmt.Sprintf("notify job %d: %v", jobID, err))
+	}
+}
+
+func jobLabel(jobType model.JobType) string {
+	switch jobType {
+	case model.JobTypeImport:
+		return "Import"
+	case model.JobTypeExport:
+		return "Export"
+	default:
+		return "Query"
+	}
 }
 
 func (jm *IJobManagerImpl) markJobCompleted(ctx context.Context, jobID uint, message string) error {
@@ -168,6 +245,8 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 			jm.logger.Error(fmt.Sprintf("Failed to update job error: %v", updateErr))
 		}
 
+		jm.Announce(jobCtx, job.ID)
+
 		return fmt.Errorf("job processing failed: %w", err)
 	}
 
@@ -190,6 +269,8 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 	if err != nil {
 		return fmt.Errorf("failed to update job status: %w", err)
 	}
+
+	jm.Announce(jobCtx, job.ID)
 
 	return nil
 }
@@ -238,6 +319,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		for _, rj := range runningJobs[1:] {
 			_ = jm.markJobCancelled(jm.workerCtx, rj.ID, "Canceled due to single-run policy")
 			jm.CancelRunning(rj.ID)
+			jm.Announce(jm.workerCtx, rj.ID)
 		}
 	}
 
@@ -268,6 +350,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 			if r := recover(); r != nil {
 				jm.logger.Error(fmt.Sprintf("Panic processing job %d: %v", job.ID, r))
 				_ = jm.updateJobError(jm.workerCtx, job, fmt.Sprintf("internal error: %v", r))
+				jm.Announce(jm.workerCtx, job.ID)
 			}
 		}()
 

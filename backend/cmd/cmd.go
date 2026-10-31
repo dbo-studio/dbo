@@ -102,6 +102,7 @@ func Execute() {
 		Question:              handler.NewQuestionHandler(appLogger, ss.QuestionService),
 		Dashboard:             handler.NewDashboardHandler(appLogger, ss.DashboardService),
 		DashboardShare:        handler.NewDashboardShareHandler(appLogger, ss.DashboardShareService),
+		Notification:          handler.NewNotificationHandler(appLogger, ss.NotificationService, ss.EventHub),
 		DashboardSubscription: handler.NewDashboardSubscriptionHandler(appLogger, ss.DashboardSubscriptionService),
 		History:               handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:           handler.NewTreeHandler(appLogger, ss.TreeService),

@@ -14,11 +14,13 @@ import (
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceEvents "github.com/dbo-studio/dbo/internal/service/events"
 	serviceHistory "github.com/dbo-studio/dbo/internal/service/history"
 	serviceImportExport "github.com/dbo-studio/dbo/internal/service/import_export"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	serviceMCP "github.com/dbo-studio/dbo/internal/service/mcp"
+	serviceNotification "github.com/dbo-studio/dbo/internal/service/notification"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceQuestion "github.com/dbo-studio/dbo/internal/service/question"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
@@ -37,6 +39,8 @@ type Service struct {
 	QuestionService              serviceQuestion.IQuestionService
 	DashboardService             serviceDashboard.IDashboardService
 	DashboardShareService        serviceDashboard.IShareService
+	EventHub                     serviceEvents.IHub
+	NotificationService          serviceNotification.INotificationService
 	DashboardSubscriptionService serviceDashboard.ISubscriptionService
 	TreeService                  serviceTree.ITreeService
 	QueryService                 serviceQuery.IQueryService
@@ -65,7 +69,9 @@ type Deps struct {
 }
 
 func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionManager, ss serviceSecretStore.ISecretStore, deps Deps) *Service {
-	jobManager := serviceJob.NewJobManager(repo.JobRepo, deps.Logger)
+	eventHub := serviceEvents.NewHub()
+	notificationService := serviceNotification.NewNotificationService(repo.NotificationRepo, eventHub)
+	jobManager := serviceJob.NewJobManager(repo.JobRepo, deps.Logger, eventHub, notificationService)
 
 	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
@@ -97,6 +103,8 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		QuestionService:              questionService,
 		DashboardService:             dashboardService,
 		DashboardShareService:        dashboardShareService,
+		EventHub:                     eventHub,
+		NotificationService:          notificationService,
 		DashboardSubscriptionService: dashboardSubscriptionService,
 		TreeService:                  serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
 		QueryService:                 serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),

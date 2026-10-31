@@ -27,6 +27,7 @@ type Handlers struct {
 	Question              *handler.QuestionHandler
 	Dashboard             *handler.DashboardHandler
 	DashboardShare        *handler.DashboardShareHandler
+	Notification          *handler.NotificationHandler
 	DashboardSubscription *handler.DashboardSubscriptionHandler
 	History               *handler.HistoryHandler
 	TreeHandler           *handler.TreeHandler
@@ -97,7 +98,8 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 	if isLocal {
 		r.app.Use(fiberLogger.New())
 	} else {
-		r.app.Use(compress.New())
+		// Compression would hold the event stream back until its buffer fills.
+		r.app.Use(compress.New(compress.Config{Next: func(c fiber.Ctx) bool { return c.Path() == "/api/events" }}))
 	}
 
 	r.app.Use(cors.New(cors.Config{
