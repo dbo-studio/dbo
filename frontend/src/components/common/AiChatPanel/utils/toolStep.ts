@@ -65,6 +65,22 @@ export function describeToolStep(trace: AiToolTrace): string {
       const board = typeof args.board === 'string' ? args.board : '';
       return running ? locales.ai_step_pinning_report : locales.ai_step_pinned_report.replace('{board}', board);
     }
+    case 'update_report':
+      return running ? locales.ai_step_updating_report : locales.ai_step_updated_report;
+    case 'delete_report':
+      return running ? locales.ai_step_deleting_report : locales.ai_step_deleted_report;
+    case 'rename_board': {
+      const name = typeof args.newName === 'string' ? args.newName : '';
+      return running ? locales.ai_step_renaming_board : locales.ai_step_renamed_board.replace('{board}', name);
+    }
+    case 'delete_board': {
+      const board = typeof args.board === 'string' ? args.board : '';
+      return running ? locales.ai_step_deleting_board : locales.ai_step_deleted_board.replace('{board}', board);
+    }
+    case 'unpin_report': {
+      const board = typeof args.board === 'string' ? args.board : '';
+      return running ? locales.ai_step_unpinning_report : locales.ai_step_unpinned_report.replace('{board}', board);
+    }
     case 'list_reports':
       return running ? locales.ai_step_listing_reports : locales.ai_step_listed_reports;
     case 'save_report': {

@@ -225,6 +225,18 @@ func (s *AiServiceImpl) runToolCall(
 		if saved, err = s.saveReport(ctx, call.Arguments, toolCtx); err == nil {
 			result = fmt.Sprintf("Saved the report %q (id %d). The user can reopen it from Reports.", saved.Name, saved.ID)
 		}
+	case call.Name == serviceDbtools.ToolShowChart && hasParams(call.Arguments):
+		result, err = s.showChartWithParams(ctx, call.Arguments, toolCtx)
+	case call.Name == serviceDbtools.ToolUpdateReport:
+		result, err = s.updateReport(ctx, call.Arguments, toolCtx)
+	case call.Name == serviceDbtools.ToolDeleteReport:
+		result, err = s.deleteReport(ctx, call.Arguments, toolCtx)
+	case call.Name == serviceDbtools.ToolRenameBoard:
+		result, err = s.renameBoard(ctx, call.Arguments, toolCtx)
+	case call.Name == serviceDbtools.ToolDeleteBoard:
+		result, err = s.deleteBoard(ctx, call.Arguments, toolCtx)
+	case call.Name == serviceDbtools.ToolUnpinReport:
+		result, err = s.unpinReport(ctx, call.Arguments, toolCtx)
 	case call.Name == serviceDbtools.ToolListReports:
 		result, err = s.listReports(ctx, toolCtx)
 	case call.Name == serviceDbtools.ToolPinReport:
@@ -331,6 +343,35 @@ type saveReportArgs struct {
 	X       string   `json:"x"`
 	Y       []string `json:"y"`
 	Stacked bool     `json:"stacked"`
+	// Params are the default values of the {{filters}} in SQL.
+	Params map[string]string `json:"params"`
+}
+
+// hasParams reports whether a show_chart call fills {{filters}}, which the plain SQL path cannot run.
+func hasParams(rawArgs string) bool {
+	var args struct {
+		Params map[string]string `json:"params"`
+	}
+
+	return json.Unmarshal([]byte(rawArgs), &args) == nil && len(args.Params) > 0
+}
+
+// showChartWithParams runs a chart's SQL with its filters filled, the way a saved report runs.
+func (s *AiServiceImpl) showChartWithParams(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args saveReportArgs
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	result, err := s.questionService.Preview(ctx, &dto.QuestionPreviewRequest{
+		ConnectionID: toolCtx.ConnectionID,
+		Database:     toolCtx.Database,
+		Schema:       toolCtx.Schema,
+		SQL:          args.SQL,
+		Params:       args.Params,
+	})
+
+	return string(result), err
 }
 
 // saveReport stores a chart as a report of the chat's connection, database and schema.
@@ -347,6 +388,7 @@ func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx 
 		Name:         args.Title,
 		SQL:          args.SQL,
 		Chart:        dto.QuestionChart{Type: args.Type, X: args.X, Y: args.Y, Stacked: args.Stacked},
+		Params:       args.Params,
 	}
 	if err := req.Validate(); err != nil {
 		return nil, err
@@ -418,4 +460,164 @@ func (s *AiServiceImpl) pinReport(ctx context.Context, rawArgs string) (*dto.Das
 	}
 
 	return s.dashboardService.PinByName(ctx, name, args.ReportID)
+}
+
+// ownReport finds a report of the chat's connection; ids of other connections are not reachable from a chat.
+func (s *AiServiceImpl) ownReport(ctx context.Context, toolCtx serviceDbtools.ToolContext, id uint) (*dto.QuestionResponse, error) {
+	reports, err := s.questionService.Index(ctx, &dto.QuestionListRequest{ConnectionID: toolCtx.ConnectionID})
+	if err != nil {
+		return nil, err
+	}
+
+	report, found := lo.Find(reports, func(item dto.QuestionResponse) bool { return item.ID == id })
+	if !found {
+		return nil, fmt.Errorf("report %d not found on this connection", id)
+	}
+
+	return &report, nil
+}
+
+// ownBoard finds a board of the chat's connection by name.
+func (s *AiServiceImpl) ownBoard(ctx context.Context, toolCtx serviceDbtools.ToolContext, name string) (*dto.DashboardResponse, error) {
+	boards, err := s.dashboardService.Index(ctx, &dto.DashboardListRequest{ConnectionID: toolCtx.ConnectionID})
+	if err != nil {
+		return nil, err
+	}
+
+	board, found := lo.Find(boards, func(item dto.DashboardResponse) bool { return item.Name == strings.TrimSpace(name) })
+	if !found {
+		return nil, fmt.Errorf("board %q not found", name)
+	}
+
+	return &board, nil
+}
+
+func (s *AiServiceImpl) updateReport(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args struct {
+		ReportID uint               `json:"reportId"`
+		Title    *string            `json:"title"`
+		SQL      *string            `json:"sql"`
+		Type     *string            `json:"type"`
+		X        *string            `json:"x"`
+		Y        *[]string          `json:"y"`
+		Stacked  *bool              `json:"stacked"`
+		Params   *map[string]string `json:"params"`
+	}
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	report, err := s.ownReport(ctx, toolCtx, args.ReportID)
+	if err != nil {
+		return "", err
+	}
+
+	// The chart is replaced as a whole, so start from what is saved and change the fields given.
+	chart := report.Chart
+	chart.Type = lo.FromPtrOr(args.Type, chart.Type)
+	chart.X = lo.FromPtrOr(args.X, chart.X)
+	chart.Y = lo.FromPtrOr(args.Y, chart.Y)
+	chart.Stacked = lo.FromPtrOr(args.Stacked, chart.Stacked)
+
+	req := &dto.QuestionUpdateRequest{Name: args.Title, SQL: args.SQL, Chart: &chart, Params: args.Params}
+	if err := req.Validate(); err != nil {
+		return "", err
+	}
+
+	updated, err := s.questionService.Update(ctx, args.ReportID, req)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("Updated the report %q (id %d).", updated.Name, updated.ID), nil
+}
+
+func (s *AiServiceImpl) deleteReport(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args struct {
+		ReportID uint `json:"reportId"`
+	}
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	report, err := s.ownReport(ctx, toolCtx, args.ReportID)
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.questionService.Delete(ctx, report.ID); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("Deleted the report %q. It is gone from every board.", report.Name), nil
+}
+
+func (s *AiServiceImpl) renameBoard(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args struct {
+		Board   string `json:"board"`
+		NewName string `json:"newName"`
+	}
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	board, err := s.ownBoard(ctx, toolCtx, args.Board)
+	if err != nil {
+		return "", err
+	}
+
+	req := &dto.DashboardRenameRequest{Name: strings.TrimSpace(args.NewName)}
+	if err := req.Validate(); err != nil {
+		return "", err
+	}
+
+	renamed, err := s.dashboardService.Rename(ctx, board.ID, req)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("Renamed the board %q to %q.", board.Name, renamed.Name), nil
+}
+
+func (s *AiServiceImpl) deleteBoard(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args struct {
+		Board string `json:"board"`
+	}
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	board, err := s.ownBoard(ctx, toolCtx, args.Board)
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.dashboardService.Delete(ctx, board.ID); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("Deleted the board %q. Its %d report(s) stay saved.", board.Name, len(board.Cards)), nil
+}
+
+func (s *AiServiceImpl) unpinReport(ctx context.Context, rawArgs string, toolCtx serviceDbtools.ToolContext) (string, error) {
+	var args pinReportArgs
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return "", fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	board, err := s.ownBoard(ctx, toolCtx, args.Board)
+	if err != nil {
+		return "", err
+	}
+
+	card, found := lo.Find(board.Cards, func(item dto.DashboardCardResponse) bool { return item.Question.ID == args.ReportID })
+	if !found {
+		return "", fmt.Errorf("report %d is not on the board %q", args.ReportID, board.Name)
+	}
+
+	if _, err := s.dashboardService.Unpin(ctx, board.ID, card.ID); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("Took the report off the board %q. The report is still saved.", board.Name), nil
 }

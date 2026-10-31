@@ -28,6 +28,8 @@ type UseAiStreamReturn = {
 };
 
 /** Streams chat turns; each chat has its own stream, state and abort handle. */
+const REPORT_TOOLS = new Set(['save_report', 'pin_report', 'update_report', 'delete_report', 'rename_board', 'delete_board', 'unpin_report']);
+
 export const useAiStream = (): UseAiStreamReturn => {
   const controllersRef = useRef(new Map<number, AbortController>());
   const queryClient = useQueryClient();
@@ -122,8 +124,8 @@ export const useAiStream = (): UseAiStreamReturn => {
               result: event.content,
               durationMs: event.durationMs
             });
-            // The agent saved a report or pinned one: lists already loaded are out of date.
-            if (event.label === 'save_report' || event.label === 'pin_report') {
+            // The agent changed a report or a board: lists already loaded are out of date.
+            if (REPORT_TOOLS.has(event.label ?? '')) {
               void queryClient.invalidateQueries({ queryKey: ['questions'], refetchType: 'all' });
               void queryClient.invalidateQueries({ queryKey: ['dashboards'], refetchType: 'all' });
             }

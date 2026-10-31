@@ -22,6 +22,11 @@ const (
 	ToolSaveReport          = "save_report"
 	ToolPinReport           = "pin_report"
 	ToolListReports         = "list_reports"
+	ToolUpdateReport        = "update_report"
+	ToolDeleteReport        = "delete_report"
+	ToolRenameBoard         = "rename_board"
+	ToolDeleteBoard         = "delete_board"
+	ToolUnpinReport         = "unpin_report"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
@@ -30,6 +35,12 @@ var agentOnlyTools = map[string]bool{
 	ToolProposeSchemaChange: true,
 	ToolPreviewWrite:        true,
 	ToolUpdatePlan:          true,
+	// Changing or removing what the user already saved is Agent mode only; Ask mode may save and pin.
+	ToolUpdateReport: true,
+	ToolDeleteReport: true,
+	ToolRenameBoard:  true,
+	ToolDeleteBoard:  true,
+	ToolUnpinReport:  true,
 }
 
 // AllowedTool is the server-side source of truth for which tools a chat turn
@@ -59,6 +70,15 @@ func ChatTools(agent bool, tier string) []openai.ChatCompletionToolUnionParam {
 	return lo.Filter(allChatTools(agent), func(tool openai.ChatCompletionToolUnionParam, _ int) bool {
 		return tool.OfFunction == nil || AllowedTool(agent, tier, tool.OfFunction.Function.Name)
 	})
+}
+
+// paramsSchema is the values for {{name}} filters in a report's SQL, e.g. {"region": "east"}.
+// Type a filter inside its placeholder: {{n:number}}, {{d:date}}, {{b:boolean}}, {{r:range}} (value "low..high"),
+// {{f:field=table.column}}.
+var paramsSchema = map[string]any{
+	"type":                 "object",
+	"additionalProperties": map[string]any{"type": "string"},
+	"description":          "Values for {{name}} filters in the SQL, by name. Use a filter instead of a fixed value only when the user wants to change it later.",
 }
 
 func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
@@ -149,6 +169,7 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				"x":       map[string]any{"type": "string", "description": "Column for categories or time."},
 				"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Number columns to plot."},
 				"stacked": map[string]any{"type": "boolean"},
+				"params":  paramsSchema,
 			},
 			"required": []string{"sql", "title"},
 		}),
@@ -162,12 +183,55 @@ func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 					"x":       map[string]any{"type": "string"},
 					"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 					"stacked": map[string]any{"type": "boolean"},
+					"params":  paramsSchema,
 				},
 				"required": []string{"title", "sql", "type"},
 			}),
 		functionTool(ToolListReports, "List the saved reports of this connection and the boards (dashboards) they are pinned to. "+
 			"Call it before save_report or pin_report so you reuse a report or board that exists instead of making a copy.",
 			shared.FunctionParameters{"type": "object", "properties": map[string]any{}}),
+		functionTool(ToolUpdateReport, "Change a saved report: only the fields you pass change. Agent mode only; use it when the user asks to edit a report.",
+			shared.FunctionParameters{
+				"type": "object",
+				"properties": map[string]any{
+					"reportId": map[string]any{"type": "integer", "description": "Id from list_reports or save_report."},
+					"title":    map[string]any{"type": "string"},
+					"sql":      map[string]any{"type": "string"},
+					"type":     map[string]any{"type": "string", "enum": []string{"bar", "row", "line", "area", "pie", "number", "table"}},
+					"x":        map[string]any{"type": "string"},
+					"y":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"stacked":  map[string]any{"type": "boolean"},
+					"params":   paramsSchema,
+				},
+				"required": []string{"reportId"},
+			}),
+		functionTool(ToolDeleteReport, "Delete a saved report; it also leaves every board it is on. Agent mode only; only when the user asks for it.",
+			shared.FunctionParameters{
+				"type":       "object",
+				"properties": map[string]any{"reportId": map[string]any{"type": "integer"}},
+				"required":   []string{"reportId"},
+			}),
+		functionTool(ToolRenameBoard, "Rename a board. Agent mode only.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"board":   map[string]any{"type": "string", "description": "Current name."},
+				"newName": map[string]any{"type": "string"},
+			},
+			"required": []string{"board", "newName"},
+		}),
+		functionTool(ToolDeleteBoard, "Delete a board. Its reports stay saved. Agent mode only; only when the user asks for it.", shared.FunctionParameters{
+			"type":       "object",
+			"properties": map[string]any{"board": map[string]any{"type": "string"}},
+			"required":   []string{"board"},
+		}),
+		functionTool(ToolUnpinReport, "Take a report off a board without deleting it. Agent mode only.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"reportId": map[string]any{"type": "integer"},
+				"board":    map[string]any{"type": "string"},
+			},
+			"required": []string{"reportId", "board"},
+		}),
 		functionTool(ToolPinReport, "Pin a saved report to a board (a simple dashboard) by board name; the board is created when it does not exist. "+
 			"Save the report with save_report first and use the id it returns.", shared.FunctionParameters{
 			"type": "object",

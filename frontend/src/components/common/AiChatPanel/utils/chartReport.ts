@@ -15,7 +15,15 @@ export type ChartReport = {
   params?: Record<string, string>;
 };
 
-type ShowChartArgs = { sql?: string; title?: string; type?: string; x?: string; y?: string[]; stacked?: boolean };
+type ShowChartArgs = {
+  sql?: string;
+  title?: string;
+  type?: string;
+  x?: string;
+  y?: string[];
+  stacked?: boolean;
+  params?: Record<string, string>;
+};
 
 /** Reads a finished show_chart call; the agent's chart settings win, the auto pick fills the gaps. */
 export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
@@ -40,7 +48,8 @@ export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
         x: args.x && columns.includes(args.x) ? args.x : auto.x,
         y: y.length > 0 ? y : auto.y,
         stacked: args.stacked
-      }
+      },
+      params: args.params
     };
   } catch {
     return undefined;
