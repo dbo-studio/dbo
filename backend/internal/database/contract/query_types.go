@@ -22,6 +22,9 @@ type (
 		Sorts        []SortDto   `json:"sorts"`
 		Columns      []string
 		Confirmed    bool `json:"confirmed"`
+		// BackgroundAfterSeconds is how long the request waits before the query moves to the background
+		// (default 10, 0 keeps it in the request).
+		BackgroundAfterSeconds *int `json:"backgroundAfterSeconds"`
 	}
 
 	RunQueryResponse struct {
@@ -50,6 +53,9 @@ type (
 		Confirmed    bool    `json:"confirmed"`
 		Limit        *int    `json:"limit"`
 		Page         *int    `json:"page"`
+		// BackgroundAfterSeconds is how long the request waits before the query moves to the background
+		// (default 10, 0 keeps it in the request).
+		BackgroundAfterSeconds *int `json:"backgroundAfterSeconds"`
 	}
 
 	RawQueryResponse struct {
@@ -141,6 +147,7 @@ func (req RunQueryRequest) Validate() error {
 		validation.Field(&req.Filters),
 		validation.Field(&req.Sorts),
 		validation.Field(&req.Columns, validation.Each(validation.Length(0, 120))),
+		validation.Field(&req.BackgroundAfterSeconds, validation.Min(0), validation.Max(3600)),
 	)
 }
 
@@ -176,6 +183,7 @@ func (req RawQueryRequest) Validate() error {
 		validation.Field(&req.Query, validation.Required),
 		validation.Field(&req.Limit, validation.Min(1), validation.Max(10000)),
 		validation.Field(&req.Page, validation.Min(1)),
+		validation.Field(&req.BackgroundAfterSeconds, validation.Min(0), validation.Max(3600)),
 	)
 }
 

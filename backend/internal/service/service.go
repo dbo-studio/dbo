@@ -107,7 +107,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		NotificationService:          notificationService,
 		DashboardSubscriptionService: dashboardSubscriptionService,
 		TreeService:                  serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
-		QueryService:                 serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache),
+		QueryService:                 serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache, jobManager),
 		ImportExportService:          serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:                   serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:                   jobManager,

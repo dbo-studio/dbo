@@ -14,6 +14,7 @@ import (
 	serviceNotification "github.com/dbo-studio/dbo/internal/service/notification"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -25,6 +26,11 @@ type IJobManager interface {
 	// Announce tells the job's owner how it ended: an event for any end, and a notification for a finish or
 	// a failure. Every writer of a terminal status calls it, so there is one path to the user.
 	Announce(ctx context.Context, jobID uint)
+	// RunWithHandover runs fn at once with a context that outlives the request, and waits up to opts.Wait for it.
+	// When it ends in time its value is returned and no job exists. Otherwise a running job of opts.Type is
+	// created, the request is answered with its id (jobID != 0), and the same run, never a second one, ends in
+	// that job: result saved, status set, owner told.
+	RunWithHandover(ctx context.Context, opts HandoverOptions, fn func(ctx context.Context) (any, error)) (value any, jobID uint, err error)
 	Shutdown() error
 	CancelAllJobs() error
 }
@@ -57,6 +63,8 @@ func NewJobManager(jobRepo repository.IJobRepo, appLogger logger.Logger, hub ser
 		hub:          hub,
 		notifier:     notifier,
 	}
+
+	jm.failStaleQueries()
 
 	jm.workerWg.Add(1)
 	go jm.worker()
@@ -275,6 +283,148 @@ func (jm *IJobManagerImpl) processJob(job *model.Job) error {
 	return nil
 }
 
+// HandoverOptions describes the job a slow request turns into.
+type HandoverOptions struct {
+	Type model.JobType
+	// Data is what is needed to rebuild the work on screen (for a query: the request).
+	Data string
+	Wait time.Duration
+}
+
+type handoverOutcome struct {
+	value any
+	err   error
+}
+
+func (jm *IJobManagerImpl) RunWithHandover(ctx context.Context, opts HandoverOptions, fn func(ctx context.Context) (any, error)) (any, uint, error) {
+	owner := helper.CtxOwnerID(ctx)
+	// Derived from the manager's context so a shutdown stops the work; values copied from the request.
+	runCtx, cancel := context.WithCancel(helper.CtxDetached(jm.workerCtx, ctx))
+	outcome := make(chan handoverOutcome, 1) // buffered: a result landing during the handover is never lost
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				outcome <- handoverOutcome{err: fmt.Errorf("internal error: %v", r)}
+			}
+		}()
+
+		value, err := fn(runCtx)
+		outcome <- handoverOutcome{value: value, err: err}
+	}()
+
+	timer := time.NewTimer(opts.Wait)
+	defer timer.Stop()
+
+	select {
+	case done := <-outcome:
+		cancel()
+
+		return done.value, 0, done.err
+	case <-timer.C:
+	}
+
+	// It may have finished while the timer fired.
+	select {
+	case done := <-outcome:
+		cancel()
+
+		return done.value, 0, done.err
+	default:
+	}
+
+	now := time.Now()
+	job := &model.Job{
+		Type: opts.Type, Status: model.JobStatusRunning, OwnerID: owner, Message: "Running in the background",
+		Data: opts.Data, StartedAt: &now,
+	}
+
+	if err := jm.jobRepo.Create(jm.workerCtx, job); err != nil {
+		// No job to hand over to: keep the request open for the answer.
+		done := <-outcome
+		cancel()
+
+		return done.value, 0, done.err
+	}
+
+	jm.mu.Lock()
+	jm.cancels[job.ID] = cancel
+	jm.mu.Unlock()
+
+	jm.workerWg.Add(1)
+
+	go func() {
+		defer jm.workerWg.Done()
+
+		done := <-outcome
+
+		jm.mu.Lock()
+		delete(jm.cancels, job.ID)
+		jm.mu.Unlock()
+		cancel()
+
+		jm.finishHandover(job, done)
+	}()
+
+	return nil, job.ID, nil
+}
+
+// finishHandover ends a handed-over job the way processJob ends a queued one.
+func (jm *IJobManagerImpl) finishHandover(job *model.Job, done handoverOutcome) {
+	// Writes must survive the shutdown that may have cancelled the work.
+	ctx := context.WithoutCancel(jm.workerCtx)
+
+	// A cancel by the user already set the status; it wins over whatever the driver reported.
+	if fresh, err := jm.jobRepo.Find(ctx, int32(job.ID)); err == nil && fresh.Status == model.JobStatusCancelled {
+		return
+	}
+
+	if done.err != nil {
+		if err := jm.updateJobError(ctx, job, done.err.Error()); err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to update job error: %v", err))
+		}
+
+		jm.Announce(ctx, job.ID)
+
+		return
+	}
+
+	job.Result.Data = done.value
+	if err := jm.jobRepo.UpdateFieldsIfRunning(ctx, job.ID, map[string]any{"result": helper.StructToJSON(job.Result)}); err != nil {
+		jm.logger.Error(fmt.Sprintf("Failed to save job result: %v", err))
+	}
+
+	if err := jm.markJobCompleted(ctx, job.ID, "Job completed successfully"); err != nil {
+		jm.logger.Error(fmt.Sprintf("Failed to update job status: %v", err))
+	}
+
+	jm.Announce(ctx, job.ID)
+}
+
+// failStaleQueries ends background queries a crash or restart left running: their work is gone.
+func (jm *IJobManagerImpl) failStaleQueries() {
+	running, err := jm.jobRepo.GetRunningJobs(jm.workerCtx)
+	if err != nil {
+		jm.logger.Error(fmt.Sprintf("Failed to look for stale queries: %v", err))
+
+		return
+	}
+
+	for i := range running {
+		if running[i].Type != model.JobTypeQuery {
+			continue
+		}
+
+		if err := jm.updateJobError(jm.workerCtx, &running[i], "App restarted"); err != nil {
+			jm.logger.Error(fmt.Sprintf("Failed to end stale query %d: %v", running[i].ID, err))
+
+			continue
+		}
+
+		jm.Announce(jm.workerCtx, running[i].ID)
+	}
+}
+
 func (jm *IJobManagerImpl) worker() {
 	defer jm.workerWg.Done()
 
@@ -291,8 +441,19 @@ func (jm *IJobManagerImpl) worker() {
 	}
 }
 
+// runningQueue is the running jobs the single-run policy governs. A background query is not one of them: it
+// would otherwise cancel, or block, an export that happens to be running.
+func (jm *IJobManagerImpl) runningQueue() ([]model.Job, error) {
+	running, err := jm.jobRepo.GetRunningJobs(jm.workerCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Reject(running, func(job model.Job, _ int) bool { return job.Type == model.JobTypeQuery }), nil
+}
+
 func (jm *IJobManagerImpl) processPendingJobs() {
-	runningJobs, err := jm.jobRepo.GetRunningJobs(jm.workerCtx)
+	runningJobs, err := jm.runningQueue()
 	if err != nil {
 		jm.logger.Error(fmt.Sprintf("Failed to get running jobs: %v", err))
 		return
@@ -323,7 +484,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 		}
 	}
 
-	runningJobs, err = jm.jobRepo.GetRunningJobs(jm.workerCtx)
+	runningJobs, err = jm.runningQueue()
 	if err != nil {
 		jm.logger.Error(fmt.Sprintf("Failed to re-check running jobs: %v", err))
 		return
