@@ -5,19 +5,23 @@ import Modal from '@/components/base/Modal/Modal';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
+import { parseObjectNodeId } from '@/core/db';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { Box, Button } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
+import type { ExportContentType } from '@/api/importExport/types';
 import { useEffect, useState } from 'react';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import { ExportModalContainerStyled, ExportModalPathRowStyled } from './ExportModal.styled';
 import type { ExportModalProps } from './types';
 
-export function ExportModal({ show, connectionId, query, table, onClose }: ExportModalProps) {
+export function ExportModal({ show, connectionId, query, table, nodeId, onClose }: ExportModalProps) {
   const [format, setFormat] = useState('sql');
+  const [allTables, setAllTables] = useState(false);
+  const [content, setContent] = useState<ExportContentType>('data');
   const [showProgress, setShowProgress] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [isTauri, setIsTauri] = useState(false);
@@ -34,6 +38,14 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
       .catch(() => undefined);
   }, []);
 
+  const location = nodeId ? parseObjectNodeId(nodeId) : undefined;
+  const canExportAll = !!location && !!table;
+  const multiTable = canExportAll && allTables;
+  // Schema (DDL) only exists in sql files.
+  const showContent = multiTable && format === 'sql';
+  // Several tables as csv/json cannot share one file, so the backend zips them.
+  const fileExtension = multiTable && format !== 'sql' ? 'zip' : format;
+
   const handleSelectFile = async () => {
     if (!save) {
       return;
@@ -42,14 +54,14 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
     try {
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
-      const defaultFileName = `export_${table}_${timestamp}.${format}`;
+      const defaultFileName = `export_${multiTable ? 'tables' : table}_${timestamp}.${fileExtension}`;
 
       const filePath = await save({
         defaultPath: defaultFileName,
         filters: [
           {
             name: 'Export Files',
-            extensions: [format]
+            extensions: [fileExtension]
           }
         ]
       });
@@ -70,8 +82,14 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
     try {
       const response = await exportDataMutation({
         connectionId,
-        table,
-        query,
+        ...(multiTable
+          ? {
+              scope: location?.schema ? 'schema' : 'database',
+              database: location?.database,
+              schema: location?.schema,
+              content: showContent ? content : undefined
+            }
+          : { table, query }),
         format,
         savePath: isTauri ? savePath : undefined
       });
@@ -112,6 +130,38 @@ export function ExportModal({ show, connectionId, query, table, onClose }: Expor
                 { label: 'CSV', value: 'csv' }
               ]}
             />
+
+            {canExportAll && (
+              <SelectInput
+                emptylabel={locales.no_column_found}
+                value={allTables ? 'all' : 'one'}
+                onChange={(e) => setAllTables((e as SelectInputOption)?.value === 'all')}
+                label={locales.export_scope}
+                options={[
+                  { label: table, value: 'one' },
+                  {
+                    label: location?.schema
+                      ? locales.export_all_tables_in_schema
+                      : locales.export_all_tables_in_database,
+                    value: 'all'
+                  }
+                ]}
+              />
+            )}
+
+            {showContent && (
+              <SelectInput
+                emptylabel={locales.no_column_found}
+                value={content}
+                onChange={(e) => setContent((e as SelectInputOption)?.value as ExportContentType)}
+                label={locales.export_content}
+                options={[
+                  { label: locales.export_content_data, value: 'data' },
+                  { label: locales.export_content_schema, value: 'schema' },
+                  { label: locales.export_content_both, value: 'both' }
+                ]}
+              />
+            )}
 
             {isTauri && (
               <ExportModalPathRowStyled>

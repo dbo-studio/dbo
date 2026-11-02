@@ -116,3 +116,7 @@ func stringPtrOrNil(value string) *string {
 
 	return lo.ToPtr(value)
 }
+
+func (r *PostgresRepository) StreamRawQuery(ctx context.Context, req *dto.RawQueryRequest, chunkSize int, fn func(columns []dto.Column, rows []map[string]any) error) error {
+	return r.base.StreamRawQuery(ctx, req, chunkSize, fn)
+}

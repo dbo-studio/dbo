@@ -108,6 +108,8 @@ func Execute() {
 		TreeHandler:           handler.NewTreeHandler(appLogger, ss.TreeService),
 		QueryHandler:          handler.NewQueryHandler(appLogger, ss.QueryService),
 		ImportExport:          handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Backup:                handler.NewBackupHandler(appLogger, ss.BackupService),
+		BackupSchedule:        handler.NewBackupScheduleHandler(appLogger, ss.BackupScheduleService),
 		Job:                   handler.NewJobHandler(appLogger, ss.JobService),
 		AI:                    handler.NewAiHandler(appLogger, ss.AiService),
 		AiProvider:            handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
@@ -125,6 +127,7 @@ func Execute() {
 
 	// Scheduled dashboard deliveries run in this process, so they only fire while DBO is running.
 	go ss.DashboardSubscriptionService.Start(gracefulCtx)
+	ss.BackupScheduler.Start(gracefulCtx)
 
 	// SIGINT/SIGTERM: stop the job system (abort processors, wait, mark jobs
 	// canceled) while Listen drains in-flight HTTP requests gracefully.

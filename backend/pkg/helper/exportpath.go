@@ -2,11 +2,22 @@ package helper
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
-const ExportDir = "exports"
+const (
+	// MaxUploadSize caps one request body, and so one uploaded backup or import.
+	MaxUploadSize = 256 << 20
+
+	ExportDir = "exports"
+	// BackupDir holds backup artifacts; downloads are constrained to it.
+	BackupDir = "backups"
+	// ToolsDir holds native tools DBO manages itself, one folder per driver and
+	// version.
+	ToolsDir = "data/tools"
+)
 
 var ErrExportPathOutsideRoot = errors.New("export path outside allowed directory")
 
@@ -91,4 +102,33 @@ func pathWithinRoot(absPath, root string) bool {
 	}
 
 	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+// IsReadableBackupPath reports whether filePath lies under BackupDir.
+func IsReadableBackupPath(filePath string) bool {
+	if filePath == "" {
+		return false
+	}
+
+	abs, err := filepath.Abs(filepath.Clean(filePath))
+	if err != nil {
+		return false
+	}
+
+	root, err := filepath.Abs(BackupDir)
+	if err != nil {
+		return false
+	}
+
+	return pathWithinRoot(abs, root)
+}
+
+// EnsureBackupDir creates BackupDir readable by the DBO user only; backups hold
+// whole databases. An existing directory is tightened too.
+func EnsureBackupDir() error {
+	if err := os.MkdirAll(BackupDir, 0o700); err != nil {
+		return err
+	}
+
+	return os.Chmod(BackupDir, 0o700)
 }

@@ -33,6 +33,14 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
     if (!jobId) return;
 
     try {
+      const backupResult = job?.result as { artifactId?: number; fileName?: string } | undefined;
+      const artifactId = backupResult?.artifactId;
+      if (job?.type === 'backup' && artifactId) {
+        const blob = await api.backup.download(artifactId);
+        tools.fileDownload(blob, backupResult?.fileName || 'backup');
+        return;
+      }
+
       const blob = await jobResultMutation(jobId);
       const fileName = job?.result?.fileName || 'export';
       tools.fileDownload(blob, fileName);
@@ -53,6 +61,9 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
           const totalRows = result?.totalRows || 0;
           return `${locales.import_completed}: ${successRows} ${locales.successful}, ${failedRows} ${locales.failed} (${totalRows} ${locales.total_rows})`;
         }
+        if (job.type === 'backup') return locales.backup_completed_successfully;
+        if (job.type === 'restore') return locales.restore_completed_successfully;
+        if (job.type === 'tool_install') return locales.backup_tool_install_completed;
         return locales.export_completed_successfully;
       case 'failed':
         return `${locales.job_failed}: ${job.error}`;
@@ -64,7 +75,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
   };
 
   const finished = job?.status === 'completed' || job?.status === 'failed' || job?.status === 'canceled';
-  const canDownload = job?.status === 'completed' && job.type === 'export' && !isTauri;
+  const canDownload = job?.status === 'completed' && (job.type === 'export' || job.type === 'backup') && !isTauri;
 
   return (
     <Modal

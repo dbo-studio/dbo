@@ -10,6 +10,7 @@ import (
 	serviceAiChat "github.com/dbo-studio/dbo/internal/service/ai_chat"
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
+	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
@@ -47,6 +48,9 @@ type Service struct {
 	ImportExportService          serviceImportExport.IImportExport
 	JobService                   serviceJob.IJobService
 	JobManager                   serviceJob.IJobManager
+	BackupService                serviceBackup.IBackupService
+	BackupScheduleService        serviceBackup.IBackupScheduleService
+	BackupScheduler              *serviceBackup.Scheduler
 	AiService                    serviceAI.IAiService
 	AiProviderService            serviceAiProvider.IAiProviderService
 	AiChatService                serviceAiChat.IAiChatService
@@ -75,6 +79,9 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 
 	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
+	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, deps.Cache))
+	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss))
+	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
@@ -111,6 +118,9 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService:          serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:                   serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:                   jobManager,
+		BackupScheduleService:        serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, ss),
+		BackupScheduler:              serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, deps.Logger),
+		BackupService:                serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, deps.Cache),
 		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:            aiProviderService,
 		AiChatService:                serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),

@@ -2,6 +2,9 @@ import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import JobResultHost from '../common/JobProgressModal/JobResultHost';
 import DashboardNameDialog from '../common/DashboardNameDialog/DashboardNameDialog';
+import BackupConsole from '../common/BackupConsole/BackupConsole';
+import BackupFailureWatcher from '../common/BackupModal/BackupFailureWatcher';
+import BackupModal from '../common/BackupModal/BackupModal';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
 
@@ -13,6 +16,9 @@ export default function AppHosts(): JSX.Element {
       <DashboardNameDialog />
       <JobResultHost />
       <SafeModePasswordHost />
+      <BackupModal />
+      <BackupConsole />
+      <BackupFailureWatcher />
       <UpdateDialog />
     </>
   );

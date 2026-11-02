@@ -8,10 +8,19 @@ export type ImportRequestType = {
   maxErrors: number;
 };
 
+export type ExportScopeType = 'query' | 'tables' | 'schema' | 'database';
+
+export type ExportContentType = 'data' | 'schema' | 'both';
+
 export type ExportRequestType = {
   connectionId: number;
-  table: string;
-  query: string;
+  scope?: ExportScopeType;
+  table?: string;
+  query?: string;
+  tables?: string[];
+  database?: string;
+  schema?: string;
+  content?: ExportContentType;
   format: string;
   chunkSize?: number;
   savePath?: string;

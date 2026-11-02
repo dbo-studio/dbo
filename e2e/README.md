@@ -86,6 +86,12 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
 | Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview + Ctrl+A stays in preview |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
+| Export scopes            | `pg\|mysql\|sqlite/export-scope.spec.ts`      | tables/schema/database export, FK-ordered schema dump, zip bundle, 150-row (uncapped) export, invalid combinations |
+| Backup / Restore         | `pg\|mysql\|sqlite/backup.spec.ts`            | backup history + checksum + download, typed-confirm and name validation, upload scan, tool manager API; SQLite round trip, safety backup, Safe Mode block |
+| Backup dialog (UI)       | `pg\|mysql\|sqlite/backup-ui.spec.ts`         | connection menu → Backup & Restore: progress, history, typed-name restore confirm, cancel queues nothing |
+| Backup schedules         | `pg\|mysql\|sqlite/backup-schedule.spec.ts`   | create/validate, run now, retention keeps newest N, pause/edit, delete keeps backups |
+| Backup console           | `pg\|mysql\|sqlite/backup-console.spec.ts`    | header → console: 5-step job wizard, run now, last result, per-job runs, pause/delete |
+| Backup encryption/verify | `pg\|mysql\|sqlite/backup-seal.spec.ts`        | gzip + AES-GCM schedule run, verify (checksum / contents / wrong passphrase), restore needs passphrase, SQLite round trip |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |

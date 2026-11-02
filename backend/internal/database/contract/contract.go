@@ -9,6 +9,7 @@ type DatabaseRepository interface {
 	DiagramRepository
 	TableStructureRepository
 	WritePreviewRepository
+	SchemaDumpRepository
 }
 
 type QueryRepository interface {
@@ -16,6 +17,7 @@ type QueryRepository interface {
 	RunQuery(ctx context.Context, dto *RunQueryRequest) (*RunQueryResponse, error)
 	UpdateQuery(ctx context.Context, dto *UpdateQueryRequest) (*UpdateQueryResponse, error)
 	RunRawQuery(ctx context.Context, dto *RawQueryRequest) (*RawQueryResponse, error)
+	StreamRawQuery(ctx context.Context, dto *RawQueryRequest, chunkSize int, fn func(columns []Column, rows []map[string]any) error) error
 	Tree(ctx context.Context, parentID string) (*TreeNode, error)
 	GetFormTabs(ctx context.Context, action TreeNodeActionName) []FormTab
 	Objects(ctx context.Context, nodeID string, tabID TreeTab, action TreeNodeActionName) (*FormResponse, error)

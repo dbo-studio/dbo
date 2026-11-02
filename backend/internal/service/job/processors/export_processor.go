@@ -1,22 +1,25 @@
 package processors
 
 import (
+	"archive/zip"
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
-	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -81,87 +84,44 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		return err
 	}
 
-	err = p.jobManager.UpdateJobProgress(ctx, job, 20, "Executing query")
+	targets, err := exportTargets(ctx, p.cache, repo, connection, &jobData)
 	if err != nil {
 		return err
 	}
 
-	result, err := repo.RunRawQuery(ctx, &dto.RawQueryRequest{
-		ConnectionID: int32(connection.ID),
-		Query:        jobData.Query,
+	// An empty database is a valid backup but nothing to export.
+	if len(targets) == 0 {
+		return fmt.Errorf("no tables to export")
+	}
+
+	zipped := jobData.IsMultiTable() && jobData.Format != "sql"
+
+	var dump *databaseContract.SchemaDump
+
+	if jobData.IsMultiTable() && jobData.Format == "sql" {
+		dump, targets, err = schemaDumpFor(ctx, repo, connection.ConnectionType, &jobData, targets)
+		if err != nil {
+			return err
+		}
+	}
+
+	filePath, fileName, err := exportFilePath(&jobData, zipped)
+	if err != nil {
+		return err
+	}
+
+	err = p.jobManager.UpdateJobProgress(ctx, job, 20, fmt.Sprintf("Exporting %d table(s)", len(targets)))
+	if err != nil {
+		return err
+	}
+
+	totalRows, columns, err := writeExport(ctx, repo, connection.ConnectionType, &jobData, targets, dump, filePath, zipped, func(i int, name string) {
+		_ = p.jobManager.UpdateJobProgress(ctx, job, 20+70*i/len(targets), "Exporting "+name)
 	})
 	if err != nil {
+		_ = os.Remove(filePath)
+
 		return err
-	}
-
-	if result == nil {
-		return fmt.Errorf("no result found for query %s", jobData.Query)
-	}
-
-	// RunRawQuery surfaces SELECT failures as a CommandResponseBuilder row
-	// (err == nil) for the SQL editor grid — export must still fail the job.
-	if msg := rawQueryFailureMessage(result); msg != "" {
-		return fmt.Errorf("%s", msg)
-	}
-
-	err = p.jobManager.UpdateJobProgress(ctx, job, 50, fmt.Sprintf("Found %d rows to export", len(result.Data)))
-	if err != nil {
-		return fmt.Errorf("failed to update progress: %w", err)
-	}
-
-	var (
-		filePath string
-		fileName string
-	)
-
-	if jobData.SavePath != "" {
-		if err := helper.ValidateExportSavePath(jobData.SavePath, true); err != nil {
-			return fmt.Errorf("invalid save path: %w", err)
-		}
-
-		filePath = jobData.SavePath
-		fileName = filepath.Base(jobData.SavePath)
-
-		dir := filepath.Dir(jobData.SavePath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
-		}
-	} else {
-		exportDir := helper.ExportDir
-		if err := os.MkdirAll(exportDir, 0755); err != nil {
-			return fmt.Errorf("failed to create export directory: %w", err)
-		}
-
-		timestamp := time.Now().Format("20060102_150405")
-		fileName = fmt.Sprintf("export_%s_%s.%s", jobData.Table, timestamp, jobData.Format)
-		filePath = filepath.Join(exportDir, fileName)
-	}
-
-	err = p.jobManager.UpdateJobProgress(ctx, job, 70, "Creating export file")
-	if err != nil {
-		return err
-	}
-
-	var fileContent []byte
-
-	switch jobData.Format {
-	case "sql":
-		fileContent = generateSQLExportFromData(jobData.Table, result.Columns, result.Data)
-	case "json":
-		fileContent = generateJSONExport(result.Columns, result.Data)
-	case "csv":
-		headers := lo.Map(result.Columns, func(col dto.Column, _ int) string { return col.Name })
-		fileContent = []byte(csv.Writer(headers, result.Data))
-	default:
-		return fmt.Errorf("unsupported format: %s", jobData.Format)
-	}
-
-	if ctx.Err() != nil {
-		return fmt.Errorf("job was canceled")
-	}
-
-	if err := os.WriteFile(filePath, fileContent, 0644); err != nil {
-		return fmt.Errorf("failed to write export file: %w", err)
 	}
 
 	fileInfo, err := os.Stat(filePath)
@@ -178,93 +138,268 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		FileName:    fileName,
 		FilePath:    filePath,
 		Size:        fileInfo.Size(),
-		Rows:        len(result.Data),
-		Columns:     len(result.Columns),
+		Rows:        totalRows,
+		Columns:     columns,
 		TotalChunks: 1,
-		ChunkSize:   len(result.Data),
+		ChunkSize:   totalRows,
 		Query:       jobData.Query,
 	}
 
 	return nil
 }
 
-// rawQueryFailureMessage detects SQL-editor error envelopes produced by
-// CommandResponseBuilder (Query/Message/Duration) when a SELECT fails.
-func rawQueryFailureMessage(result *dto.RawQueryResponse) string {
-	if result == nil || len(result.Columns) != 3 || len(result.Data) != 1 {
-		return ""
-	}
-
-	if result.Columns[0].Name != "Query" || result.Columns[1].Name != "Message" || result.Columns[2].Name != "Duration" {
-		return ""
-	}
-
-	msg, _ := result.Data[0]["Message"].(string)
-	if msg == "" || msg == "OK" {
-		return ""
-	}
-
-	return msg
+// exportTarget is one SELECT whose rows become a table section (sql) or a
+// file inside the zip (csv/json).
+type exportTarget struct {
+	Name  string
+	Query string
 }
 
-func generateSQLExportFromData(tableName string, columns []dto.Column, data []map[string]any) []byte {
-	var sql strings.Builder
+func exportTargets(ctx context.Context, appCache cache.Cache, repo databaseContract.DatabaseRepository, connection *model.Connection, req *dto.ExportJob) ([]exportTarget, error) {
+	connectionType := connection.ConnectionType
 
-	sql.WriteString("-- Export Data\n")
-	sql.WriteString("-- Generated by DBO Studio\n")
-	sql.WriteString("-- Generated on: " + time.Now().Format("2006-01-02 15:04:05") + "\n\n")
+	if !req.IsMultiTable() {
+		return []exportTarget{{Name: req.Table, Query: req.Query}}, nil
+	}
 
-	if len(data) > 0 {
-		fmt.Fprintf(&sql, "INSERT INTO %s (", tableName)
+	database := lo.EmptyableToPtr(req.Database)
+	schema := lo.EmptyableToPtr(req.Schema)
 
-		for i, col := range columns {
-			sql.WriteString(col.Name)
+	names := req.Tables
 
-			if i < len(columns)-1 {
-				sql.WriteString(", ")
+	if req.Scope != dto.ExportScopeTables {
+		// Postgres table names are only unique per schema, and the repo lists
+		// every schema when none is given.
+		if databaseContract.IsPostgresFamily(connectionType) && schema == nil {
+			return nil, fmt.Errorf("schema is required to export a postgres %s", req.Scope)
+		}
+
+		// The table listing is cached, and a table created since it was cached
+		// would be silently left out of a whole-database export or backup.
+		for _, prefix := range []string{cache.PostgresQueryCachePrefix(connection.ID), cache.MySQLQueryCachePrefix(connection.ID)} {
+			if err := appCache.DeleteByPrefix(ctx, prefix); err != nil {
+				return nil, err
 			}
 		}
 
-		sql.WriteString(") VALUES\n")
+		var err error
 
-		for i, row := range data {
-			sql.WriteString("(")
-
-			for j, col := range columns {
-				value := row[col.Name]
-
-				if value == nil {
-					sql.WriteString("NULL")
-				} else {
-					sql.WriteString(helper.FormatSQLValue(value))
-				}
-
-				if j < len(columns)-1 {
-					sql.WriteString(", ")
-				}
-			}
-
-			sql.WriteString(")")
-
-			if i < len(data)-1 {
-				sql.WriteString(",\n")
-			} else {
-				sql.WriteString(";\n")
-			}
+		names, err = repo.ListTableNames(ctx, database, schema)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return []byte(sql.String())
+	targets := make([]exportTarget, 0, len(names))
+
+	for _, name := range names {
+		qualified := databaseCore.QuoteIdent(connectionType, name)
+		if schema != nil && databaseContract.IsPostgresFamily(connectionType) {
+			qualified = databaseCore.QuoteIdent(connectionType, *schema) + "." + qualified
+		}
+
+		targets = append(targets, exportTarget{Name: name, Query: "SELECT * FROM " + qualified})
+	}
+
+	return targets, nil
 }
 
-func generateJSONExport(columns []dto.Column, rows []map[string]any) []byte {
-	jsonData := make([]map[string]any, len(rows))
-	for i, row := range rows {
-		jsonData[i] = make(map[string]any)
-		for _, col := range columns {
-			jsonData[i][col.Name] = row[col.Name]
+func exportFilePath(req *dto.ExportJob, zipped bool) (filePath, fileName string, err error) {
+	if req.SavePath != "" {
+		if err := helper.ValidateExportSavePath(req.SavePath, true); err != nil {
+			return "", "", fmt.Errorf("invalid save path: %w", err)
+		}
+
+		if err := os.MkdirAll(filepath.Dir(req.SavePath), 0755); err != nil {
+			return "", "", fmt.Errorf("failed to create directory: %w", err)
+		}
+
+		return req.SavePath, filepath.Base(req.SavePath), nil
+	}
+
+	if err := os.MkdirAll(helper.ExportDir, 0755); err != nil {
+		return "", "", fmt.Errorf("failed to create export directory: %w", err)
+	}
+
+	label := req.Table
+
+	switch req.Scope {
+	case dto.ExportScopeTables:
+		label = "tables"
+	case dto.ExportScopeSchema:
+		label = req.Schema
+	case dto.ExportScopeDatabase:
+		label = lo.CoalesceOrEmpty(req.Database, "database")
+	}
+
+	ext := req.Format
+	if zipped {
+		ext = "zip"
+	}
+
+	fileName = fmt.Sprintf("export_%s_%s.%s", label, time.Now().Format("20060102_150405"), ext)
+
+	return filepath.Join(helper.ExportDir, fileName), fileName, nil
+}
+
+// writeExport streams every target into one sql/csv/json file, or into one zip
+// entry per target. Only one chunk of rows is held in memory at a time.
+func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, connectionType string, req *dto.ExportJob, targets []exportTarget, dump *databaseContract.SchemaDump, filePath string, zipped bool, onTarget func(i int, name string)) (totalRows, columnCount int, err error) {
+	f, err := os.Create(filePath)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to create export file: %w", err)
+	}
+
+	defer func() {
+		if closeErr := f.Close(); err == nil && closeErr != nil {
+			err = closeErr
+		}
+	}()
+
+	buffered := bufio.NewWriter(f)
+
+	var (
+		zw  *zip.Writer
+		out io.Writer = buffered
+	)
+
+	if zipped {
+		zw = zip.NewWriter(buffered)
+	} else if req.Format == "sql" {
+		if _, err := io.WriteString(buffered, sqlExportHeader()); err != nil {
+			return 0, 0, err
+		}
+
+		if dump != nil {
+			if err := writeStatements(buffered, dump.Preamble); err != nil {
+				return 0, 0, err
+			}
+
+			if req.WritesSchema() {
+				for _, t := range dump.Ordered() {
+					if _, err := io.WriteString(buffered, t.Create+"\n\n"); err != nil {
+						return 0, 0, err
+					}
+				}
+			}
 		}
 	}
 
-	return []byte(helper.StructToJSON(jsonData))
+	for i, target := range targets {
+		if !req.WritesData() {
+			break
+		}
+
+		onTarget(i, target.Name)
+
+		if zipped {
+			out, err = zw.Create(target.Name + "." + req.Format)
+			if err != nil {
+				return 0, 0, err
+			}
+		}
+
+		tw := newTableWriter(out, req.Format, target.Name, connectionType, req.IsMultiTable(), ddlFor(dump, target.Name))
+
+		err = repo.StreamRawQuery(ctx, &dto.RawQueryRequest{
+			ConnectionID: req.ConnectionID,
+			Query:        target.Query,
+			Database:     lo.EmptyableToPtr(req.Database),
+		}, req.ChunkSize, tw.write)
+		if err != nil {
+			return 0, 0, fmt.Errorf("export %s: %w", target.Name, err)
+		}
+
+		if err := tw.finish(); err != nil {
+			return 0, 0, err
+		}
+
+		totalRows += tw.rows
+		columnCount = tw.columns
+	}
+
+	if zw != nil {
+		if err := zw.Close(); err != nil {
+			return 0, 0, err
+		}
+	}
+
+	if dump != nil {
+		if req.WritesSchema() {
+			for _, t := range dump.Ordered() {
+				if err := writeStatements(buffered, t.Post); err != nil {
+					return 0, 0, err
+				}
+			}
+		}
+
+		if err := writeStatements(buffered, dump.Postamble); err != nil {
+			return 0, 0, err
+		}
+	}
+
+	if err := buffered.Flush(); err != nil {
+		return 0, 0, err
+	}
+
+	return totalRows, columnCount, nil
+}
+
+func writeStatements(w io.Writer, statements []string) error {
+	for _, statement := range statements {
+		if _, err := io.WriteString(w, statement+"\n"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// schemaDumpFor loads table DDL and reorders targets parents-first. Postgres
+// needs a schema to dump; without one only data-only exports proceed unordered.
+func schemaDumpFor(ctx context.Context, repo databaseContract.DatabaseRepository, connectionType string, req *dto.ExportJob, targets []exportTarget) (*databaseContract.SchemaDump, []exportTarget, error) {
+	if databaseContract.IsPostgresFamily(connectionType) && req.Schema == "" {
+		if req.WritesSchema() {
+			return nil, nil, fmt.Errorf("schema is required to export a postgres schema")
+		}
+
+		return &databaseContract.SchemaDump{}, targets, nil
+	}
+
+	names := lo.Map(targets, func(t exportTarget, _ int) string { return t.Name })
+
+	dump, err := repo.DumpSchema(ctx, lo.EmptyableToPtr(req.Database), lo.EmptyableToPtr(req.Schema), names)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	byName := lo.KeyBy(targets, func(t exportTarget) string { return t.Name })
+	ordered := make([]exportTarget, 0, len(targets))
+
+	for _, t := range dump.Ordered() {
+		ordered = append(ordered, byName[t.Name])
+		delete(byName, t.Name)
+	}
+
+	for _, t := range targets {
+		if _, left := byName[t.Name]; left {
+			ordered = append(ordered, t)
+		}
+	}
+
+	return dump, ordered, nil
+}
+
+func ddlFor(dump *databaseContract.SchemaDump, table string) *databaseContract.TableDDL {
+	if dump == nil {
+		return nil
+	}
+
+	for i := range dump.Tables {
+		if dump.Tables[i].Name == table {
+			return &dump.Tables[i]
+		}
+	}
+
+	return nil
 }

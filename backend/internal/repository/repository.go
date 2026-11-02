@@ -74,6 +74,29 @@ type IJobRepo interface {
 	DeleteOldJobs(ctx context.Context, days int) error
 }
 
+type IBackupArtifactRepo interface {
+	Create(ctx context.Context, artifact *model.BackupArtifact) error
+	FindByOwner(ctx context.Context, id uint, ownerID string) (*model.BackupArtifact, error)
+	FindByJob(ctx context.Context, jobID uint, ownerID string) (*model.BackupArtifact, error)
+	ListByOwner(ctx context.Context, ownerID string, connectionID *uint) ([]model.BackupArtifact, error)
+	// ListCompletedBySchedule returns a schedule's finished backups, newest first.
+	ListCompletedBySchedule(ctx context.Context, scheduleID uint) ([]model.BackupArtifact, error)
+	Delete(ctx context.Context, id uint) error
+	// UpdateFields writes only the given columns so a late write can never
+	// clobber a concurrent change.
+	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+}
+
+type IBackupScheduleRepo interface {
+	Create(ctx context.Context, schedule *model.BackupSchedule) error
+	FindByOwner(ctx context.Context, id uint, ownerID string) (*model.BackupSchedule, error)
+	ListByOwner(ctx context.Context, ownerID string) ([]model.BackupSchedule, error)
+	// ListDue returns enabled schedules whose next run is at or before now.
+	ListDue(ctx context.Context, now time.Time) ([]model.BackupSchedule, error)
+	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+	Delete(ctx context.Context, id uint) error
+}
+
 type IAiProviderRepo interface {
 	Index(ctx context.Context) ([]model.AiProvider, error)
 	Find(ctx context.Context, id uint) (*model.AiProvider, error)
@@ -215,6 +238,8 @@ type Repository struct {
 	HistoryRepo                IHistoryRepo
 	SavedQueryRepo             ISavedQueryRepo
 	JobRepo                    IJobRepo
+	BackupArtifactRepo         IBackupArtifactRepo
+	BackupScheduleRepo         IBackupScheduleRepo
 	AiChatRepo                 IAiChatRepo
 	AiChangesetRepo            IAiChangesetRepo
 	AiAuditRepo                IAiAuditRepo
@@ -241,6 +266,8 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		HistoryRepo:                NewHistoryRepo(db),
 		SavedQueryRepo:             NewSavedQueryRepo(db),
 		JobRepo:                    NewJobRepo(db),
+		BackupArtifactRepo:         NewBackupArtifactRepo(db),
+		BackupScheduleRepo:         NewBackupScheduleRepo(db),
 		AiChatRepo:                 NewAiChatRepo(db),
 		AiChangesetRepo:            NewAiChangesetRepo(db),
 		AiAuditRepo:                NewAiAuditRepo(db),
