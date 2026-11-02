@@ -3,6 +3,7 @@ import { mysqlCoreSchemaNames, MYSQL_CORE_ERRORS as E } from "../../fixtures/mys
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addTrigger,
+  addTriggers,
   addTriggerWithoutBodyRejected,
   cleanupMysqlCoreSchema,
   createFunction,
@@ -11,6 +12,10 @@ import {
   createProcedureWithOutParameter,
   dropRoutine,
   dropTrigger,
+  dropTriggerRows,
+  editFunctionBodyRejectedByDb,
+  editTriggerBodyRejectedByDb,
+  expectFunctionBody,
   editFunctionBody,
   editTriggerBody,
   expectFunctionLoaded,
@@ -18,6 +23,9 @@ import {
   expectOutParameterLoaded,
   expectProcedureLoaded,
   expectTriggerLoaded,
+  expectTriggerRows,
+  retargetTrigger,
+  type MysqlTriggerSpec,
   setupMysqlCoreSchema,
 } from "../../helpers/objectFormMysqlCoreSchema";
 import { safeDeleteConnection } from "../../helpers/safeCleanup";
@@ -91,6 +99,66 @@ test.describe("Object Form MySQL triggers and routines", () => {
     });
     await test.step("reopen: no triggers left", async () => {
       await expectNoTriggers(page, names.usersTable);
+    });
+  });
+
+  test("AFTER and UPDATE/DELETE triggers round-trip and retarget", async () => {
+    // Sorted by name: that is the order information_schema returns them in.
+    const specs: MysqlTriggerSpec[] = [
+      { name: `${names.triggerName}_a`, timing: "AFTER", event: "UPDATE", body: "SET @e2e_a = 1" },
+      { name: `${names.triggerName}_b`, timing: "AFTER", event: "DELETE", body: "SET @e2e_b = 1" },
+      { name: `${names.triggerName}_c`, timing: "BEFORE", event: "UPDATE", body: "SET @e2e_c = 1" },
+    ];
+
+    await test.step("add AFTER UPDATE, AFTER DELETE and BEFORE UPDATE triggers", async () => {
+      await addTriggers(page, names.usersTable, specs);
+    });
+    await test.step("reopen: timing, event and body are loaded", async () => {
+      await expectTriggerRows(page, names.usersTable, specs);
+    });
+    await test.step("retarget the second trigger to AFTER INSERT (drop + create)", async () => {
+      await retargetTrigger(page, names.usersTable, 1, specs[1].name, { timing: "AFTER", event: "INSERT" });
+    });
+    await test.step("reopen: the new timing and event are stored", async () => {
+      await expectTriggerRows(page, names.usersTable, [specs[0], { ...specs[1], event: "INSERT" }, specs[2]]);
+    });
+    await test.step("drop all three at once", async () => {
+      await dropTriggerRows(page, names.usersTable, [0, 1, 2]);
+    });
+    await test.step("reopen: no triggers left", async () => {
+      await expectNoTriggers(page, names.usersTable);
+    });
+  });
+
+  test("A trigger edit MySQL rejects keeps the original trigger", async () => {
+    await test.step("add a trigger", async () => {
+      await addTrigger(page, names.usersTable, `${names.triggerName}_keep`);
+    });
+    await test.step("edit to a body on a missing column: rejected before anything is dropped", async () => {
+      await editTriggerBodyRejectedByDb(page, names.usersTable);
+    });
+    await test.step("reopen: the original trigger and body are still there", async () => {
+      await expectTriggerLoaded(page, names.usersTable, `${names.triggerName}_keep`, /LOWER/);
+    });
+    await test.step("drop it", async () => {
+      await dropTrigger(page, names.usersTable);
+    });
+  });
+
+  test("A function edit MySQL rejects keeps the original function", async () => {
+    const name = `${names.functionName}_keep`;
+
+    await test.step("create function", async () => {
+      await createFunction(page, names, name);
+    });
+    await test.step("edit to a body with a syntax error: rejected before anything is dropped", async () => {
+      await editFunctionBodyRejectedByDb(page, name);
+    });
+    await test.step("reopen: the original function and body are still there", async () => {
+      await expectFunctionBody(page, name, /a\s*\+\s*1/);
+    });
+    await test.step("drop it", async () => {
+      await dropRoutine(page, name, "Drop function");
     });
   });
 

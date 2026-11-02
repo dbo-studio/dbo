@@ -32,12 +32,12 @@ func (r *PostgresRepository) handleRoutineCommands(ctx context.Context, node con
 			return nil, nil
 		}
 
-		identity, err := r.routineIdentity(ctx, node, procedure, node.Table, nil)
+		target, err := r.routineTarget(ctx, node, procedure, nil)
 		if err != nil {
 			return nil, err
 		}
 
-		return ddl.Plan{ddlPostgres.BuildRoutineDrop(node.Schema, node.Table, identity, procedure)}.SQLs(), nil
+		return ddl.Plan{ddlPostgres.BuildRoutineDrop(node.Schema, target.Name, target.IdentityArgs, procedure)}.SQLs(), nil
 	}
 
 	params, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.RoutineParams](data)
@@ -65,10 +65,12 @@ func (r *PostgresRepository) handleRoutineCommands(ctx context.Context, node con
 		return nil, fmt.Errorf("missing %s name", kind)
 	}
 
-	input.OldIdentity, err = r.routineIdentity(ctx, node, procedure, *routine.Old.Name, routine.Old.Parameters)
+	target, err := r.routineTarget(ctx, node, procedure, routine.Old.Parameters)
 	if err != nil {
 		return nil, err
 	}
+
+	input.OldIdentity = target.IdentityArgs
 
 	statements, err := ddlPostgres.BuildRoutineEdit(input)
 	if err != nil {
@@ -78,33 +80,22 @@ func (r *PostgresRepository) handleRoutineCommands(ctx context.Context, node con
 	return ddl.Plan(statements).SQLs(), nil
 }
 
-// routineIdentity finds the identity argument list PostgreSQL needs to drop a
-// routine. With overloads, parameters picks the one the form loaded.
-func (r *PostgresRepository) routineIdentity(ctx context.Context, node contract.DBNode, procedure bool, name string, parameters *string) (string, error) {
+// routineTarget resolves the routine the node id points at. If the form was opened on a
+// different definition than the one now in the database, it fails instead of editing blind.
+func (r *PostgresRepository) routineTarget(ctx context.Context, node contract.DBNode, procedure bool, openedParameters *string) (*Routine, error) {
 	routines, err := r.routines(ctx, &node.Database, &node.Schema, procedure)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	var fallback *Routine
-
-	for i, routine := range routines {
-		if routine.Name != name {
-			continue
-		}
-
-		if parameters != nil && routine.Parameters == *parameters {
-			return routine.IdentityArgs, nil
-		}
-
-		if fallback == nil {
-			fallback = &routines[i]
-		}
+	target, err := findRoutine(routines, node.Table)
+	if err != nil {
+		return nil, err
 	}
 
-	if fallback == nil {
-		return "", fmt.Errorf("routine %q not found", name)
+	if openedParameters != nil && target.Parameters != *openedParameters {
+		return nil, fmt.Errorf("%q changed since the form was opened; reopen it", target.Name)
 	}
 
-	return fallback.IdentityArgs, nil
+	return target, nil
 }

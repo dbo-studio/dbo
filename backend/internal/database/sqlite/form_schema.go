@@ -35,6 +35,42 @@ func (r *SQLiteRepository) keyFields(ctx context.Context, node string) []contrac
 	}
 }
 
+func (r *SQLiteRepository) indexFields(ctx context.Context, node string) []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "columns", Name: "Columns", Type: contract.FormFieldTypeMultiSelect, Options: r.tableColumnsOptions(ctx, node), Required: true},
+		{ID: "unique", Name: "Unique", Type: contract.FormFieldTypeCheckBox},
+		{ID: "order", Name: "Order", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+			{Value: "ASC", Label: "ASC"},
+			{Value: "DESC", Label: "DESC"},
+		}},
+	}
+}
+
+func (r *SQLiteRepository) triggerFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "timing", Name: "Timing", Type: contract.FormFieldTypeSelect, Required: true, Options: []contract.FormFieldOption{
+			{Value: "BEFORE", Label: "BEFORE"},
+			{Value: "AFTER", Label: "AFTER"},
+		}},
+		{ID: "event", Name: "Event", Type: contract.FormFieldTypeSelect, Required: true, Options: []contract.FormFieldOption{
+			{Value: "INSERT", Label: "INSERT"},
+			{Value: "UPDATE", Label: "UPDATE"},
+			{Value: "DELETE", Label: "DELETE"},
+		}},
+		{ID: "when", Name: "When (optional condition)", Type: contract.FormFieldTypeText},
+		{ID: "body", Name: "Body", Type: contract.FormFieldTypeQuery, Required: true},
+	}
+}
+
+func (r *SQLiteRepository) checkFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText},
+		{ID: "expression", Name: "Expression", Type: contract.FormFieldTypeText, Required: true},
+	}
+}
+
 func (r *SQLiteRepository) foreignKeyFields(ctx context.Context, node string) []contract.FormField {
 	return []contract.FormField{
 		{ID: "constraint_name", Name: "Constraint Name", Type: contract.FormFieldTypeText, Required: true},

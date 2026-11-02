@@ -21,6 +21,9 @@ type TableInput struct {
 	Indexes     *dto.MysqlTableIndexParams
 	ForeignKeys *dto.MysqlTableForeignKeyParams
 	Triggers    *dto.MysqlTableTriggerParams
+	Checks      *dto.MysqlTableCheckParams
+	// MariaDB selects its DROP CONSTRAINT spelling for checks.
+	MariaDB bool
 }
 
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {

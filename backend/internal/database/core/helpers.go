@@ -45,7 +45,8 @@ func isContainerSegment(segment string) bool {
 		databaseContract.TypeContainerNodeType,
 		databaseContract.SequenceContainerNodeType,
 		databaseContract.FunctionContainerNodeType,
-		databaseContract.ProcedureContainerNodeType:
+		databaseContract.ProcedureContainerNodeType,
+		databaseContract.EventContainerNodeType:
 		return true
 	default:
 		return false

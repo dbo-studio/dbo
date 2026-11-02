@@ -257,7 +257,7 @@ func buildContainer(ctx context.Context, r *PostgresRepository, dbName, schemaNa
 
 		for _, routine := range routines {
 			containerNode.Children = append(containerNode.Children, contract.TreeNode{
-				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, routine.Name),
+				ID:          fmt.Sprintf("%s.%s.%s", dbName, schemaName, routineNodeName(routine)),
 				Name:        routine.Name + "(" + routine.IdentityArgs + ")",
 				Type:        nodeType,
 				Action:      editAction(r.ContextMenu(nodeType)),

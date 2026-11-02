@@ -44,7 +44,18 @@ func BuildRoutineEdit(input RoutineInput) ([]ddl.Statement, error) {
 		return nil, err
 	}
 
+	// Validate under a temporary name first; see validationPrefix.
+	probeData := *input.New
+	probeData.Name = lo.ToPtr(validationName(lo.FromPtr(input.New.Name)))
+
+	probe, err := createRoutine(RoutineInput{Database: input.Database, Procedure: input.Procedure, New: &probeData})
+	if err != nil {
+		return nil, err
+	}
+
 	return []ddl.Statement{
+		{SQL: probe, Phase: ddl.PhaseRoutines},
+		BuildRoutineDrop(input.Database, *probeData.Name, input.Procedure),
 		BuildRoutineDrop(input.Database, *input.Old.Name, input.Procedure),
 		{SQL: create, Phase: ddl.PhaseRoutines},
 	}, nil

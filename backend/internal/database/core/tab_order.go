@@ -12,6 +12,7 @@ var treeTabOrder = map[contract.TreeTab]int{
 	contract.SchemaTab:           2,
 	contract.ViewTab:             3,
 	contract.MaterializedViewTab: 4,
+	contract.EventTab:            18,
 	contract.FunctionTab:         8,
 	contract.ProcedureTab:        9,
 	contract.SequenceTab:         7,

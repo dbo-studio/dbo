@@ -37,7 +37,8 @@ func ResolveExecuteIdentity(
 		databaseContract.CreateTypeAction, databaseContract.EditTypeAction,
 		databaseContract.CreateSequenceAction, databaseContract.EditSequenceAction,
 		databaseContract.CreateFunctionAction, databaseContract.EditFunctionAction,
-		databaseContract.CreateProcedureAction, databaseContract.EditProcedureAction:
+		databaseContract.CreateProcedureAction, databaseContract.EditProcedureAction,
+		databaseContract.CreateEventAction, databaseContract.EditEventAction:
 		node.Table = newName
 	default:
 		return &databaseContract.ExecuteResult{}
@@ -134,6 +135,14 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 
 		return ptrName(routine.Old), ptrName(routine.New)
 
+	case databaseContract.CreateEventAction, databaseContract.EditEventAction:
+		event := decodeTab[dto.EventParams](params, databaseContract.EventTab, databaseContract.GeneralTab)
+		if event == nil {
+			return "", ""
+		}
+
+		return ptrName(event.Old), ptrName(event.New)
+
 	case databaseContract.CreateSequenceAction, databaseContract.EditSequenceAction:
 		s := decodeTab[dto.PostgresSequenceParams](params, databaseContract.SequenceTab, databaseContract.GeneralTab)
 		if s == nil {
@@ -186,6 +195,10 @@ func ptrName(data any) string {
 			return *v.Name
 		}
 	case *dto.RoutineData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.EventData:
 		if v != nil && v.Name != nil {
 			return *v.Name
 		}

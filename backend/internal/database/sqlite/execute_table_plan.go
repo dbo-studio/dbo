@@ -24,10 +24,19 @@ func (r *SQLiteRepository) BuildTablePlan(ctx context.Context, nodeID string, ac
 		return nil, "", err
 	}
 
+	// Indexes and triggers change in place; anything else recreates the table.
+	inPlace := action == contract.EditTableAction && paramsMap.onlyIndexesAndTriggers()
+	edits := newColumnEdits(paramsMap.columnParams)
+
 	paramsMap.tableParams = r.initializeTableParams(paramsMap.tableParams, nodeID)
 
-	if action == contract.EditTableAction {
-		r.populateParamsFromDatabase(ctx, paramsMap, *paramsMap.tableParams.Old.Name)
+	if action == contract.EditTableAction && !inPlace {
+		tableName := *paramsMap.tableParams.Old.Name
+
+		r.populateParamsFromDatabase(ctx, paramsMap, tableName)
+		paramsMap.indexParams = r.preserveIndexes(ctx, paramsMap.indexParams, tableName, edits)
+		paramsMap.triggerParams = r.preserveTriggers(ctx, paramsMap.triggerParams, tableName)
+		paramsMap.checkParams = r.preserveChecks(ctx, paramsMap.checkParams, tableName)
 	}
 
 	input := ddlSqlite.TableInput{
@@ -36,11 +45,16 @@ func (r *SQLiteRepository) BuildTablePlan(ctx context.Context, nodeID string, ac
 		ForeignKeyParams: paramsMap.foreignKeyParams,
 		KeyParams:        paramsMap.keyParams,
 		IndexParams:      paramsMap.indexParams,
+		TriggerParams:    paramsMap.triggerParams,
+		CheckParams:      paramsMap.checkParams,
+		InPlace:          inPlace,
 	}
 
 	switch action {
 	case contract.CreateTableAction:
-		return ddlSqlite.BuildCreatePlan(input), "", nil
+		plan, err := ddlSqlite.BuildCreatePlan(input)
+
+		return plan, "", err
 	case contract.EditTableAction:
 		tmpBaseName := *paramsMap.tableParams.Old.Name
 		if paramsMap.tableParams.New != nil && paramsMap.tableParams.New.Name != nil && *paramsMap.tableParams.New.Name != "" {
@@ -74,6 +88,16 @@ type tableParamsMap struct {
 	foreignKeyParams *dto.SQLiteTableForeignKeyParams
 	keyParams        *dto.SQLiteTableKeyParams
 	indexParams      *dto.SQLiteIndexParams
+	triggerParams    *dto.SQLiteTriggerParams
+	checkParams      *dto.SQLiteCheckParams
+}
+
+func (p *tableParamsMap) onlyIndexesAndTriggers() bool {
+	return (p.tableParams == nil || p.tableParams.New == nil) &&
+		(p.columnParams == nil || len(p.columnParams.Columns) == 0) &&
+		(p.foreignKeyParams == nil || len(p.foreignKeyParams.Columns) == 0) &&
+		(p.keyParams == nil || len(p.keyParams.Keys) == 0) &&
+		(p.checkParams == nil || len(p.checkParams.Checks) == 0)
 }
 
 func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, error) {
@@ -102,12 +126,24 @@ func (r *SQLiteRepository) parseTableParams(params []byte) (*tableParamsMap, err
 		return nil, err
 	}
 
+	triggerParamsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.SQLiteTriggerParams](params)
+	if err != nil {
+		return nil, err
+	}
+
+	checkParamsDto, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.SQLiteCheckParams](params)
+	if err != nil {
+		return nil, err
+	}
+
 	return &tableParamsMap{
 		tableParams:      tableParamsDto[contract.GeneralTab],
 		columnParams:     columnParamsDto[contract.TableColumnsTab],
 		foreignKeyParams: foreignKeyParamsDto[contract.TableForeignKeysTab],
 		keyParams:        keyParamsDto[contract.TableKeysTab],
 		indexParams:      indexParamsDto[contract.TableIndexesTab],
+		triggerParams:    triggerParamsDto[contract.TableTriggersTab],
+		checkParams:      checkParamsDto[contract.TableChecksTab],
 	}, nil
 }
 

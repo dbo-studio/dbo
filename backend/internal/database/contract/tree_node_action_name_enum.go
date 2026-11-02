@@ -19,6 +19,9 @@ const (
 	CreateProcedureAction               TreeNodeActionName = "createProcedure"
 	EditProcedureAction                 TreeNodeActionName = "editProcedure"
 	DropProcedureAction                 TreeNodeActionName = "dropProcedure"
+	CreateEventAction                   TreeNodeActionName = "createEvent"
+	EditEventAction                     TreeNodeActionName = "editEvent"
+	DropEventAction                     TreeNodeActionName = "dropEvent"
 	CreateTypeAction                    TreeNodeActionName = "createType"
 	EditTypeAction                      TreeNodeActionName = "editType"
 	DropTypeAction                      TreeNodeActionName = "dropType"
@@ -57,6 +60,8 @@ func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
 		return EditFunctionAction
 	case CreateProcedureAction:
 		return EditProcedureAction
+	case CreateEventAction:
+		return EditEventAction
 	case CreateSequenceAction:
 		return EditSequenceAction
 	case CreateTypeAction:
