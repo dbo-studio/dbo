@@ -395,9 +395,8 @@ function JobDetail({
           {openLog === run.id && (
             <Box
               component='pre'
-              typography='caption'
               data-testid={`backup-run-log-${run.id}`}
-              sx={{ m: 0, mb: 1, p: 1, whiteSpace: 'pre-wrap', bgcolor: 'action.hover' }}
+              sx={{ typography: 'caption', m: 0, mb: 1, p: 1, whiteSpace: 'pre-wrap', bgcolor: 'action.hover' }}
             >
               {run.log}
             </Box>
