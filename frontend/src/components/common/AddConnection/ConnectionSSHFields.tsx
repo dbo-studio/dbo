@@ -68,7 +68,7 @@ function HopFields({ prefix, value, onChange }: HopFieldsProps): JSX.Element {
           label={locales.password}
           fullWidth={true}
           type='password'
-          placeholder={locales.ssh_secret_keep}
+          placeholder={value.passwordSet ? locales.ssh_secret_keep : undefined}
           value={value.password}
           onChange={(e): void => set({ password: e.target.value })}
         />
@@ -80,7 +80,7 @@ function HopFields({ prefix, value, onChange }: HopFieldsProps): JSX.Element {
             testId={`${prefix}-private-key`}
             label={locales.ssh_private_key}
             value={value.privateKey}
-            placeholder={locales.ssh_private_key_placeholder}
+            placeholder={value.privateKeySet ? locales.ssh_secret_keep : locales.ssh_private_key_placeholder}
             onChange={(next): void => set({ privateKey: next })}
           />
           <FieldInput
@@ -88,6 +88,7 @@ function HopFields({ prefix, value, onChange }: HopFieldsProps): JSX.Element {
             label={locales.ssh_passphrase}
             fullWidth={true}
             type='password'
+            placeholder={value.passphraseSet ? locales.ssh_secret_keep : undefined}
             value={value.passphrase}
             onChange={(e): void => set({ passphrase: e.target.value })}
           />

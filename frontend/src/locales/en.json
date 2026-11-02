@@ -171,7 +171,7 @@
   "ssh_private_key": "Private key",
   "ssh_private_key_placeholder": "-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----",
   "ssh_passphrase": "Key passphrase",
-  "ssh_secret_keep": "Leave blank to keep stored value",
+  "ssh_secret_keep": "Stored. Leave blank to keep it",
   "ssh_use_jump": "Connect through a bastion (jump host) first",
   "ssh_tunnel_on": "SSH tunnel",
   "ssl": "SSL",

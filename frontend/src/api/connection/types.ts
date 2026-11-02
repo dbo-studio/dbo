@@ -61,6 +61,10 @@ export type ConnectionSSHOptionsType = {
   password?: string;
   privateKey?: string;
   passphrase?: string;
+  /** Response only: whether the secret is stored. */
+  passwordSet?: boolean;
+  privateKeySet?: boolean;
+  passphraseSet?: boolean;
   jump?: ConnectionSSHOptionsType;
 };
 

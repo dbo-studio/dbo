@@ -174,6 +174,12 @@ func classifyConnectionFailure(err error) (string, string) {
 		return "unknown", "Retry the test connection."
 	}
 
+	// Validation errors wrap the readable cause; classify on that.
+	var appErr *apperror.AppError
+	if errors.As(err, &appErr) && appErr.Err != nil {
+		err = appErr.Err
+	}
+
 	msg := strings.ToLower(err.Error())
 	switch {
 	case strings.Contains(msg, "ssh tunnel"):

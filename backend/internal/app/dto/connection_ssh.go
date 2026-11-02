@@ -58,3 +58,18 @@ func NormalizeSSH(s *ConnectionSSHParams) {
 		}
 	}
 }
+
+// ValidateSSHSecrets requires the secret of the chosen auth method. Used when a
+// tunnel is created; updates may leave it blank to keep the stored one.
+func ValidateSSHSecrets(s *ConnectionSSHParams) error {
+	for ; s != nil && s.Enabled; s = s.Jump {
+		switch {
+		case s.AuthMethod == SSHAuthPassword && lo.FromPtr(s.Password) == "":
+			return validation.Errors{"ssh": validation.NewError("validation_required", "ssh tunnel: password cannot be blank")}
+		case s.AuthMethod == SSHAuthKey && lo.FromPtr(s.PrivateKey) == "":
+			return validation.Errors{"ssh": validation.NewError("validation_required", "ssh tunnel: private key cannot be blank")}
+		}
+	}
+
+	return nil
+}

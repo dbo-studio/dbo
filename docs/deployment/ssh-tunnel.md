@@ -22,8 +22,8 @@ The tunnel opens when DBO opens the connection and closes when the connection is
 
 - **The tunnel runs on the machine running the DBO backend.** Desktop: your computer. Web / Docker: the DBO server. Its network, `SSH_AUTH_SOCK` and known-hosts file are what matter, not the browser's.
 - **Host keys use trust-on-first-use.** The first key seen for an SSH host is recorded in `ssh_known_hosts` (default: `<user config dir>/dbo/ssh_known_hosts`, override with `SSH_KNOWN_HOSTS_PATH`; in Docker mount a persistent path). A later key mismatch is rejected as a possible man-in-the-middle. If a host key legitimately changed, delete its line from that file.
-- **SSH passwords, private keys and passphrases are encrypted at rest** in the app database (AES-GCM with the app secret key) and are never returned by the API. Leave a secret field blank when editing to keep the stored value.
-- Shared connections use the owner's stored SSH credentials server-side; viewers never receive them.
+- **SSH passwords, private keys and passphrases are encrypted at rest** in the app database (AES-GCM with the app secret key) and are never returned by the API. When editing, a field marked "Stored" keeps its value if left blank; type a new value to replace it, or switch the auth method to drop it. A new tunnel requires its password or key.
+- Shared connections use the owner's stored SSH credentials server-side. Viewers never receive them and only see that a tunnel is enabled, not its host or user; owners and editors see the SSH host and user.
 - TLS to the database still applies inside the tunnel. With `verify-full`, DBO verifies the certificate against the real database host name, not the loopback address.
 - Use a dedicated SSH user restricted to port forwarding (`PermitOpen`, `command="/bin/false"`) on the bastion.
 

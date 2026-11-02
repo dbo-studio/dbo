@@ -15,6 +15,10 @@ export type SSHHopFormValues = {
   password: string;
   privateKey: string;
   passphrase: string;
+  /** Stored on the server (never returned); blank input keeps it. */
+  passwordSet: boolean;
+  privateKeySet: boolean;
+  passphraseSet: boolean;
 };
 
 export type SSHFormValues = SSHHopFormValues & {
@@ -30,7 +34,10 @@ const hopSchema = v.object({
   authMethod: v.string(),
   password: v.string(),
   privateKey: v.string(),
-  passphrase: v.string()
+  passphrase: v.string(),
+  passwordSet: v.boolean(),
+  privateKeySet: v.boolean(),
+  passphraseSet: v.boolean()
 });
 
 export const sshFormSchema = v.object({
@@ -47,7 +54,10 @@ const emptyHop = (): SSHHopFormValues => ({
   authMethod: 'password',
   password: '',
   privateKey: '',
-  passphrase: ''
+  passphrase: '',
+  passwordSet: false,
+  privateKeySet: false,
+  passphraseSet: false
 });
 
 const hopFromOptions = (ssh?: ConnectionSSHOptionsType | null): SSHHopFormValues => ({
@@ -58,7 +68,10 @@ const hopFromOptions = (ssh?: ConnectionSSHOptionsType | null): SSHHopFormValues
   // Secrets are never returned by the API; blank means "keep stored value".
   password: '',
   privateKey: '',
-  passphrase: ''
+  passphrase: '',
+  passwordSet: Boolean(ssh?.passwordSet),
+  privateKeySet: Boolean(ssh?.privateKeySet),
+  passphraseSet: Boolean(ssh?.passphraseSet)
 });
 
 export function sshFormDefaults(ssh?: ConnectionSSHOptionsType | null): SSHFormValues {

@@ -304,17 +304,27 @@ func helperOptionalNonEmpty(value, fallback *string) *string {
 }
 
 // RedactSSHSecrets blanks SSH credentials in a serialized options JSON so they
-// are never returned to clients.
-func RedactSSHSecrets(options string) string {
-	if !gjson.Get(options, "ssh").Exists() {
+// are never returned to clients, and flags which ones are stored (`<field>Set`).
+// With hideTarget (view-only callers) only `{enabled}` is kept.
+func RedactSSHSecrets(options string, hideTarget bool) string {
+	ssh := gjson.Get(options, "ssh")
+	if !ssh.Exists() {
 		return options
+	}
+
+	if hideTarget {
+		out, _ := sjson.Set(options, "ssh", map[string]any{"enabled": ssh.Get("enabled").Bool()})
+
+		return out
 	}
 
 	for prefix := "ssh"; gjson.Get(options, prefix).Exists(); prefix += ".jump" {
 		for _, field := range []string{"password", "privateKey", "passphrase"} {
-			if gjson.Get(options, prefix+"."+field).String() != "" {
-				options, _ = sjson.Set(options, prefix+"."+field, "")
-			}
+			path := prefix + "." + field
+
+			isSet := gjson.Get(options, path).String() != ""
+			options, _ = sjson.Set(options, path, "")
+			options, _ = sjson.Set(options, path+"Set", isSet)
 		}
 	}
 

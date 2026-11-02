@@ -34,6 +34,10 @@ func CreateMysqlConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
+	if err := dto.ValidateSSHSecrets(options.SSH); err != nil {
+		return "", apperror.Validation(err)
+	}
+
 	if options.SSL != nil {
 		options.SSL.Mode = dto.NormalizeSSLMode(options.SSL.Mode)
 	}

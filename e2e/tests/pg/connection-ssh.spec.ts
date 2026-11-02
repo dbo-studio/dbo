@@ -135,6 +135,10 @@ test.describe("Connection SSH tunnel", () => {
           bastion.host,
         );
         await expect(root.locator('input[name="sshPassword"]')).toHaveValue("");
+        await expect(root.locator('input[name="sshPassword"]')).toHaveAttribute(
+          "placeholder",
+          /Stored/,
+        );
         await page.getByRole("button", { name: "Cancel" }).click();
       });
 
@@ -377,5 +381,33 @@ test.describe("Connection SSH tunnel", () => {
         cleanup();
       }
     });
+  });
+
+  test("New tunnel without a password is rejected", async ({
+    page,
+  }, testInfo) => {
+    const connectionPage = new ConnectionPage(page);
+
+    await connectionPage.goto();
+    await connectionPage.waitForReady();
+    await connectionPage.openNewConnectionModal();
+    await connectionPage.selectConnectionType("PostgreSQL");
+    await connectionPage.fillConnectionForm({
+      ...getBastionOnlyPostgresConfig(
+        `${testPrefix}-blank-${uniqueTestSuffix(testInfo)}`,
+      ),
+      ssh: { ...bastion, authMethod: "password", password: "" },
+    });
+
+    await connectionPage.openSshTab();
+    await expect(
+      page.getByTestId("ssh-fields").locator('input[name="sshPassword"]'),
+    ).not.toHaveAttribute("placeholder", /Stored/);
+
+    const { status, body } = await pingStatus(page, connectionPage);
+    expect(status).toBe(400);
+    expect(body).toContain("password cannot be blank");
+
+    await page.getByRole("button", { name: "Cancel" }).click();
   });
 });
