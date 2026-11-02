@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { BackupCadenceType, BackupScheduleType, NotifyOnType } from '@/api/backup/types';
+import PassphraseInput from './PassphraseInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
@@ -236,13 +237,7 @@ export default function ScheduleForm({
                 : undefined
           }
         >
-          <FieldInput
-            name='job-passphrase'
-            type='password'
-            value={passphrase}
-            onChange={(e) => setPassphrase(e.target.value)}
-            margin='none'
-          />
+          <PassphraseInput name='job-passphrase' value={passphrase} onChange={setPassphrase} />
         </FormRow>
       </FormGroup>
 

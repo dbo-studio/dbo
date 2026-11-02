@@ -28,6 +28,9 @@ type IConnectorService interface {
 	Update(ctx context.Context, kind string, req *dto.ConnectorRequest) (*dto.ConnectorResponse, error)
 	Delete(ctx context.Context, kind string, id uint) error
 	Test(ctx context.Context, kind string, id uint) error
+	// TestDraft checks a connector as typed in the form, before it is saved. A request id
+	// of an existing connector lets saved secrets stand in for ones left blank.
+	TestDraft(ctx context.Context, kind string, req *dto.ConnectorRequest) error
 	DriveAuthURL(ctx context.Context, id uint, redirect string) (string, error)
 	DriveExchange(ctx context.Context, state, code string) error
 
@@ -275,7 +278,7 @@ func (s *service) open(c *model.BackupConnector) (Destination, error) {
 // pin records an SFTP host key the first time one is seen, so later connections must match it.
 func (s *service) pin(ctx context.Context, c *model.BackupConnector, d Destination) {
 	p, ok := d.(pinner)
-	if !ok || p.Pinned() == "" {
+	if !ok || p.Pinned() == "" || c.ID == 0 {
 		return
 	}
 
@@ -298,7 +301,35 @@ func (s *service) Test(ctx context.Context, kind string, id uint) error {
 		return err
 	}
 
-	if kind == model.ConnectorKindChannel {
+	return s.check(ctx, c)
+}
+
+func (s *service) TestDraft(ctx context.Context, kind string, req *dto.ConnectorRequest) error {
+	c := &model.BackupConnector{OwnerID: helper.CtxOwnerID(ctx), Enabled: true}
+
+	if req.ID != 0 {
+		saved, err := s.find(ctx, kind, req.ID)
+		if err != nil {
+			return err
+		}
+
+		// A copy: apply edits it, and a test must save nothing.
+		copied := *saved
+		c = &copied
+	}
+
+	if err := s.apply(c, kind, req); err != nil {
+		return err
+	}
+
+	c.ID = 0 // a draft pins no host key
+
+	return s.check(ctx, c)
+}
+
+// check sends a test message through a channel or opens and probes a destination.
+func (s *service) check(ctx context.Context, c *model.BackupConnector) error {
+	if c.Kind == model.ConnectorKindChannel {
 		f, err := s.fieldsOf(c)
 		if err != nil {
 			return apperror.BadRequest(err)

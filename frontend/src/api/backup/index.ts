@@ -144,6 +144,11 @@ export const testConnector = async (kind: ConnectorKind, id: number): Promise<vo
   await api.post(`${connectorBase(kind)}/${id}/test`);
 };
 
+/** Checks a connector as typed in the form without saving it. id 0 means one not saved yet. */
+export const testConnectorDraft = async (kind: ConnectorKind, id: number, request: ConnectorRequestType): Promise<void> => {
+  await api.post(`${connectorBase(kind)}/${id}/test`, request);
+};
+
 export const driveAuthUrl = async (id: number): Promise<string> => {
   return (await api.post<{ data: { url: string } }>(`${connectorBase('destination')}/${id}/oauth/url`)).data.data.url;
 };

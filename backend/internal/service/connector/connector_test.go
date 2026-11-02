@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	"github.com/dbo-studio/dbo/internal/model"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -119,5 +121,20 @@ func TestSecretsAreNotReturned(t *testing.T) {
 
 	if !s.response(c).SecretsSet["accessKey"] {
 		t.Fatal("secretsSet should flag accessKey")
+	}
+}
+
+func TestTestDraftChecksWithoutSaving(t *testing.T) {
+	// A nil repo would panic on any save or lookup: a draft must touch neither.
+	s := &service{}
+	good := &dto.ConnectorRequest{Type: TypeFolder, Name: "x", Config: map[string]any{"path": t.TempDir()}}
+
+	if err := s.TestDraft(context.Background(), model.ConnectorKindDestination, good); err != nil {
+		t.Fatalf("working folder failed: %v", err)
+	}
+
+	bad := &dto.ConnectorRequest{Type: TypeFolder, Name: "x", Config: map[string]any{"path": "/nonexistent-dbo-dir/a/b"}}
+	if err := s.TestDraft(context.Background(), model.ConnectorKindDestination, bad); err == nil {
+		t.Fatal("unwritable folder passed the test")
 	}
 }

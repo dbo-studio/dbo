@@ -91,7 +91,22 @@ func (h ConnectorHandler) Delete(c fiber.Ctx) error {
 	return response.SuccessBuilder().Send(c)
 }
 
+// Test checks a saved connector, or, when the request carries a body, the connector as
+// typed in the form. An id of 0 in that case means one not saved yet.
 func (h ConnectorHandler) Test(c fiber.Ctx) error {
+	if len(c.Body()) > 0 {
+		req, err := h.body(c)
+		if err != nil {
+			return response.ErrorBuilder().FromError(err).Send(c)
+		}
+
+		if err := h.service.TestDraft(c, h.kind, req); err != nil {
+			return h.fail(c, err)
+		}
+
+		return response.SuccessBuilder().Send(c)
+	}
+
 	if err := h.service.Test(c, h.kind, fiber.Params[uint](c, "id")); err != nil {
 		return h.fail(c, err)
 	}

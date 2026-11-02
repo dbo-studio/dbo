@@ -1,6 +1,7 @@
 import api from '@/api';
 import type { BackupArtifactType } from '@/api/backup/types';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import PassphraseInput from '../PassphraseInput';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
@@ -171,13 +172,7 @@ function ConnectionBackups({
           label={locales.backup_encrypt_passphrase}
           hint={passphrase !== '' ? locales.backup_encrypt_warning : undefined}
         >
-          <FieldInput
-            name='backup-passphrase'
-            type='password'
-            value={passphrase}
-            onChange={(e) => setPassphrase(e.target.value)}
-            margin='none'
-          />
+          <PassphraseInput name='backup-passphrase' value={passphrase} onChange={setPassphrase} />
         </FormRow>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
           <SectionActionsStyled>

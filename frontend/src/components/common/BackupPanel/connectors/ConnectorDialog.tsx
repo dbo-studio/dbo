@@ -8,6 +8,7 @@ import locales from '@/locales';
 import { Box, Button, Checkbox, FormControlLabel, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
+import { toast } from 'sonner';
 import { CONNECTOR_TYPES, type ConnectorTypeSpec, specOf } from './connectorTypes';
 
 const FORM_ID = 'connector-form';
@@ -32,12 +33,18 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
     return f.secret ? !secrets[f.key] && !connector?.secretsSet[f.key] : !config[f.key];
   });
 
+  const request = (): ConnectorRequestType => ({ type: spec.type, name: name.trim(), config, secrets });
+
+  const { mutate: test, isPending: isTesting } = useMutation({
+    mutationFn: (): Promise<void> => api.backup.testConnectorDraft(kind, connector?.id ?? 0, request()),
+    onSuccess: () => toast.success(locales.connector_test_ok)
+  });
+
   const { mutate, isPending } = useMutation({
     mutationFn: (): Promise<ConnectorType> => {
-      const request: ConnectorRequestType = { type: spec.type, name: name.trim(), config, secrets };
       return connector
-        ? api.backup.updateConnector(kind, connector.id, request)
-        : api.backup.createConnector(kind, request);
+        ? api.backup.updateConnector(kind, connector.id, request())
+        : api.backup.createConnector(kind, request());
     },
     onSuccess: onSaved
   });
@@ -58,6 +65,17 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
       }
       footer={
         <>
+          {/* Drive needs a saved record to authorize against, so it can only be tested after saving. */}
+          {spec.type !== 'gdrive' && (
+            <Button
+              size='small'
+              onClick={() => test()}
+              disabled={!name.trim() || missing || isTesting || isPending}
+              data-testid='connector-test'
+            >
+              {locales.connector_test}
+            </Button>
+          )}
           <Button size='small' onClick={onClose}>
             {locales.cancel}
           </Button>
