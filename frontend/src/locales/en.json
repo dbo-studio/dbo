@@ -1313,6 +1313,7 @@
   "connector_name": "Name",
   "connector_enabled": "Enabled",
   "connector_disabled": "Disabled",
+  "backup_explain_ai": "Explain with AI",
   "backup_insights_success": "Success rate (last {count})",
   "backup_insights_avg_size": "Average size",
   "backup_insights_avg_duration": "Average duration",

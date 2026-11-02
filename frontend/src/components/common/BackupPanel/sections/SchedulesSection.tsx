@@ -10,12 +10,14 @@ import { Alert, Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useAiBridge } from '@/hooks/useAiBridge';
 import { isFinished, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import RestoreConfirm from '../RestoreConfirm';
 import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
 import { describeCadence, formatDate, formatSize, statusLabel } from '../format';
 import { restoreCandidates } from '../restoreCandidates';
+import { explainFailurePrompt } from '../explainFailure';
 import RunInsights from '../RunInsights';
 import ScheduleForm from '../ScheduleForm';
 
@@ -282,6 +284,7 @@ function JobDetail({
     }
   };
 
+  const { prefillChat } = useAiBridge();
   const [passphrase, setPassphrase] = useState('');
   const [openLog, setOpenLog] = useState<number | null>(null);
   const verify = async (run: BackupArtifactType): Promise<void> => {
@@ -390,6 +393,11 @@ function JobDetail({
             {run.log && (
               <Button size='small' onClick={() => setOpenLog(openLog === run.id ? null : run.id)}>
                 {openLog === run.id ? locales.backup_job_log_hide : locales.backup_job_log_show}
+              </Button>
+            )}
+            {run.status === 'failed' && (
+              <Button size='small' onClick={() => prefillChat(explainFailurePrompt(run, job.name), true)}>
+                {locales.backup_explain_ai}
               </Button>
             )}
             {run.status === 'completed' && (
