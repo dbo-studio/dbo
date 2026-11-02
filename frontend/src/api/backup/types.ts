@@ -88,6 +88,8 @@ export type BackupScheduleRequestType = {
   timezone: string;
   keepLast: number;
   keepDays: number;
+  /** One backup per day for a week, per week for a month, per month for a year; replaces keepLast and keepDays. */
+  keepSmart?: boolean;
   compress?: boolean;
   /** 0 = keep backups on this machine only. */
   destinationId?: number;

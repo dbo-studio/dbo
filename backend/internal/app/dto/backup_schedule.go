@@ -20,6 +20,7 @@ type (
 		Timezone     string `json:"timezone"`
 		KeepLast     int    `json:"keepLast"`
 		KeepDays     int    `json:"keepDays"`
+		KeepSmart    bool   `json:"keepSmart"`
 		Compress     bool   `json:"compress"`
 		// DestinationID also copies each backup to a destination; ChannelIDs and NotifyOn
 		// ("failure", "always" or "never") say who hears about each run.
@@ -44,6 +45,7 @@ type (
 		Timezone      *string `json:"timezone"`
 		KeepLast      *int    `json:"keepLast"`
 		KeepDays      *int    `json:"keepDays"`
+		KeepSmart     *bool   `json:"keepSmart"`
 		Compress      *bool   `json:"compress"`
 		DestinationID *uint   `json:"destinationId"`
 		ChannelIDs    *[]uint `json:"channelIds"`
@@ -66,6 +68,7 @@ type (
 		Enabled       bool       `json:"enabled"`
 		KeepLast      int        `json:"keepLast"`
 		KeepDays      int        `json:"keepDays"`
+		KeepSmart     bool       `json:"keepSmart"`
 		Compress      bool       `json:"compress"`
 		Encrypted     bool       `json:"encrypted"`
 		DestinationID uint       `json:"destinationId"`

@@ -1347,6 +1347,8 @@
   "backup_schedule_timezone": "Time zone",
   "backup_schedule_keep_last": "Keep last (0 = all)",
   "backup_schedule_keep_days": "Keep days (0 = forever)",
+  "backup_schedule_keep_smart": "Smart retention",
+  "backup_schedule_keep_smart_hint": "Keeps one backup per day for a week, per week for a month and per month for a year. Older ones are deleted.",
   "backup_schedule_create": "Create schedule",
   "backup_schedule_empty": "No schedules yet",
   "backup_schedule_next": "Next run",

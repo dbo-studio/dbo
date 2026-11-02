@@ -44,6 +44,7 @@ export default function ScheduleForm({
   const [weekday, setWeekday] = useState(job?.weekday ?? 0);
   const [keepLast, setKeepLast] = useState(job?.keepLast ?? 7);
   const [keepDays, setKeepDays] = useState(job?.keepDays ?? 0);
+  const [keepSmart, setKeepSmart] = useState(job?.keepSmart ?? false);
   const [compress, setCompress] = useState(job?.compress ?? true);
   const [passphrase, setPassphrase] = useState('');
   const [destinationId, setDestinationId] = useState(job?.destinationId ?? 0);
@@ -77,6 +78,7 @@ export default function ScheduleForm({
       timezone,
       keepLast,
       keepDays,
+      keepSmart,
       compress,
       destinationId,
       channelIds,
@@ -186,6 +188,11 @@ export default function ScheduleForm({
             ]}
           />
         </FormRow>
+        <FormRow label={locales.backup_schedule_keep_smart} hint={locales.backup_schedule_keep_smart_hint}>
+          <Switch checked={keepSmart} onChange={(e) => setKeepSmart(e.target.checked)} />
+        </FormRow>
+        {!keepSmart && (
+          <>
         <FormRow label={locales.backup_schedule_keep_last}>
           <FieldInput
             name='job-keep-last'
@@ -204,6 +211,8 @@ export default function ScheduleForm({
             margin='none'
           />
         </FormRow>
+          </>
+        )}
         <FormRow label={locales.backup_compress}>
           <Switch checked={compress} onChange={(e) => setCompress(e.target.checked)} />
         </FormRow>

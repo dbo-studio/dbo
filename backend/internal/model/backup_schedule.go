@@ -41,8 +41,11 @@ type BackupSchedule struct {
 	ChannelIDs    string `gorm:"not null;default:'[]'"`
 	NotifyOn      string `gorm:"not null;default:'failure'"`
 	// KeepLast and KeepDays are retention limits; zero means no limit of that kind.
-	KeepLast  int `gorm:"not null;default:0"`
-	KeepDays  int `gorm:"not null;default:0"`
+	KeepLast int `gorm:"not null;default:0"`
+	KeepDays int `gorm:"not null;default:0"`
+	// KeepSmart replaces both limits: one backup per day for a week, per week for
+	// four weeks, per month for a year.
+	KeepSmart bool `gorm:"not null;default:false"`
 	NextRunAt *time.Time
 	LastRunAt *time.Time
 	// LastSuccessAt and LastSize describe the newest completed run.
