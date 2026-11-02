@@ -157,7 +157,8 @@ const resolveGeneralSaveKey = (tabId: string, action: string): string | null => 
     tabId === 'type' ||
     tabId === 'sequence' ||
     tabId === 'function' ||
-    tabId === 'procedure'
+    tabId === 'procedure' ||
+    tabId === 'event'
   ) {
     return tabId;
   }

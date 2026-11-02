@@ -114,17 +114,87 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 		return nil, err
 	}
 
-	for _, query := range queries {
-		if query == "" {
-			continue
+	run := func(tx *gorm.DB) error {
+		for _, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			if err := tx.Exec(query).Error; err != nil {
+				return err
+			}
 		}
 
-		if err := conn.WithContext(ctx).Exec(query).Error; err != nil {
-			return nil, err
+		return nil
+	}
+
+	// Edits drop and recreate objects. One transaction means a failing CREATE rolls the DROP back
+	// instead of leaving the object gone.
+	if runsInTransaction(action) {
+		err = conn.WithContext(ctx).Transaction(run)
+	} else {
+		err = run(conn.WithContext(ctx))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params)
+
+	return r.pinRoutineNode(ctx, node, action, result), nil
+}
+
+// pinRoutineNode adds the pg_proc oid to the node id of a routine that was just created or
+// renamed. With overloads a bare name would be ambiguous, and the form reopened after the
+// save would fail. The new routine is the highest oid of that name.
+func (r *PostgresRepository) pinRoutineNode(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName, result *contract.ExecuteResult) *contract.ExecuteResult {
+	var procedure bool
+
+	switch action {
+	case contract.CreateFunctionAction, contract.EditFunctionAction:
+	case contract.CreateProcedureAction, contract.EditProcedureAction:
+		procedure = true
+	default:
+		return result
+	}
+
+	if result == nil || result.NodeID == "" {
+		return result
+	}
+
+	created := r.base.ExtractNode(result.NodeID)
+
+	routines, err := r.routines(ctx, &created.Database, &created.Schema, procedure)
+	if err != nil {
+		return result
+	}
+
+	var newest *Routine
+
+	for i := range routines {
+		if routines[i].Name == created.Table && (newest == nil || routines[i].OID > newest.OID) {
+			newest = &routines[i]
 		}
 	}
 
-	return databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params), nil
+	if newest != nil {
+		result.NodeID = fmt.Sprintf("%s~%d", result.NodeID, newest.OID)
+	}
+
+	return result
+}
+
+// runsInTransaction is false for statements PostgreSQL refuses inside a transaction block
+// (database DDL) and for enum edits, whose ALTER TYPE ... ADD VALUE needs PostgreSQL 12+.
+func runsInTransaction(action contract.TreeNodeActionName) bool {
+	switch action {
+	case contract.CreateDatabaseAction, contract.EditDatabaseAction, contract.DropDatabaseAction,
+		contract.CreateTypeAction, contract.EditTypeAction:
+		return false
+	default:
+		return true
+	}
 }
 
 func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*gorm.DB, error) {

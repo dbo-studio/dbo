@@ -131,6 +131,20 @@ export async function editTriggerBody(page: Page, tableName: string): Promise<vo
   await objectForm.confirmExecute();
 }
 
+/**
+ * MySQL cannot roll DDL back, so the planner creates the new trigger under a temporary name
+ * first. A body MySQL rejects must fail there, with the original trigger still in place.
+ */
+export async function editTriggerBodyRejectedByDb(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.triggers);
+
+  await objectForm.fillArrayQueryCell(0, F.triggerBody, 'SET NEW.nosuchcolumn = 1');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.dropTrigger);
+  await objectForm.confirmExecuteExpectingError(/nosuchcolumn|Unknown column/i);
+}
+
 export async function dropTrigger(page: Page, tableName: string): Promise<void> {
   const objectForm = await openEditTable(page, tableName);
   await objectForm.selectTab(T.triggers);
@@ -229,7 +243,7 @@ export async function dropTriggerRows(page: Page, tableName: string, rows: numbe
 async function openCreateRoutine(
   page: Page,
   names: MysqlCoreNames,
-  container: 'functionContainer' | 'procedureContainer',
+  container: 'functionContainer' | 'procedureContainer' | 'eventContainer',
   action: string,
   tabId: string
 ): Promise<ObjectFormPage> {
@@ -297,6 +311,22 @@ export async function editFunctionBody(page: Page, functionName: string): Promis
   await objectForm.assertPreviewContains(P.dropFunction);
   await objectForm.assertPreviewContains(/CREATE FUNCTION[\s\S]*RETURN a \+ 2/i);
   await objectForm.confirmExecute();
+}
+
+/** Same safety net for routines: a body MySQL rejects must leave the original function intact. */
+export async function editFunctionBodyRejectedByDb(page: Page, functionName: string): Promise<void> {
+  const objectForm = await openEditRoutine(page, functionName, 'Edit function', T.function);
+
+  await objectForm.fillGeneralQueryField(F.routineBody, 'RETURN a +');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.dropFunction);
+  await objectForm.confirmExecuteExpectingError(/syntax/i);
+}
+
+export async function expectFunctionBody(page: Page, functionName: string, body: RegExp): Promise<void> {
+  const objectForm = await expectFunctionLoaded(page, functionName);
+
+  await expect(objectForm.getGeneralField(F.routineBody)).toContainText(body);
 }
 
 export async function createProcedure(page: Page, names: MysqlCoreNames, procedureName: string): Promise<void> {
@@ -378,6 +408,80 @@ export async function dropRoutine(page: Page, nodeName: string, action: 'Drop fu
   await expect(tree.getTreeNode(nodeName)).toBeHidden({ timeout: 15000 });
 }
 
+// ----------------------------------------------------------------- events
+
+const EVENT_BODY = 'UPDATE users SET email = LOWER(email)';
+
+export async function createEvent(page: Page, names: MysqlCoreNames, eventName: string): Promise<void> {
+  const tree = new ObjectTreePage(page);
+  const objectForm = await openCreateRoutine(page, names, 'eventContainer', 'Create event', T.event);
+
+  await objectForm.fillGeneralField(F.eventName, eventName);
+  await objectForm.fillGeneralField(F.eventSchedule, 'EVERY 1 DAY');
+  await objectForm.selectGeneralOption(F.eventStatus, 'DISABLE');
+  await objectForm.toggleGeneralCheckbox(F.eventPreserve, true);
+  await objectForm.fillGeneralQueryField(F.eventBody, EVENT_BODY);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.createEvent);
+  await objectForm.assertPreviewContains(eventName);
+  await objectForm.confirmExecute();
+
+  await expandContainer(page, names, 'eventContainer');
+  await expect(tree.getTreeNode(eventName)).toBeVisible({ timeout: 15000 });
+}
+
+export async function expectEventLoaded(page: Page, eventName: string, schedule: RegExp, body: RegExp): Promise<ObjectFormPage> {
+  const objectForm = await openEditRoutine(page, eventName, 'Edit event', T.event);
+
+  await expect(objectForm.getGeneralField(F.eventName).locator('input')).toHaveValue(eventName);
+  await expect(objectForm.getGeneralField(F.eventSchedule).locator('input')).toHaveValue(schedule);
+  await expect(objectForm.getGeneralField(F.eventStatus)).toContainText('DISABLE');
+  await expect(objectForm.getGeneralField(F.eventPreserve).locator('input[type="checkbox"]')).toBeChecked();
+  await expect(objectForm.getGeneralField(F.eventBody)).toContainText(body);
+
+  return objectForm;
+}
+
+/** An edit emits one ALTER EVENT with only the clauses that changed. */
+export async function editEventBody(page: Page, eventName: string): Promise<void> {
+  const objectForm = await expectEventLoaded(page, eventName, /EVERY 1 DAY/i, /LOWER\(email\)/i);
+
+  await objectForm.fillGeneralQueryField(F.eventBody, 'UPDATE users SET email = UPPER(email)');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/ALTER EVENT[\s\S]*DO UPDATE users SET email = UPPER\(email\)/i);
+  await expect(page.getByText(/ON SCHEDULE/i)).toBeHidden();
+  await objectForm.confirmExecute();
+}
+
+export async function rescheduleAndRenameEvent(page: Page, eventName: string, newName: string): Promise<void> {
+  const objectForm = await expectEventLoaded(page, eventName, /EVERY 1 DAY/i, /UPPER\(email\)/i);
+
+  await objectForm.fillGeneralField(F.eventName, newName);
+  await objectForm.fillGeneralField(F.eventSchedule, 'EVERY 2 DAY');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/ALTER EVENT[\s\S]*ON SCHEDULE EVERY 2 DAY RENAME TO/i);
+  await objectForm.assertPreviewContains(newName);
+  await objectForm.confirmExecute();
+}
+
+export async function createEventRejected(page: Page, names: MysqlCoreNames, schedule: string, body: string, message: RegExp): Promise<void> {
+  const objectForm = await openCreateRoutine(page, names, 'eventContainer', 'Create event', T.event);
+
+  await objectForm.fillGeneralField(F.eventName, 'ev_rejected');
+  await objectForm.fillGeneralField(F.eventSchedule, schedule);
+  await objectForm.fillGeneralQueryField(F.eventBody, body);
+
+  await objectForm.saveExpectingError(message);
+}
+
+export async function dropEvent(page: Page, eventName: string): Promise<void> {
+  const tree = new ObjectTreePage(page);
+
+  await tree.dropObject(eventName, 'Drop event');
+  await expect(tree.getTreeNode(eventName)).toBeHidden({ timeout: 15000 });
+}
+
 // ---------------------------------------------------------------- cleanup
 
 export async function cleanupMysqlCoreSchema(page: Page, names: MysqlCoreNames): Promise<ConnectionPage> {
@@ -401,4 +505,138 @@ export async function cleanupMysqlCoreSchema(page: Page, names: MysqlCoreNames):
   await connectionPage.deleteConnection(names.connectionName);
 
   return connectionPage;
+}
+
+// ------------------------------------------------------------ unique keys
+
+/** Add a UNIQUE key on `email`. It must come back in the Keys tab and stay out of Indexes. */
+export async function addUniqueKey(page: Page, tableName: string, keyName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(LT.keys);
+
+  const row = await objectForm.addArrayRow(LF.keyName);
+  await objectForm.fillArrayCell(row, LF.keyName, keyName);
+  await objectForm.selectMultiSelectOptions(row, LF.keyColumns, ['email']);
+  await objectForm.selectArrayCellOption(row, LF.keyType, 'UNIQUE');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addUnique);
+  await objectForm.assertPreviewContains(keyName);
+  await objectForm.confirmExecute();
+}
+
+/** Keys rows are the PRIMARY KEY first, then UNIQUE keys by name. */
+export async function expectUniqueKeyLoaded(page: Page, tableName: string, keyName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(LT.keys);
+
+  await expect(objectForm.getArrayCell(1, LF.keyName).locator('input')).toHaveValue(keyName);
+  await expect(objectForm.getArrayCell(1, LF.keyColumns)).toContainText('email');
+  await expect(objectForm.getArrayCell(1, LF.keyType)).toContainText('UNIQUE');
+
+  await objectForm.selectTab(T.indexes);
+  await expect(objectForm.getArrayCell(0, F.indexName)).toBeHidden();
+}
+
+export async function renameUniqueKey(page: Page, tableName: string, from: string, to: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(LT.keys);
+
+  await objectForm.fillArrayCell(1, LF.keyName, to);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`DROP INDEX \`${from}\``));
+  await objectForm.assertPreviewContains(new RegExp(`ADD CONSTRAINT \`${to}\` UNIQUE`));
+  await objectForm.confirmExecute();
+}
+
+export async function dropUniqueKey(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(LT.keys);
+
+  await objectForm.deleteArrayRow(1);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.dropUnique);
+  await objectForm.confirmExecute();
+}
+
+export async function expectOnlyPrimaryKey(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(LT.keys);
+
+  await expect(objectForm.getArrayCell(0, LF.keyType)).toContainText('PRIMARY KEY');
+  await expect(objectForm.getArrayCell(1, LF.keyName)).toBeHidden();
+}
+
+// ----------------------------------------------------------------- checks
+
+export async function addCheck(page: Page, tableName: string, checkName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  const row = await objectForm.addArrayRow(F.checkName);
+  await objectForm.fillArrayCell(row, F.checkName, checkName);
+  await objectForm.fillArrayCell(row, F.checkExpression, 'CHAR_LENGTH(email) > 3');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.addCheck);
+  await objectForm.assertPreviewContains(checkName);
+  await objectForm.confirmExecute();
+}
+
+/** MySQL stores a normalised clause, so match on its parts. */
+export async function expectCheckLoaded(page: Page, tableName: string, checkName: string, expression: RegExp): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  await expect(objectForm.getArrayCell(0, F.checkName).locator('input')).toHaveValue(checkName);
+  await expect(objectForm.getArrayCell(0, F.checkExpression).locator('input')).toHaveValue(expression);
+}
+
+export async function editCheckExpression(page: Page, tableName: string, expression: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  await objectForm.fillArrayCell(0, F.checkExpression, expression);
+  await objectForm.save();
+  // The new definition is validated under a temporary name before the original is dropped.
+  await objectForm.assertPreviewContains(P.dropCheck);
+  await objectForm.assertPreviewContains(/__dbo_check_/);
+  await objectForm.confirmExecute();
+}
+
+export async function editCheckRejectedByDb(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  await objectForm.fillArrayCell(0, F.checkExpression, 'nosuchcolumn > 1');
+  await objectForm.save();
+  await objectForm.confirmExecuteExpectingError(/nosuchcolumn|Unknown column/i);
+}
+
+export async function addCheckWithBadExpressionRejected(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  const row = await objectForm.addArrayRow(F.checkName);
+  await objectForm.fillArrayCell(row, F.checkName, 'chk_bad');
+  await objectForm.fillArrayCell(row, F.checkExpression, '1 = 1; DROP TABLE x');
+
+  await objectForm.saveExpectingError(/single SQL expression/i);
+}
+
+export async function dropCheck(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  await objectForm.deleteArrayRow(0);
+  await objectForm.save();
+  await objectForm.assertPreviewContains(P.dropCheck);
+  await objectForm.confirmExecute();
+}
+
+export async function expectNoChecks(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.checks);
+
+  await expect(objectForm.getArrayCell(0, F.checkName)).toBeHidden();
 }

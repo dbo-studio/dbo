@@ -14,6 +14,7 @@ const (
 	ProcedureContainerNodeType        TreeNodeType = "procedureContainer"
 	SequenceContainerNodeType         TreeNodeType = "sequenceContainer"
 	TypeContainerNodeType             TreeNodeType = "typeContainer"
+	EventContainerNodeType            TreeNodeType = "eventContainer"
 	TableNodeType                     TreeNodeType = "table"
 	ViewNodeType                      TreeNodeType = "view"
 	MaterializedViewNodeType          TreeNodeType = "materializedView"
@@ -21,4 +22,5 @@ const (
 	ProcedureNodeType                 TreeNodeType = "procedure"
 	SequenceNodeType                  TreeNodeType = "sequence"
 	TypeNodeType                      TreeNodeType = "type"
+	EventNodeType                     TreeNodeType = "event"
 )

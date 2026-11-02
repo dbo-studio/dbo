@@ -102,6 +102,11 @@ func buildDatabase(_ context.Context, r *MySQLRepository, dbName string) (*contr
 			contract.ProcedureContainerNodeType,
 			r.ContextMenu(contract.ProcedureContainerNodeType),
 		},
+		{
+			"Events",
+			contract.EventContainerNodeType,
+			r.ContextMenu(contract.EventContainerNodeType),
+		},
 	}
 
 	for _, c := range containers {
@@ -194,6 +199,22 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 				Type:        nodeType,
 				Action:      editAction(r.ContextMenu(nodeType)),
 				ContextMenu: r.ContextMenu(nodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.EventContainerNodeType:
+		events, err := r.events(ctx, dbName)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, event := range events {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s", dbName, event.Name),
+				Name:        event.Name,
+				Type:        contract.EventNodeType,
+				Action:      editAction(r.ContextMenu(contract.EventNodeType)),
+				ContextMenu: r.ContextMenu(contract.EventNodeType),
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}

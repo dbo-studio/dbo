@@ -82,6 +82,8 @@ export function postgresCoreSchemaNames(suffix: string): {
   checkName: string;
   triggerFunction: string;
   signatureFunction: string;
+  rollbackFunction: string;
+  overloadFunction: string;
   optionsSequence: string;
   ownedSequence: string;
   roleName: string;
@@ -101,6 +103,8 @@ export function postgresCoreSchemaNames(suffix: string): {
     checkName: `ck_email_${suffix}`,
     triggerFunction: `trg_fn_${suffix}`,
     signatureFunction: `sig_fn_${suffix}`,
+    rollbackFunction: `rb_fn_${suffix}`,
+    overloadFunction: `ov_fn_${suffix}`,
     optionsSequence: `seq_opts_${suffix}`,
     ownedSequence: `seq_own_${suffix}`,
     roleName: `e2e_role_${suffix}`,

@@ -1090,6 +1090,7 @@ func (r *PostgresRepository) enumTypes(ctx context.Context, database *string, sc
 }
 
 type Routine struct {
+	OID          int64  `gorm:"column:oid"`
 	Name         string `gorm:"column:name"`
 	Parameters   string `gorm:"column:parameters"`
 	IdentityArgs string `gorm:"column:identity_args"`
@@ -1110,6 +1111,7 @@ func (r *PostgresRepository) routines(ctx context.Context, database *string, sch
 
 	err = conn.WithContext(ctx).Raw(`
 		SELECT
+			p.oid::bigint AS oid,
 			p.proname AS name,
 			pg_get_function_arguments(p.oid) AS parameters,
 			pg_get_function_identity_arguments(p.oid) AS identity_args,

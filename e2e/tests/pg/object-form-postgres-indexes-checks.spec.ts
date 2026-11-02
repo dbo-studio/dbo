@@ -8,6 +8,7 @@ import {
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import {
   addCheck,
+  addColumnAndFailingCheck,
   addCheckRejected,
   addColumn,
   addIndex,
@@ -22,6 +23,8 @@ import {
   expectIndexLoaded,
   expectIndexRows,
   expectIndexWhereLoaded,
+  expectNoColumn,
+  refreshCatalogCache,
   expectTabEmpty,
   renameIndex,
   type IndexSpec,
@@ -196,6 +199,18 @@ test.describe("Object Form PostgreSQL indexes and checks", () => {
     });
     await test.step("reopen: no indexes left", async () => {
       await expectTabEmpty(page, names.usersTable, T.indexes, "name");
+    });
+  });
+
+  test("A failing change rolls back the whole table edit", async () => {
+    await test.step("add a column and a check on a missing column in one save", async () => {
+      await addColumnAndFailingCheck(page, names.usersTable, "atomic_col");
+    });
+    await test.step("clear the metadata cache with a harmless successful edit", async () => {
+      await refreshCatalogCache(page, names.usersTable);
+    });
+    await test.step("reopen: the column from the same save was rolled back too", async () => {
+      await expectNoColumn(page, names.usersTable, "atomic_col");
     });
   });
 

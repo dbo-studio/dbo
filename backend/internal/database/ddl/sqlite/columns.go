@@ -26,6 +26,14 @@ func indexRows(input TableInput) []dto.SQLiteIndex {
 	return input.IndexParams.Indexes
 }
 
+func triggerRows(input TableInput) []dto.SQLiteTrigger {
+	if input.TriggerParams == nil {
+		return nil
+	}
+
+	return input.TriggerParams.Triggers
+}
+
 func filterActiveColumns(columns []dto.SQLiteTableColumn) []dto.SQLiteTableColumn {
 	return lo.Filter(columns, func(col dto.SQLiteTableColumn, _ int) bool {
 		if col.Added != nil && col.Deleted != nil && *col.Added && *col.Deleted {
@@ -181,10 +189,4 @@ func oldColumnName(col dto.SQLiteTableColumn) string {
 	}
 
 	return ""
-}
-
-func isIndexRenamed(idx dto.SQLiteIndex) bool {
-	return idx.New != nil && idx.Old != nil &&
-		idx.New.Name != nil && idx.Old.Name != nil &&
-		*idx.New.Name != *idx.Old.Name
 }

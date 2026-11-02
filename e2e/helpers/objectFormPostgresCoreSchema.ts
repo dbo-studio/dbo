@@ -406,6 +406,103 @@ export async function editProcedureBody(page: Page, nodeName: string): Promise<v
   await objectForm.confirmExecute();
 }
 
+/** Create a function with explicit parameters; used to make overloads. */
+export async function createFunctionWith(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  functionName: string,
+  spec: { parameters: string; returns: string; body: string }
+): Promise<void> {
+  const objectForm = await openCreateForm(page, names, 'Functions', 'Create function', T.function);
+
+  await objectForm.fillGeneralField(F.routineName, functionName);
+  await objectForm.fillGeneralField(F.routineParameters, spec.parameters);
+  await objectForm.fillGeneralField(F.routineReturns, spec.returns);
+  await objectForm.fillGeneralQueryField(F.routineBody, spec.body);
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`CREATE FUNCTION[\\s\\S]*\\(${spec.parameters}\\) RETURNS ${spec.returns}`, 'i'));
+  await objectForm.confirmExecute();
+}
+
+export async function expectRoutineNode(
+  page: Page,
+  names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,
+  nodeName: string,
+  visible: boolean
+): Promise<void> {
+  const tree = new ObjectTreePage(page);
+
+  await expandPublicContainer(page, names, 'Functions');
+  const node = tree.getTreeNode(nodeName);
+  await (visible ? expect(node).toBeVisible({ timeout: 15000 }) : expect(node).toBeHidden({ timeout: 15000 }));
+}
+
+/** Open an overload from the tree and check the form shows that overload, not another. */
+export async function expectFunctionForm(page: Page, nodeName: string, parameters: string, returns: string): Promise<void> {
+  const objectForm = await openEditForm(page, nodeName, 'Edit function', T.function);
+
+  await expect(objectForm.getGeneralField(F.routineParameters).locator('input')).toHaveValue(parameters);
+  await expect(objectForm.getGeneralField(F.routineReturns).locator('input')).toHaveValue(returns);
+}
+
+/**
+ * Edit that changes the signature (DROP + CREATE) with a body PostgreSQL rejects. The whole plan
+ * must roll back: the original function has to still exist afterwards.
+ */
+export async function changeFunctionWithBadBody(page: Page, nodeName: string): Promise<void> {
+  const objectForm = await openEditForm(page, nodeName, 'Edit function', T.function);
+
+  await objectForm.fillGeneralField(F.routineParameters, 'a integer, b integer');
+  await objectForm.fillGeneralQueryField(F.routineBody, 'BEGIN RETURN a +; END;');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/DROP FUNCTION/);
+  await objectForm.confirmExecuteExpectingError(/syntax error/i);
+}
+
+/** A table edit with two changes where the second fails: nothing from the first may stay. */
+export async function addColumnAndFailingCheck(page: Page, tableName: string, columnName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+
+  await objectForm.selectTab(T.columns);
+  const columnRow = await addRow(objectForm, F.columnName);
+  await objectForm.fillArrayCell(columnRow, F.columnName, columnName);
+  await objectForm.selectArrayCellOption(columnRow, F.columnType, 'integer');
+
+  await objectForm.selectTab(T.checks);
+  const checkRow = await addRow(objectForm, F.checkName);
+  await objectForm.fillArrayCell(checkRow, F.checkName, 'ck_missing_column');
+  await objectForm.fillArrayCell(checkRow, F.checkExpression, 'nosuchcolumn > 1');
+
+  await objectForm.save();
+  await objectForm.assertPreviewContains(new RegExp(`ADD COLUMN "${columnName}"`, 'i'));
+  await objectForm.confirmExecuteExpectingError(/nosuchcolumn/i);
+}
+
+/**
+ * A failed execute does not clear the metadata cache, so a reopened form can show stale data.
+ * A harmless successful edit clears it, which lets the next reopen read the real catalog.
+ */
+export async function refreshCatalogCache(page: Page, tableName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+
+  await objectForm.fillGeneralField(LF.tableComment, 'cache refresh');
+  await objectForm.save();
+  await objectForm.assertPreviewContains(/COMMENT ON TABLE/i);
+  await objectForm.confirmExecute();
+}
+
+export async function expectNoColumn(page: Page, tableName: string, columnName: string): Promise<void> {
+  const objectForm = await openEditTable(page, tableName);
+  await objectForm.selectTab(T.columns);
+
+  const count = await objectForm.arrayRowCount(F.columnName);
+  for (let i = 0; i < count; i++) {
+    await expect(objectForm.getArrayCell(i, F.columnName).locator('input')).not.toHaveValue(columnName);
+  }
+}
+
 export async function createProcedure(
   page: Page,
   names: Pick<PgCoreNames, 'connectionName' | 'databaseName'>,

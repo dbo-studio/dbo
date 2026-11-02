@@ -12,7 +12,9 @@ import {
   addTriggers,
   cleanupPgCoreSchema,
   changeFunctionSignature,
+  changeFunctionWithBadBody,
   createFunctionRejected,
+  createFunctionWith,
   createIntegerFunction,
   createProcedure,
   createTriggerFunction,
@@ -21,7 +23,9 @@ import {
   dropRowsOfTab,
   editFunctionBody,
   editProcedureBody,
+  expectFunctionForm,
   expectFunctionSignature,
+  expectRoutineNode,
   expectTabEmpty,
   expectTriggerLoaded,
   expectTriggerRows,
@@ -174,6 +178,54 @@ test.describe("Object Form PostgreSQL routines and triggers", () => {
     });
     await test.step("drop the function via tree", async () => {
       await dropRoutine(page, `${names.signatureFunction}(a integer, b integer)`, "Drop function");
+    });
+  });
+
+  test("A failed function edit rolls back and keeps the original", async () => {
+    const node = `${names.rollbackFunction}(a integer)`;
+
+    await test.step("create function f(a integer)", async () => {
+      await createFunctionWith(page, names, names.rollbackFunction, {
+        parameters: "a integer", returns: "integer", body: "BEGIN RETURN a; END;",
+      });
+    });
+    await test.step("signature change with an invalid body is rejected by PostgreSQL", async () => {
+      await changeFunctionWithBadBody(page, node);
+    });
+    await test.step("the original function still exists with its old signature", async () => {
+      await expectRoutineNode(page, names, node, true);
+      await expectFunctionForm(page, node, "a integer", "integer");
+    });
+    await test.step("drop it via tree", async () => {
+      await dropRoutine(page, node, "Drop function");
+    });
+  });
+
+  test("Dropping one overload leaves the other", async () => {
+    const intNode = `${names.overloadFunction}(a integer)`;
+    const textNode = `${names.overloadFunction}(a text)`;
+
+    await test.step("create f(a integer) and f(a text)", async () => {
+      await createFunctionWith(page, names, names.overloadFunction, {
+        parameters: "a integer", returns: "integer", body: "BEGIN RETURN a; END;",
+      });
+      await createFunctionWith(page, names, names.overloadFunction, {
+        parameters: "a text", returns: "text", body: "BEGIN RETURN a; END;",
+      });
+    });
+    await test.step("each overload opens its own definition", async () => {
+      await expectFunctionForm(page, textNode, "a text", "text");
+      await expectFunctionForm(page, intNode, "a integer", "integer");
+    });
+    await test.step("drop the text overload", async () => {
+      await dropRoutine(page, textNode, "Drop function");
+    });
+    await test.step("the integer overload is untouched", async () => {
+      await expectRoutineNode(page, names, intNode, true);
+      await expectFunctionForm(page, intNode, "a integer", "integer");
+    });
+    await test.step("drop the integer overload", async () => {
+      await dropRoutine(page, intNode, "Drop function");
     });
   });
 

@@ -97,3 +97,38 @@ type SQLiteIndexData struct {
 	Unique  *bool    `json:"unique"`
 	Order   *string  `json:"order"`
 }
+
+type SQLiteTriggerParams struct {
+	Triggers []SQLiteTrigger `json:"columns"`
+}
+
+type SQLiteTrigger struct {
+	New     *SQLiteTriggerData `json:"new"`
+	Old     *SQLiteTriggerData `json:"old"`
+	Added   *bool              `json:"added"`
+	Deleted *bool              `json:"deleted"`
+}
+
+type SQLiteTriggerData struct {
+	Name   *string `json:"name"`
+	Timing *string `json:"timing"`
+	Event  *string `json:"event"`
+	When   *string `json:"when"`
+	Body   *string `json:"body"`
+}
+
+type SQLiteCheckParams struct {
+	Checks []SQLiteCheck `json:"columns"`
+}
+
+type SQLiteCheck struct {
+	New     *SQLiteCheckData `json:"new"`
+	Old     *SQLiteCheckData `json:"old"`
+	Added   *bool            `json:"added"`
+	Deleted *bool            `json:"deleted"`
+}
+
+type SQLiteCheckData struct {
+	Name       *string `json:"name"`
+	Expression *string `json:"expression"`
+}

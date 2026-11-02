@@ -5,7 +5,8 @@ const CONTAINER_SUFFIXES = new Set([
   'typeContainer',
   'sequenceContainer',
   'functionContainer',
-  'procedureContainer'
+  'procedureContainer',
+  'eventContainer'
 ]);
 
 export type ParsedObjectNodeId = {
