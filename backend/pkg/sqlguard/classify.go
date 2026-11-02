@@ -88,7 +88,7 @@ func ClassifyAction(action string) Class {
 	switch action {
 	case "dropDatabase", "dropSchema", "dropTable", "dropView",
 		"dropMaterializedView", "dropIndex", "dropSequence", "dropType",
-		"dropFunction", "dropProcedure":
+		"dropFunction", "dropProcedure", "dropEvent":
 		if action == "dropIndex" || action == "dropSequence" {
 			return ClassDDL
 		}
@@ -99,7 +99,7 @@ func ClassifyAction(action string) Class {
 		"createMaterializedView", "editMaterializedView",
 		"createIndex", "editIndex", "createSequence", "editSequence",
 		"createType", "editType", "createFunction", "editFunction",
-		"createProcedure", "editProcedure",
+		"createProcedure", "editProcedure", "createEvent", "editEvent",
 		"refreshMaterializedView", "refreshMaterializedViewNoData":
 		return ClassDDL
 	default:

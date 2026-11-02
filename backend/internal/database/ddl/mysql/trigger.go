@@ -47,6 +47,16 @@ func triggerStatements(database, tableName string, rows []dto.MysqlTableTrigger,
 				return nil, err
 			}
 		case trigger.Old != nil && triggerChanged(trigger.Old, trigger.New):
+			// Validate under a temporary name first; see validationPrefix.
+			probe := *trigger.New
+			probe.Name = lo.ToPtr(validationName(lo.FromPtr(trigger.New.Name)))
+
+			if err := create(&probe); err != nil {
+				return nil, err
+			}
+
+			drop(*probe.Name)
+
 			if lo.FromPtr(trigger.Old.Name) != "" {
 				drop(*trigger.Old.Name)
 			}

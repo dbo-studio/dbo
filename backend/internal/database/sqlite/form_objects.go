@@ -15,6 +15,12 @@ func (r *SQLiteRepository) Objects(ctx context.Context, nodeID string, tabID con
 		return r.getTableForeignKeys(ctx, nodeID)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, nodeID)
+	case contract.TableIndexesTab:
+		return r.getTableIndexes(ctx, nodeID)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(ctx, nodeID)
+	case contract.TableChecksTab:
+		return r.getTableChecks(ctx, nodeID)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, nodeID)
 	default:
@@ -127,6 +133,60 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 	}
 
 	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *SQLiteRepository) getTableIndexes(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
+	indexes, err := r.editableIndexes(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []map[string]any{}
+	for _, index := range indexes {
+		result = append(result, map[string]any{
+			"name":    index.Name,
+			"columns": index.Columns,
+			"unique":  index.Unique,
+			"order":   index.Order,
+		})
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.indexFields(ctx, nodeID))
+}
+
+func (r *SQLiteRepository) getTableTriggers(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
+	triggers, err := r.tableTriggers(ctx, nodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []map[string]any{}
+	for _, trigger := range triggers {
+		result = append(result, map[string]any{
+			"name":   trigger.Name,
+			"timing": trigger.Timing,
+			"event":  trigger.Event,
+			"when":   trigger.When,
+			"body":   trigger.Body,
+		})
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.triggerFields())
+}
+
+func (r *SQLiteRepository) getTableChecks(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
+	// A table that is not created yet has no DDL, hence no checks.
+	tableDDL, _ := r.getTableDDL(ctx, nodeID)
+
+	result := []map[string]any{}
+	for _, check := range parseChecks(tableDDL) {
+		result = append(result, map[string]any{
+			"name":       check.Name,
+			"expression": check.Expression,
+		})
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.checkFields())
 }
 
 func (r *SQLiteRepository) getViewInfo(ctx context.Context, nodeID string) (*contract.FormResponse, error) {

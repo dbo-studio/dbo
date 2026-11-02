@@ -133,3 +133,19 @@ type MysqlTableTriggerData struct {
 	Event  *string `json:"event"`
 	Body   *string `json:"body"`
 }
+
+type MysqlTableCheckParams struct {
+	Columns []MysqlTableCheck `json:"columns"`
+}
+
+type MysqlTableCheck struct {
+	New     *MysqlTableCheckData `json:"new"`
+	Old     *MysqlTableCheckData `json:"old"`
+	Added   *bool                `json:"added"`
+	Deleted *bool                `json:"deleted"`
+}
+
+type MysqlTableCheckData struct {
+	Name       *string `json:"name"`
+	Expression *string `json:"expression"`
+}

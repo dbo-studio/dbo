@@ -358,6 +358,20 @@ export class ObjectFormPage extends BasePage {
     await expect(this.previewModal).toBeHidden({ timeout: 10000 });
   }
 
+  /** Execute is sent but the database rejects it; the form stays open so nothing is hidden. */
+  async confirmExecuteExpectingError(message: RegExp): Promise<void> {
+    const response = await waitForResponseDuring(
+      this.page,
+      apiRoute.objectExecute,
+      () => this.executeButton.click(),
+      API_DDL_TIMEOUT,
+    );
+    expect(response.status(), "execute is rejected by the database").toBeGreaterThanOrEqual(400);
+    expect(await response.text()).toMatch(message);
+    // The modal stays open after a rejected execute; close it so later steps can click through.
+    await this.cancelPreview();
+  }
+
   async saveAndExecute(): Promise<void> {
     await this.save();
     await this.confirmExecute();

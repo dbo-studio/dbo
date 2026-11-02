@@ -329,18 +329,17 @@ func (r *PostgresRepository) getRoutineInfo(ctx context.Context, node contract.D
 			return nil, err
 		}
 
-		for _, routine := range routines {
-			if routine.Name == node.Table {
-				row = map[string]any{
-					"name":       routine.Name,
-					"language":   routine.Language,
-					"parameters": routine.Parameters,
-					"returns":    routine.Returns,
-					"body":       routine.Body,
-				}
+		routine, err := findRoutine(routines, node.Table)
+		if err != nil {
+			return nil, err
+		}
 
-				break
-			}
+		row = map[string]any{
+			"name":       routine.Name,
+			"language":   routine.Language,
+			"parameters": routine.Parameters,
+			"returns":    routine.Returns,
+			"body":       routine.Body,
 		}
 	}
 

@@ -92,6 +92,28 @@ func (r *MySQLRepository) indexOptions(ctx context.Context, nodeID string) []con
 	}
 }
 
+func (r *MySQLRepository) eventFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "schedule", Name: "Schedule (EVERY 1 DAY or AT '2030-01-01 00:00:00')", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "status", Name: "Status", Type: contract.FormFieldTypeSelect, Options: []contract.FormFieldOption{
+			{Value: "ENABLE", Label: "ENABLE"},
+			{Value: "DISABLE", Label: "DISABLE"},
+			{Value: "DISABLE ON SLAVE", Label: "DISABLE ON SLAVE"},
+		}},
+		{ID: "preserve", Name: "Keep after it completes", Type: contract.FormFieldTypeCheckBox},
+		{ID: "comment", Name: "Comment", Type: contract.FormFieldTypeText},
+		{ID: "body", Name: "Body (the statement to run)", Type: contract.FormFieldTypeQuery, Required: true},
+	}
+}
+
+func (r *MySQLRepository) checkFields() []contract.FormField {
+	return []contract.FormField{
+		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},
+		{ID: "expression", Name: "Expression", Type: contract.FormFieldTypeText, Required: true},
+	}
+}
+
 func (r *MySQLRepository) triggerFields() []contract.FormField {
 	return []contract.FormField{
 		{ID: "name", Name: "Name", Type: contract.FormFieldTypeText, Required: true},

@@ -12,7 +12,7 @@ import (
 
 // BuildTablePlan is the single planning entrypoint shared by PreviewExecute
 // and Execute for create-table / edit-table actions.
-func (r *MySQLRepository) BuildTablePlan(_ context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (ddl.Plan, string, error) {
+func (r *MySQLRepository) BuildTablePlan(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) (ddl.Plan, string, error) {
 	node := r.base.ExtractNode(nodeID)
 
 	general, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableParams](params)
@@ -45,6 +45,13 @@ func (r *MySQLRepository) BuildTablePlan(_ context.Context, nodeID string, actio
 		return nil, "", err
 	}
 
+	checks, err := helper.ConvertToDTO[map[contract.TreeTab]*dto.MysqlTableCheckParams](params)
+	if err != nil {
+		return nil, "", err
+	}
+
+	_, mariaDB := r.checksSupport(ctx)
+
 	input := ddlMysql.TableInput{
 		Database:    node.Database,
 		NodeTable:   node.Table,
@@ -55,6 +62,8 @@ func (r *MySQLRepository) BuildTablePlan(_ context.Context, nodeID string, actio
 		Indexes:     indexes[contract.TableIndexesTab],
 		ForeignKeys: foreignKeys[contract.TableForeignKeysTab],
 		Triggers:    triggers[contract.TableTriggersTab],
+		Checks:      checks[contract.TableChecksTab],
+		MariaDB:     mariaDB,
 	}
 
 	return ddlMysql.BuildTablePlan(input)

@@ -17,6 +17,8 @@ const (
 
 	SequenceTab TreeTab = "sequence"
 
+	EventTab TreeTab = "event"
+
 	FunctionTab  TreeTab = "function"
 	ProcedureTab TreeTab = "procedure"
 

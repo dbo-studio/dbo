@@ -70,6 +70,10 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 				},
 			},
 		)
+	case contract.EventContainerNodeType:
+		actions = append(actions, routineCreateAction("Create event", contract.CreateEventAction))
+	case contract.EventNodeType:
+		actions = append(actions, routineNodeActions("event", contract.EditEventAction, contract.DropEventAction)...)
 	case contract.FunctionContainerNodeType:
 		actions = append(actions, routineCreateAction("Create function", contract.CreateFunctionAction))
 	case contract.ProcedureContainerNodeType:

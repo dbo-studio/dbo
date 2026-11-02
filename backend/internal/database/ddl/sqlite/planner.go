@@ -18,21 +18,43 @@ type TableInput struct {
 	ForeignKeyParams *dto.SQLiteTableForeignKeyParams
 	KeyParams        *dto.SQLiteTableKeyParams
 	IndexParams      *dto.SQLiteIndexParams
+	TriggerParams    *dto.SQLiteTriggerParams
+	CheckParams      *dto.SQLiteCheckParams
+	// InPlace marks an edit that touches only indexes and triggers, which
+	// SQLite can change without recreating the table.
+	InPlace bool
 }
 
-// BuildCreatePlan composes a single CREATE TABLE with columns, keys and
-// foreign keys inline, followed by the index statements.
-func BuildCreatePlan(input TableInput) ddl.Plan {
+// BuildCreatePlan composes a single CREATE TABLE with columns, keys, foreign
+// keys and checks inline, followed by the index and trigger statements.
+func BuildCreatePlan(input TableInput) (ddl.Plan, error) {
 	tableName := lo.FromPtr(tableNewName(input.TableParams))
 
+	columnDefs, err := allColumnDefinitions(input)
+	if err != nil {
+		return nil, err
+	}
+
 	plan := ddl.Plan{{
-		SQL:   buildCreateTableQuery(quote.SqliteIdent(tableName), tableNewData(input.TableParams), allColumnDefinitions(input)),
+		SQL:   buildCreateTableQuery(quote.SqliteIdent(tableName), tableNewData(input.TableParams), columnDefs),
 		Phase: ddl.PhaseTable,
 	}}
 
-	plan = append(plan, createIndexStatements(tableName, indexRows(input))...)
+	return appendIndexesAndTriggers(plan, tableName, input, true)
+}
 
-	return plan
+func appendIndexesAndTriggers(plan ddl.Plan, tableName string, input TableInput, recreate bool) (ddl.Plan, error) {
+	indexes, err := indexStatements(tableName, indexRows(input), recreate)
+	if err != nil {
+		return nil, err
+	}
+
+	triggers, err := triggerStatements(tableName, triggerRows(input), recreate)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(append(plan, indexes...), triggers...), nil
 }
 
 // BuildEditPlan composes the SQLite table-recreate flow (SQLite cannot
@@ -44,17 +66,25 @@ func BuildEditPlan(input TableInput, tmpTableName string) (ddl.Plan, error) {
 	}
 
 	oldName := *input.TableParams.Old.Name
+
+	if input.InPlace {
+		return appendIndexesAndTriggers(nil, oldName, input, false)
+	}
+
 	newName := newTableName(input.TableParams, oldName)
 
-	columnDefs := allColumnDefinitions(input)
+	columnDefs, err := allColumnDefinitions(input)
+	if err != nil {
+		return nil, err
+	}
+
 	if columnDefs == "" {
 		return nil, fmt.Errorf("table %s has no column definitions", oldName)
 	}
 
 	plan := recreateTableStatements(tmpTableName, oldName, newName, tableNewData(input.TableParams), columnDefs, input)
-	plan = append(plan, editIndexStatements(newName, indexRows(input))...)
 
-	return plan, nil
+	return appendIndexesAndTriggers(plan, newName, input, true)
 }
 
 func tableNewName(params *dto.SQLiteTableParams) *string {
@@ -81,7 +111,7 @@ func newTableName(params *dto.SQLiteTableParams, oldName string) string {
 	return oldName
 }
 
-func allColumnDefinitions(input TableInput) string {
+func allColumnDefinitions(input TableInput) (string, error) {
 	var parts []string
 
 	if defs := columnDefinitions(filterActiveColumns(columnRows(input))); defs != "" {
@@ -96,7 +126,14 @@ func allColumnDefinitions(input TableInput) string {
 		parts = append(parts, defs)
 	}
 
-	return strings.Join(parts, ", ")
+	checks, err := checkDefinitions(checkRows(input))
+	if err != nil {
+		return "", err
+	}
+
+	parts = append(parts, checks...)
+
+	return strings.Join(parts, ", "), nil
 }
 
 func recreateTableStatements(tmpTableName, oldName, newName string, tableParams *dto.SQLiteTableParamsData, columnDefs string, input TableInput) ddl.Plan {
