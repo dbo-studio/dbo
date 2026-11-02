@@ -81,6 +81,20 @@ test.describe("AI report tools", () => {
           expect(updated).toMatchObject({ name: `${title} x3`, sql, params: { n: "5" }, chart: { type: "number", y: ["doubled"] } });
         });
 
+        await test.step("The agent saves the newer chart types with their extra settings", async () => {
+          const sql = "SELECT 'a' AS r, 'x' AS m, 5 AS v";
+          expect(
+            failed(await call("save_report", { title: `${title} heat`, sql, type: "heatmap", x: "r", group: "m", y: ["v"] })),
+          ).toBeUndefined();
+          expect(
+            failed(await call("save_report", { title: `${title} gauge`, sql: "SELECT 7 AS v", type: "gauge", y: ["v"], goal: 10 })),
+          ).toBeUndefined();
+          const saved = await reports();
+          expect(saved.find((item) => item.name === `${title} heat`)?.chart).toMatchObject({ type: "heatmap", x: "r", group: "m", y: ["v"] });
+          expect(saved.find((item) => item.name === `${title} gauge`)?.chart).toMatchObject({ type: "gauge", goal: 10 });
+          expect(failed(await call("save_report", { title: "bad", sql, type: "sankey", y: ["v"] }))).toBeDefined();
+        });
+
         await test.step("Ask mode cannot change or remove what is saved", async () => {
           const refused = await call("delete_report", { reportId: id }, "ask");
           expect(failed(refused)).toBeDefined();

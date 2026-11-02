@@ -3,12 +3,14 @@ import {
   formatNumber,
   MAX_CHART_POINTS,
   numericColumns,
+  pivotRows,
   toPlotRows,
+  trendOf,
   type ChartSpec
 } from '@/core/charts/chartSpec';
 import locales from '@/locales';
-import { Box, Typography, useTheme } from '@mui/material';
-import type { JSX } from 'react';
+import { alpha, Box, Typography, useTheme } from '@mui/material';
+import { type JSX, useId } from 'react';
 import {
   Area,
   AreaChart,
@@ -16,15 +18,25 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
+  Funnel,
+  FunnelChart,
+  LabelList,
   Legend,
   Line,
   LineChart,
   Pie,
   PieChart,
+  PolarAngleAxis,
+  RadialBar,
+  RadialBarChart,
   ResponsiveContainer,
+  Scatter,
+  ScatterChart,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  ZAxis
 } from 'recharts';
 import ChatDataTable from '../AiChatPanel/Messages/ChatDataTable/ChatDataTable';
 
@@ -49,18 +61,30 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
     theme.palette.error.main,
     theme.palette.secondary.main
   ];
+  // useId's colons are not safe inside an SVG url(#…) reference.
+  const gradientId = `area${useId().replace(/[^\w-]/g, '')}`;
   const axis = { fill: theme.palette.text.secondary, fontSize: theme.typography.caption.fontSize };
-  const tooltip = (
+  // Bars highlight their band; lines and areas get a thin guide line.
+  const tooltip = (band: boolean): JSX.Element => (
     <Tooltip
       formatter={(value) => formatNumber(value)}
+      cursor={band ? { fill: alpha(theme.palette.primary.main, 0.08) } : { stroke: theme.palette.divider }}
       contentStyle={{
         background: theme.palette.background.paper,
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 6,
+        borderRadius: 8,
+        boxShadow: theme.shadows[4],
         fontSize: theme.typography.caption.fontSize
       }}
     />
   );
+  const grid = { stroke: theme.palette.divider, strokeDasharray: '3 3', strokeOpacity: 0.6 };
+  const bare = { axisLine: false, tickLine: false };
+  // Stacked bars round only the top segment, so the stack reads as one bar.
+  const barRadius = (
+    index: number,
+    radius: [number, number, number, number]
+  ): [number, number, number, number] | number => (!spec.stacked || index === spec.y.length - 1 ? radius : 0);
   const legend = spec.y.length > 1 ? <Legend wrapperStyle={{ fontSize: theme.typography.caption.fontSize }} /> : null;
   const data = toPlotRows(rows, spec);
   const cut = rows.length > MAX_CHART_POINTS;
@@ -102,10 +126,102 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
     );
   }
 
+  if (spec.type === 'trend') {
+    const { current, previous, change } = trendOf(rows, spec.y[0]);
+    const up = (change ?? 0) >= 0;
+
+    return (
+      <Box sx={{ p: 2 }} data-testid='ai-chart' data-type='trend'>
+        <Typography variant='caption' color='textSubdued'>
+          {spec.y[0]}
+        </Typography>
+        <Typography variant='h4' sx={{ fontWeight: 600, lineHeight: 1.2 }} data-testid='trend-value'>
+          {formatNumber(current)}
+        </Typography>
+        {change !== null && (
+          <Typography
+            variant='body2'
+            data-testid='trend-change'
+            data-direction={up ? 'up' : 'down'}
+            sx={{ color: up ? theme.palette.success.main : theme.palette.error.main, fontWeight: 600 }}
+          >
+            {up ? '▲' : '▼'} {Math.abs(change).toFixed(1)}%{' '}
+            <Typography component='span' variant='caption' color='textSubdued'>
+              {locales.ai_chart_trend_from.replace('{value}', formatNumber(previous))}
+            </Typography>
+          </Typography>
+        )}
+      </Box>
+    );
+  }
+
+  if ((spec.type === 'pivot' || spec.type === 'heatmap') && spec.x && spec.group) {
+    const pivot = pivotRows(rows, spec.x, spec.group, spec.y[0]);
+
+    if (spec.type === 'pivot') {
+      return (
+        <Box data-testid='ai-chart' data-type='pivot'>
+          <ChatDataTable rows={pivot.rows} columns={pivot.columns} />
+        </Box>
+      );
+    }
+
+    const values = pivot.rows.flatMap((row) => pivot.columns.slice(1).map((column) => Number(row[column] ?? NaN)));
+    const finite = values.filter(Number.isFinite);
+    const [low, high] = [Math.min(...finite), Math.max(...finite)];
+
+    return (
+      <Box sx={{ p: 1, overflow: 'auto' }} data-testid='ai-chart' data-type='heatmap'>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: `minmax(80px, auto) repeat(${pivot.columns.length - 1}, minmax(48px, 1fr))`,
+            gap: '2px',
+            fontSize: theme.typography.caption.fontSize
+          }}
+        >
+          <Box />
+          {pivot.columns.slice(1).map((column) => (
+            <Typography key={column} variant='caption' color='textSubdued' noWrap sx={{ textAlign: 'center' }}>
+              {column}
+            </Typography>
+          ))}
+          {pivot.rows.map((row) => [
+            <Typography key={`${formatNumber(row[spec.x ?? ''])}-label`} variant='caption' color='textSubdued' noWrap>
+              {formatNumber(row[spec.x ?? ''])}
+            </Typography>,
+            ...pivot.columns.slice(1).map((column) => {
+              const value = Number(row[column] ?? NaN);
+              const shade = Number.isFinite(value) && high > low ? 0.12 + 0.88 * ((value - low) / (high - low)) : 0.12;
+
+              return (
+                <Box
+                  key={`${formatNumber(row[spec.x ?? ''])}-${column}`}
+                  data-testid='heatmap-cell'
+                  title={`${formatNumber(row[spec.x ?? ''])} / ${column}: ${formatNumber(value)}`}
+                  sx={{
+                    minHeight: 28,
+                    borderRadius: 0.5,
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: Number.isFinite(value) ? alpha(theme.palette.primary.main, shade) : 'action.hover',
+                    color: shade > 0.55 ? theme.palette.primary.contrastText : theme.palette.text.primary
+                  }}
+                >
+                  {Number.isFinite(value) ? formatAxisNumber(value) : ''}
+                </Box>
+              );
+            })
+          ])}
+        </Box>
+      </Box>
+    );
+  }
+
   const cartesian = (children: JSX.Element[]): JSX.Element[] => [
-    <CartesianGrid key='grid' stroke={theme.palette.divider} vertical={false} />,
-    <XAxis key='x' dataKey={spec.x} tick={axis} stroke={theme.palette.divider} minTickGap={16} />,
-    <YAxis key='y' tick={axis} stroke={theme.palette.divider} width={44} tickFormatter={formatAxisNumber} />,
+    <CartesianGrid key='grid' {...grid} vertical={false} />,
+    <XAxis key='x' dataKey={spec.x} tick={axis} {...bare} minTickGap={16} />,
+    <YAxis key='y' tick={axis} {...bare} width={44} tickFormatter={formatAxisNumber} />,
     ...children
   ];
 
@@ -118,35 +234,47 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
               spec.y.map((key, index) => (
                 <Line
                   key={key}
+                  type='monotone'
                   dataKey={key}
                   stroke={palette[index % palette.length]}
                   strokeWidth={2}
-                  dot={data.length <= 40}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
                   animationDuration={600}
                 />
               ))
             )}
-            {tooltip}
+            {tooltip(false)}
             {legend}
           </LineChart>
         );
       case 'area':
         return (
           <AreaChart data={data}>
+            <defs>
+              {spec.y.map((key, index) => (
+                <linearGradient key={key} id={`${gradientId}-${index}`} x1='0' y1='0' x2='0' y2='1'>
+                  <stop offset='0%' stopColor={palette[index % palette.length]} stopOpacity={0.35} />
+                  <stop offset='100%' stopColor={palette[index % palette.length]} stopOpacity={0} />
+                </linearGradient>
+              ))}
+            </defs>
             {cartesian(
               spec.y.map((key, index) => (
                 <Area
                   key={key}
+                  type='monotone'
                   dataKey={key}
                   stackId={spec.stacked ? 'stack' : undefined}
                   stroke={palette[index % palette.length]}
-                  fill={palette[index % palette.length]}
-                  fillOpacity={0.18}
+                  strokeWidth={2}
+                  fill={`url(#${gradientId}-${index})`}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
                   animationDuration={600}
                 />
               ))
             )}
-            {tooltip}
+            {tooltip(false)}
             {legend}
           </AreaChart>
         );
@@ -157,42 +285,136 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
               data={data}
               dataKey={spec.y[0]}
               nameKey={spec.x}
-              innerRadius='55%'
+              innerRadius='60%'
               outerRadius='85%'
-              paddingAngle={1}
+              paddingAngle={2}
+              cornerRadius={4}
+              stroke='none'
               animationDuration={600}
             >
               {data.map((row, index) => (
                 <Cell key={formatNumber(row[spec.x ?? ''])} fill={palette[index % palette.length]} />
               ))}
             </Pie>
-            {tooltip}
+            {tooltip(false)}
             <Legend wrapperStyle={{ fontSize: theme.typography.caption.fontSize }} />
           </PieChart>
         );
+      case 'combo':
+        return (
+          <ComposedChart data={data}>
+            {cartesian([
+              <Bar
+                key={spec.y[0]}
+                dataKey={spec.y[0]}
+                fill={palette[0]}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
+                animationDuration={600}
+              />,
+              ...spec.y.slice(1).map((key, index) => (
+                <Line
+                  key={key}
+                  type='monotone'
+                  dataKey={key}
+                  stroke={palette[(index + 1) % palette.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                  animationDuration={600}
+                />
+              ))
+            ])}
+            {tooltip(true)}
+            {legend}
+          </ComposedChart>
+        );
+      case 'scatter':
+        return (
+          <ScatterChart>
+            <CartesianGrid {...grid} />
+            <XAxis type='number' dataKey={spec.x} name={spec.x} tick={axis} {...bare} tickFormatter={formatAxisNumber} />
+            <YAxis
+              type='number'
+              dataKey={spec.y[0]}
+              name={spec.y[0]}
+              tick={axis}
+              {...bare}
+              width={44}
+              tickFormatter={formatAxisNumber}
+            />
+            {spec.size && <ZAxis type='number' dataKey={spec.size} name={spec.size} range={[40, 400]} />}
+            {tooltip(false)}
+            <Scatter data={data} fill={palette[0]} fillOpacity={0.7} animationDuration={600} />
+          </ScatterChart>
+        );
+      case 'funnel': {
+        const stages = [...data].sort((a, b) => Number(b[spec.y[0]]) - Number(a[spec.y[0]]));
+
+        return (
+          <FunnelChart>
+            {tooltip(false)}
+            <Funnel data={stages} dataKey={spec.y[0]} nameKey={spec.x} isAnimationActive={false}>
+              {stages.map((row, index) => (
+                <Cell key={formatNumber(row[spec.x ?? ''])} fill={palette[index % palette.length]} />
+              ))}
+              <LabelList position='right' dataKey={spec.x} fill={theme.palette.text.primary} stroke='none' />
+            </Funnel>
+          </FunnelChart>
+        );
+      }
+      case 'gauge': {
+        const value = Number(rows[0]?.[spec.y[0]]);
+        const goal = spec.goal && spec.goal > 0 ? spec.goal : value <= 100 ? 100 : value;
+
+        return (
+          <RadialBarChart
+            data={[{ name: spec.y[0], value: Math.min(value, goal) }]}
+            innerRadius='70%'
+            outerRadius='100%'
+            startAngle={210}
+            endAngle={-30}
+          >
+            <PolarAngleAxis type='number' domain={[0, goal]} tick={false} />
+            <RadialBar dataKey='value' cornerRadius={8} fill={palette[0]} background={{ fill: alpha(palette[0], 0.15) }} />
+            <text
+              x='50%'
+              y='50%'
+              textAnchor='middle'
+              dominantBaseline='middle'
+              fill={theme.palette.text.primary}
+              fontSize={theme.typography.h5.fontSize}
+              data-testid='gauge-value'
+            >
+              {`${formatNumber(value)} / ${formatNumber(goal)}`}
+            </text>
+          </RadialBarChart>
+        );
+      }
       case 'row':
         return (
-          <BarChart data={data} layout='vertical'>
-            <CartesianGrid stroke={theme.palette.divider} horizontal={false} />
-            <XAxis type='number' tick={axis} stroke={theme.palette.divider} tickFormatter={formatAxisNumber} />
-            <YAxis type='category' dataKey={spec.x} tick={axis} stroke={theme.palette.divider} width={96} />
+          <BarChart data={data} layout='vertical' barCategoryGap='25%'>
+            <CartesianGrid {...grid} horizontal={false} />
+            <XAxis type='number' tick={axis} {...bare} tickFormatter={formatAxisNumber} />
+            <YAxis type='category' dataKey={spec.x} tick={axis} {...bare} width={96} />
             {spec.y.map((key, index) => (
               <Bar
                 key={key}
                 dataKey={key}
                 stackId={spec.stacked ? 'stack' : undefined}
                 fill={palette[index % palette.length]}
-                radius={[0, 3, 3, 0]}
+                radius={barRadius(index, [0, 4, 4, 0])}
+                maxBarSize={32}
                 animationDuration={600}
               />
             ))}
-            {tooltip}
+            {tooltip(true)}
             {legend}
           </BarChart>
         );
       default:
         return (
-          <BarChart data={data}>
+          <BarChart data={data} barCategoryGap='25%'>
             {cartesian(
               spec.y.map((key, index) => (
                 <Bar
@@ -200,13 +422,14 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
                   dataKey={key}
                   stackId={spec.stacked ? 'stack' : undefined}
                   fill={palette[index % palette.length]}
-                  radius={[3, 3, 0, 0]}
+                  radius={barRadius(index, [4, 4, 0, 0])}
+                  maxBarSize={32}
                   animationDuration={600}
                   animationEasing='ease-out'
                 />
               ))
             )}
-            {tooltip}
+            {tooltip(true)}
             {legend}
           </BarChart>
         );

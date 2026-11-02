@@ -74,6 +74,58 @@ export default function ReportEditor({
   const measures = numericColumns(edited.rows, edited.columns);
   const option = (value: string): SelectInputOption => ({ value, label: value });
 
+  const patchSpec = (next: Partial<typeof edited.spec>): void => setEdited({ ...edited, spec: { ...edited.spec, ...next } });
+  const picked = (value: unknown): string => (value as SelectInputOption).value as string;
+  // The chart types with more than an x and one measure ask for the rest here.
+  const extras = (
+    <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }}>
+      {(edited.spec.type === 'heatmap' || edited.spec.type === 'pivot') && (
+        <Box sx={{ flex: 1, minWidth: 140 }}>
+          <SelectInput
+            label={locales.ai_report_group}
+            testId='ai-report-group'
+            value={edited.spec.group}
+            options={edited.columns.map(option)}
+            onChange={(value) => patchSpec({ group: picked(value) })}
+          />
+        </Box>
+      )}
+      {edited.spec.type === 'combo' && (
+        <Box sx={{ flex: 1, minWidth: 140 }}>
+          <SelectInput
+            label={locales.ai_report_line}
+            testId='ai-report-line'
+            value={edited.spec.y[1]}
+            options={measures.filter((measure) => measure !== edited.spec.y[0]).map(option)}
+            onChange={(value) => patchSpec({ y: [edited.spec.y[0], picked(value)] })}
+          />
+        </Box>
+      )}
+      {edited.spec.type === 'scatter' && (
+        <Box sx={{ flex: 1, minWidth: 140 }}>
+          <SelectInput
+            label={locales.ai_report_size}
+            testId='ai-report-size'
+            value={edited.spec.size}
+            options={measures.map(option)}
+            onChange={(value) => patchSpec({ size: picked(value) })}
+          />
+        </Box>
+      )}
+      {edited.spec.type === 'gauge' && (
+        <FieldInput
+          size='small'
+          type='number'
+          placeholder={locales.ai_report_goal}
+          value={edited.spec.goal ?? ''}
+          onChange={(event) => patchSpec({ goal: Number(event.target.value) || undefined })}
+          inputProps={{ 'aria-label': locales.ai_report_goal, 'data-testid': 'ai-report-goal' }}
+          mb={0}
+        />
+      )}
+    </Stack>
+  );
+
   return (
     <Stack spacing={1.5} data-testid='ai-report-editor'>
       <FieldInput
@@ -132,6 +184,7 @@ export default function ReportEditor({
           />
         </Box>
       </Stack>
+      {extras}
       <ChartView rows={edited.rows} columns={edited.columns} spec={edited.spec} height={320} />
       <Box
         data-testid='ai-report-sql'

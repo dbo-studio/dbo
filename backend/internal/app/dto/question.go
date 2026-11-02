@@ -6,7 +6,7 @@ import (
 	"github.com/invopop/validation"
 )
 
-var questionChartTypes = []any{"table", "number", "bar", "row", "line", "area", "pie"}
+var questionChartTypes = []any{"table", "number", "bar", "row", "line", "area", "pie", "combo", "scatter", "funnel", "gauge", "heatmap", "pivot", "trend"}
 
 type (
 	// QuestionChart is how a report is drawn; the frontend chart kit reads it as is.
@@ -15,6 +15,12 @@ type (
 		X       string   `json:"x,omitempty"`
 		Y       []string `json:"y"`
 		Stacked bool     `json:"stacked,omitempty"`
+		// Group is the second dimension of a heatmap or pivot.
+		Group string `json:"group,omitempty"`
+		// Size is the measure that sizes a scatter chart's bubbles.
+		Size string `json:"size,omitempty"`
+		// Goal is what a gauge's value is measured against.
+		Goal float64 `json:"goal,omitempty"`
 	}
 
 	QuestionListRequest struct {

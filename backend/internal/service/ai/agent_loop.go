@@ -343,6 +343,9 @@ type saveReportArgs struct {
 	X       string   `json:"x"`
 	Y       []string `json:"y"`
 	Stacked bool     `json:"stacked"`
+	Group   string   `json:"group"`
+	Size    string   `json:"size"`
+	Goal    float64  `json:"goal"`
 	// Params are the default values of the {{filters}} in SQL.
 	Params map[string]string `json:"params"`
 }
@@ -387,7 +390,7 @@ func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx 
 		Schema:       toolCtx.Schema,
 		Name:         args.Title,
 		SQL:          args.SQL,
-		Chart:        dto.QuestionChart{Type: args.Type, X: args.X, Y: args.Y, Stacked: args.Stacked},
+		Chart:        dto.QuestionChart{Type: args.Type, X: args.X, Y: args.Y, Stacked: args.Stacked, Group: args.Group, Size: args.Size, Goal: args.Goal},
 		Params:       args.Params,
 	}
 	if err := req.Validate(); err != nil {
@@ -501,6 +504,9 @@ func (s *AiServiceImpl) updateReport(ctx context.Context, rawArgs string, toolCt
 		X        *string            `json:"x"`
 		Y        *[]string          `json:"y"`
 		Stacked  *bool              `json:"stacked"`
+		Group    *string            `json:"group"`
+		Size     *string            `json:"size"`
+		Goal     *float64           `json:"goal"`
 		Params   *map[string]string `json:"params"`
 	}
 	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
@@ -518,6 +524,9 @@ func (s *AiServiceImpl) updateReport(ctx context.Context, rawArgs string, toolCt
 	chart.X = lo.FromPtrOr(args.X, chart.X)
 	chart.Y = lo.FromPtrOr(args.Y, chart.Y)
 	chart.Stacked = lo.FromPtrOr(args.Stacked, chart.Stacked)
+	chart.Group = lo.FromPtrOr(args.Group, chart.Group)
+	chart.Size = lo.FromPtrOr(args.Size, chart.Size)
+	chart.Goal = lo.FromPtrOr(args.Goal, chart.Goal)
 
 	req := &dto.QuestionUpdateRequest{Name: args.Title, SQL: args.SQL, Chart: &chart, Params: args.Params}
 	if err := req.Validate(); err != nil {

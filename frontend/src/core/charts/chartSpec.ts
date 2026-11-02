@@ -1,4 +1,19 @@
-export const CHART_TYPES = ['table', 'number', 'bar', 'row', 'line', 'area', 'pie'] as const;
+export const CHART_TYPES = [
+  'table',
+  'number',
+  'bar',
+  'row',
+  'line',
+  'area',
+  'pie',
+  'combo',
+  'scatter',
+  'funnel',
+  'gauge',
+  'heatmap',
+  'pivot',
+  'trend'
+] as const;
 
 export type ChartType = (typeof CHART_TYPES)[number];
 
@@ -10,6 +25,12 @@ export type ChartSpec = {
   /** Measure columns, one series each. */
   y: string[];
   stacked?: boolean;
+  /** Second dimension of a heatmap or pivot. */
+  group?: string;
+  /** Number column that sizes scatter bubbles. */
+  size?: string;
+  /** What a gauge's value is measured against. */
+  goal?: number;
 };
 
 /** Points beyond this are cut, with a note: SVG charts slow down and stop being readable. */
@@ -55,9 +76,47 @@ export function autoChart(rows: Record<string, unknown>[], columns: string[]): C
 export const toPlotRows = (rows: Record<string, unknown>[], spec: ChartSpec): Record<string, unknown>[] =>
   rows.slice(0, MAX_CHART_POINTS).map((row) => {
     const next: Record<string, unknown> = { ...row };
-    for (const key of spec.y) next[key] = Number(row[key]);
+    for (const key of [...spec.y, ...(spec.size ? [spec.size] : [])]) next[key] = Number(row[key]);
+    // A scatter plots numbers on both axes.
+    if (spec.type === 'scatter' && spec.x) next[spec.x] = Number(row[spec.x]);
     return next;
   });
+
+/** Rows pivoted: one row per `x`, one column per `group`, each cell the sum of `value` (cells with no data stay empty). */
+export function pivotRows(
+  rows: Record<string, unknown>[],
+  x: string,
+  group: string,
+  value: string
+): { columns: string[]; rows: Record<string, unknown>[] } {
+  const groups: string[] = [];
+  const byX = new Map<string, Record<string, unknown>>();
+
+  for (const row of rows) {
+    const key = asText(row[x]);
+    const g = asText(row[group]);
+    if (!groups.includes(g)) groups.push(g);
+
+    const line = byX.get(key) ?? { [x]: row[x] };
+    line[g] = Number(line[g] ?? 0) + Number(row[value]);
+    byX.set(key, line);
+  }
+
+  return { columns: [x, ...groups], rows: [...byX.values()] };
+}
+
+/** The latest value of a series and how it moved from the one before (null when there is nothing to compare). */
+export function trendOf(
+  rows: Record<string, unknown>[],
+  value: string
+): { current: number; previous: number | null; change: number | null } {
+  const current = Number(rows[rows.length - 1]?.[value]);
+  const previousRow = rows.length > 1 ? rows[rows.length - 2] : undefined;
+  const previous = previousRow ? Number(previousRow[value]) : null;
+  const change = previous === null || previous === 0 ? null : ((current - previous) / Math.abs(previous)) * 100;
+
+  return { current, previous, change };
+}
 
 const compact = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
 const full = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });

@@ -22,6 +22,9 @@ type ShowChartArgs = {
   x?: string;
   y?: string[];
   stacked?: boolean;
+  group?: string;
+  size?: string;
+  goal?: number;
   params?: Record<string, string>;
 };
 
@@ -47,7 +50,10 @@ export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
         type,
         x: args.x && columns.includes(args.x) ? args.x : auto.x,
         y: y.length > 0 ? y : auto.y,
-        stacked: args.stacked
+        stacked: args.stacked,
+        group: args.group && columns.includes(args.group) ? args.group : undefined,
+        size: args.size && columns.includes(args.size) ? args.size : undefined,
+        goal: args.goal
       },
       params: args.params
     };
