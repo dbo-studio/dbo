@@ -1,26 +1,47 @@
 import api from '@/api';
-import type { BackupCadenceType, BackupScheduleType, NotifyOnType } from '@/api/backup/types';
-import PassphraseInput from './PassphraseInput';
+import type { BackupScheduleType, NotifyOnType } from '@/api/backup/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
-import type { SelectInputOption } from '@/components/base/SelectInput/types';
+import { nextRuns } from '@/core/backup/schedulePlan';
 import { isPostgresDriver } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Button, Switch } from '@mui/material';
+import { Box } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
-import { FormActionsStyled } from './BackupPanel.styled';
-import { FormGroup, FormRow } from './FormRow';
+import DestinationPicker from './DestinationPicker';
+import FormSection from './FormSection';
 import { describeCadence } from './format';
+import NotifyPicker from './NotifyPicker';
+import PlanSummary, { type PlanRow } from './PlanSummary';
+import ProtectPicker from './ProtectPicker';
+import RetentionPicker, { type Retention } from './RetentionPicker';
 import ScopePicker, { type Scope, scopeFor } from './ScopePicker';
+import Segmented from './Segmented';
+import WhenPicker, { type When } from './WhenPicker';
 
-const asNumber = (value: string, fallback: number): number => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isNaN(parsed) ? fallback : parsed;
-};
+const RETRY_CHOICES = [0, 1, 2, 3, 5];
 
-/** One page for a schedule: source, timing, storage and notifications, saved together. */
+const cadenceLabel = (c: When['cadence']): string =>
+  ({
+    hourly: locales.backup_when_hourly,
+    daily: locales.backup_when_daily,
+    weekly: locales.backup_when_weekly,
+    monthly: locales.backup_when_monthly
+  })[c];
+
+const keepSentence = (r: Retention): string =>
+  r.keepSmart
+    ? locales.backup_keep_smart_summary
+    : r.keepLast > 0
+      ? locales.backup_keep_last_summary.replace('{n}', String(r.keepLast))
+      : r.keepDays > 0
+        ? locales.backup_keep_days_summary.replace('{n}', String(r.keepDays))
+        : locales.backup_keep_all;
+
+/**
+ * One page to set up a schedule. Each step is a row of buttons or tiles instead of a field, and the
+ * plan on the right is rewritten as you go, with the next run times worked out for the chosen zone.
+ */
 export default function ScheduleForm({
   job,
   onDone,
@@ -39,16 +60,21 @@ export default function ScheduleForm({
   const [scope, setScope] = useState<Scope>(() =>
     job ? { connectionId: job.connectionId, database: job.database, schema: job.schema } : scopeFor(writable[0])
   );
-  const [cadence, setCadence] = useState<BackupCadenceType>(job?.cadence ?? 'daily');
-  const [hour, setHour] = useState(job?.hour ?? 2);
-  const [minute, setMinute] = useState(job?.minute ?? 0);
-  const [weekday, setWeekday] = useState(job?.weekday ?? 0);
-  const [monthDay, setMonthDay] = useState(job?.monthDay ?? 1);
-  const [keepLast, setKeepLast] = useState(job?.keepLast ?? 7);
-  const [keepDays, setKeepDays] = useState(job?.keepDays ?? 0);
-  const [keepSmart, setKeepSmart] = useState(job?.keepSmart ?? false);
+  const [when, setWhen] = useState<When>({
+    cadence: job?.cadence ?? 'daily',
+    hour: job?.hour ?? 2,
+    minute: job?.minute ?? 0,
+    weekday: job?.weekday ?? 0,
+    monthDay: job?.monthDay ?? 1
+  });
   const [retryMax, setRetryMax] = useState(job?.retryMax ?? 2);
+  const [retention, setRetention] = useState<Retention>({
+    keepSmart: job?.keepSmart ?? true,
+    keepLast: job?.keepLast ?? 0,
+    keepDays: job?.keepDays ?? 0
+  });
   const [compress, setCompress] = useState(job?.compress ?? true);
+  const [encrypt, setEncrypt] = useState(job?.encrypted ?? false);
   const [passphrase, setPassphrase] = useState('');
   const [destinationId, setDestinationId] = useState(job?.destinationId ?? 0);
   const [channelIds, setChannelIds] = useState<number[]>(job?.channelIds ?? []);
@@ -67,28 +93,36 @@ export default function ScheduleForm({
   const connection = writable.find((c) => c.id === scope.connectionId);
   const isSqlite = connection?.type === 'sqlite';
   const isPostgres = connection ? isPostgresDriver(connection.type) : false;
-  const valid = name.trim() !== '' && scope.connectionId !== null;
+
+  const target = [connection?.name, isSqlite ? '' : scope.database, isPostgres ? scope.schema : '']
+    .filter(Boolean)
+    .join(' · ');
+  // Until the user types one, a name worked out from the choices, so a first schedule needs no typing.
+  const suggestedName = connection ? `${target} · ${cadenceLabel(when.cadence)}` : '';
+  const finalName = name.trim() || suggestedName;
+
+  const problems = [
+    scope.connectionId === null ? locales.backup_plan_missing_connection : '',
+    encrypt && !job?.encrypted && !passphrase ? locales.backup_plan_missing_passphrase : ''
+  ].filter(Boolean);
+
+  const upcoming = nextRuns({ ...when, timezone }, new Date(), 3);
+  const destination = destinations.find((d) => d.id === destinationId);
 
   const handleSave = async (): Promise<void> => {
     if (scope.connectionId === null) return;
 
     const body = {
-      name: name.trim(),
-      cadence,
-      hour,
-      minute,
-      weekday,
-      monthDay,
+      name: finalName,
+      ...when,
       timezone,
-      keepLast,
-      keepDays,
-      keepSmart,
+      ...retention,
       retryMax,
       compress,
       destinationId,
       channelIds,
       notifyOn,
-      passphrase: passphrase || undefined
+      passphrase: encrypt && passphrase ? passphrase : undefined
     };
 
     setBusy(true);
@@ -115,191 +149,140 @@ export default function ScheduleForm({
     }
   };
 
-  const cadenceOptions = [
-    { label: locales.backup_schedule_hourly, value: 'hourly' },
-    { label: locales.backup_schedule_daily, value: 'daily' },
-    { label: locales.backup_schedule_weekly, value: 'weekly' },
-  { label: locales.backup_schedule_monthly, value: 'monthly' }
+  const rows: PlanRow[] = [
+    { label: locales.backup_plan_what, value: target || '—', testId: 'plan-what' },
+    {
+      label: locales.backup_plan_when,
+      value: `${describeCadence({ ...when, timezone })}${retryMax > 0 ? ` · ${locales.backup_plan_retries.replace('{n}', String(retryMax))}` : ''}`,
+      testId: 'plan-when'
+    },
+    {
+      label: locales.backup_plan_next,
+      value:
+        upcoming.length === 0
+          ? '—'
+          : upcoming.map((d) => (
+              <div key={d.getTime()}>
+                {d.toLocaleString([], {
+                  timeZone: timezone,
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+            )),
+      testId: 'plan-next'
+    },
+    {
+      label: locales.backup_plan_where,
+      value: destinationId === 0 ? locales.backup_dest_this_device : (destination?.name ?? `#${destinationId}`)
+    },
+    { label: locales.backup_plan_keeps, value: keepSentence(retention) },
+    {
+      label: locales.backup_plan_protection,
+      value:
+        [compress ? locales.backup_compress : '', encrypt ? locales.backup_encrypted : ''].filter(Boolean).join(' · ') ||
+        locales.backup_plan_none
+    },
+    {
+      label: locales.backup_plan_alerts,
+      value:
+        channelIds.length === 0
+          ? locales.backup_plan_none
+          : `${channels
+              .filter((c) => channelIds.includes(c.id))
+              .map((c) => c.name)
+              .join(', ')} · ${
+              notifyOn === 'failure'
+                ? locales.backup_notify_failure
+                : notifyOn === 'always'
+                  ? locales.backup_notify_always
+                  : locales.backup_notify_never
+            }`
+    }
   ];
 
   return (
-    <div data-testid='backup-job-wizard'>
-      <FormGroup title={locales.backup_form_general}>
-        <FormRow label={locales.backup_schedule_name}>
-          <FieldInput name='job-name' value={name} onChange={(e) => setName(e.target.value)} margin='none' />
-        </FormRow>
-      </FormGroup>
-
-      <FormGroup title={locales.backup_form_source}>
-        <ScopePicker connections={writable} value={scope} onChange={setScope} connectionLocked={job !== undefined} />
-      </FormGroup>
-
-      <FormGroup title={locales.backup_form_schedule}>
-        <FormRow
-          label={locales.backup_schedule_cadence}
-          hint={describeCadence({ cadence, hour, minute, weekday, monthDay, timezone })}
-        >
-          <SelectInput
-            emptylabel=''
-            value={cadence}
-            onChange={(e) => setCadence((e as SelectInputOption)?.value as BackupCadenceType)}
-            options={cadenceOptions}
-          />
-        </FormRow>
-        {cadence === 'monthly' && (
-          <FormRow label={locales.backup_schedule_month_day}>
-            <SelectInput
-              emptylabel=''
-              value={String(monthDay)}
-              onChange={(e) => setMonthDay(Number((e as SelectInputOption)?.value))}
-              options={Array.from({ length: 28 }, (_, i) => ({ label: String(i + 1), value: String(i + 1) }))}
-            />
-          </FormRow>
-        )}
-        {cadence === 'weekly' && (
-          <FormRow label={locales.backup_schedule_weekday}>
-            <SelectInput
-              emptylabel=''
-              value={String(weekday)}
-              onChange={(e) => setWeekday(Number((e as SelectInputOption)?.value))}
-              options={[0, 1, 2, 3, 4, 5, 6].map((d) => ({
-                label: locales[`weekday_${d}` as keyof typeof locales],
-                value: String(d)
-              }))}
-            />
-          </FormRow>
-        )}
-        {cadence !== 'hourly' && (
-          <FormRow label={locales.backup_schedule_hour} hint={`${locales.backup_schedule_timezone}: ${timezone}`}>
-            <FieldInput
-              name='job-hour'
-              type='number'
-              value={String(hour)}
-              onChange={(e) => setHour(asNumber(e.target.value, hour))}
-              margin='none'
-            />
-          </FormRow>
-        )}
-        <FormRow label={locales.backup_schedule_minute}>
+    <Box
+      data-testid='backup-job-wizard'
+      sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 280px' }, gap: 3 }}
+    >
+      <div>
+        <FormSection step={1} title={locales.backup_form_source}>
           <FieldInput
-            name='job-minute'
-            type='number'
-            value={String(minute)}
-            onChange={(e) => setMinute(asNumber(e.target.value, minute))}
+            name='job-name'
+            label={locales.backup_schedule_name}
+            placeholder={suggestedName}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             margin='none'
           />
-        </FormRow>
-        <FormRow label={locales.backup_schedule_retry} hint={locales.backup_schedule_retry_hint}>
-          <SelectInput
-            emptylabel=''
-            value={String(retryMax)}
-            onChange={(e) => setRetryMax(Number((e as SelectInputOption)?.value))}
-            options={[0, 1, 2, 3, 4, 5].map((n) => ({ label: String(n), value: String(n) }))}
-          />
-        </FormRow>
-      </FormGroup>
+          <ScopePicker connections={writable} value={scope} onChange={setScope} connectionLocked={job !== undefined} />
+        </FormSection>
 
-      <FormGroup title={locales.backup_form_storage}>
-        <FormRow label={locales.backup_job_destination} hint={locales.backup_wizard_local_folder_hint}>
-          <SelectInput
-            emptylabel=''
-            value={String(destinationId)}
-            onChange={(e) => setDestinationId(Number((e as SelectInputOption)?.value))}
-            testId='wizard-destination'
-            options={[
-              { label: locales.backup_destination_local, value: '0' },
-              ...destinations.filter((d) => d.enabled).map((d) => ({ label: d.name, value: String(d.id) }))
-            ]}
-          />
-        </FormRow>
-        <FormRow label={locales.backup_schedule_keep_smart} hint={locales.backup_schedule_keep_smart_hint}>
-          <Switch checked={keepSmart} onChange={(e) => setKeepSmart(e.target.checked)} />
-        </FormRow>
-        {!keepSmart && (
-          <>
-        <FormRow label={locales.backup_schedule_keep_last}>
-          <FieldInput
-            name='job-keep-last'
-            type='number'
-            value={String(keepLast)}
-            onChange={(e) => setKeepLast(asNumber(e.target.value, keepLast))}
-            margin='none'
-          />
-        </FormRow>
-        <FormRow label={locales.backup_schedule_keep_days}>
-          <FieldInput
-            name='job-keep-days'
-            type='number'
-            value={String(keepDays)}
-            onChange={(e) => setKeepDays(asNumber(e.target.value, keepDays))}
-            margin='none'
-          />
-        </FormRow>
-          </>
-        )}
-        <FormRow label={locales.backup_compress}>
-          <Switch checked={compress} onChange={(e) => setCompress(e.target.checked)} />
-        </FormRow>
-        <FormRow
-          label={locales.backup_encrypt_passphrase}
-          hint={
-            passphrase !== ''
-              ? locales.backup_encrypt_warning
-              : job?.encrypted
-                ? locales.backup_job_keep_passphrase
-                : undefined
-          }
-        >
-          <PassphraseInput name='job-passphrase' value={passphrase} onChange={setPassphrase} />
-        </FormRow>
-      </FormGroup>
+        <FormSection step={2} title={locales.backup_form_schedule}>
+          <WhenPicker value={when} timezone={timezone} onChange={(patch) => setWhen((w) => ({ ...w, ...patch }))} />
+          <Box>
+            <Box component='span' sx={{ typography: 'caption', color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              {locales.backup_schedule_retry}
+            </Box>
+            <Segmented
+              testId='retry-max'
+              value={retryMax}
+              onChange={setRetryMax}
+              options={RETRY_CHOICES.map((n) => ({ value: n, label: n === 0 ? locales.backup_off : String(n) }))}
+            />
+            <Box component='span' sx={{ typography: 'caption', color: 'text.secondary', display: 'block', mt: 0.5 }}>
+              {locales.backup_schedule_retry_hint}
+            </Box>
+          </Box>
+        </FormSection>
 
-      <FormGroup title={locales.backup_form_notifications}>
-        {channels.length === 0 ? (
-          <FormRow label={locales.backup_notify_channels} hint={locales.backup_form_no_channels}>
-            <span />
-          </FormRow>
-        ) : (
-          <>
-            <FormRow label={locales.backup_notify_channels}>
-              <SelectInput
-                emptylabel={locales.backup_notify_never}
-                isMulti
-                value={channelIds.map(String) as unknown as string}
-                onChange={(e) => setChannelIds(((e as SelectInputOption[]) ?? []).map((o) => Number(o.value)))}
-                options={channels.filter((c) => c.enabled).map((c) => ({ label: c.name, value: String(c.id) }))}
-              />
-            </FormRow>
-            <FormRow label={locales.backup_notify_on}>
-              <SelectInput
-                emptylabel=''
-                value={notifyOn}
-                onChange={(e) => setNotifyOn((e as SelectInputOption)?.value as NotifyOnType)}
-                options={[
-                  { label: locales.backup_notify_failure, value: 'failure' },
-                  { label: locales.backup_notify_always, value: 'always' },
-                  { label: locales.backup_notify_never, value: 'never' }
-                ]}
-              />
-            </FormRow>
-          </>
-        )}
-      </FormGroup>
+        <FormSection step={3} title={locales.backup_form_where}>
+          <DestinationPicker value={destinationId} onChange={setDestinationId} />
+        </FormSection>
 
-      <FormActionsStyled sx={{ mt: 2 }}>
-        <Button size='small' onClick={onCancel}>
-          {locales.cancel}
-        </Button>
-        <Button
-          size='small'
-          variant='contained'
-          disabled={busy || !valid}
-          onClick={() => void handleSave()}
-          data-testid='schedule-save'
-        >
-          {job ? locales.backup_job_save : locales.backup_schedule_create}
-        </Button>
-      </FormActionsStyled>
-    </div>
+        <FormSection step={4} title={locales.backup_form_keep} hint={locales.backup_form_keep_hint}>
+          <RetentionPicker
+            value={retention}
+            cadence={when.cadence}
+            lastSize={job?.lastSize ?? 0}
+            onChange={setRetention}
+          />
+        </FormSection>
+
+        <FormSection step={5} title={locales.backup_form_protect}>
+          <ProtectPicker
+            compress={compress}
+            onCompress={setCompress}
+            alreadyEncrypted={job?.encrypted ?? false}
+            encrypt={encrypt}
+            onEncrypt={setEncrypt}
+            passphrase={passphrase}
+            onPassphrase={setPassphrase}
+          />
+        </FormSection>
+
+        <FormSection step={6} title={locales.backup_form_notifications}>
+          <NotifyPicker
+            channelIds={channelIds}
+            onChannels={setChannelIds}
+            notifyOn={notifyOn}
+            onNotifyOn={setNotifyOn}
+          />
+        </FormSection>
+      </div>
+
+      <PlanSummary
+        rows={rows}
+        problems={problems}
+        busy={busy}
+        saveLabel={job ? locales.backup_job_save : locales.backup_schedule_create}
+        onSave={() => void handleSave()}
+        onCancel={onCancel}
+      />
+    </Box>
   );
 }

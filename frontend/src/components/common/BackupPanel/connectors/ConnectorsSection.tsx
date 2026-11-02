@@ -5,8 +5,6 @@ import EmptyState from '@/components/base/EmptyState/EmptyState';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { Button, Chip, Typography } from '@mui/material';
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { tools } from '@/core/utils/tools';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,6 +16,7 @@ import {
   SectionActionsStyled,
   SectionHeadStyled
 } from '../BackupPanel.styled';
+import { authorizeConnector } from './authorize';
 import ConnectorDialog from './ConnectorDialog';
 import { specOf } from './connectorTypes';
 
@@ -38,16 +37,6 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
       await api.backup.testConnector(kind, item.id);
       toast.success(locales.connector_test_ok);
       refresh();
-    } catch {
-      /* the api layer already toasted */
-    }
-  };
-
-  const authorize = async (item: ConnectorType): Promise<void> => {
-    try {
-      const url = await api.backup.oauthUrl(item.id);
-      if (await tools.isTauri()) await openUrl(url);
-      else window.open(url, '_blank');
     } catch {
       /* the api layer already toasted */
     }
@@ -109,7 +98,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
                   />
                 )}
                 {needsAuth && (
-                  <Button size='small' variant='outlined' onClick={() => void authorize(item)}>
+                  <Button size='small' variant='outlined' onClick={() => void authorizeConnector(item)}>
                     {locales.connector_authorize}
                   </Button>
                 )}
@@ -138,7 +127,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
             setEditing(null);
             refresh();
             // A new sign-in destination is useless until approved, so take the user straight there.
-            if (specOf(saved.type)?.oauth && !saved.secretsSet.refreshToken) void authorize(saved);
+            if (specOf(saved.type)?.oauth && !saved.secretsSet.refreshToken) void authorizeConnector(saved);
           }}
         />
       )}
