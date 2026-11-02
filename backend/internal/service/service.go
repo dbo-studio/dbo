@@ -81,7 +81,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	questionService := serviceQuestion.NewQuestionService(repo.QuestionRepo, repo.ConnectionRepo, toolRegistry)
 	dashboardService := serviceDashboard.NewDashboardService(repo.DashboardRepo, repo.QuestionRepo, repo.ConnectionRepo)
 	dashboardShareService := serviceDashboard.NewShareService(repo.DashboardShareRepo, repo.DashboardRepo, questionService, deps.Config, deps.Logger)
-	dashboardSubscriptionService := serviceDashboard.NewSubscriptionService(repo.DashboardSubscriptionRepo, repo.DashboardRepo, questionService, deps.Config, deps.CipherKey, deps.Logger)
+	dashboardSubscriptionService := serviceDashboard.NewSubscriptionService(repo.DashboardSubscriptionRepo, repo.DashboardRepo, questionService, deps.Config, deps.CipherKey, deps.Logger, notificationService)
 	mcpService := serviceMCP.NewMcpService(repo.McpSettingsRepo, repo.ConnectionRepo, toolRegistry, deps.Logger, deps.Config)
 	safeModePasswordService := serviceSafemode.NewPasswordService(repo.SafeModePasswordRepo, deps.Config, deps.Logger, deps.Cache)
 	authService := serviceAuth.NewAuthService(

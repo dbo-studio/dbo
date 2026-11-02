@@ -11,7 +11,7 @@ import type { ConnectionType } from '@/types';
 import { toast } from 'sonner';
 
 export const notificationTitle = (n: NotificationType): string =>
-  locales[`notification_${n.kind}_${n.jobType}`] ?? n.title;
+  (locales as Record<string, string | undefined>)[`notification_${n.kind}_${n.jobType}`] ?? n.title;
 
 /** Opens what a notification points at: a query's rows in a new tab, or an import or export in the job modal. */
 export async function openNotification(

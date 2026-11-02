@@ -5,6 +5,9 @@ import "time"
 const (
 	NotificationJobCompleted = "job_completed"
 	NotificationJobFailed    = "job_failed"
+	// NotificationSubscriptionPaused tells the owner a scheduled report stopped sending after repeated failures.
+	NotificationSubscriptionPaused = "subscription_paused"
+	NotificationTypeSubscription   = "subscription"
 )
 
 // Notification is an entry of the notification center: a finished or failed job the user may have missed.

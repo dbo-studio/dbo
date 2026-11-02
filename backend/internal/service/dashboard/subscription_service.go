@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceNotification "github.com/dbo-studio/dbo/internal/service/notification"
 	serviceQuestion "github.com/dbo-studio/dbo/internal/service/question"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cryptoutil"
@@ -57,6 +58,7 @@ type ISubscriptionServiceImpl struct {
 	cfg             *config.Config
 	cipherKey       []byte
 	logger          logger.Logger
+	notifier        serviceNotification.INotifier
 }
 
 func NewSubscriptionService(
@@ -66,6 +68,7 @@ func NewSubscriptionService(
 	cfg *config.Config,
 	cipherKey []byte,
 	logger logger.Logger,
+	notifier serviceNotification.INotifier,
 ) ISubscriptionService {
 	return &ISubscriptionServiceImpl{
 		subRepo:         subRepo,
@@ -74,6 +77,7 @@ func NewSubscriptionService(
 		cfg:             cfg,
 		cipherKey:       cipherKey,
 		logger:          logger,
+		notifier:        notifier,
 	}
 }
 
@@ -308,6 +312,7 @@ func (s *ISubscriptionServiceImpl) execute(ctx context.Context, sub *model.Dashb
 			if sub.ConsecutiveFailures >= pauseAfterFailures {
 				sub.Enabled = false
 				s.logger.Warn(fmt.Sprintf("dashboard subscription %d paused after %d failures in a row", sub.ID, sub.ConsecutiveFailures))
+				s.notifyPaused(ownerCtx, sub)
 			}
 		}
 	} else if !manual {
@@ -323,6 +328,25 @@ func (s *ISubscriptionServiceImpl) execute(ctx context.Context, sub *model.Dashb
 	}
 
 	return run
+}
+
+// notifyPaused puts the pause in the owner's inbox, so a dead address is not found out weeks later.
+func (s *ISubscriptionServiceImpl) notifyPaused(ctx context.Context, sub *model.DashboardSubscription) {
+	name := "a board"
+	if board, err := s.dashboardRepo.Find(ctx, sub.DashboardID); err == nil {
+		name = board.Name
+	}
+
+	err := s.notifier.Notify(ctx, &model.Notification{
+		OwnerID: sub.OwnerID,
+		Kind:    model.NotificationSubscriptionPaused,
+		JobType: model.NotificationTypeSubscription,
+		Title:   "Subscription paused",
+		Body:    fmt.Sprintf("%s: %s", name, sub.LastError),
+	})
+	if err != nil {
+		s.logger.Error(err)
+	}
 }
 
 func truncate(text string, limit int) string {

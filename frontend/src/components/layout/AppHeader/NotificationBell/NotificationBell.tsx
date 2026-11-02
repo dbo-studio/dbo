@@ -66,8 +66,8 @@ export default function NotificationBell(): JSX.Element {
               sx={{ alignItems: 'flex-start', px: 1.5, py: 1, cursor: 'pointer', opacity: n.read ? 0.7 : 1, '&:hover': { bgcolor: 'action.hover' } }}
               onClick={() => open(n)}
             >
-              <Box sx={{ pt: 0.25, color: n.kind === 'job_failed' ? 'error.main' : 'success.main' }}>
-                <CustomIcon type={n.kind === 'job_failed' ? 'close' : 'check'} size='s' />
+              <Box sx={{ pt: 0.25, color: n.kind === 'job_completed' ? 'success.main' : 'error.main' }}>
+                <CustomIcon type={n.kind === 'job_completed' ? 'check' : 'close'} size='s' />
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant='body2' sx={{ fontWeight: n.read ? 400 : 600 }}>

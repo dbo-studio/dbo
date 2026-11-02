@@ -63,13 +63,13 @@ const permitted = async (): Promise<boolean> =>
  */
 export async function announce(n: NotificationType, open: (n: NotificationType) => void): Promise<void> {
   const settings = useSettingStore.getState().general.notifications;
-  if (!settings.enabled || !settings[n.jobType]) return;
+  if (!settings.enabled || (n.jobType !== 'subscription' && !settings[n.jobType])) return;
 
   const title = notificationTitle(n);
   const inFront = document.hasFocus();
 
   if (inFront && settings.onlyWhenUnfocused) {
-    const show = n.kind === 'job_failed' ? toast.error : toast.success;
+    const show = n.kind === 'job_completed' ? toast.success : toast.error;
     show(title, { action: { label: locales.open, onClick: () => open(n) } });
 
     return;

@@ -930,6 +930,7 @@
   "notification_job_failed_export": "Export failed",
   "notification_job_completed_import": "Import finished",
   "notification_job_failed_import": "Import failed",
+  "notification_subscription_paused_subscription": "Subscription paused",
   "notification_result_expired": "That result is no longer kept. Run the query again.",
   "notification_settings_enabled": "Notifications",
   "notification_settings_enabled_hint": "Be told when a background query, import or export finishes or fails.",
