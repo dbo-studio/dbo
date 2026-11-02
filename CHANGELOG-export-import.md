@@ -46,6 +46,12 @@ Everything on this branch since it split from `dev` at `ba72cb02` (20 commits, m
 - Verify checks a backup and reports pass or fail for each version. Encrypted contents can be checked with the passphrase.
 - Restore from a job's history takes a passphrase when the backup is encrypted.
 
+## Notifications
+
+- A finished or failed backup, restore or tool download goes to the notification center and as a toast or system notification. The text says what ran and never includes a path, key or error detail.
+- One new setting, "Backups and restores", turns all three off together. A click opens the job in the job modal.
+- This replaces the scheduled-backup failure toast and its polling. The Backup console reloads from the job stream instead of a 15 second timer.
+
 ## Merge notes
 
 - The backup migrations were renumbered from 00020–00025 to 00034–00039 to follow the agent-workspace migrations. A database that already ran the old numbers needs a manual look before upgrading.
