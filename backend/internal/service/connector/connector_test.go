@@ -138,3 +138,112 @@ func TestTestDraftChecksWithoutSaving(t *testing.T) {
 		t.Fatal("unwritable folder passed the test")
 	}
 }
+
+// davServer is a tiny in-memory WebDAV: folders by MKCOL, files by PUT.
+func davServer() *httptest.Server {
+	files := map[string]string{}
+	dirs := map[string]bool{"/": true}
+
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if u, p, ok := r.BasicAuth(); !ok || u != "me" || p != "pw" {
+			w.WriteHeader(http.StatusUnauthorized)
+
+			return
+		}
+
+		switch r.Method {
+		case "MKCOL":
+			if dirs[r.URL.Path] {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+
+				return
+			}
+
+			dirs[r.URL.Path] = true
+			w.WriteHeader(http.StatusCreated)
+		case "PROPFIND":
+			if !dirs[r.URL.Path] {
+				w.WriteHeader(http.StatusNotFound)
+
+				return
+			}
+
+			w.WriteHeader(http.StatusMultiStatus)
+		case http.MethodPut:
+			raw, _ := io.ReadAll(r.Body)
+			files[r.URL.Path] = string(raw)
+			w.WriteHeader(http.StatusCreated)
+		case http.MethodGet:
+			body, ok := files[r.URL.Path]
+			if !ok {
+				w.WriteHeader(http.StatusNotFound)
+
+				return
+			}
+
+			_, _ = io.WriteString(w, body)
+		case http.MethodDelete:
+			delete(files, r.URL.Path)
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}))
+}
+
+func TestWebDAVDestinationRoundTrip(t *testing.T) {
+	srv := davServer()
+	defer srv.Close()
+
+	ctx := context.Background()
+	f := fields{config: map[string]any{"url": srv.URL, "username": "me", "path": "/backups/db"}, secrets: map[string]string{"password": "pw"}}
+
+	d, err := OpenDestination(TypeWebDAV, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := d.Test(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	remote, err := d.Put(ctx, "../x.sql", strings.NewReader("data"), 4)
+	if err != nil || remote != "backups/db/x.sql" {
+		t.Fatalf("put: %q, %v", remote, err)
+	}
+
+	var got bytes.Buffer
+	if err := d.Get(ctx, remote, &got); err != nil || got.String() != "data" {
+		t.Fatalf("get: %q, %v", got.String(), err)
+	}
+
+	if err := d.Delete(ctx, remote); err != nil {
+		t.Fatal(err)
+	}
+
+	f.secrets["password"] = "wrong"
+
+	bad, _ := OpenDestination(TypeWebDAV, f)
+	if err := bad.Test(ctx); err == nil || !strings.Contains(err.Error(), "refused") {
+		t.Fatalf("wrong password: %v", err)
+	}
+}
+
+func TestS3ObjectLockSettings(t *testing.T) {
+	f := fields{config: map[string]any{"bucket": "b", "lockDays": float64(30), "lockMode": "compliance"}, secrets: map[string]string{"accessKey": "a", "secretKey": "s"}}
+
+	d, err := newS3(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := d.(*s3Destination)
+	if got.lockDays != 30 || got.lockMode != "COMPLIANCE" {
+		t.Fatalf("lock: %d days, mode %q", got.lockDays, got.lockMode)
+	}
+
+	f.config["lockMode"] = ""
+	plain, _ := newS3(f)
+
+	if plain.(*s3Destination).lockMode != "GOVERNANCE" {
+		t.Fatal("the default mode must be the reversible one")
+	}
+}

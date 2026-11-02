@@ -67,9 +67,10 @@ type typeSpec struct {
 // specs fixes which keys each type may store, so a request cannot park arbitrary data in a row.
 var specs = map[string]typeSpec{
 	TypeFolder:   {model.ConnectorKindDestination, []string{"path"}, nil},
-	TypeS3:       {model.ConnectorKindDestination, []string{"endpoint", "region", "bucket", "prefix", "insecure"}, []string{"accessKey", "secretKey"}},
+	TypeS3:       {model.ConnectorKindDestination, []string{"endpoint", "region", "bucket", "prefix", "insecure", "lockDays", "lockMode"}, []string{"accessKey", "secretKey"}},
 	TypeSFTP:     {model.ConnectorKindDestination, []string{"host", "port", "username", "path", "hostKey"}, []string{"password", "privateKey"}},
 	TypeFTP:      {model.ConnectorKindDestination, []string{"host", "port", "username", "path", "security"}, []string{"password"}},
+	TypeWebDAV:   {model.ConnectorKindDestination, []string{"url", "username", "path"}, []string{"password"}},
 	TypeGDrive:   {model.ConnectorKindDestination, []string{"folderId"}, []string{"clientId", "clientSecret", "refreshToken"}},
 	TypeEmail:    {model.ConnectorKindChannel, []string{"recipients", "includeError"}, nil},
 	TypeSlack:    {model.ConnectorKindChannel, []string{"includeError"}, []string{"webhookUrl"}},

@@ -14,6 +14,7 @@ const (
 	TypeSFTP   = "sftp"
 	TypeFTP    = "ftp"
 	TypeGDrive = "gdrive"
+	TypeWebDAV = "webdav"
 )
 
 // Channel types a backup result can be announced on.
@@ -91,6 +92,8 @@ func OpenDestination(connType string, f fields) (Destination, error) {
 		return newFTP(f)
 	case TypeGDrive:
 		return newGDrive(f)
+	case TypeWebDAV:
+		return newWebDAV(f)
 	default:
 		return nil, ErrUnknownType
 	}

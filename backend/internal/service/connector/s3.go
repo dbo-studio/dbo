@@ -5,6 +5,7 @@ import (
 	"io"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -15,6 +16,9 @@ type s3Destination struct {
 	client *minio.Client
 	bucket string
 	prefix string
+	// lockDays, when above zero, makes every upload immutable for that long (S3 Object Lock).
+	lockDays int
+	lockMode minio.RetentionMode
 }
 
 func newS3(f fields) (Destination, error) {
@@ -36,7 +40,15 @@ func newS3(f fields) (Destination, error) {
 		return nil, err
 	}
 
-	return &s3Destination{client: client, bucket: f.str("bucket"), prefix: strings.Trim(f.str("prefix"), "/")}, nil
+	mode := minio.Governance
+	if f.str("lockMode") == "compliance" {
+		mode = minio.Compliance
+	}
+
+	return &s3Destination{
+		client: client, bucket: f.str("bucket"), prefix: strings.Trim(f.str("prefix"), "/"),
+		lockDays: f.num("lockDays", 0), lockMode: mode,
+	}, nil
 }
 
 func (d *s3Destination) Test(ctx context.Context) error {
@@ -55,7 +67,13 @@ func (d *s3Destination) Test(ctx context.Context) error {
 func (d *s3Destination) Put(ctx context.Context, name string, r io.Reader, size int64) (string, error) {
 	key := path.Join(d.prefix, path.Base(name))
 
-	_, err := d.client.PutObject(ctx, d.bucket, key, r, size, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	opts := minio.PutObjectOptions{ContentType: "application/octet-stream"}
+	if d.lockDays > 0 {
+		opts.Mode = d.lockMode
+		opts.RetainUntilDate = time.Now().AddDate(0, 0, d.lockDays)
+	}
+
+	_, err := d.client.PutObject(ctx, d.bucket, key, r, size, opts)
 
 	return key, err
 }

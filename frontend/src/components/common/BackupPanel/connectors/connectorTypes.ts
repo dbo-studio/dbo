@@ -45,8 +45,31 @@ export const CONNECTOR_TYPES: ConnectorTypeSpec[] = [
       { key: 'bucket', label: locales.connector_bucket, required: true },
       { key: 'prefix', label: locales.connector_prefix, placeholder: 'dbo/' },
       { key: 'insecure', label: locales.connector_insecure, input: 'bool' },
+      { key: 'lockDays', label: locales.connector_lock_days, input: 'number', placeholder: '0' },
+      {
+        key: 'lockMode',
+        label: locales.connector_lock_mode,
+        input: 'select',
+        options: [
+          { label: locales.connector_lock_governance, value: 'governance' },
+          { label: locales.connector_lock_compliance, value: 'compliance' }
+        ]
+      },
       { key: 'accessKey', label: locales.connector_access_key, secret: true, required: true },
       { key: 'secretKey', label: locales.connector_secret_key, secret: true, required: true }
+    ]
+  },
+  {
+    type: 'webdav',
+    kind: 'destination',
+    label: locales.connector_webdav,
+    description: locales.connector_webdav_hint,
+    icon: 'cloud',
+    fields: [
+      { key: 'url', label: locales.connector_url, placeholder: 'https://cloud.example.com/remote.php/dav/files/me', required: true },
+      { key: 'username', label: locales.connector_username },
+      { key: 'password', label: locales.connector_password, secret: true },
+      { key: 'path', label: locales.connector_remote_path, placeholder: 'backups' }
     ]
   },
   {
