@@ -76,6 +76,7 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 		Hour:          req.Hour,
 		Minute:        req.Minute,
 		Weekday:       req.Weekday,
+		MonthDay:      lo.CoalesceOrEmpty(req.MonthDay, 1),
 		Timezone:      lo.CoalesceOrEmpty(req.Timezone, "UTC"),
 		Enabled:       true,
 		KeepLast:      req.KeepLast,
@@ -143,7 +144,7 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 	fields := map[string]any{
 		"name": schedule.Name, "database": schedule.Database, "schema": schedule.Schema,
 		"cadence": schedule.Cadence, "hour": schedule.Hour, "minute": schedule.Minute,
-		"weekday": schedule.Weekday, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
+		"weekday": schedule.Weekday, "month_day": schedule.MonthDay, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
 		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "keep_smart": schedule.KeepSmart, "retry_max": schedule.RetryMax, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
 		"destination_id": schedule.DestinationID, "channel_ids": schedule.ChannelIDs, "notify_on": schedule.NotifyOn,
 	}
@@ -235,6 +236,7 @@ func applyScheduleUpdate(s *model.BackupSchedule, req *dto.BackupScheduleUpdateR
 	s.Hour = lo.FromPtrOr(req.Hour, s.Hour)
 	s.Minute = lo.FromPtrOr(req.Minute, s.Minute)
 	s.Weekday = lo.FromPtrOr(req.Weekday, s.Weekday)
+	s.MonthDay = lo.FromPtrOr(req.MonthDay, s.MonthDay)
 	s.Timezone = strings.TrimSpace(lo.FromPtrOr(req.Timezone, s.Timezone))
 	s.KeepLast = lo.FromPtrOr(req.KeepLast, s.KeepLast)
 	s.KeepDays = lo.FromPtrOr(req.KeepDays, s.KeepDays)
@@ -306,7 +308,7 @@ func (s IBackupScheduleServiceImpl) passwordRemembered(ctx context.Context, sc m
 func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 	return dto.BackupScheduleResponse{
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
-		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, Timezone: s.Timezone,
+		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, MonthDay: s.MonthDay, Timezone: s.Timezone,
 		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, KeepSmart: s.KeepSmart, RetryMax: s.RetryMax, Compress: s.Compress, Encrypted: s.PublicKey != "",
 		DestinationID: s.DestinationID, ChannelIDs: s.Channels(), NotifyOn: s.NotifyOn,
 		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,

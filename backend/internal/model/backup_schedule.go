@@ -9,6 +9,8 @@ const (
 	ScheduleCadenceHourly = "hourly"
 	ScheduleCadenceDaily  = "daily"
 	ScheduleCadenceWeekly = "weekly"
+	// ScheduleCadenceMonthly runs on MonthDay, which stops at 28 so every month has it.
+	ScheduleCadenceMonthly = "monthly"
 )
 
 // BackupSchedule runs a backup on a fixed cadence while the DBO process is up.
@@ -25,6 +27,7 @@ type BackupSchedule struct {
 	Hour     int    `gorm:"not null;default:0"`
 	Minute   int    `gorm:"not null;default:0"`
 	Weekday  int    `gorm:"not null;default:0"`
+	MonthDay int    `gorm:"not null;default:1"`
 	Timezone string `gorm:"not null;default:'UTC'"`
 	Enabled  bool   `gorm:"not null;default:true"`
 	// Compress gzips each backup. PublicKey and WrappedKey, when set, encrypt it:

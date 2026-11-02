@@ -16,6 +16,7 @@ import RestoreConfirm from '../RestoreConfirm';
 import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
 import { describeCadence, formatDate, formatSize, statusLabel } from '../format';
 import { restoreCandidates } from '../restoreCandidates';
+import RunInsights from '../RunInsights';
 import ScheduleForm from '../ScheduleForm';
 
 type View = { kind: 'dashboard' } | { kind: 'wizard'; editId?: number } | { kind: 'job'; id: number };
@@ -338,6 +339,8 @@ function JobDetail({
           onChange={(e) => setPassphrase(e.target.value)}
         />
       )}
+
+      <RunInsights runs={runs} />
 
       <Typography variant='subtitle2' sx={{ mb: 1 }}>
         {locales.backup_job_runs}

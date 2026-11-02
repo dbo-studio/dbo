@@ -74,7 +74,7 @@ export type BackupToolDownloadType = {
 
 export type NotifyOnType = 'failure' | 'always' | 'never';
 
-export type BackupCadenceType = 'hourly' | 'daily' | 'weekly';
+export type BackupCadenceType = 'hourly' | 'daily' | 'weekly' | 'monthly';
 
 export type BackupScheduleRequestType = {
   connectionId: number;
@@ -85,6 +85,8 @@ export type BackupScheduleRequestType = {
   hour: number;
   minute: number;
   weekday: number;
+  /** Day of the month for a monthly cadence, 1 to 28. */
+  monthDay?: number;
   timezone: string;
   keepLast: number;
   keepDays: number;

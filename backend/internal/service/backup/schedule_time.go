@@ -31,6 +31,11 @@ func NextRun(s *model.BackupSchedule, from time.Time) (time.Time, error) {
 		if !next.After(local) {
 			next = next.AddDate(0, 0, 7)
 		}
+	case model.ScheduleCadenceMonthly:
+		next = time.Date(local.Year(), local.Month(), s.MonthDay, s.Hour, s.Minute, 0, 0, loc)
+		if !next.After(local) {
+			next = time.Date(local.Year(), local.Month()+1, s.MonthDay, s.Hour, s.Minute, 0, 0, loc)
+		}
 	default:
 		next = time.Date(local.Year(), local.Month(), local.Day(), s.Hour, s.Minute, 0, 0, loc)
 		if !next.After(local) {

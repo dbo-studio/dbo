@@ -17,6 +17,7 @@ type (
 		Hour         int    `json:"hour"`
 		Minute       int    `json:"minute"`
 		Weekday      int    `json:"weekday"`
+		MonthDay     int    `json:"monthDay"`
 		Timezone     string `json:"timezone"`
 		KeepLast     int    `json:"keepLast"`
 		KeepDays     int    `json:"keepDays"`
@@ -43,6 +44,7 @@ type (
 		Hour          *int    `json:"hour"`
 		Minute        *int    `json:"minute"`
 		Weekday       *int    `json:"weekday"`
+		MonthDay      *int    `json:"monthDay"`
 		Timezone      *string `json:"timezone"`
 		KeepLast      *int    `json:"keepLast"`
 		KeepDays      *int    `json:"keepDays"`
@@ -66,6 +68,7 @@ type (
 		Hour          int        `json:"hour"`
 		Minute        int        `json:"minute"`
 		Weekday       int        `json:"weekday"`
+		MonthDay      int        `json:"monthDay"`
 		Timezone      string     `json:"timezone"`
 		Enabled       bool       `json:"enabled"`
 		KeepLast      int        `json:"keepLast"`
@@ -95,7 +98,7 @@ type (
 
 var notifyModes = []any{"failure", "always", "never"}
 
-var cadences = []any{model.ScheduleCadenceHourly, model.ScheduleCadenceDaily, model.ScheduleCadenceWeekly}
+var cadences = []any{model.ScheduleCadenceHourly, model.ScheduleCadenceDaily, model.ScheduleCadenceWeekly, model.ScheduleCadenceMonthly}
 
 func (req BackupScheduleRequest) Validate() error {
 	return validation.ValidateStruct(&req,
@@ -107,6 +110,7 @@ func (req BackupScheduleRequest) Validate() error {
 		validation.Field(&req.Hour, validation.Min(0), validation.Max(23)),
 		validation.Field(&req.Minute, validation.Min(0), validation.Max(59)),
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
+		validation.Field(&req.MonthDay, validation.Min(0), validation.Max(28)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
 		validation.Field(&req.RetryMax, validation.Min(0), validation.Max(5)),
@@ -123,6 +127,7 @@ func (req BackupScheduleUpdateRequest) Validate() error {
 		validation.Field(&req.Hour, validation.Min(0), validation.Max(23)),
 		validation.Field(&req.Minute, validation.Min(0), validation.Max(59)),
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
+		validation.Field(&req.MonthDay, validation.Min(1), validation.Max(28)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
 		validation.Field(&req.RetryMax, validation.Min(0), validation.Max(5)),

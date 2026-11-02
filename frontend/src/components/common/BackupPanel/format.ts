@@ -15,7 +15,7 @@ export const formatDate = (value?: string): string =>
 
 /** "Every day 02:00 UTC" style summary of a job's cadence. */
 export const describeCadence = (
-  s: Pick<BackupScheduleType, 'cadence' | 'hour' | 'minute' | 'weekday' | 'timezone'>
+  s: Pick<BackupScheduleType, 'cadence' | 'hour' | 'minute' | 'weekday' | 'monthDay' | 'timezone'>
 ): string => {
   if (s.cadence === 'hourly') return `${locales.backup_schedule_hourly} :${pad(s.minute)}`;
 
@@ -23,6 +23,8 @@ export const describeCadence = (
   if (s.cadence === 'weekly') {
     return `${locales.backup_schedule_weekly}, ${locales[`weekday_${s.weekday}` as keyof typeof locales]} ${time}`;
   }
+
+  if (s.cadence === 'monthly') return `${locales.backup_schedule_monthly}, ${locales.backup_schedule_month_day} ${s.monthDay ?? 1} ${time}`;
 
   return `${locales.backup_schedule_daily} ${time}`;
 };

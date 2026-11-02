@@ -43,6 +43,7 @@ export default function ScheduleForm({
   const [hour, setHour] = useState(job?.hour ?? 2);
   const [minute, setMinute] = useState(job?.minute ?? 0);
   const [weekday, setWeekday] = useState(job?.weekday ?? 0);
+  const [monthDay, setMonthDay] = useState(job?.monthDay ?? 1);
   const [keepLast, setKeepLast] = useState(job?.keepLast ?? 7);
   const [keepDays, setKeepDays] = useState(job?.keepDays ?? 0);
   const [keepSmart, setKeepSmart] = useState(job?.keepSmart ?? false);
@@ -77,6 +78,7 @@ export default function ScheduleForm({
       hour,
       minute,
       weekday,
+      monthDay,
       timezone,
       keepLast,
       keepDays,
@@ -116,7 +118,8 @@ export default function ScheduleForm({
   const cadenceOptions = [
     { label: locales.backup_schedule_hourly, value: 'hourly' },
     { label: locales.backup_schedule_daily, value: 'daily' },
-    { label: locales.backup_schedule_weekly, value: 'weekly' }
+    { label: locales.backup_schedule_weekly, value: 'weekly' },
+  { label: locales.backup_schedule_monthly, value: 'monthly' }
   ];
 
   return (
@@ -134,7 +137,7 @@ export default function ScheduleForm({
       <FormGroup title={locales.backup_form_schedule}>
         <FormRow
           label={locales.backup_schedule_cadence}
-          hint={describeCadence({ cadence, hour, minute, weekday, timezone })}
+          hint={describeCadence({ cadence, hour, minute, weekday, monthDay, timezone })}
         >
           <SelectInput
             emptylabel=''
@@ -143,6 +146,16 @@ export default function ScheduleForm({
             options={cadenceOptions}
           />
         </FormRow>
+        {cadence === 'monthly' && (
+          <FormRow label={locales.backup_schedule_month_day}>
+            <SelectInput
+              emptylabel=''
+              value={String(monthDay)}
+              onChange={(e) => setMonthDay(Number((e as SelectInputOption)?.value))}
+              options={Array.from({ length: 28 }, (_, i) => ({ label: String(i + 1), value: String(i + 1) }))}
+            />
+          </FormRow>
+        )}
         {cadence === 'weekly' && (
           <FormRow label={locales.backup_schedule_weekday}>
             <SelectInput
