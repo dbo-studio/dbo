@@ -96,7 +96,7 @@ func Execute() {
 		appLogger.Error(err)
 	}
 
-	restServer := server.New(appLogger, cfg, server.Handlers{Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
+	restServer := server.New(appLogger, cfg, server.Handlers{Account: handler.NewAccountHandler(appLogger, ss.AccountService), Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
 		Connection:            handler.NewConnectionHandler(appLogger, ss.ConnectionService),
 		SavedQuery:            handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
 		Question:              handler.NewQuestionHandler(appLogger, ss.QuestionService),

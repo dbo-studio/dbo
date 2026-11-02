@@ -59,6 +59,10 @@ func (r *Server) routing() {
 	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
+	account := api.Group("v1/account")
+	account.Post("/connect/start", r.handlers.Account.ConnectStart)
+	account.Post("/connect/poll", r.handlers.Account.ConnectPoll)
+
 	ai := api.Group("ai")
 	ai.Post("/chat", r.handlers.AI.Chat)
 	ai.Post("/chat/stream", r.handlers.AI.ChatStream)

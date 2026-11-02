@@ -5,9 +5,3 @@ export const QueryPreviewContentStyled = styled(Box)(() => ({
   flexDirection: 'column',
   flex: 1
 }));
-
-export const QueryPreviewActionsStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  marginTop: theme.spacing(2),
-  justifyContent: 'space-between'
-}));

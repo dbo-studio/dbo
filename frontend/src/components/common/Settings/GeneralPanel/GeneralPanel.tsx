@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';
 import { SettingGroup } from '../SettingRow/SettingRow';
+import { AccountSettings } from './AccountSettings/AccountSettings';
 import { Analytics } from './Analytics/Analytics';
 import { AuthSessionSettings } from './AuthSessionSettings/AuthSessionSettings';
 import { CheckUpdate } from './CheckUpdate/CheckUpdate';
@@ -18,6 +19,7 @@ export default function GeneralPanel(): JSX.Element {
   return (
     <Box>
       <SettingGroup>
+        <AccountSettings />
         <AuthSessionSettings />
         <CheckUpdate />
         <Analytics />

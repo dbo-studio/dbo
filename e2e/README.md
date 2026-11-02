@@ -114,6 +114,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit / column rename copy / keys    |
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
 | Object Form generated col | `pg|sqlite/object-form-generated-column.spec.ts` | Add generated column on edit (STORED / VIRTUAL)     |
+| Boards sidebar           | `sqlite/boards-sidebar.spec.ts`               | Boards tab: new/rename/duplicate/delete dashboard, new/save/delete report, `{{filters}}`, CSV/PNG/JSON export + import |
+| Dashboard share / schedule | `sqlite/dashboard-share.spec.ts`, `sqlite/dashboard-subscriptions.spec.ts` | opened from the Boards tab; share actions in the modal footer |
 | Database diagram (ERD)   | `shared/database-diagram.spec.ts`             | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export, Source DBML |
 
 **Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).

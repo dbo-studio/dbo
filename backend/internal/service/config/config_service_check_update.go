@@ -27,7 +27,7 @@ func (i IConfigServiceImpl) CheckUpdate(ctx context.Context) (*dto.ConfigCheckUp
 	cc := client.New()
 	cc.SetTimeout(10 * time.Second)
 
-	resp, err := cc.Get(i.cfg.App.ReleaseURLAPI)
+	resp, err := cc.Get(i.cfg.App.WebsiteAPIURL + "/config")
 	if err != nil {
 		return nil, err
 	}

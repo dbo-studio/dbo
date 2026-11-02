@@ -6,7 +6,6 @@ export const DiagramToolbarStyled = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(0.5),
   padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
-  borderTop: `1px solid ${theme.palette.divider}`,
   borderBottom: `1px solid ${theme.palette.divider}`,
   minHeight: 40
 }));

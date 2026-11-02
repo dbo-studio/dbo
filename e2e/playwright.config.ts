@@ -1,21 +1,21 @@
-import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
+import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-dotenv.config({ path: path.resolve(__dirname, '.run-env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+dotenv.config({ path: path.resolve(__dirname, ".run-env"), override: true });
 
 const chromeUse = {
-  ...devices['Desktop Chrome'],
-  ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {})
+  ...devices["Desktop Chrome"],
+  ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}),
 };
 
 const isUiMode =
-  process.env.E2E_UI_MODE === '1' ||
-  process.argv.some((arg) => arg === '--ui' || arg.startsWith('--ui-'));
+  process.env.E2E_UI_MODE === "1" ||
+  process.argv.some((arg) => arg === "--ui" || arg.startsWith("--ui-"));
 
 const hasProjectFilter = process.argv.some(
-  (arg) => arg === '--project' || arg.startsWith('--project=')
+  (arg) => arg === "--project" || arg.startsWith("--project="),
 );
 
 /**
@@ -34,42 +34,68 @@ const hasProjectFilter = process.argv.some(
  */
 const engineProjects = [
   {
-    name: 'postgres',
+    name: "postgres",
     use: chromeUse,
-    testMatch: ['**/shared/**/*.spec.ts', '**/pg/**/*.spec.ts']
+    testMatch: ["**/shared/**/*.spec.ts", "**/pg/**/*.spec.ts"],
   },
   {
-    name: 'mysql',
+    name: "mysql",
     use: chromeUse,
-    testMatch: ['**/mysql/**/*.spec.ts']
+    testMatch: ["**/mysql/**/*.spec.ts"],
   },
   {
-    name: 'sqlite',
+    name: "sqlite",
     use: chromeUse,
-    testMatch: ['**/sqlite/**/*.spec.ts']
-  }
+    testMatch: ["**/sqlite/**/*.spec.ts"],
+  },
 ];
 
 export default defineConfig({
-  testDir: './tests',
-  globalSetup: require.resolve('./utils/global.setup'),
+  testDir: "./tests",
+  globalSetup: require.resolve("./utils/global.setup"),
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.PLAYWRIGHT_WORKERS ? Number(process.env.PLAYWRIGHT_WORKERS) : 1,
+  workers: process.env.PLAYWRIGHT_WORKERS
+    ? Number(process.env.PLAYWRIGHT_WORKERS)
+    : 1,
   maxFailures: process.env.PLAYWRIGHT_MAX_FAILURES
     ? Number(process.env.PLAYWRIGHT_MAX_FAILURES)
     : 1,
   timeout: 300000,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3001',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
+    // Skips the first-run tour and signs the AI in, which every spec expects.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: new URL(
+            process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3001",
+          ).origin,
+          localStorage: [
+            {
+              name: "dbo:account",
+              value: JSON.stringify({
+                state: {
+                  token: "e2e-token",
+                  user: { name: "e2e", email: "e2e@example.com" },
+                  onboarded: true,
+                },
+                version: 0,
+              }),
+            },
+          ],
+        },
+      ],
+    },
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
   projects:
     isUiMode && !hasProjectFilter
-      ? [{ name: 'e2e', use: chromeUse, testMatch: '**/*.spec.ts' }]
-      : engineProjects
+      ? [{ name: "e2e", use: chromeUse, testMatch: "**/*.spec.ts" }]
+      : engineProjects,
 });
