@@ -3,6 +3,7 @@ import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { ensureSqliteDbFile, removeSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
+import { FakeWebhook } from "../../helpers/fakeMailbox";
 import { AuthPage } from "../../pages/AuthPage";
 import { ConnectionPage } from "../../pages/ConnectionPage";
 
@@ -64,6 +65,28 @@ test.describe("Dashboard share links with sign-in required", () => {
             "/api/connections",
           ]) {
             expect((await visitor.request.get(path)).status(), path).toBe(401);
+          }
+        });
+
+        await test.step("With sign-in on, a webhook cannot be aimed at the server's own network", async () => {
+          const hook = new FakeWebhook();
+          const url = await hook.start();
+          try {
+            const made = await page.request.post(`/api/dashboards/${board}/subscriptions`, {
+              data: { kind: "webhook", target: url, frequency: "daily", hour: 9, minute: 0 },
+            });
+            const subId = ((await made.json()) as { data: { id: number } }).data.id;
+            const run = (
+              (await (await page.request.post(`/api/dashboards/${board}/subscriptions/${subId}/run`)).json()) as {
+                data: { status: string; error: string };
+              }
+            ).data;
+            expect(run.status).toBe("failed");
+            expect(run.error).toContain("private or local address");
+            // Nothing reached the receiver.
+            expect(hook.hooks).toHaveLength(0);
+          } finally {
+            await hook.stop();
           }
         });
 
