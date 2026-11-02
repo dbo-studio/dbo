@@ -71,7 +71,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
         <Grid size={{ md: 3 }}>
           <Stack
             direction={'row'}
-            onMouseDown={(event) => event.stopPropagation()}
             sx={{
               justifyContent: 'flex-end'
             }}
@@ -114,7 +113,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
         <Grid size={{ md: 3 }}>
           <Stack
             direction={'row'}
-            onMouseDown={(event) => event.stopPropagation()}
             sx={{
               justifyContent: 'flex-start'
             }}

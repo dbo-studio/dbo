@@ -18,7 +18,8 @@ import {
 import { baseTypography } from './typography';
 import { validateTheme } from './themeRegistry';
 
-const paletteMap: Record<string, (mode: ThemeModeEnum) => Record<string, unknown>> = {
+/** Palette factories by theme id, also used to preview a palette before it is chosen. */
+export const paletteMap: Record<string, (mode: ThemeModeEnum) => Record<string, unknown>> = {
   dbo: dboPalette,
   elastic: elasticPalette,
   shadcn: shadcnPalette,

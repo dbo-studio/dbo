@@ -1,5 +1,12 @@
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import locales from '@/locales';
 import type { KeyboardEvent, JSX } from 'react';
-import { SidebarSectionTabStyled, SidebarSectionTabsRootStyled } from './SidebarSectionTabs.styled';
+import {
+  SidebarSectionTabCloseStyled,
+  SidebarSectionTabLabelStyled,
+  SidebarSectionTabStyled,
+  SidebarSectionTabsRootStyled
+} from './SidebarSectionTabs.styled';
 import type { SidebarSectionTabsProps } from './types';
 
 export default function SidebarSectionTabs<T extends string | number>({
@@ -33,10 +40,26 @@ export default function SidebarSectionTabs<T extends string | number>({
             tabIndex={selected ? 0 : -1}
             selected={selected}
             isLast={index === tabs.length - 1}
+            title={tab.label}
             onClick={(): void => onChange(tab.id)}
-            onKeyDown={(event): void => handleKeyDown(event, index)}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>): void => handleKeyDown(event, index)}
+            {...Object.fromEntries(Object.entries(tab.data ?? {}).map(([key, value]) => [`data-${key}`, value]))}
           >
-            {tab.label}
+            {tab.icon && <CustomIcon type={tab.icon} size='xs' />}
+            <SidebarSectionTabLabelStyled>{tab.label}</SidebarSectionTabLabelStyled>
+            {tab.onClose && (
+              <SidebarSectionTabCloseStyled
+                role='button'
+                aria-label={locales.close}
+                data-testid='sidebar-tab-close'
+                onClick={(event): void => {
+                  event.stopPropagation();
+                  tab.onClose?.();
+                }}
+              >
+                <CustomIcon type='close' size='xs' />
+              </SidebarSectionTabCloseStyled>
+            )}
           </SidebarSectionTabStyled>
         );
       })}

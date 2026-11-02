@@ -12,14 +12,25 @@ func init() {
 }
 
 func upUserTotp(ctx context.Context, tx *sql.Tx) error {
-	if _, err := tx.ExecContext(ctx, `
-ALTER TABLE users ADD COLUMN totp_secret_ciphertext TEXT`); err != nil {
+	// Idempotent: a prior partial apply can leave columns without a goose row.
+	has, err := sqliteHasColumn(ctx, tx, "users", "totp_secret_ciphertext")
+	if err != nil {
 		return err
 	}
+	if !has {
+		if _, err := tx.ExecContext(ctx, `ALTER TABLE users ADD COLUMN totp_secret_ciphertext TEXT`); err != nil {
+			return err
+		}
+	}
 
-	if _, err := tx.ExecContext(ctx, `
-ALTER TABLE users ADD COLUMN totp_enabled_at DATETIME`); err != nil {
+	has, err = sqliteHasColumn(ctx, tx, "users", "totp_enabled_at")
+	if err != nil {
 		return err
+	}
+	if !has {
+		if _, err := tx.ExecContext(ctx, `ALTER TABLE users ADD COLUMN totp_enabled_at DATETIME`); err != nil {
+			return err
+		}
 	}
 
 	if _, err := tx.ExecContext(ctx, `

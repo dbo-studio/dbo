@@ -39,6 +39,12 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	// The connection's agent level is the ceiling: a read-only connection always runs in Ask.
+	req.AgentTier = string(conn.AgentTier)
+	if conn.AgentTier == model.AgentTierReadOnly {
+		req.Mode = dto.AiChatModeAsk
+	}
+
 	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
 	if err != nil {
 		return err
@@ -62,14 +68,16 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
+	s.refreshSummary(ctx, provider, dbProvider.Model, chat)
+
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
-	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode())
-	providerReq.ModeInstructions = modeInstructions(req)
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
+	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
+	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -78,7 +86,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, req, emitEvent)
+	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, chat.ID, req, emitEvent)
 
 	// Persist even when the user stopped the turn so the tool cards and any
 	// pending diagram proposal survive a reload.
@@ -87,7 +95,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	}
 
 	if providerErr != nil {
-		return providerErr
+		return aiProvider.ProviderError(providerErr)
 	}
 
 	response := &dto.AiChatResponse{

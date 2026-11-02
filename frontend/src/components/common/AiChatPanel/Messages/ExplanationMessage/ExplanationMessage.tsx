@@ -35,10 +35,8 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
     <Typography
       variant='body2'
       component='div'
-      sx={{
-        whiteSpace: 'pre-wrap',
-        ...(isUser ? { lineHeight: 1.55 } : undefined)
-      }}
+      // Only what the user typed keeps its line breaks; markdown has its own.
+      sx={isUser ? { whiteSpace: 'pre-wrap', lineHeight: 1.55 } : undefined}
     >
       {isUser ? displayContent : <ChatMarkdown content={displayContent} />}
     </Typography>
@@ -46,7 +44,7 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
 
   if (isUser) {
     return (
-      <UserMessageRowStyled>
+      <UserMessageRowStyled $isNew={message.isNew}>
         <UserMessageActionsStyled className='user-message-actions'>
           <Tooltip title={locales.edit}>
             <IconButton size='small' onClick={handleEditButton}>

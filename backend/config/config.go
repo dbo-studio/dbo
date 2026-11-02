@@ -15,27 +15,18 @@ type App struct {
 	MCPURLOverride string
 	DatabaseName   string
 	Version        string
-	ReleaseURLAPI  string
 	ReleaseURL     string
-	FeedbackURLAPI string
+	WebsiteAPIURL  string
 	LogPath        string
 	Auth           Auth
-	// AllowedOrigins is a comma-separated list of extra origins allowed to make
-	// credentialed cross-origin requests (localhost is always allowed when login is off).
 	AllowedOrigins []string
 }
 
-// Auth holds every web login option. Desktop ignores it.
 type Auth struct {
-	// Configured is APP_AUTH_MODE as written (none | local | empty).
-	Configured AuthMode
-	// Mode is the mode in effect, resolved at bootstrap.
-	Mode AuthMode
-	// AdminEmail / AdminPassword seed the first admin when login is on and no user exists.
+	Configured    AuthMode
+	Mode          AuthMode
 	AdminEmail    string
 	AdminPassword string
-	// SharedOwnerID is the admin every browser acts as when login is off but
-	// users exist, so their data stays visible. Empty: each browser owns its data.
 	SharedOwnerID string
 }
 
@@ -44,6 +35,8 @@ type Config struct {
 }
 
 var config *Config
+
+const websiteAPIURL = "https://dbo-studio.com/api"
 
 func New() *Config {
 	config = &Config{
@@ -63,10 +56,13 @@ func New() *Config {
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
 			Version:        "v1.2.0",
 			DatabaseName:   "dbo.db",
-			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
 			ReleaseURL:     "https://dbo-studio.com/releases",
-			FeedbackURLAPI: feedbackURL(),
+			WebsiteAPIURL:  websiteAPIURL,
 		},
+	}
+
+	if override := strings.TrimSpace(os.Getenv("APP_WEBSITE_API_URL")); override != "" {
+		config.App.WebsiteAPIURL = strings.TrimRight(override, "/")
 	}
 
 	return config
@@ -121,14 +117,4 @@ func parseAllowedOrigins(raw string) []string {
 	}
 
 	return origins
-}
-
-// feedbackURL is where AI feedback is sent. APP_FEEDBACK_URL lets tests and
-// self-hosted setups point it elsewhere.
-func feedbackURL() string {
-	if url := strings.TrimSpace(os.Getenv("APP_FEEDBACK_URL")); url != "" {
-		return url
-	}
-
-	return "https://dbo-studio.com/api/feedback/ai"
 }

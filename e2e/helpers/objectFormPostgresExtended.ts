@@ -96,7 +96,7 @@ export async function createViewInSchema(
   await objectForm.fillGeneralField(F.viewName, viewName);
   await objectForm.getGeneralField(F.viewQuery).click();
   await objectForm.wait(1000);
-  await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id FROM ${schemaName}.${tableName}`);
+  await objectForm.fillGeneralQueryField(F.viewQuery, `SELECT id FROM "${schemaName}"."${tableName}"`);
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createView);
@@ -127,7 +127,7 @@ export async function createMaterializedView(
 
   await expect(objectForm.getGeneralField(F.matViewName)).toBeVisible({ timeout: 30000 });
   await objectForm.fillGeneralField(F.matViewName, matViewName);
-  await objectForm.fillGeneralQueryField(F.matViewQuery, `SELECT id FROM ${schemaName}.${tableName}`);
+  await objectForm.fillGeneralQueryField(F.matViewQuery, `SELECT id FROM "${schemaName}"."${tableName}"`);
 
   await objectForm.save();
   await objectForm.assertPreviewContains(P.createMaterializedView);
@@ -206,7 +206,7 @@ export async function editViewQuery(
 
   await objectForm.fillGeneralQueryField(
     F.viewQuery,
-    `SELECT COUNT(*) AS total FROM ${schemaName}.${tableName}`
+    `SELECT COUNT(*) AS total FROM "${schemaName}"."${tableName}"`
   );
 
   await objectForm.save();

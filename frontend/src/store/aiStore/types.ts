@@ -4,6 +4,7 @@ import type {
   AiChatType,
   AiContextType,
   AiMessageType,
+  AiPlanStep,
   AiProviderType,
   AiToolTrace
 } from '@/types';
@@ -24,12 +25,36 @@ export type AiStreamingState = {
   lastRequest?: AiChatRequest;
 };
 
-export type AiStreamingSlice = {
+/** One chat's running or last turn. Chats stream independently of each other. */
+export type AiSession = {
   streaming: AiStreamingState;
-  resetStreaming: () => void;
-  setStreamingStatus: (status: AiStreamingState['status']) => void;
-  updateStreaming: (partial: Partial<AiStreamingState>) => void;
-  setLastRequest: (request: AiChatRequest | undefined) => void;
+  /** Live tool/diagram/plan cards of the turn being streamed. */
+  agentItems: AiAgentItem[];
+  /** A turn finished while the user was in another chat. */
+  unseen: boolean;
+  /** A message typed while a turn ran, sent once that turn has settled (`settled` passed `after`). */
+  queued?: { text: string; after: number };
+  /** Turns of this chat that finished and stored their result. */
+  settled: number;
+};
+
+export type AiSessionSlice = {
+  sessions: Record<number, AiSession>;
+  resetStreaming: (chatId: number) => void;
+  setStreamingStatus: (chatId: number, status: AiStreamingState['status']) => void;
+  updateStreaming: (chatId: number, partial: Partial<AiStreamingState>) => void;
+  setLastRequest: (chatId: number, request: AiChatRequest | undefined) => void;
+  markUnseen: (chatId: number, unseen: boolean) => void;
+  appendAgentItem: (chatId: number, item: AiAgentItem) => void;
+  /** Shows the agent's latest checklist, replacing the one already shown for the turn. */
+  setPlan: (chatId: number, steps: AiPlanStep[]) => void;
+  updateToolTrace: (chatId: number, id: string, partial: Partial<AiToolTrace>) => void;
+  clearAgentItems: (chatId: number) => void;
+  setQueued: (chatId: number, message: string | undefined) => void;
+  /** Returns the queued message once its turn has settled and clears it in one step, so only one caller sends it. */
+  takeQueued: (chatId: number) => string | undefined;
+  /** Called when a turn has stored its answer (or its partial result). */
+  markSettled: (chatId: number) => void;
 };
 
 export type AIThread = {
@@ -49,6 +74,8 @@ export type AiChatSlice = {
   chats: AiChatType[];
   currentChat: AiChatType | undefined;
   updateCurrentChat: (chat: AiChatType | undefined) => void;
+  /** Updates a chat in the list, and the open chat only if it is that one. */
+  patchChat: (chat: AiChatType) => void;
   updateChats: (chats: AiChatType[]) => void;
   addChat: (chat: AiChatType) => void;
   addMessage: (chat: AiChatType, messages: AiMessageType[]) => AiChatType;
@@ -67,17 +94,4 @@ export type AiContextSlice = {
 export type AiBridgeSlice = {
   bridgeRequest: AiBridgeRequest | null;
   setBridgeRequest: (request: AiBridgeRequest | null) => void;
-};
-
-/** Outcome of a diagram changeset or permission card, keyed by changesetId / requestId. */
-export type AiReviewDecision = 'applied' | 'rejected' | 'confirmed';
-
-export type AiToolSlice = {
-  /** Live tool/diagram/permission cards of the turn being streamed. */
-  agentItems: AiAgentItem[];
-  appendAgentItem: (item: AiAgentItem) => void;
-  updateToolTrace: (id: string, partial: Partial<AiToolTrace>) => void;
-  clearAgentItems: () => void;
-  reviews: Record<string, AiReviewDecision>;
-  setReview: (id: string, decision: AiReviewDecision) => void;
 };

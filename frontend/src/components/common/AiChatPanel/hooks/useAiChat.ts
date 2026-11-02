@@ -7,9 +7,11 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { AiChatType, AutoCompleteType } from '@/types';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useCallback, useRef, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { agentItemToMessage, isTraceMessage } from '../utils/agentTrace';
+import { contextScope } from '../utils/contextScope';
+import { openChat, rememberChat, reopenLastChat } from '../utils/openChat';
 import { resolveAiChatMode } from './useAiChatMode';
 import { useAiStream } from './useAiStream';
 
@@ -17,6 +19,8 @@ type useAiChatReturnType = {
   autocomplete: AutoCompleteType | undefined;
   chatPending: boolean;
   handleCancel: () => void;
+  /** Stops every chat's turn, e.g. when the connection changes. */
+  handleCancelAll: () => void;
   handleCreateChat: () => Promise<void>;
   handleLoadMore: () => Promise<void>;
   handleSend: (messageOverride?: string) => Promise<void>;
@@ -37,8 +41,7 @@ const buildContextOpts = (): AiContextOptsType => {
   const context = useAiStore.getState().context;
 
   const contextOpts: AiContextOptsType = {
-    database: context.database,
-    schema: context.schema,
+    ...contextScope(context, useConnectionStore.getState().currentConnection()),
     tables: context.tables,
     views: context.views
   };
@@ -78,17 +81,30 @@ export const useAiChat = (active = true): useAiChatReturnType => {
   const updateCurrentChat = useAiStore((state) => state.updateCurrentChat);
   const addChat = useAiStore((state) => state.addChat);
   const addMessage = useAiStore((state) => state.addMessage);
+  const patchChat = useAiStore((state) => state.patchChat);
   const updateContext = useAiStore((state) => state.updateContext);
   const resetStreaming = useAiStore((state) => state.resetStreaming);
 
-  const { isStreaming, sendStream, cancelStream } = useAiStream();
+  const { isStreaming, sendStream, cancelStream, cancelAllStreams } = useAiStream();
+
+  // Tables and views belong to one database and schema, so the list follows the context's.
+  const contextDatabase = useAiStore((state) => state.context.database);
+  const contextSchema = useAiStore((state) => state.context.schema);
+
+  // After a reload the panel shows the chat the user had open, as it does before one.
+  useEffect(() => {
+    if (active && connectionId) void reopenLastChat(connectionId);
+  }, [active, connectionId]);
 
   const { data: autocomplete } = useQuery({
-    queryKey: ['ai_autocomplete', connectionId],
+    queryKey: ['ai_autocomplete', connectionId, contextDatabase, contextSchema],
     queryFn: async (): Promise<AutoCompleteType> =>
       api.query.autoComplete({
-        connectionId: Number(connectionId)
+        connectionId: Number(connectionId),
+        database: contextDatabase,
+        schema: contextSchema
       }),
+    placeholderData: keepPreviousData,
     enabled: !!connectionId && active
   });
 
@@ -112,23 +128,14 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     }
   };
 
-  const handleChatChange = useCallback(
-    async (chat: AiChatType) => {
-      const currentChat = useAiStore.getState().currentChat;
-      if (chat.id === currentChat?.id) return;
+  const handleChatChange = useCallback(async (chat: AiChatType) => {
+    const currentChat = useAiStore.getState().currentChat;
+    if (chat.id === currentChat?.id) return;
 
-      resetStreaming();
-      setPage(1);
+    setPage(1);
 
-      const detail = await api.aiChat.getChatDetail({
-        id: chat.id,
-        page: 1,
-        count: 10
-      });
-      updateCurrentChat(detail);
-    },
-    [resetStreaming, updateCurrentChat]
-  );
+    await openChat(chat);
+  }, []);
 
   const handleLoadMore = useCallback(async (): Promise<void> => {
     const currentChat = useAiStore.getState().currentChat;
@@ -144,8 +151,19 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     updateCurrentChat(currentChat);
   }, [page, updateCurrentChat]);
 
+  const handleCancelAll = useCallback(() => {
+    cancelAllStreams();
+    fallbackAbortRef.current?.abort();
+    fallbackAbortRef.current = null;
+    fallbackGenerationRef.current += 1;
+    setIsFallbackPending(false);
+  }, [cancelAllStreams]);
+
   const handleCancel = useCallback(() => {
-    cancelStream();
+    const chatId = useAiStore.getState().currentChat?.id;
+    if (chatId === undefined) return;
+
+    cancelStream(chatId);
     fallbackAbortRef.current?.abort();
     fallbackAbortRef.current = null;
     fallbackGenerationRef.current += 1;
@@ -167,11 +185,12 @@ export const useAiChat = (active = true): useAiChatReturnType => {
       // Stopped or failed turns keep their cards: running tools become
       // "cancelled" and pending diagram proposals stay reviewable.
       const keepPartialTurn = (): void => {
-        const items = useAiStore.getState().agentItems;
+        const items = useAiStore.getState().sessions[currentChat.id]?.agentItems ?? [];
         if (items.length > 0) {
-          addMessage(useAiStore.getState().currentChat ?? currentChat, items.map(agentItemToMessage));
+          const loaded = useAiStore.getState().chats.find((chat) => chat.id === currentChat.id);
+          addMessage(loaded?.messages ? loaded : currentChat, items.map(agentItemToMessage));
         }
-        useAiStore.getState().clearAgentItems();
+        useAiStore.getState().clearAgentItems(currentChat.id);
       };
 
       const thinkingSnapshot = {
@@ -180,91 +199,103 @@ export const useAiChat = (active = true): useAiChatReturnType => {
       };
 
       try {
-        const doneEvent = await sendStream(request);
-
-        if (doneEvent?.type === 'done') {
-          const streaming = useAiStore.getState().streaming;
-          if (streaming.thinkingContent) {
-            thinkingSnapshot.content = streaming.thinkingContent;
-            thinkingSnapshot.durationMs = streaming.thinkingDurationMs ?? 0;
-          }
-
-          const messagesWithThinking = doneEvent.messages.map((msg, index) => {
-            if (index === 0 && msg.role === 'assistant' && thinkingSnapshot.content) {
-              return {
-                ...msg,
-                isNew: true,
-                thinking: thinkingSnapshot
-              };
-            }
-            return { ...msg, isNew: true };
-          });
-
-          const updatedChat = addMessage(currentChat, messagesWithThinking);
-          if (doneEvent.title !== currentChat.title) {
-            updateCurrentChat({ ...updatedChat, title: doneEvent.title });
-          }
-          useAiStore.getState().clearAgentItems();
-          resetStreaming();
-          return;
-        }
-
-        if (useAiStore.getState().streaming.error) {
-          keepPartialTurn();
-          return;
-        }
-      } catch (error) {
-        // User cancel must not start the HTTP fallback (that re-shows the cancel button).
-        if (error instanceof Error && error.name === 'AbortError') {
-          keepPartialTurn();
-          return;
-        }
-        // A turn that already ran tools must not be replayed by the tool-less fallback.
-        if (useAiStore.getState().agentItems.length > 0) {
-          keepPartialTurn();
-          return;
-        }
+        await runTurn();
+      } finally {
+        // Only now is the answer stored, so a queued message can follow without overwriting it.
+        useAiStore.getState().markSettled(currentChat.id);
       }
 
-      const generation = fallbackGenerationRef.current;
-      fallbackAbortRef.current?.abort();
-      const controller = new AbortController();
-      fallbackAbortRef.current = controller;
+      async function runTurn(): Promise<void> {
+        try {
+          const doneEvent = await sendStream(request);
 
-      try {
-        setIsFallbackPending(true);
-        const chat = await api.ai.chat(request, controller.signal);
-        if (generation !== fallbackGenerationRef.current) {
-          return;
+          if (doneEvent?.type === 'done') {
+            const streaming = useAiStore.getState().sessions[currentChat.id].streaming;
+            if (streaming.thinkingContent) {
+              thinkingSnapshot.content = streaming.thinkingContent;
+              thinkingSnapshot.durationMs = streaming.thinkingDurationMs ?? 0;
+            }
+
+            const messagesWithThinking = doneEvent.messages.map((msg, index) => {
+              if (index === 0 && msg.role === 'assistant' && thinkingSnapshot.content) {
+                return {
+                  ...msg,
+                  isNew: true,
+                  thinking: thinkingSnapshot
+                };
+              }
+              return { ...msg, isNew: true };
+            });
+
+            const updatedChat = addMessage(currentChat, messagesWithThinking);
+            if (doneEvent.title !== currentChat.title) {
+              patchChat({ ...updatedChat, title: doneEvent.title });
+            }
+            useAiStore.getState().clearAgentItems(currentChat.id);
+            resetStreaming(currentChat.id);
+            if (useAiStore.getState().currentChat?.id !== currentChat.id) {
+              useAiStore.getState().markUnseen(currentChat.id, true);
+            }
+            return;
+          }
+
+          if (useAiStore.getState().sessions[currentChat.id].streaming.error) {
+            keepPartialTurn();
+            return;
+          }
+        } catch (error) {
+          // User cancel must not start the HTTP fallback (that re-shows the cancel button).
+          if (error instanceof Error && error.name === 'AbortError') {
+            keepPartialTurn();
+            return;
+          }
+          // A turn that already ran tools must not be replayed by the tool-less fallback.
+          if ((useAiStore.getState().sessions[currentChat.id]?.agentItems.length ?? 0) > 0) {
+            keepPartialTurn();
+            return;
+          }
         }
 
-        const updatedChat = addMessage(
-          currentChat,
-          chat.messages.map((m) => ({ ...m, isNew: true }))
-        );
-        if (chat.title !== currentChat.title) {
-          updateCurrentChat({ ...updatedChat, title: chat.title });
-        }
-        resetStreaming();
-      } catch (error) {
-        if (generation !== fallbackGenerationRef.current) {
-          return;
-        }
+        const generation = fallbackGenerationRef.current;
+        fallbackAbortRef.current?.abort();
+        const controller = new AbortController();
+        fallbackAbortRef.current = controller;
 
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
+        try {
+          setIsFallbackPending(true);
+          const chat = await api.ai.chat(request, controller.signal);
+          if (generation !== fallbackGenerationRef.current) {
+            return;
+          }
 
-        const message = error instanceof Error ? error.message : 'Request failed';
-        useAiStore.getState().updateStreaming({ error: message });
-      } finally {
-        if (generation === fallbackGenerationRef.current) {
-          fallbackAbortRef.current = null;
-          setIsFallbackPending(false);
+          const updatedChat = addMessage(
+            currentChat,
+            chat.messages.map((m) => ({ ...m, isNew: true }))
+          );
+          if (chat.title !== currentChat.title) {
+            patchChat({ ...updatedChat, title: chat.title });
+          }
+          resetStreaming(currentChat.id);
+        } catch (error) {
+          if (generation !== fallbackGenerationRef.current) {
+            return;
+          }
+
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+
+          const message = error instanceof Error ? error.message : 'Request failed';
+          useAiStore.getState().updateStreaming(currentChat.id, { error: message });
+        } finally {
+          if (generation === fallbackGenerationRef.current) {
+            fallbackAbortRef.current = null;
+            setIsFallbackPending(false);
+          }
         }
       }
     },
-    [addMessage, connectionId, resetStreaming, sendStream, updateCurrentChat]
+    [addMessage, connectionId, patchChat, resetStreaming, sendStream]
   );
 
   const handleSend = async (messageOverride?: string): Promise<void> => {
@@ -299,11 +330,11 @@ export const useAiChat = (active = true): useAiChatReturnType => {
   };
 
   const handleRetry = async (): Promise<void> => {
-    const lastRequest = useAiStore.getState().streaming.lastRequest;
     const currentChat = useAiStore.getState().currentChat;
+    const lastRequest = useAiStore.getState().sessions[currentChat?.id ?? 0]?.streaming.lastRequest;
     if (!lastRequest || !currentChat) return;
 
-    resetStreaming();
+    resetStreaming(currentChat.id);
     // A failed compare must retry on the model it was asked of, not the active one.
     const { providerId, model } = lastRequest;
     await executeChat(lastRequest.message, currentChat, providerId && model ? { providerId, model } : undefined);
@@ -321,6 +352,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
         await handleChatChange(newChats[newChats.length - 1]);
       } else if (newChats.length === 0) {
         updateCurrentChat(undefined);
+        rememberChat(useConnectionStore.getState().currentConnectionId, undefined);
       }
     },
     [handleChatChange, updateChats, updateCurrentChat]
@@ -344,7 +376,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
     if (!currentChat || !lastUser || chatPending) return;
 
-    resetStreaming();
+    resetStreaming(currentChat.id);
     await executeChat(lastUser.content, currentChat);
   };
 
@@ -354,7 +386,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     const lastUser = [...(currentChat?.messages ?? [])].reverse().find((message) => message.role === 'user');
     if (!currentChat || !lastUser || chatPending) return;
 
-    resetStreaming();
+    resetStreaming(currentChat.id);
     await executeChat(lastUser.content, currentChat, { providerId, model });
   };
 
@@ -384,6 +416,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     autocomplete,
     chatPending,
     handleCancel,
+    handleCancelAll,
     handleChatChange,
     handleCreateChat,
     handleLoadMore,

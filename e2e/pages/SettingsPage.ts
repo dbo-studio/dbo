@@ -9,7 +9,8 @@ export type SettingsPanel =
   | "AI"
   | "Security"
   | "About"
-  | "Administration";
+  | "Administration"
+  | "Notifications";
 
 /**
  * Page Object for Settings workspace tab
@@ -25,6 +26,7 @@ export class SettingsPage extends BasePage {
   readonly aiMenuItem: Locator;
   readonly securityMenuItem: Locator;
   readonly aboutMenuItem: Locator;
+  readonly notificationsMenuItem: Locator;
   readonly administrationMenuItem: Locator;
 
   readonly lightTheme: Locator;
@@ -52,6 +54,7 @@ export class SettingsPage extends BasePage {
     });
     this.securityMenuItem = page.getByText("Security").first();
     this.aboutMenuItem = page.getByText("About").first();
+    this.notificationsMenuItem = this.panel.getByText("Notifications", { exact: true }).first();
     this.administrationMenuItem = this.panel.getByRole("button", {
       name: "Administration",
     });
@@ -107,6 +110,9 @@ export class SettingsPage extends BasePage {
         break;
       case "Administration":
         await this.administrationMenuItem.click();
+        break;
+      case "Notifications":
+        await this.notificationsMenuItem.click();
         break;
     }
   }
@@ -242,15 +248,6 @@ export class SettingsPage extends BasePage {
     await this.page.getByTestId("admin-create-password").fill(password);
     await this.page.getByTestId("admin-create-submit").click();
     await expect(this.adminUserRow(email)).toBeVisible({ timeout: 10000 });
-  }
-
-  async openMcpTab(): Promise<void> {
-    const mcpTab = this.page.getByRole("tab", { name: "MCP" });
-    await expect(mcpTab).toBeVisible({ timeout: 10000 });
-    await mcpTab.click();
-    await expect(
-      this.page.getByRole("switch", { name: /Enable MCP server/i }),
-    ).toBeVisible({ timeout: 10000 });
   }
 
   async expectMcpPanelVisible(): Promise<void> {

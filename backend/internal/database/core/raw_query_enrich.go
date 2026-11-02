@@ -2,6 +2,7 @@ package databaseCore
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"strings"
 
@@ -227,6 +228,21 @@ func stringPtr(value string) *string {
 	}
 
 	return lo.ToPtr(value)
+}
+
+// CommandError is the error a statement failed with, when the raw query reported it as a
+// Query/Message/Duration row for the editor; nil when the statement succeeded.
+func CommandError(resp *dto.RawQueryResponse) error {
+	if resp == nil || !isRawQueryCommandResponse(resp) {
+		return nil
+	}
+
+	message, _ := resp.Data[0]["Message"].(string)
+	if message == "" || message == "OK" {
+		return nil
+	}
+
+	return errors.New(message)
 }
 
 func isRawQueryCommandResponse(resp *dto.RawQueryResponse) bool {

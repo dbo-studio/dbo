@@ -16,8 +16,13 @@ export default function SyntaxHighlighter({ value, lang = 'sql' }: SyntaxHighlig
 
   return (
     <SyntaxHighlighterStyled data-select-all-root>
-      {/* eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml -- Shiki renders trusted syntax HTML */}
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+      {html ? (
+        // eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml -- Shiki renders trusted syntax HTML
+        <div dangerouslySetInnerHTML={{ __html: html }} />
+      ) : (
+        // Plain text until the highlighter loads (or if it cannot), so the block never collapses to nothing.
+        <pre>{value}</pre>
+      )}
     </SyntaxHighlighterStyled>
   );
 }

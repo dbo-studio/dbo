@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -20,7 +21,7 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 			return queries, nil
 		}
 
-		queries = append(queries, fmt.Sprintf("DROP DATABASE %s WITH (FORCE)", node.Database))
+		queries = append(queries, fmt.Sprintf("DROP DATABASE %s WITH (FORCE)", quote.PostgresIdent(node.Database)))
 
 		return queries, nil
 	}
@@ -40,23 +41,25 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 			return queries, nil
 		}
 
-		query := fmt.Sprintf("CREATE DATABASE %s", *params.New.Name)
+		dbName := quote.PostgresIdent(*params.New.Name)
+
+		query := fmt.Sprintf("CREATE DATABASE %s", dbName)
 		if params.New.Owner != nil {
-			query += fmt.Sprintf(" WITH OWNER %s", *params.New.Owner)
+			query += fmt.Sprintf(" WITH OWNER %s", quote.PostgresIdent(*params.New.Owner))
 		}
 
 		if params.New.Template != nil {
-			query += fmt.Sprintf(" TEMPLATE %s", *params.New.Template)
+			query += fmt.Sprintf(" TEMPLATE %s", quote.PostgresIdent(*params.New.Template))
 		}
 
 		if params.New.Tablespace != nil {
-			query += fmt.Sprintf(" TABLESPACE %s", *params.New.Tablespace)
+			query += fmt.Sprintf(" TABLESPACE %s", quote.PostgresIdent(*params.New.Tablespace))
 		}
 
 		queries = append(queries, query)
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", dbName, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 
@@ -65,23 +68,23 @@ func (r *PostgresRepository) handleDatabaseCommands(node contract.DBNode, tabID 
 			return queries, nil
 		}
 
-		dbName := *params.Old.Name
+		dbName := quote.PostgresIdent(*params.Old.Name)
 
 		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", dbName, *params.New.Name))
-			dbName = *params.New.Name
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s RENAME TO %s", dbName, quote.PostgresIdent(*params.New.Name)))
+			dbName = quote.PostgresIdent(*params.New.Name)
 		}
 
 		if params.New.Owner != nil && (params.Old.Owner == nil || *params.Old.Owner != *params.New.Owner) {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", dbName, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s OWNER TO %s", dbName, quote.PostgresIdent(*params.New.Owner)))
 		}
 
 		if params.New.Tablespace != nil && (params.Old.Tablespace == nil || *params.Old.Tablespace != *params.New.Tablespace) {
-			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", dbName, *params.New.Tablespace))
+			queries = append(queries, fmt.Sprintf("ALTER DATABASE %s SET TABLESPACE = %s", dbName, quote.PostgresIdent(*params.New.Tablespace)))
 		}
 
 		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
-			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS '%s'", dbName, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON DATABASE %s IS %s", dbName, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 

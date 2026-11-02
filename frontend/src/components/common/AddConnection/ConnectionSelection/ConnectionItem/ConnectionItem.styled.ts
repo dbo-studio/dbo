@@ -9,7 +9,8 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   display: 'flex',
   width: '100%',
   minWidth: 0,
-  justifyContent: 'center',
+  // Top-aligned, so logos line up across a row whether a name takes one line or two.
+  justifyContent: 'flex-start',
   alignItems: 'center',
   flexDirection: 'column',
   gap: theme.spacing(0.5),
@@ -42,7 +43,7 @@ export const ConnectionItemLogoStyled = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   alignItems: 'center',
   borderRadius: variables.radius.small,
-  background: theme.palette.grey[200],
+  background: theme.palette.mode === 'dark' ? theme.palette.background.subdued : theme.palette.grey[200],
   overflow: 'hidden',
   '& img': {
     maxWidth: 28,

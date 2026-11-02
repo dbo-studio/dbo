@@ -1,40 +1,27 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Stack, Tooltip } from '@mui/material';
-import { type JSX, RefObject, useRef } from 'react';
-import { useHover } from 'usehooks-ts';
+import locales from '@/locales';
+import { Tooltip } from '@mui/material';
+import type { JSX } from 'react';
 import type { ChatContextItemProps } from '../../../types';
 import { ChatContextItemNameStyled } from '../ChatContext.styled';
-import { ChatContextItemStyled } from './ChatContextItem.styled';
+import { ChatContextItemRemoveStyled, ChatContextItemStyled } from './ChatContextItem.styled';
 
 export default function ChatContextItem({ name, type, onClick }: ChatContextItemProps): JSX.Element {
-  const hoverRef = useRef<HTMLElement | null>(null);
-  const isHover = useHover(hoverRef as RefObject<HTMLElement>);
-
   return (
-    <ChatContextItemStyled ref={hoverRef} data-testid='ai-context-chip' data-chip={name}>
-      <Stack
-        direction={'row'}
-        spacing={1}
-        sx={{
-          alignItems: 'center',
-          minWidth: 0,
-          overflow: 'hidden'
-        }}
+    <ChatContextItemStyled data-testid='ai-context-chip' data-chip={name}>
+      <CustomIcon type={type === 'database' ? 'database' : type === 'query' ? 'sql' : 'sheet'} size='xs' />
+      <Tooltip title={name} enterDelay={600} enterNextDelay={600}>
+        <ChatContextItemNameStyled color='textText' variant='caption'>
+          {name}
+        </ChatContextItemNameStyled>
+      </Tooltip>
+      <ChatContextItemRemoveStyled
+        aria-label={locales.ai_context_remove}
+        data-testid='ai-context-chip-remove'
+        onClick={onClick}
       >
-        {isHover ? (
-          <span data-testid='ai-context-chip-remove' style={{ display: 'inline-flex' }} onClick={onClick}>
-            <CustomIcon type='close' size='xs' />
-          </span>
-        ) : (
-          <CustomIcon type={type === 'database' ? 'database' : 'sheet'} size='xs' />
-        )}
-
-        <Tooltip title={name} enterDelay={500}>
-          <ChatContextItemNameStyled color={'textText'} variant='caption'>
-            {name}
-          </ChatContextItemNameStyled>
-        </Tooltip>
-      </Stack>
+        <CustomIcon type='close' size='xs' />
+      </ChatContextItemRemoveStyled>
     </ChatContextItemStyled>
   );
 }

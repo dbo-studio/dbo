@@ -58,7 +58,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 		query := fmt.Sprintf("CREATE MATERIALIZED VIEW %s", viewRef)
 
 		if params.New.Tablespace != nil {
-			query += fmt.Sprintf(" TABLESPACE %s", *params.New.Tablespace)
+			query += fmt.Sprintf(" TABLESPACE %s", quote.PostgresIdent(*params.New.Tablespace))
 		}
 
 		if params.New.Query != nil {
@@ -68,11 +68,11 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 		queries = append(queries, query)
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, viewRef, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf(`ALTER MATERIALIZED VIEW %s OWNER TO %s`, viewRef, quote.PostgresIdent(*params.New.Owner)))
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS '%s'", viewRef, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON MATERIALIZED VIEW %s IS %s", viewRef, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 
@@ -81,7 +81,7 @@ func (r *PostgresRepository) handleMaterializedViewCommands(node contract.DBNode
 	}
 
 	if action == contract.DropMaterializedViewAction {
-		query := fmt.Sprintf(`DROP MATERIALIZED VIEW "%s"."%s"`, node.Schema, node.Table)
+		query := fmt.Sprintf("DROP MATERIALIZED VIEW %s", quote.PostgresQualifiedTable(node.Schema, node.Table))
 		queries = append(queries, query)
 	}
 

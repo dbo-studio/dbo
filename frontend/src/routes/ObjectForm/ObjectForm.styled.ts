@@ -1,9 +1,8 @@
 import { Box, styled } from '@mui/material';
 
-export const ObjectFormStyled = styled(Box)(({ theme }) => ({
+export const ObjectFormStyled = styled(Box)(() => ({
   display: 'flex',
-  height: '100%',
-  borderTop: `1px solid ${theme.palette.divider}`
+  height: '100%'
 }));
 
 export const ObjectFormLoadingStyled = styled(Box)(() => ({
@@ -15,6 +14,8 @@ export const ObjectFormLoadingStyled = styled(Box)(() => ({
 }));
 
 export const ObjectFormContentStyled = styled(Box)(() => ({
+  // The status bar draws its own top border; drop the one on the element right above it.
+  '& > :nth-last-child(2)': { borderBottom: 'none' },
   overflow: 'hidden',
   flexDirection: 'column',
   display: 'flex',

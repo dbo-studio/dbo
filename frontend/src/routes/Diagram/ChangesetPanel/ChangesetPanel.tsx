@@ -2,30 +2,37 @@ import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPrevie
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
-import type { AiDiagramDiff } from '@/types';
+import { isOpen } from '@/store/changesetStore/changeset.store';
 import { Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { Panel } from '@xyflow/react';
 import type { JSX } from 'react';
 import { ChangesetPanelStyled } from './ChangesetPanel.styled';
 
 /** Dock over the canvas for a pending agent changeset: Reject or Review & apply. */
-export default function ChangesetPanel({ diff }: { diff: AiDiagramDiff }): JSX.Element {
-  const review = useChangesetReview(diff);
-  const lines = summarizeChangeset(diff.ops);
+export default function ChangesetPanel({ changesetId }: { changesetId: number }): JSX.Element | null {
+  const review = useChangesetReview(changesetId);
+  if (!review.changeset) return null;
+
+  const lines = summarizeChangeset(review.changeset.ops.filter((op) => isOpen(op.status)));
 
   return (
     <Panel position='top-center'>
       <ChangesetPanelStyled data-testid='diagram-changeset-panel'>
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
           <Typography variant='subtitle2'>
-            {locales.ai_changeset_pending.replace('{n}', String(diff.ops.length))}
+            {locales.ai_changeset_pending.replace('{n}', String(review.openCount))}
           </Typography>
           <Typography variant='caption' color='textSubdued' noWrap title={lines.map((l) => l.detail).join('\n')}>
             {lines.map((line) => line.detail).join(' · ')}
           </Typography>
         </Stack>
         <Stack direction='row' spacing={1} sx={{ flexShrink: 0 }}>
-          <Button size='small' variant='text' onClick={review.reject} data-testid='diagram-changeset-reject'>
+          <Button
+            size='small'
+            variant='text'
+            onClick={() => void review.review('rejected')}
+            data-testid='diagram-changeset-reject'
+          >
             {locales.ai_reject}
           </Button>
           <Button

@@ -209,7 +209,7 @@ const findMarkdownTableMatches = (content: string, excludeRanges: TableMatch[]):
       continue;
     }
 
-    const blockStart = lineIndex;
+    let blockStart = lineIndex;
     const blockLines: string[] = [];
     while (lineIndex < lines.length) {
       const line = lines[lineIndex].trim();
@@ -225,6 +225,10 @@ const findMarkdownTableMatches = (content: string, excludeRanges: TableMatch[]):
         break;
       }
 
+      // Blank lines before the table are skipped, so the block starts at its first row.
+      if (blockLines.length === 0) {
+        blockStart = lineIndex;
+      }
       blockLines.push(lines[lineIndex]);
       lineIndex += 1;
     }

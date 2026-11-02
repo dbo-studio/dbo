@@ -47,6 +47,21 @@ func (r *MySQLRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequ
 	return databaseCore.EnrichRawQueryResponse(ctx, req, resp, &mysqlRawQueryResolver{repo: r})
 }
 
+func (r *MySQLRepository) StreamRawQuery(ctx context.Context, req *dto.RawQueryRequest, chunkSize int, fn func(columns []dto.Column, rows []map[string]any) error) error {
+	database := strings.TrimSpace(lo.FromPtr(req.Database))
+	if database == "" {
+		database = databaseConnection.DefaultMysqlDatabase(r.base.Connection())
+	}
+
+	db, cleanup, err := r.sessionForDatabase(ctx, database)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	return r.base.StreamRawQueryOn(ctx, db, req.Query, chunkSize, fn)
+}
+
 func (r *MySQLRepository) sessionForDatabase(ctx context.Context, database string) (*gorm.DB, func(), error) {
 	if database == "" {
 		return r.base.DB(), func() {}, nil

@@ -71,12 +71,22 @@ func isContextCancelErr(ctx context.Context, err error) bool {
 	return false
 }
 
+// openRows runs the statement. With bound arguments it goes to the driver as it is, with the engine's own
+// placeholders: gorm's Raw would rewrite every ? in the text, quoted or not.
+func openRows(ctx context.Context, db *gorm.DB, req *dto.RawQueryRequest) (*sql.Rows, error) {
+	if len(req.Args) == 0 {
+		return db.WithContext(ctx).Raw(req.Query).Rows()
+	}
+
+	return db.WithContext(ctx).Statement.ConnPool.QueryContext(ctx, req.Query, req.Args...)
+}
+
 func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
 	queryResults := make([]map[string]any, 0)
 
 	limit, _ := sqlguard.ResolveLimitPage(req.Limit, req.Page)
 
-	rows, err := db.WithContext(ctx).Raw(req.Query).Rows()
+	rows, err := openRows(ctx, db, req)
 	if err != nil {
 		return &dto.RawQueryResponse{
 			Query: req.Query,
@@ -125,6 +135,29 @@ func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.R
 		return nil, err
 	}
 
+	structures, columnMappedTypes := r.columnStructures(columns, columnTypes)
+
+	for i := range queryResults {
+		queryResults[i]["dbo_index"] = i
+		queryResults[i]["editable"] = false
+		queryResults[i] = SanitizeQueryResultsWithTypes(queryResults[i], columnMappedTypes)
+	}
+
+	page := 1
+	if req.Page != nil && *req.Page > 0 {
+		page = *req.Page
+	}
+
+	return &dto.RawQueryResponse{
+		Query:   req.Query,
+		Data:    queryResults,
+		Columns: structures,
+		Limit:   limit,
+		Page:    page,
+	}, nil
+}
+
+func (r *BaseRepository) columnStructures(columns []string, columnTypes []*sql.ColumnType) ([]dto.Column, map[string]string) {
 	structures := make([]dto.Column, 0, len(columns))
 	columnMappedTypes := make(map[string]string, len(columns))
 
@@ -145,22 +178,5 @@ func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.R
 		})
 	}
 
-	for i := range queryResults {
-		queryResults[i]["dbo_index"] = i
-		queryResults[i]["editable"] = false
-		queryResults[i] = SanitizeQueryResultsWithTypes(queryResults[i], columnMappedTypes)
-	}
-
-	page := 1
-	if req.Page != nil && *req.Page > 0 {
-		page = *req.Page
-	}
-
-	return &dto.RawQueryResponse{
-		Query:   req.Query,
-		Data:    queryResults,
-		Columns: structures,
-		Limit:   limit,
-		Page:    page,
-	}, nil
+	return structures, columnMappedTypes
 }

@@ -94,12 +94,13 @@ export function postgresExtendedNames(suffix: string): {
   matViewName: string;
 } {
   return {
+    // Hyphenated names guard identifier quoting in every generated DDL statement.
     connectionName: `e2e-pg-extended-${suffix}`,
-    databaseName: `e2e_db_${suffix}`,
-    schemaName: `e2e_schema_${suffix}`,
-    renamedSchemaName: `e2e_schema_renamed_${suffix}`,
-    tableName: `items_${suffix}`,
-    viewName: `v_items_${suffix}`,
-    matViewName: `mv_items_${suffix}`
+    databaseName: `e2e-db-${suffix}`,
+    schemaName: `e2e-schema-${suffix}`,
+    renamedSchemaName: `e2e-schema-renamed-${suffix}`,
+    tableName: `items-${suffix}`,
+    viewName: `v-items-${suffix}`,
+    matViewName: `mv-items-${suffix}`
   };
 }

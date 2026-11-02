@@ -30,7 +30,13 @@ type GridContextMenuState = {
   target: DataGridContextTarget;
 };
 
-export default function DataGrid({ rows, columns, loading, editable = true }: DataGridProps): JSX.Element {
+export default function DataGrid({
+  rows,
+  columns,
+  loading,
+  editable = true,
+  standalone = false
+}: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<GridContextMenuState | null>(null);
 
@@ -41,7 +47,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     defaultColumnWidth: 200
   });
 
-  const { tableColumns, totalTableWidth } = useDataGridColumns({ columns, columnSizes });
+  const { tableColumns, totalTableWidth } = useDataGridColumns({ columns, columnSizes, selectable: !standalone });
 
   const { virtualRows, paddingTop, paddingBottom, totalSize, rowVirtualizer } = useDataGridVirtualization({
     rowsCount: rows.length,
@@ -56,15 +62,19 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
     rowVirtualizer
   });
 
-  const openContextMenu = useCallback((event: React.MouseEvent, target: DataGridContextTarget): void => {
-    event.preventDefault();
-    event.stopPropagation();
-    setContextMenu({
-      mouseX: event.clientX + 2,
-      mouseY: event.clientY - 6,
-      target
-    });
-  }, []);
+  const openContextMenu = useCallback(
+    (event: React.MouseEvent, target: DataGridContextTarget): void => {
+      if (standalone) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setContextMenu({
+        mouseX: event.clientX + 2,
+        mouseY: event.clientY - 6,
+        target
+      });
+    },
+    [standalone]
+  );
 
   const closeContextMenu = useCallback((): void => {
     setContextMenu(null);
@@ -118,6 +128,7 @@ export default function DataGrid({ rows, columns, loading, editable = true }: Da
               startResize={startResize}
               resizingColumnId={resizingColumnId}
               editable={editable}
+              sortable={!standalone}
               onHeaderContextMenu={handleHeaderContextMenu}
             />
             <DataGridTableBodyRows

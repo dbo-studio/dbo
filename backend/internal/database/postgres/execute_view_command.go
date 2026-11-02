@@ -48,7 +48,7 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 		queries = append(queries, query)
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS '%s'", viewRef, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS %s", viewRef, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 
@@ -71,12 +71,12 @@ func (r *PostgresRepository) handleViewCommands(node contract.DBNode, tabID cont
 		}
 
 		if params.New != nil && params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
-			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS '%s'", viewRef, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON VIEW %s IS %s", viewRef, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 
 	if action == contract.DropViewAction {
-		query := fmt.Sprintf(`DROP VIEW "%s"."%s"`, node.Schema, node.Table)
+		query := fmt.Sprintf("DROP VIEW %s", quote.PostgresQualifiedTable(node.Schema, node.Table))
 		queries = append(queries, query)
 	}
 

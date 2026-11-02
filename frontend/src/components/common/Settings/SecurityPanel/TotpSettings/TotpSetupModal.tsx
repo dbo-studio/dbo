@@ -3,7 +3,7 @@ import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX } from 'react';
-import { TotpSetupPanel } from './TotpSetupPanel';
+import { TotpSetupActions, TotpSetupPanel } from './TotpSetupPanel';
 
 export type TotpSetupModalProps = {
   open: boolean;
@@ -29,7 +29,17 @@ export function TotpSetupModal({
   onEnable
 }: TotpSetupModalProps): JSX.Element {
   return (
-    <Modal open={open} title={locales.auth_totp_title} onClose={onClose}>
+    <Modal
+      open={open}
+      title={locales.auth_totp_title}
+      onClose={onClose}
+      footer={
+        !isLoading &&
+        setup && (
+          <TotpSetupActions enableCode={enableCode} isEnabling={isEnabling} onCancel={onClose} onEnable={onEnable} />
+        )
+      }
+    >
       <Box
         data-testid='auth-totp-setup-modal'
         sx={{ display: 'flex', flexDirection: 'column', minWidth: 360, maxWidth: 420 }}

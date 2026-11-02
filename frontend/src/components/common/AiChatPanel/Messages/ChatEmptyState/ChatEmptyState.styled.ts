@@ -28,3 +28,14 @@ export const StarterCardStyled = styled(ButtonBase)(({ theme }) => ({
     backgroundColor: theme.palette.action.hover
   }
 }));
+
+export const KbdStyled = styled('kbd')(({ theme }) => ({
+  fontFamily: 'inherit',
+  fontSize: variables.fontSize.xxs,
+  lineHeight: 1,
+  padding: theme.spacing(0.25, 0.5),
+  borderRadius: variables.radius.small,
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.paper,
+  color: theme.palette.text.secondary
+}));

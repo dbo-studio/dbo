@@ -1,6 +1,6 @@
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
-import { DataValueEditor } from '@/components/common/DataGrid/DataValuePanel/DataValuePanel';
+import { DataValueEditor, editorStateKey } from '@/components/common/DataGrid/DataValuePanel/DataValuePanel';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -53,11 +53,13 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
         <QuickViewDialogEditorStyled>
           {activeRow?.selectedColumn && (
             <DataValueEditor
+              key={editorStateKey(sourceValue, column?.mappedType)}
               value={sourceValue}
               column={column}
               editable={cellEditable}
               width={dimensions.width}
               height={dimensions.height}
+              onCancel={handleClose}
               onApply={(next): void => {
                 const newEditedRows = handleRowChangeLog(
                   editedRows,

@@ -8,9 +8,11 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AiToolTrace } from '@/types';
 import { Box, Button, Collapse, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
-import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { AgentCardBodyStyled, AgentCardHeaderStyled, RawTextStyled, ToolRowStyled } from '../AgentCards.styled';
 import ToolStatusPill from '../ToolStatusPill/ToolStatusPill';
+import { describeToolStep, toolStepDetail } from '../../utils/toolStep';
+import { contextScope } from '../../utils/contextScope';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 
 const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   list_tables: 'grid',
@@ -18,7 +20,9 @@ const TOOL_ICONS: Record<string, keyof typeof IconTypes> = {
   describe_table: 'structure',
   execute_sql: 'sql',
   propose_schema_change: 'network',
-  execute_write: 'pen'
+  execute_write: 'pen',
+  preview_write: 'pen',
+  update_plan: 'layoutList'
 };
 
 type SqlResult = {
@@ -46,38 +50,48 @@ const parseSqlResult = (trace: AiToolTrace): SqlResult | undefined => {
   }
 };
 
-/** Short, single-line argument summary shown next to the tool name. */
-const summarizeArgs = (args: Record<string, unknown>): string => {
-  if (typeof args.sql === 'string') return args.sql.replace(/\s+/g, ' ');
-  if (typeof args.table === 'string') return args.table;
-  if (Array.isArray(args.ops)) return locales.ai_tool_ops_count.replace('{n}', String(args.ops.length));
-  if (typeof args.schema === 'string') return args.schema;
-  return '';
-};
-
-export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Element {
-  const [expanded, setExpanded] = useState(false);
+export default function ToolCallCard({
+  trace,
+  defaultExpanded = false
+}: {
+  trace: AiToolTrace;
+  defaultExpanded?: boolean;
+}): JSX.Element {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const args = parseArgs(trace.args);
   const sqlArg = typeof args.sql === 'string' ? args.sql : undefined;
   const sqlResult = parseSqlResult(trace);
   const describedTable = trace.name === 'describe_table' && typeof args.table === 'string' ? args.table : undefined;
 
   const showTableInDiagram = (table: string): void => {
-    const context = useAiStore.getState().context;
-    useTabStore
-      .getState()
-      .addDiagramTab({ database: context.database ?? '', schema: context.schema ?? '', focusTable: table });
+    const { database, schema } = contextScope(
+      useAiStore.getState().context,
+      useConnectionStore.getState().currentConnection()
+    );
+    useTabStore.getState().addDiagramTab({ database: database ?? '', schema: schema ?? '', focusTable: table });
   };
 
   return (
-    <ToolRowStyled data-testid='ai-tool-card' data-tool={trace.name} data-status={trace.status}>
+    <ToolRowStyled
+      data-testid='ai-tool-card'
+      data-tool={trace.name}
+      data-status={trace.status}
+      sx={{ containerType: 'inline-size' }}
+    >
       <AgentCardHeaderStyled onClick={() => setExpanded((prev) => !prev)}>
         <CustomIcon type={TOOL_ICONS[trace.name] ?? 'code'} size='xs' />
-        <Typography variant='caption' sx={{ fontWeight: 600, flexShrink: 0 }}>
-          {trace.name}
+        <Typography variant='caption' sx={{ fontWeight: 500, flexShrink: 0 }} data-testid='ai-tool-step'>
+          {describeToolStep(trace)}
         </Typography>
-        <Typography variant='caption' color='textSubdued' noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {summarizeArgs(args)}
+        <Typography
+          variant='caption'
+          color='textSubdued'
+          noWrap
+          // In the narrow side panel the SQL would shrink to a letter; it stays one click away in the details.
+          sx={{ flex: 1, minWidth: 0, '@container (max-width: 380px)': { visibility: 'hidden' } }}
+          title={trace.name}
+        >
+          {toolStepDetail(trace)}
         </Typography>
         {trace.durationMs !== undefined && trace.status !== 'running' && (
           <Typography variant='caption' color='textSubdued' sx={{ flexShrink: 0 }}>
@@ -92,7 +106,10 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
           {sqlArg ? (
             <SyntaxHighlighter value={sqlArg} />
           ) : (
-            trace.args && <RawTextStyled>{JSON.stringify(args, null, 2)}</RawTextStyled>
+            // Arguments cut short in storage are no longer JSON; show them as they are.
+            trace.args && (
+              <RawTextStyled>{Object.keys(args).length > 0 ? JSON.stringify(args, null, 2) : trace.args}</RawTextStyled>
+            )
           )}
           {trace.name === 'execute_sql' && (
             <Typography variant='caption' color='textSubdued'>
@@ -126,14 +143,9 @@ export default function ToolCallCard({ trace }: { trace: AiToolTrace }): JSX.Ele
               {trace.error}
             </Typography>
           )}
+          {/* Rows show once, below the steps (or on the canvas), so the step itself only says when there were none. */}
           {sqlResult ? (
-            sqlResult.rows.length > 0 ? (
-              <ChatDataTable
-                rows={sqlResult.rows}
-                columns={sqlResult.columns?.map((column) => column.name)}
-                query={sqlArg ?? sqlResult.query}
-              />
-            ) : (
+            sqlResult.rows.length === 0 && (
               <Typography variant='caption' color='textSubdued'>
                 {locales.ai_tool_no_rows}
               </Typography>

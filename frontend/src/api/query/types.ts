@@ -10,6 +10,8 @@ export type RunQueryRequestType = {
   filters: FilterType[];
   sorts: SortType[];
   confirmed?: boolean;
+  /** Seconds to wait before the query moves to the background (0: never). The server's default is 10. */
+  backgroundAfterSeconds?: number;
 };
 
 export type RunRawQueryRequestType = {
@@ -20,7 +22,14 @@ export type RunRawQueryRequestType = {
   confirmed?: boolean;
   limit?: number;
   page?: number;
+  backgroundAfterSeconds?: number;
 };
+
+/** The answer to a query that outlasted its wait: it keeps running as this job. */
+export type BackgroundQueryType = { status: 'background'; jobId: number };
+
+export const isBackgroundQuery = (answer: RunQueryResponseType | BackgroundQueryType): answer is BackgroundQueryType =>
+  'status' in answer && answer.status === 'background';
 
 export type GridMetaType = {
   gridEditable: boolean;

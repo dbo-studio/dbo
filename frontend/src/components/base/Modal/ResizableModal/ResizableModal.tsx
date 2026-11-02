@@ -5,12 +5,20 @@ import {
 import { useScopedSelectAll } from '@/hooks';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
-import { ModalStyled } from '../Modal.styled.ts';
+import { ModalBodyStyled, ModalStyled } from '../Modal.styled.ts';
+import ModalFooter from '../ModalFooter/ModalFooter';
 import type { ResizableModalProps } from '../types.ts';
 
 const DEFAULT_DIMENSIONS = { width: 400, height: 400 };
 
-export default function ResizableModal({ open, title, children, onClose, onResize }: ResizableModalProps): JSX.Element {
+export default function ResizableModal({
+  open,
+  title,
+  children,
+  footer,
+  onClose,
+  onResize
+}: ResizableModalProps): JSX.Element {
   const theme = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, open);
@@ -93,7 +101,14 @@ export default function ResizableModal({ open, title, children, onClose, onResiz
             <Divider />
           </Box>
         )}
-        {children}
+        {footer ? (
+          <>
+            <ModalBodyStyled>{children}</ModalBodyStyled>
+            <ModalFooter>{footer}</ModalFooter>
+          </>
+        ) : (
+          children
+        )}
         <ResizeHandle onMouseDown={(e: React.MouseEvent<HTMLDivElement>): void => handleResizeStart(e)} />
       </ResizableModalWrapperStyled>
     </ModalStyled>

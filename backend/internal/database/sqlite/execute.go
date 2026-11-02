@@ -13,6 +13,11 @@ import (
 )
 
 func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, string, error) {
+	if action == contract.ExecuteSQLAction {
+		queries, err := databaseCore.SQLFromParams(params)
+		return queries, "", err
+	}
+
 	type ExecuteParams map[contract.TreeTab]any
 
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)

@@ -21,18 +21,18 @@ var configs = []AiProviderConfig{
 	{
 		Type:     model.AIProviderTypeOpenAI,
 		URL:      "https://api.openai.com/v1",
-		Models:   []string{"gpt-5", "gpt-4o"},
-		Model:    "gpt-5",
+		Models:   []string{"gpt-4o", "gpt-4o-mini"},
+		Model:    "gpt-4o",
 		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeAnthropic,
 		URL:      "https://api.anthropic.com/v1",
-		Models:   []string{"claude-3-5-sonnet"},
-		Model:    "claude-3-5-sonnet",
+		Models:   []string{"claude-sonnet-5-5"},
+		Model:    "claude-sonnet-5-5",
 		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeGemini,
@@ -40,15 +40,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"gemini-2.0-flash"},
 		Model:    "gemini-2.0-flash",
 		IsActive: false,
-		Timeout:  30,
-	},
-	{
-		Type:     model.AIProviderTypeGroq,
-		URL:      "https://api.x.ai/v1",
-		Models:   []string{"grok-4"},
-		Model:    "grok-4",
-		IsActive: false,
-		Timeout:  30,
+		Timeout:  300,
 	},
 	{
 		Type:     model.AIProviderTypeOllama,
@@ -56,7 +48,7 @@ var configs = []AiProviderConfig{
 		Models:   []string{"llama3.1"},
 		Model:    "llama3.1",
 		IsActive: false,
-		Timeout:  60,
+		Timeout:  300,
 	},
 }
 

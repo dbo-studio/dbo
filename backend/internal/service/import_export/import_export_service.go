@@ -99,8 +99,10 @@ func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (
 
 	// Exports are read-only by definition; never hand a write statement to the
 	// background job, which would bypass Safe Mode gating.
-	if class := sqlguard.ClassifySQL(req.Query).Class; class != sqlguard.ClassRead {
-		return nil, apperror.BadRequest(apperror.ErrExportQueryNotRead)
+	if !req.IsMultiTable() {
+		if class := sqlguard.ClassifySQL(req.Query).Class; class != sqlguard.ClassRead {
+			return nil, apperror.BadRequest(apperror.ErrExportQueryNotRead)
+		}
 	}
 
 	j, err := s.jobManager.CreateJob(model.JobTypeExport, helper.CtxOwnerID(ctx), helper.StructToJSON(dto.ExportJob{

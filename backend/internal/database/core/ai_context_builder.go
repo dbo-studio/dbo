@@ -25,6 +25,15 @@ func BuildAIChatContext(ctx context.Context, opts databaseContract.AIContextOpti
 		sb.WriteString("\n")
 	}
 
+	// A large schema is listed by name only: picking some tables to describe would hide the rest.
+	if len(opts.Tables) > maxAIContextObjects || len(opts.Views) > maxAIContextObjects {
+		writeNameList(&sb, "Tables", opts.Tables)
+		writeNameList(&sb, "Views", opts.Views)
+		sb.WriteString("\nOnly names are listed because the schema is large: call describe_table for the columns of the tables you need.\n")
+
+		return sb.String(), nil
+	}
+
 	sb.WriteString("\nTables:\n")
 
 	tables := slices.Clone(opts.Tables)
@@ -57,6 +66,29 @@ func BuildAIChatContext(ctx context.Context, opts databaseContract.AIContextOpti
 	}
 
 	return sb.String(), nil
+}
+
+// maxAIContextObjects is how many tables or views the chat context describes column by column.
+const maxAIContextObjects = 25
+
+// maxAIContextNames caps the names-only listing of a very large schema.
+const maxAIContextNames = 500
+
+func writeNameList(sb *strings.Builder, title string, names []string) {
+	if len(names) == 0 {
+		return
+	}
+
+	shown := names
+	if len(shown) > maxAIContextNames {
+		shown = shown[:maxAIContextNames]
+	}
+
+	fmt.Fprintf(sb, "\n%s (%d):\n%s\n", title, len(names), strings.Join(shown, ", "))
+
+	if len(shown) < len(names) {
+		fmt.Fprintf(sb, "…and %d more; call list_tables or list_views for the rest.\n", len(names)-len(shown))
+	}
 }
 
 func BuildAICompleteContext(ctx context.Context, opts databaseContract.AIContextOptions, provider databaseContract.AIContextColumnProvider) (string, error) {

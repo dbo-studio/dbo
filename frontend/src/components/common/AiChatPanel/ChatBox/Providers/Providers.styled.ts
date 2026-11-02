@@ -25,3 +25,25 @@ export const ModelButtonStyled = styled(Button)(({ theme }) => ({
     whiteSpace: 'nowrap'
   }
 }));
+
+export const CapabilityIconStyled = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'warn'
+})<{ warn: boolean }>(({ theme, warn }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 18,
+  height: 18,
+  flexShrink: 0,
+  borderRadius: '50%',
+  '& svg': { color: `${warn ? theme.palette.warning.main : theme.palette.success.main} !important` }
+}));
+
+export const VisuallyHidden = styled('span')({
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap'
+});

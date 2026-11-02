@@ -32,7 +32,7 @@ const KNOWN_QUERY_KEYS = new Set([
   'allowNativePasswords'
 ]);
 
-const DEFAULT_PORTS: Record<ConnectionUriEngine, string> = {
+export const DEFAULT_PORTS: Record<ConnectionUriEngine, string> = {
   postgresql: '5432',
   mysql: '3306'
 };

@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import ModeBar from '@/components/common/AiChatPanel/ModeBar/ModeBar';
+import { SafeModeBadge } from '@/components/common/AiChatPanel/ModeBar/ModeBar';
 import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -12,7 +12,7 @@ type WorkspaceTopBarProps = {
   onToggleSessions: () => void;
 };
 
-/** Back to the app, sessions toggle, connection switcher, and the Ask/Agent + Safe Mode bar. */
+/** Back to the app, sessions toggle, connection switcher and the Safe Mode badge. */
 export default function WorkspaceTopBar({ onBack, onToggleSessions }: WorkspaceTopBarProps): JSX.Element {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const connections = useConnectionStore((state) => state.connections);
@@ -66,7 +66,7 @@ export default function WorkspaceTopBar({ onBack, onToggleSessions }: WorkspaceT
         ))}
       </Menu>
       <Box sx={{ flex: 1 }} />
-      <ModeBar />
+      <SafeModeBadge />
     </WorkspaceTopBarStyled>
   );
 }

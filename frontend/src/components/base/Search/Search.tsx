@@ -30,6 +30,10 @@ export default function Search({ onChange, placeholder, value, inputRef, onKeyDo
   return (
     <Box>
       <InputBase
+        autoComplete='off'
+        autoCapitalize='off'
+        autoCorrect='off'
+        spellCheck={false}
         size='small'
         value={current}
         onChange={onChangeHandler}

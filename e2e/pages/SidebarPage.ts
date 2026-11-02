@@ -52,6 +52,7 @@ export class SidebarPage extends BasePage {
     }
 
     await expect(tab).toHaveAttribute("aria-selected", "true");
+    await expect(tab).toHaveText(tabName);
   }
 
   item(text: string): Locator {

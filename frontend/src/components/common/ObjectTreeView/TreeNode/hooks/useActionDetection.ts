@@ -1,11 +1,10 @@
 import api from '@/api';
+import { useCloseOverlaySidebar } from '@/components/common/Boards/useDashboardCommands';
 import { TabMode } from '@/core/enums';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
-import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
@@ -22,8 +21,7 @@ export const useActionDetection = (
   const queryClient = useQueryClient();
   const confirmDanger = useConfirmModalStore((state) => state.danger);
   const currentConnection = useCurrentConnection();
-  const { useSidebarOverlay } = useLayoutMode();
-  const updateUI = useSettingStore((state) => state.updateUI);
+  const closeLeftSidebar = useCloseOverlaySidebar();
 
   const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
@@ -35,19 +33,6 @@ export const useActionDetection = (
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction
   });
-
-  const closeLeftSidebar = useCallback((): void => {
-    if (!useSidebarOverlay) {
-      return;
-    }
-
-    const sidebar = useSettingStore.getState().ui.sidebar;
-    if (!sidebar.showLeft) {
-      return;
-    }
-
-    updateUI({ sidebar: { ...sidebar, showLeft: false } });
-  }, [updateUI, useSidebarOverlay]);
 
   const runTreeAction = useCallback(
     async (node: TreeNodeType): Promise<void> => {

@@ -196,7 +196,9 @@ export const useTabStore: UseBoundStore<StoreApi<TabState>> = create<TabState>()
 );
 
 /** Selected tab of a pane, resolved the same way `useSelectedTab` does inside that pane. */
-export const selectPaneSelectedTab = <T extends TabType>(pane: PaneId): T | undefined => {
+export const selectPaneSelectedTab = <T extends TabType>(pane: PaneId | 'scoped'): T | undefined => {
+  // A scoped grid (the agent canvas) belongs to no pane and so to no tab.
+  if (pane === 'scoped') return undefined;
   const { tabs, selectedByPane } = useTabStore.getState();
   const currentConnectionId = useConnectionStore.getState().currentConnectionId;
   return resolvePaneSelectedTab(
@@ -206,4 +208,5 @@ export const selectPaneSelectedTab = <T extends TabType>(pane: PaneId): T | unde
   ) as T | undefined;
 };
 
-export const selectPaneSelectedTabId = (pane: PaneId): string | undefined => selectPaneSelectedTab(pane)?.id;
+export const selectPaneSelectedTabId = (pane: PaneId | 'scoped'): string | undefined =>
+  selectPaneSelectedTab(pane)?.id;

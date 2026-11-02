@@ -8,8 +8,6 @@ import (
 	"github.com/samber/lo"
 )
 
-const maxAIContextObjects = 25
-
 type ForeignKeyInfo struct {
 	ReferencedTable  string
 	ReferencedColumn string
@@ -28,9 +26,6 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *databaseContract.
 		}
 
 		tables = list
-		if len(tables) > maxAIContextObjects {
-			tables = tables[:maxAIContextObjects]
-		}
 	}
 
 	views := req.Views
@@ -41,9 +36,6 @@ func (r *SQLiteRepository) AiContext(ctx context.Context, req *databaseContract.
 		}
 
 		views = list
-		if len(views) > maxAIContextObjects {
-			views = views[:maxAIContextObjects]
-		}
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{

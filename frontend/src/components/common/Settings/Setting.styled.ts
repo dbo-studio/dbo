@@ -8,7 +8,6 @@ export const SettingsRootStyled = styled('div')(({ theme }) => ({
   minHeight: 0,
   width: '100%',
   overflow: 'hidden',
-  borderTop: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.default,
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column'

@@ -1,6 +1,6 @@
 export type JobType = {
   id: string;
-  type: 'import' | 'export';
+  type: 'import' | 'export' | 'backup' | 'restore' | 'tool_install';
   status: 'pending' | 'running' | 'completed' | 'failed' | 'canceled';
   progress: number;
   message: string;
@@ -28,6 +28,7 @@ export type ImportResultType = {
 
 export type ExportResultType = {
   fileName: string;
+  artifactId?: number;
   successRows: number;
   failedRows: number;
   totalRows: number;

@@ -29,6 +29,8 @@ const TAB_MODE_ICON: Record<TabMode, keyof typeof IconTypes> = {
   [TabMode.Object]: 'pen',
   [TabMode.ObjectDetail]: 'pen',
   [TabMode.Diagram]: 'layout',
+  [TabMode.Dashboard]: 'layout',
+  [TabMode.Question]: 'chart',
   [TabMode.Settings]: 'settings'
 };
 

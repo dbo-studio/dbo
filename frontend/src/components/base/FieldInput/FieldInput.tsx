@@ -56,9 +56,11 @@ export default function FieldInput({
       </FieldInputLabelRowStyled>
       <FieldInputInputStyled
         ref={ref}
-        spellCheck={'false'}
         value={value}
         autoComplete='off'
+        autoCapitalize='off'
+        autoCorrect='off'
+        spellCheck='false'
         onBlur={handleOnBlur}
         onChange={handleOnChange}
         error={error}

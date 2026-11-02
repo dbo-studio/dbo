@@ -122,9 +122,8 @@ test.describe("Settings & Theme", () => {
 
       await test.step("Check AI panel", async () => {
         await settingsPage.navigateTo("AI");
-        await expect(
-          page.getByRole("tab", { name: "Providers" }),
-        ).toBeVisible();
+        await expect(page.getByRole("region", { name: "Providers" })).toBeVisible();
+        await expect(page.getByRole("region", { name: "MCP" })).toBeVisible();
       });
 
       await test.step("Check Security panel", async () => {

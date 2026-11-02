@@ -4,6 +4,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/shared"
+	"github.com/samber/lo"
 )
 
 const (
@@ -11,30 +12,76 @@ const (
 	ToolListViews           = "list_views"
 	ToolDescribeTable       = "describe_table"
 	ToolExecuteSQL          = "execute_sql"
+	ToolExplainQuery        = "explain_query"
+	ToolTableStats          = "table_stats"
+	ToolReviewSchema        = "review_schema"
 	ToolProposeSchemaChange = "propose_schema_change"
-	ToolExecuteWrite        = "execute_write"
+	ToolPreviewWrite        = "preview_write"
+	ToolUpdatePlan          = "update_plan"
+	ToolShowChart           = "show_chart"
+	ToolSaveReport          = "save_report"
+	ToolPinReport           = "pin_report"
+	ToolListReports         = "list_reports"
+	ToolUpdateReport        = "update_report"
+	ToolDeleteReport        = "delete_report"
+	ToolRenameBoard         = "rename_board"
+	ToolDeleteBoard         = "delete_board"
+	ToolUnpinReport         = "unpin_report"
 )
 
 // agentOnlyTools never execute against the database themselves: they only
 // surface a proposal that the user must accept through the regular APIs.
 var agentOnlyTools = map[string]bool{
 	ToolProposeSchemaChange: true,
-	ToolExecuteWrite:        true,
+	ToolPreviewWrite:        true,
+	ToolUpdatePlan:          true,
+	// Changing or removing what the user already saved is Agent mode only; Ask mode may save and pin.
+	ToolUpdateReport: true,
+	ToolDeleteReport: true,
+	ToolRenameBoard:  true,
+	ToolDeleteBoard:  true,
+	ToolUnpinReport:  true,
 }
 
 // AllowedTool is the server-side source of truth for which tools a chat turn
-// may call. Ask mode is limited to read-only inspection tools.
-func AllowedTool(agent bool, name string) bool {
+// may call. Ask mode is limited to read-only inspection tools, and a connection
+// whose agent level is data_write never gets schema proposals.
+func AllowedTool(agent bool, tier string, name string) bool {
 	switch name {
-	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL:
+	case ToolListTables, ToolListViews, ToolDescribeTable, ToolExecuteSQL, ToolExplainQuery, ToolTableStats, ToolReviewSchema, ToolShowChart, ToolSaveReport, ToolPinReport, ToolListReports:
 		return true
+	case ToolProposeSchemaChange:
+		if tier == TierDataWrite {
+			return false
+		}
 	}
 
 	return agent && agentOnlyTools[name]
 }
 
-// ChatTools returns OpenAI tool definitions for the internal chat agent.
-func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
+// Agent levels of a connection (model.AgentTier values).
+const (
+	TierReadOnly  = "read_only"
+	TierDataWrite = "data_write"
+)
+
+// ChatTools returns the tool definitions a turn may use, filtered by AllowedTool.
+func ChatTools(agent bool, tier string) []openai.ChatCompletionToolUnionParam {
+	return lo.Filter(allChatTools(agent), func(tool openai.ChatCompletionToolUnionParam, _ int) bool {
+		return tool.OfFunction == nil || AllowedTool(agent, tier, tool.OfFunction.Function.Name)
+	})
+}
+
+// paramsSchema is the values for {{name}} filters in a report's SQL, e.g. {"region": "east"}.
+// Type a filter inside its placeholder: {{n:number}}, {{d:date}}, {{b:boolean}}, {{r:range}} (value "low..high"),
+// {{f:field=table.column}}.
+var paramsSchema = map[string]any{
+	"type":                 "object",
+	"additionalProperties": map[string]any{"type": "string"},
+	"description":          "Values for {{name}} filters in the SQL, by name. Use a filter instead of a fixed value only when the user wants to change it later.",
+}
+
+func allChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 	tools := []openai.ChatCompletionToolUnionParam{
 		functionTool(ToolListTables, "List table names in the connected database.", shared.FunctionParameters{
 			"type": "object",
@@ -68,7 +115,8 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 			},
 			"required": []string{"table"},
 		}),
-		functionTool(ToolExecuteSQL, "Run a read-only SELECT query against the database. Returns rows as JSON.", shared.FunctionParameters{
+		functionTool(ToolExecuteSQL, "Run a read-only SELECT query against the database. Returns rows as JSON. "+
+			"To see why a query is slow use explain_query instead; to measure NULLs or distinct values use table_stats.", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
 				"sql": map[string]any{
@@ -77,6 +125,132 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 				},
 			},
 			"required": []string{"sql"},
+		}),
+		functionTool(ToolExplainQuery, "Show the database's plan for one SELECT without running it (EXPLAIN, no ANALYZE). "+
+			"Use it to find out why a query is slow and which index would help.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"sql": map[string]any{
+					"type":        "string",
+					"description": "The SELECT statement to explain.",
+				},
+			},
+			"required": []string{"sql"},
+		}),
+		functionTool(ToolReviewSchema, "Review the design of the tables in the current database/schema (or the named ones): missing primary keys, "+
+			"foreign keys without an index, columns that look like references but have no foreign key, nullable foreign keys, duplicate indexes "+
+			"and mixed naming. The user sees each finding as a card with a Fix button, so summarize them briefly instead of repeating them.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"tables": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Optional: only these tables."},
+			},
+		}),
+		functionTool(ToolTableStats, "Measure a table's data: row count and, per column, the percent of NULLs, the number of distinct values, "+
+			"and the min and max. Use it before writing filters or proposing NOT NULL, UNIQUE or CHECK constraints. "+
+			"Large tables are measured on a sample of their first rows.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"table":  map[string]any{"type": "string", "description": "Table name to measure."},
+				"schema": map[string]any{"type": "string", "description": "Optional schema/database name."},
+			},
+			"required": []string{"table"},
+		}),
+		functionTool(ToolShowChart, "Show the user a chart of a read-only SELECT. Use it when the answer is numbers over categories or time "+
+			"(totals per group, trends by month, shares of a whole). The result rows come back to you too.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"sql":   map[string]any{"type": "string", "description": "SELECT that returns the label column first and the numbers after it. LIMIT is enforced automatically."},
+				"title": map[string]any{"type": "string", "description": "Short chart title, e.g. \"Revenue by month\"."},
+				"type": map[string]any{
+					"type": "string",
+					"enum": []string{"bar", "row", "line", "area", "pie", "number", "table", "combo", "scatter", "funnel", "gauge", "heatmap", "pivot", "trend"},
+					"description": "line or area for time, bar for categories, pie for a few shares of a whole, number for a single value. " +
+						"combo draws the first y as bars and the other y as lines; scatter plots two numbers (size sets bubble size); funnel is stages in order; gauge is one value against goal; " +
+						"heatmap and pivot need x and group (two dimensions) with one y; trend is a number with its change from the previous row.",
+				},
+				"x":       map[string]any{"type": "string", "description": "Column for categories or time."},
+				"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Number columns to plot."},
+				"stacked": map[string]any{"type": "boolean"},
+				"group":   map[string]any{"type": "string", "description": "Second dimension for heatmap and pivot."},
+				"size":    map[string]any{"type": "string", "description": "Number column that sizes scatter bubbles."},
+				"goal":    map[string]any{"type": "number", "description": "What a gauge value is measured against."},
+				"params":  paramsSchema,
+			},
+			"required": []string{"sql", "title"},
+		}),
+		functionTool(ToolSaveReport, "Save a chart as a report the user can reopen and refresh later. Use it when the user asks to save, keep or pin a chart.",
+			shared.FunctionParameters{
+				"type": "object",
+				"properties": map[string]any{
+					"title":   map[string]any{"type": "string"},
+					"sql":     map[string]any{"type": "string", "description": "The SELECT the report runs."},
+					"type":    map[string]any{"type": "string", "enum": []string{"bar", "row", "line", "area", "pie", "number", "table", "combo", "scatter", "funnel", "gauge", "heatmap", "pivot", "trend"}},
+					"x":       map[string]any{"type": "string"},
+					"y":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"stacked": map[string]any{"type": "boolean"},
+					"group":   map[string]any{"type": "string", "description": "Second dimension for heatmap and pivot."},
+					"size":    map[string]any{"type": "string", "description": "Number column that sizes scatter bubbles."},
+					"goal":    map[string]any{"type": "number", "description": "What a gauge value is measured against."},
+					"params":  paramsSchema,
+				},
+				"required": []string{"title", "sql", "type"},
+			}),
+		functionTool(ToolListReports, "List the saved reports of this connection and the boards (dashboards) they are pinned to. "+
+			"Call it before save_report or pin_report so you reuse a report or board that exists instead of making a copy.",
+			shared.FunctionParameters{"type": "object", "properties": map[string]any{}}),
+		functionTool(ToolUpdateReport, "Change a saved report: only the fields you pass change. Agent mode only; use it when the user asks to edit a report.",
+			shared.FunctionParameters{
+				"type": "object",
+				"properties": map[string]any{
+					"reportId": map[string]any{"type": "integer", "description": "Id from list_reports or save_report."},
+					"title":    map[string]any{"type": "string"},
+					"sql":      map[string]any{"type": "string"},
+					"type":     map[string]any{"type": "string", "enum": []string{"bar", "row", "line", "area", "pie", "number", "table", "combo", "scatter", "funnel", "gauge", "heatmap", "pivot", "trend"}},
+					"x":        map[string]any{"type": "string"},
+					"y":        map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"stacked":  map[string]any{"type": "boolean"},
+					"group":    map[string]any{"type": "string", "description": "Second dimension for heatmap and pivot."},
+					"size":     map[string]any{"type": "string", "description": "Number column that sizes scatter bubbles."},
+					"goal":     map[string]any{"type": "number", "description": "What a gauge value is measured against."},
+					"params":   paramsSchema,
+				},
+				"required": []string{"reportId"},
+			}),
+		functionTool(ToolDeleteReport, "Delete a saved report; it also leaves every board it is on. Agent mode only; only when the user asks for it.",
+			shared.FunctionParameters{
+				"type":       "object",
+				"properties": map[string]any{"reportId": map[string]any{"type": "integer"}},
+				"required":   []string{"reportId"},
+			}),
+		functionTool(ToolRenameBoard, "Rename a board. Agent mode only.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"board":   map[string]any{"type": "string", "description": "Current name."},
+				"newName": map[string]any{"type": "string"},
+			},
+			"required": []string{"board", "newName"},
+		}),
+		functionTool(ToolDeleteBoard, "Delete a board. Its reports stay saved. Agent mode only; only when the user asks for it.", shared.FunctionParameters{
+			"type":       "object",
+			"properties": map[string]any{"board": map[string]any{"type": "string"}},
+			"required":   []string{"board"},
+		}),
+		functionTool(ToolUnpinReport, "Take a report off a board without deleting it. Agent mode only.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"reportId": map[string]any{"type": "integer"},
+				"board":    map[string]any{"type": "string"},
+			},
+			"required": []string{"reportId", "board"},
+		}),
+		functionTool(ToolPinReport, "Pin a saved report to a board (a simple dashboard) by board name; the board is created when it does not exist. "+
+			"Save the report with save_report first and use the id it returns.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"reportId": map[string]any{"type": "integer", "description": "Id returned by save_report."},
+				"board":    map[string]any{"type": "string", "description": "Board name, e.g. \"Sales\"."},
+			},
+			"required": []string{"reportId", "board"},
 		}),
 	}
 
@@ -97,7 +271,7 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 	}
 
 	return append(tools,
-		functionTool(ToolProposeSchemaChange, "Propose schema changes (create tables, add columns, add foreign keys). "+
+		functionTool(ToolProposeSchemaChange, "Propose schema changes (create databases and schemas, create tables, add/alter/drop columns, add indexes, add foreign keys). "+
 			"Changes are shown to the user on the diagram and are NOT applied until the user accepts them.", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
@@ -108,32 +282,62 @@ func ChatTools(agent bool) []openai.ChatCompletionToolUnionParam {
 						"properties": map[string]any{
 							"op": map[string]any{
 								"type": "string",
-								"enum": []string{dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAddForeignKey},
+								"enum": []string{dto.SchemaChangeCreateDatabase, dto.SchemaChangeCreateSchema, dto.SchemaChangeCreateTable, dto.SchemaChangeAddColumn, dto.SchemaChangeAlterColumn, dto.SchemaChangeDropColumn, dto.SchemaChangeAddIndex, dto.SchemaChangeAddForeignKey,
+									dto.SchemaChangeRenameTable, dto.SchemaChangeRenameColumn, dto.SchemaChangeCreateView, dto.SchemaChangeDropView, dto.SchemaChangeAddCheck, dto.SchemaChangeDropConstraint, dto.SchemaChangeDropTable},
 							},
-							"table":      map[string]any{"type": "string"},
-							"columns":    map[string]any{"type": "array", "items": column, "description": "create_table only: every column of the new table."},
-							"column":     column,
-							"fkColumns":  map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_foreign_key only: source columns on table."},
-							"refTable":   map[string]any{"type": "string"},
-							"refColumns": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
-							"onDelete":   map[string]any{"type": "string", "enum": []string{"NO ACTION", "CASCADE", "SET NULL", "RESTRICT"}},
+							"table": map[string]any{"type": "string"},
+							"name": map[string]any{"type": "string", "description": "create_database / create_schema: the new name (tables in the same proposal are created inside it). " +
+								"rename_table / rename_column: the new name. create_view / drop_view: the view. add_check / drop_constraint: the constraint name."},
+							"sql":          map[string]any{"type": "string", "description": "create_view: the view's SELECT. add_check: the boolean expression, e.g. \"price >= 0\"."},
+							"columns":      map[string]any{"type": "array", "items": column, "description": "create_table only: every column of the new table."},
+							"column":       lo.Assign(column, map[string]any{"description": "add_column / alter_column: the column, as an object {name, type, notNull, primary, default}."}),
+							"columnName":   map[string]any{"type": "string", "description": "drop_column: the column to remove. rename_column: its current name."},
+							"indexColumns": map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_index only: indexed columns."},
+							"unique":       map[string]any{"type": "boolean", "description": "add_index only: create a unique index."},
+							"fkColumns":    map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "add_foreign_key only: source columns on table."},
+							"refTable":     map[string]any{"type": "string"},
+							"refColumns":   map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+							"onDelete":     map[string]any{"type": "string", "enum": []string{"NO ACTION", "CASCADE", "SET NULL", "RESTRICT"}},
 						},
-						"required": []string{"op", "table"},
+						"required": []string{"op"},
 					},
 				},
 			},
 			"required": []string{"ops"},
 		}),
-		functionTool(ToolExecuteWrite, "Request running a single INSERT/UPDATE/DELETE or DDL statement. "+
-			"The statement is shown to the user and only runs if they confirm it.", shared.FunctionParameters{
+		functionTool(ToolUpdatePlan, "Show the user a checklist of the steps you plan to take, and keep it current as you work. "+
+			"Send the whole list every time; it replaces the previous one.", shared.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"steps": map[string]any{
+					"type": "array",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"title":  map[string]any{"type": "string"},
+							"status": map[string]any{"type": "string", "enum": []string{dto.PlanStepPending, dto.PlanStepInProgress, dto.PlanStepDone}},
+						},
+						"required": []string{"title", "status"},
+					},
+				},
+			},
+			"required": []string{"steps"},
+		}),
+		functionTool(ToolPreviewWrite, "Preview INSERT, UPDATE or DELETE statements (UPDATE/DELETE need a WHERE): how many rows each changes and a sample of them. "+
+			"Nothing changes now. The statements join the user's proposal and run only when the user applies them; several statements apply together, "+
+			"in order, so later ones may use rows earlier ones insert (seed parents before children).", shared.FunctionParameters{
 			"type": "object",
 			"properties": map[string]any{
 				"sql": map[string]any{
 					"type":        "string",
-					"description": "The write statement. UPDATE/DELETE must have a WHERE clause.",
+					"description": "One data change. UPDATE/DELETE must have a WHERE clause.",
+				},
+				"statements": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "Several data changes that belong together, in the order they run (at most 20). Use instead of sql.",
 				},
 			},
-			"required": []string{"sql"},
 		}),
 	)
 }

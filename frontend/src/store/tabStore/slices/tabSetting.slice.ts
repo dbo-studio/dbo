@@ -15,7 +15,7 @@ import {
   tabPane
 } from '@/store/tabStore/tabs';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { DataTabType, DiagramTabType, EditorTabType, ObjectTabType, SettingsTabType, TabType } from '@/types/Tab';
+import type { QuestionTabType, DashboardTabType, DataTabType, DiagramTabType, EditorTabType, ObjectTabType, SettingsTabType, TabType } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
 import type { AddSettingsTabOptions, TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
@@ -179,6 +179,66 @@ export const createTabSettingSlice: StateCreator<
     };
 
     return get().handleAddNewTab(tabs, newTab) as DiagramTabType;
+  },
+  addDashboardTab: (dashboard: { id: number; name: string }): DashboardTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const tabs = selectTabs(get()) as DashboardTabType[];
+    const findTab = tabs.find(
+      (tab) =>
+        tab.mode === TabMode.Dashboard &&
+        tab.dashboardId === dashboard.id &&
+        matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: DashboardTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      nodeId: `dashboard:${dashboard.id}`,
+      name: dashboard.name,
+      mode: TabMode.Dashboard,
+      dashboardId: dashboard.id
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as DashboardTabType;
+  },
+  addQuestionTab: (question: { id: number; name: string }): QuestionTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const tabs = selectTabs(get()) as QuestionTabType[];
+    const findTab = tabs.find(
+      (tab) =>
+        tab.mode === TabMode.Question &&
+        tab.questionId === question.id &&
+        matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: QuestionTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      nodeId: `question:${question.id}`,
+      name: question.name,
+      mode: TabMode.Question,
+      questionId: question.id
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as QuestionTabType;
   },
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode): ObjectTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;

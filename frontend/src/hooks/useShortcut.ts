@@ -16,7 +16,13 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
 };
 
 /** Shortcuts that still work over the agent workspace; the rest would act on the hidden app behind it. */
-const WORKSPACE_SHORTCUTS = new Set(['toggleAgentWorkspace', 'focusAssistant', 'openShortcuts']);
+const WORKSPACE_SHORTCUTS = new Set([
+  'toggleAgentWorkspace',
+  'toggleWorkspaceSessions',
+  'toggleWorkspaceChanges',
+  'focusAssistant',
+  'openShortcuts'
+]);
 
 const hasChordModifier = (event: KeyboardEvent): boolean => {
   return event.altKey || event.ctrlKey || event.metaKey;

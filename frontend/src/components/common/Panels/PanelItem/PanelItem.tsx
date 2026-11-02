@@ -10,6 +10,8 @@ import { useAuthStore } from '@/store/authStore/auth.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { Button } from '@mui/material';
+import Question from '@/routes/Question/Question';
+import Dashboard from '@/routes/Dashboard/Dashboard';
 import Data from '@/routes/Data/Data';
 import ObjectForm from '@/routes/ObjectForm/ObjectForm';
 import Query from '@/routes/Query/Query';
@@ -78,6 +80,8 @@ export default function PanelItem(): JSX.Element {
               <Diagram />
             </Suspense>
           )) ||
+          (selectedTab.mode === TabMode.Dashboard && <Dashboard />) ||
+          (selectedTab.mode === TabMode.Question && <Question />) ||
           (selectedTab.mode === TabMode.Settings && <Settings />)
         : null}
     </PanelItemStyled>

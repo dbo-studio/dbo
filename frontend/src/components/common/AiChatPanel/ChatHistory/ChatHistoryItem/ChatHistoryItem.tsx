@@ -5,6 +5,7 @@ import type { MouseEvent } from 'react';
 import { relativeTime } from '../../utils/relativeTime';
 import { ChatHistoryItemStyled } from '../ChatHistory.styled';
 import { ChatHistoryItemProps } from '../types';
+import SessionStatusBadge from '../SessionStatusBadge';
 import { variables } from '@/core/theme/variables';
 
 const stop =
@@ -36,13 +37,13 @@ export default function ChatHistoryItem({
           <Typography color={'textText'} variant='caption' noWrap sx={{ display: 'block' }}>
             {item.title}
           </Typography>
-          <Typography
-            color={'textSubdued'}
-            variant='caption'
-            sx={{ display: 'block', fontSize: variables.fontSize.xxs }}
-          >
-            {relativeTime(item.updatedAt ?? item.createdAt)}
-          </Typography>
+          {/* The status sits on the meta line so long titles keep their room. */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography color={'textSubdued'} variant='caption' sx={{ fontSize: variables.fontSize.xxs }}>
+              {relativeTime(item.updatedAt ?? item.createdAt)}
+            </Typography>
+            <SessionStatusBadge chatId={item.id} />
+          </Box>
         </Box>
       </Box>
       <Box className='history-actions'>

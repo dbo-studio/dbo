@@ -130,7 +130,7 @@ function DiagramCanvas(): JSX.Element {
           >
             <Background gap={16} color={theme.palette.divider} />
             <DiagramControls />
-            {changeset && <ChangesetPanel key={changeset.changesetId} diff={changeset} />}
+            {changeset && <ChangesetPanel key={changeset.id} changesetId={changeset.id} />}
           </ReactFlow>
         )}
       </DiagramCanvasStyled>

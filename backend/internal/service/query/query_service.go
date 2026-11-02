@@ -9,18 +9,25 @@ import (
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
+	"github.com/goccy/go-json"
 	"github.com/samber/lo"
 )
 
 type IQueryService interface {
 	Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	Raw(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
+	// RunOrBackground and RawOrBackground are Run and Raw for the HTTP request: a query that outlasts the
+	// request's wait moves to the background, and then jobID is set and the result is nil.
+	RunOrBackground(ctx context.Context, req *dto.RunQueryRequest) (result *dto.RunQueryResponse, jobID uint, err error)
+	RawOrBackground(ctx context.Context, req *dto.RawQueryRequest) (result *dto.RawQueryResponse, jobID uint, err error)
 	Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
 	AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
 }
@@ -33,9 +40,10 @@ type IQueryServiceImpl struct {
 	cm             *databaseConnection.ConnectionManager
 	cache          cache.Cache
 	unlockStore    *serviceSafemode.UnlockStore
+	jobs           serviceJob.IJobManager
 }
 
-func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache) IQueryService {
+func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache, jobs serviceJob.IJobManager) IQueryService {
 	c := appCache
 
 	return &IQueryServiceImpl{
@@ -44,7 +52,56 @@ func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repo
 		cm:             cm,
 		cache:          c,
 		unlockStore:    serviceSafemode.NewUnlockStore(c),
+		jobs:           jobs,
 	}
+}
+
+// defaultBackgroundAfter is how long a query holds its request before it moves to the background.
+const defaultBackgroundAfter = 10 * time.Second
+
+func backgroundWait(seconds *int) time.Duration {
+	if seconds == nil {
+		return defaultBackgroundAfter
+	}
+
+	return time.Duration(*seconds) * time.Second
+}
+
+// handover runs fn in the request, or in the background past the wait. kind and req are stored on the job so a
+// notification can rebuild the tab the query came from.
+func handover[T any](ctx context.Context, jobs serviceJob.IJobManager, wait time.Duration, kind string, req any, fn func(ctx context.Context) (*T, error)) (*T, uint, error) {
+	if wait == 0 {
+		result, err := fn(ctx)
+
+		return result, 0, err
+	}
+
+	data, err := json.Marshal(map[string]any{"kind": kind, "request": req})
+	if err != nil {
+		return nil, 0, apperror.InternalServerError(err)
+	}
+
+	value, jobID, err := jobs.RunWithHandover(ctx, serviceJob.HandoverOptions{Type: model.JobTypeQuery, Data: string(data), Wait: wait},
+		func(runCtx context.Context) (any, error) { return fn(runCtx) })
+	if err != nil || jobID != 0 {
+		return nil, jobID, err
+	}
+
+	result, _ := value.(*T)
+
+	return result, 0, nil
+}
+
+func (i IQueryServiceImpl) RunOrBackground(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, uint, error) {
+	return handover(ctx, i.jobs, backgroundWait(req.BackgroundAfterSeconds), "run", req, func(runCtx context.Context) (*dto.RunQueryResponse, error) {
+		return i.Run(runCtx, req)
+	})
+}
+
+func (i IQueryServiceImpl) RawOrBackground(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, uint, error) {
+	return handover(ctx, i.jobs, backgroundWait(req.BackgroundAfterSeconds), "raw", req, func(runCtx context.Context) (*dto.RawQueryResponse, error) {
+		return i.Raw(runCtx, req)
+	})
 }
 
 func (i IQueryServiceImpl) Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error) {

@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/goccy/go-json"
 )
@@ -74,6 +75,13 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 		return fmt.Sprintf("%d", v), nil
 	case float32, float64:
 		return strconv.FormatFloat(reflect.ValueOf(v).Float(), 'f', -1, 64), nil
+	case time.Time:
+		// MySQL datetimes carry no zone; the others keep the offset.
+		if NormalizeSQLDriver(driver) == "mysql" {
+			return "'" + v.Format("2006-01-02 15:04:05.999999") + "'", nil
+		}
+
+		return "'" + v.Format("2006-01-02 15:04:05.999999999-07:00") + "'", nil
 	case bool:
 		// MySQL/SQLite store booleans as 0/1; Postgres accepts true/false literals.
 		switch NormalizeSQLDriver(driver) {

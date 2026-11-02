@@ -8,9 +8,11 @@ import (
 // Compile-time assertions to guarantee SQLiteRepository satisfies
 // all required repository contracts after refactors.
 var (
-	_ databaseContract.DatabaseRepository   = (*SQLiteRepository)(nil)
-	_ databaseContract.AIContextRepository  = (*SQLiteRepository)(nil)
-	_ databaseContract.AIMetadataRepository = (*SQLiteRepository)(nil)
-	_ databaseContract.DBToolsRepository    = (*SQLiteRepository)(nil)
-	_ ddl.TablePlanBuilder                  = (*SQLiteRepository)(nil)
+	_ databaseContract.DatabaseRepository       = (*SQLiteRepository)(nil)
+	_ databaseContract.AIContextRepository      = (*SQLiteRepository)(nil)
+	_ databaseContract.AIMetadataRepository     = (*SQLiteRepository)(nil)
+	_ databaseContract.DBToolsRepository        = (*SQLiteRepository)(nil)
+	_ databaseContract.TableStructureRepository = (*SQLiteRepository)(nil)
+	_ databaseContract.WritePreviewRepository   = (*SQLiteRepository)(nil)
+	_ ddl.TablePlanBuilder                      = (*SQLiteRepository)(nil)
 )

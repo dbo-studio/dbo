@@ -17,6 +17,17 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [['zustand/devtools', 
     }
     set({ currentChat: undefined }, undefined, 'updateCurrentChat');
   },
+  patchChat: (chat: AiChatType) => {
+    const { chats, currentChat } = get();
+    set(
+      {
+        chats: chats.map((c) => (c.id === chat.id ? chat : c)),
+        currentChat: currentChat?.id === chat.id ? chat : currentChat
+      },
+      undefined,
+      'patchChat'
+    );
+  },
   updateChats: (chats: AiChatType[]) => {
     set({ chats });
   },
@@ -30,7 +41,7 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [['zustand/devtools', 
 
     const updatedChat = { ...chat, messages: [...(chat.messages ?? []), ...messages] };
 
-    get().updateCurrentChat(updatedChat);
+    get().patchChat(updatedChat);
 
     return updatedChat;
   }

@@ -103,7 +103,7 @@ func (s IAiChatServiceImpl) sendFeedback(ctx context.Context, payload aiFeedback
 	cc := client.New()
 	cc.SetTimeout(10 * time.Second)
 
-	resp, err := cc.Post(s.cfg.App.FeedbackURLAPI, client.Config{
+	resp, err := cc.Post(s.cfg.App.WebsiteAPIURL+"/feedback/ai", client.Config{
 		Ctx:    ctx,
 		Header: map[string]string{"Content-Type": "application/json", "Accept": "application/json"},
 		Body:   body,

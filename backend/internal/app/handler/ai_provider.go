@@ -31,6 +31,25 @@ func (h AiProviderHandler) Providers(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(items.Items).Send(c)
 }
 
+func (h AiProviderHandler) Models(c fiber.Ctx) error {
+	req := new(dto.AiProviderModelsRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.aiProviderService.Models(c, fiber.Params[uint](c, "id"), req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h AiProviderHandler) Update(c fiber.Ctx) error {
 	queryID := fiber.Params[uint](c, "id")
 	req := new(dto.AiProviderUpdateRequest)

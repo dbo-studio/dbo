@@ -12,6 +12,8 @@ type (
 		// ProviderID and Model override the active provider for this turn only (compare with another model).
 		ProviderID *uint  `json:"providerId"`
 		Model      string `json:"model"`
+		// AgentTier is the connection's agent level, set by the server, never by the client.
+		AgentTier string `json:"-"`
 	}
 
 	AiContextOptions struct {

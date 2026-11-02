@@ -22,8 +22,6 @@ func (f *ProviderFactory) CreateProvider(ctx context.Context, provider *model.Ai
 		return NewAnthropicProvider(ctx, provider)
 	case model.AIProviderTypeGemini:
 		return NewGeminiProvider(ctx, provider)
-	case model.AIProviderTypeGroq:
-		return NewGroqProvider(ctx, provider)
 	case model.AIProviderTypeOllama:
 		return NewOllamaProvider(ctx, provider)
 	default:

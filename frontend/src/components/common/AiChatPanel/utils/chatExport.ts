@@ -7,7 +7,7 @@ function messageToMarkdown(message: AiMessageType): string | undefined {
     return `### You\n\n${message.content.trim()}`;
   }
 
-  // Tool traces, diagram diffs and permission requests carry raw SQL/args; keep exports to the conversation.
+  // Tool traces and changesets carry raw SQL/args; keep exports to the conversation.
   if (message.type === 'explanation') {
     return `### Assistant\n\n${message.content.trim()}`;
   }

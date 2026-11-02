@@ -8,8 +8,6 @@ import (
 	"github.com/samber/lo"
 )
 
-const maxAIContextObjects = 25
-
 type ForeignKeyInfo struct {
 	ReferencedTable  string
 	ReferencedColumn string
@@ -52,9 +50,6 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *databaseContrac
 		tables = lo.Map(list, func(table Table, _ int) string {
 			return table.Name
 		})
-		if len(tables) > maxAIContextObjects {
-			tables = tables[:maxAIContextObjects]
-		}
 	}
 
 	views := req.Views
@@ -67,9 +62,6 @@ func (r *PostgresRepository) AiContext(ctx context.Context, req *databaseContrac
 		views = lo.Map(list, func(view View, _ int) string {
 			return view.Name
 		})
-		if len(views) > maxAIContextObjects {
-			views = views[:maxAIContextObjects]
-		}
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{

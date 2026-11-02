@@ -1,17 +1,10 @@
-import type {
-  AiAgentItem,
-  AiDiagramDiff,
-  AiMessageType,
-  AiPermissionRequest,
-  AiToolTrace,
-  AiTraceMessageKind
-} from '@/types';
+import type { AiAgentItem, AiMessageType, AiPlanStep, AiToolTrace, AiTraceMessageKind } from '@/types';
 
-const TRACE_KINDS: ReadonlySet<string> = new Set<AiTraceMessageKind>(['tool', 'diagram_diff', 'permission']);
+const TRACE_KINDS: ReadonlySet<string> = new Set<AiTraceMessageKind>(['tool', 'diagram_diff', 'plan']);
 
 export const isTraceMessage = (message: AiMessageType): boolean => TRACE_KINDS.has(message.type);
 
-/** Parses a persisted tool / diagram_diff / permission message into a card item. */
+/** Parses a persisted tool / diagram_diff / plan message into a card item. */
 export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefined => {
   try {
     const payload: unknown = JSON.parse(message.content);
@@ -19,9 +12,9 @@ export const traceMessageToItem = (message: AiMessageType): AiAgentItem | undefi
       case 'tool':
         return { kind: 'tool', trace: payload as AiToolTrace };
       case 'diagram_diff':
-        return { kind: 'diagram_diff', diff: payload as AiDiagramDiff };
-      case 'permission':
-        return { kind: 'permission', request: payload as AiPermissionRequest };
+        return { kind: 'diagram_diff', changesetId: (payload as { changesetId: number }).changesetId };
+      case 'plan':
+        return { kind: 'plan', steps: (payload as { steps: AiPlanStep[] }).steps };
       default:
         return undefined;
     }
@@ -50,9 +43,9 @@ export const agentItemToMessage = (item: AiAgentItem): AiMessageType => {
         content: JSON.stringify(item.trace.status === 'running' ? { ...item.trace, status: 'cancelled' } : item.trace)
       };
     case 'diagram_diff':
-      return { ...base, type: 'diagram_diff', content: JSON.stringify(item.diff) };
-    case 'permission':
-      return { ...base, type: 'permission', content: JSON.stringify(item.request) };
+      return { ...base, type: 'diagram_diff', content: JSON.stringify({ changesetId: item.changesetId }) };
+    case 'plan':
+      return { ...base, type: 'plan', content: JSON.stringify({ steps: item.steps }) };
   }
 };
 
@@ -62,6 +55,18 @@ export type RenderBlock =
   | { kind: 'message'; message: AiMessageType; key: string }
   | { kind: 'tools'; items: AiAgentItem[]; key: string; thinking?: Thinking }
   | { kind: 'card'; item: AiAgentItem; key: string; thinking?: Thinking };
+
+/** A newer plan replaces the one shown earlier in the same turn, as it does while streaming. */
+const dropTurnPlan = (blocks: RenderBlock[]): void => {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const block = blocks[i];
+    if (block.kind === 'message' && block.message.role === 'user') return;
+    if (block.kind === 'card' && block.item.kind === 'plan') {
+      blocks.splice(i, 1);
+      return;
+    }
+  }
+};
 
 /** Groups consecutive tool traces into one "Used N tools" block. */
 export const toRenderBlocks = (messages: AiMessageType[]): RenderBlock[] => {
@@ -76,6 +81,10 @@ export const toRenderBlocks = (messages: AiMessageType[]): RenderBlock[] => {
 
     const item = traceMessageToItem(message);
     if (!item) return;
+
+    if (item.kind === 'plan') {
+      dropTurnPlan(blocks);
+    }
 
     if (item.kind !== 'tool') {
       blocks.push({ kind: 'card', item, key, thinking: message.thinking });

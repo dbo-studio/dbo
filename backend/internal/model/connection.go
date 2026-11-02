@@ -20,6 +20,18 @@ const (
 	SafeModeSafeWrite SafeMode = "safe_write"
 )
 
+// AgentTier is how far the AI agent may go on a connection.
+type AgentTier string
+
+const (
+	// AgentTierReadOnly — Ask only: the agent reads, never proposes changes.
+	AgentTierReadOnly AgentTier = "read_only"
+	// AgentTierDataWrite — the agent may propose data changes, not schema changes.
+	AgentTierDataWrite AgentTier = "data_write"
+	// AgentTierSchemaChange — the agent may propose data and schema changes (the default).
+	AgentTierSchemaChange AgentTier = "schema_change"
+)
+
 type Connection struct {
 	ID             uint   `gorm:"primaryKey,autoIncrement"`
 	OwnerID        string `gorm:"index;default:'desktop'"`
@@ -27,7 +39,8 @@ type Connection struct {
 	ConnectionType string
 	Options        string
 	IsActive       bool
-	SafeMode       SafeMode `gorm:"column:safe_mode;not null;default:'silent'"`
+	SafeMode       SafeMode  `gorm:"column:safe_mode;not null;default:'silent'"`
+	AgentTier      AgentTier `gorm:"column:agent_tier;not null;default:'schema_change'"`
 	Version        *string
 	CreatedAt      *time.Time `gorm:"autoCreateTime"`
 	UpdatedAt      *time.Time `gorm:"autoUpdateTime"`

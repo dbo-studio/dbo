@@ -103,6 +103,10 @@ func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Conne
 	connection.IsActive = helper.OptionalBool(req.IsActive, connection.IsActive)
 
 	connection.Options = string(req.Options)
+	if req.AgentTier != nil {
+		connection.AgentTier = model.AgentTier(*req.AgentTier)
+	}
+
 	if req.SafeMode != nil {
 		connection.SafeMode = model.SafeMode(*req.SafeMode)
 	}

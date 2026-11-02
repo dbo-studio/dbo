@@ -36,7 +36,7 @@ const (
 	// Agent traces: JSON payloads rendered as cards, never sent back to the model as history.
 	AiChatMessageTypeTool        AiChatMessageType = "tool"
 	AiChatMessageTypeDiagramDiff AiChatMessageType = "diagram_diff"
-	AiChatMessageTypePermission  AiChatMessageType = "permission"
+	AiChatMessageTypePlan        AiChatMessageType = "plan"
 )
 
 // IsConversational reports whether the message is part of the model-visible
@@ -55,4 +55,6 @@ const (
 	AiChatMessageLanguageJSON   AiChatMessageLanguage = "json"
 	AiChatMessageLanguageYaml   AiChatMessageLanguage = "yaml"
 	AiChatMessageLanguageText   AiChatMessageLanguage = "text"
+	// Mermaid blocks are drawn as diagrams in the chat.
+	AiChatMessageLanguageMermaid AiChatMessageLanguage = "mermaid"
 )

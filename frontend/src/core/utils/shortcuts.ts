@@ -109,6 +109,27 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: [altKey(), shiftKey(), 'E'],
     shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyE'
   },
+  toggleWorkspaceSessions: {
+    id: 'toggleWorkspaceSessions',
+    group: 'app',
+    label: locales.toggle_workspace_sessions,
+    command: [altKey(), shiftKey(), 'B'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyB'
+  },
+  toggleWorkspaceChanges: {
+    id: 'toggleWorkspaceChanges',
+    group: 'app',
+    label: locales.toggle_workspace_changes,
+    command: [altKey(), shiftKey(), 'G'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyG'
+  },
+  toggleWorkspaceFullScreen: {
+    id: 'toggleWorkspaceFullScreen',
+    group: 'app',
+    label: locales.toggle_workspace_full_screen,
+    command: [altKey(), shiftKey(), 'M'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.shiftKey && !isMod(event) && event.code === 'KeyM'
+  },
   clearComposer: {
     id: 'clearComposer',
     group: 'app',
@@ -231,6 +252,27 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     label: locales.toggle_agent_workspace,
     command: [modKey(), shiftKey(), 'E'],
     shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyE'
+  },
+  toggleWorkspaceSessions: {
+    id: 'toggleWorkspaceSessions',
+    group: 'app',
+    label: locales.toggle_workspace_sessions,
+    command: [modKey(), shiftKey(), 'B'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyB'
+  },
+  toggleWorkspaceChanges: {
+    id: 'toggleWorkspaceChanges',
+    group: 'app',
+    label: locales.toggle_workspace_changes,
+    command: [modKey(), shiftKey(), 'G'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyG'
+  },
+  toggleWorkspaceFullScreen: {
+    id: 'toggleWorkspaceFullScreen',
+    group: 'app',
+    label: locales.toggle_workspace_full_screen,
+    command: [modKey(), shiftKey(), 'M'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && event.shiftKey && !event.altKey && event.code === 'KeyM'
   },
   clearComposer: {
     id: 'clearComposer',

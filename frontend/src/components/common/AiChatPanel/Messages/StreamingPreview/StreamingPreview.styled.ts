@@ -20,6 +20,21 @@ export const StreamingPreviewStyled = styled(Box, {
   overflow: 'hidden'
 }));
 
+/** The caret at the end of the last block of formatted text that is still being typed. */
+export const inlineCaretSx = (color: string) => ({
+  '& > p:last-child::after, & > h1:last-child::after, & > h2:last-child::after, & > h3:last-child::after, & > h4:last-child::after, & > ul:last-child > li:last-child::after, & > ol:last-child > li:last-child::after':
+    {
+      content: '""',
+      display: 'inline-block',
+      width: 2,
+      height: '1em',
+      marginLeft: '1px',
+      verticalAlign: 'text-bottom',
+      backgroundColor: color,
+      animation: `${blink} 1s step-end infinite`
+    }
+});
+
 export const StreamingCursorStyled = styled('span')(({ theme }) => ({
   display: 'inline-block',
   width: 2,

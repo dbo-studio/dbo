@@ -1,6 +1,7 @@
 import type { Components, Theme } from '@mui/material';
 import Baseline from './Baseline';
 import Button from './Button';
+import Chip from './Chip';
 import IconButton from './IconButton';
 import Input from './Input';
 import Menu from './Menu';
@@ -16,6 +17,7 @@ export default function ComponentsOverrides(theme: Theme): Components {
     Tabs(theme),
     Select(theme),
     Button(theme),
+    Chip(theme),
     IconButton(theme),
     Menu(theme),
     Table(theme),

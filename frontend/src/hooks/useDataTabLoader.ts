@@ -1,5 +1,6 @@
 import { shortcuts } from '@/core/utils';
 import { useShortcut } from './useShortcut';
+import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useCallback, useEffect, useRef } from 'react';
@@ -37,6 +38,12 @@ export function useDataTabLoader(): boolean {
       /* ignored */
     }
   }, [loadDataFromIndexedDB, runQuery]);
+
+  // A query that ran in the background hands its rows over when it ends.
+  const delivered = useBackgroundQueryStore((state) => (selectedTabId ? (state.delivered[selectedTabId] ?? 0) : 0));
+  useEffect(() => {
+    if (delivered > 0) loadData().catch(() => undefined);
+  }, [delivered, loadData]);
 
   const handleReRunQuery = useCallback(async (): Promise<void> => {
     await runQuery();

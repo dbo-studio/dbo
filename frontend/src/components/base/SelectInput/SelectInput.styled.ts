@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables.ts';
-import type { Theme } from '@mui/material/styles';
+import { alpha, type Theme } from '@mui/material/styles';
 import type { CSSObjectWithLabel, GroupBase, StylesConfig } from 'react-select';
 import type { SelectInputOption } from './types';
 
@@ -60,27 +60,33 @@ export const SelectInputStyles = (
   multiValue: (base): CSSObjectWithLabel => ({
     ...base,
     flexShrink: 0,
-    margin: '2px 4px 2px 0',
-    backgroundColor: theme.palette.primary.light,
+    margin: '0 4px 0 0',
+    alignItems: 'center',
+    height: '22px',
+    backgroundColor: alpha(theme.palette.primary.main, 0.14),
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.35)}`,
     borderRadius: variables.radius.small
   }),
 
   multiValueLabel: (styles): CSSObjectWithLabel => ({
     ...styles,
-    color: theme.palette.primary.contrastText,
+    color: theme.palette.text.text,
     fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
-    padding: '2px 4px',
+    padding: '0 2px 0 6px',
+    lineHeight: '20px',
     fontWeight: 500
   }),
 
   multiValueRemove: (styles): CSSObjectWithLabel => ({
     ...styles,
-    color: theme.palette.primary.contrastText,
-    opacity: 0.7,
+    color: theme.palette.text.secondary,
+    borderRadius: variables.radius.small,
+    padding: '0 3px',
+    height: '20px',
+    cursor: 'pointer',
     ':hover': {
-      backgroundColor: theme.palette.primary.dark,
-      color: theme.palette.common.white,
-      opacity: 1
+      backgroundColor: alpha(theme.palette.error.main, 0.2),
+      color: theme.palette.error.main
     }
   }),
 
@@ -89,8 +95,9 @@ export const SelectInputStyles = (
     display: 'flex',
     flexDirection: 'row',
     flexWrap: 'nowrap',
-    overflow: 'auto',
-    padding: '2px 8px',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    padding: '0 8px',
     maxWidth: '100%',
     '&::-webkit-scrollbar': {
       height: '4px'

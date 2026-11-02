@@ -58,3 +58,7 @@ func (r *sqliteRawQueryResolver) BuildNodeID(_ context.Context, database, schema
 
 	return table
 }
+
+func (r *SQLiteRepository) StreamRawQuery(ctx context.Context, req *dto.RawQueryRequest, chunkSize int, fn func(columns []dto.Column, rows []map[string]any) error) error {
+	return r.base.StreamRawQuery(ctx, req, chunkSize, fn)
+}

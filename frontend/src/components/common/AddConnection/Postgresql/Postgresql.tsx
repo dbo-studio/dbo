@@ -16,7 +16,7 @@ import {
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSLFields from '../ConnectionSSLFields';
-import { buildConnectionUri, parseConnectionUri } from '../connectionUri';
+import { buildConnectionUri, DEFAULT_PORTS, parseConnectionUri } from '../connectionUri';
 import { applyParsedConnectionUri } from '../connectionUriForm';
 import { sslFormDefaults, sslOptionsFromForm } from '../ssl';
 import type { ConnectionSettingsProps } from '../types';
@@ -108,7 +108,8 @@ export default function PostgreSQL({
       rememberPassword: false,
       name: connection?.name ?? '',
       host: options?.host || parsedUri?.host || '',
-      port: options?.port?.toString() || parsedUri?.port || '',
+      // A new connection starts on the engine's usual port, which the field shows as its placeholder.
+      port: options?.port?.toString() || parsedUri?.port || DEFAULT_PORTS.postgresql,
       username: options?.username || parsedUri?.username || '',
       password: '',
       database: options?.database || parsedUri?.database || '',

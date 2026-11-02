@@ -8,8 +8,6 @@ import (
 	"github.com/samber/lo"
 )
 
-const maxAIContextObjects = 25
-
 func (r *MySQLRepository) AiContext(ctx context.Context, req *databaseContract.AIContextInput) (string, error) {
 	if req == nil {
 		return "", nil
@@ -23,9 +21,6 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *databaseContract.A
 		}
 
 		tables = list
-		if len(tables) > maxAIContextObjects {
-			tables = tables[:maxAIContextObjects]
-		}
 	}
 
 	views := req.Views
@@ -36,9 +31,6 @@ func (r *MySQLRepository) AiContext(ctx context.Context, req *databaseContract.A
 		}
 
 		views = list
-		if len(views) > maxAIContextObjects {
-			views = views[:maxAIContextObjects]
-		}
 	}
 
 	return databaseCore.BuildAIChatContext(ctx, databaseContract.AIContextOptions{

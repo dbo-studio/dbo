@@ -22,6 +22,12 @@ const (
 	JobTypeImport JobType = "import"
 	JobTypeExport JobType = "export"
 	JobTypeQuery  JobType = "query"
+	// Backup and restore are database-level and never share a type with the
+	// row-level import/export jobs.
+	JobTypeBackup  JobType = "backup"
+	JobTypeRestore JobType = "restore"
+	// JobTypeToolInstall downloads a native backup tool on the user's request.
+	JobTypeToolInstall JobType = "tool_install"
 )
 
 type Job struct {
@@ -56,4 +62,5 @@ type JobResult struct {
 	TotalChunks int                            `json:"totalChunks"`
 	ChunkSize   int                            `json:"chunkSize"`
 	Query       string                         `json:"query"`
+	ArtifactID  uint                           `json:"artifactId"`
 }

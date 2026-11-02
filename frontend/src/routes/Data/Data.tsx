@@ -2,6 +2,8 @@ import DataGrid from '@/components/common/DataGrid/DataGrid';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useDataTabLoader, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
+import BackgroundQueryNotice from '@/components/common/BackgroundQueryNotice/BackgroundQueryNotice';
+import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { ColumnType, DataTabType, RowType } from '@/types';
 import { CircularProgress } from '@mui/material';
@@ -24,6 +26,8 @@ export default function Data(): JSX.Element {
   const rows = useDataStore((state) => state.rows ?? EMPTY_ROWS);
   const allColumns = useDataStore((state) => state.columns ?? EMPTY_COLUMNS);
 
+  const waitingOnBackground = useBackgroundQueryStore((state) => (selectedTab ? !!state.byTab[selectedTab.id] : false));
+
   const activeColumns = useMemo(() => allColumns.filter((column) => column.isActive), [allColumns]);
 
   return (
@@ -31,7 +35,9 @@ export default function Data(): JSX.Element {
       <ActionBar showColumns={showColumns} setShowColumns={setShowColumns} />
       <DataContentStyled>
         {showColumns && <Columns />}
-        {activeColumns.length > 0 ? (
+        {waitingOnBackground && selectedTab ? (
+          <BackgroundQueryNotice tabId={selectedTab.id} />
+        ) : activeColumns.length > 0 ? (
           <DataGrid rows={rows} columns={activeColumns} loading={isGridLoading} editable={selectedTab?.editable} />
         ) : isGridLoading ? (
           <DataLoadingStyled>

@@ -35,6 +35,7 @@ import {
   SettingsRootStyled,
   SettingsSearchInputStyled
 } from './Setting.styled';
+import NotificationsPanel from './NotificationsPanel/NotificationsPanel';
 import ShortcutPanel from './ShortcutPanel/ShortcutPanel';
 import type { MenuPanelTabType } from './types';
 
@@ -53,7 +54,8 @@ const SECTION_CONTENT: Record<number, JSX.Element> = {
     <Box data-settings-id='admin.users'>
       <AdministrationPanel />
     </Box>
-  )
+  ),
+  7: <NotificationsPanel />
 };
 
 function highlightTarget(highlightId: string): void {

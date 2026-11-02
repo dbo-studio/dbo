@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile } from "../../helpers/aiSetup";
+import { clearActiveAiProfile, setAiMode } from "../../helpers/aiSetup";
 import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SettingsPage } from "../../pages";
@@ -133,7 +133,7 @@ test.describe("AI model picker and empty states", () => {
 
       await test.step("Footer shows provider and model; Agent mode shows a tools badge", async () => {
         await expect(picker).toContainText(KNOWN_TOOL_MODEL);
-        await page.getByTestId("ai-mode-agent").click();
+        await setAiMode(page, "agent");
         await expect(page.getByTestId("ai-model-capability")).toContainText("Tools");
         await expect(page.getByTestId("ai-model-capability")).toContainText("128K");
       });

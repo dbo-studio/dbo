@@ -1,18 +1,31 @@
 import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { Box, ButtonBase, styled } from '@mui/material';
 
+// Fixed size and structure: the chip never changes shape on hover, so the row does not jump.
 export const ChatContextItemStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
+  display: 'inline-flex',
   alignItems: 'center',
-  cursor: 'pointer',
+  flexShrink: 0,
+  gap: theme.spacing(0.5),
+  height: 22,
+  maxWidth: 180,
+  padding: theme.spacing(0, 0.25, 0, 0.75),
   borderRadius: variables.radius.medium,
-  padding: '0 4px',
-  border: '1px solid transparent',
-  maxWidth: 140,
-  minWidth: 0,
-  overflow: 'hidden',
-  ':hover': {
-    border: `1px solid ${theme.palette.divider}`
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.default
+}));
+
+export const ChatContextItemRemoveStyled = styled(ButtonBase)(({ theme }) => ({
+  width: 16,
+  height: 16,
+  flexShrink: 0,
+  borderRadius: '50%',
+  color: theme.palette.text.secondary,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    color: theme.palette.text.primary
+  },
+  '&.Mui-focusVisible': {
+    outline: `2px solid ${theme.palette.primary.main}`
   }
-})) as typeof Box;
+}));

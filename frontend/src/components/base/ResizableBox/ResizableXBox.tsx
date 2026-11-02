@@ -8,6 +8,8 @@ export default function ResizableXBox({
   direction,
   width,
   maxWidth,
+  widthOverride,
+  sx,
   children,
   onChange
 }: ResizableBoxXProps): JSX.Element {
@@ -73,7 +75,7 @@ export default function ResizableXBox({
   }, [handleMouseMove, handleMouseUp, isResizing]);
 
   return (
-    <ResizableXBoxStyled boxWidth={boxWidth}>
+    <ResizableXBoxStyled boxWidth={widthOverride ?? boxWidth} animate={!isResizing} sx={sx}>
       <ResizableToggle onMouseDown={handleMouseDown} direction={direction} />
       {children}
     </ResizableXBoxStyled>
