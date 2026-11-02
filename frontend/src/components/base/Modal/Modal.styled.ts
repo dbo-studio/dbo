@@ -3,6 +3,14 @@ import { Box, Modal, styled } from '@mui/material';
 
 export const ModalStyled = styled(Modal)(() => ({})) as typeof Modal;
 
+export const ModalBodyStyled = styled(Box)(() => ({
+  flex: 1,
+  minHeight: 0,
+  overflow: 'auto',
+  display: 'flex',
+  flexDirection: 'column'
+}));
+
 export const ModalWrapperStyled = styled(Box)<{ padding?: string }>(({ theme, padding }) => ({
   minHeight: 'min(400px, 90dvh)',
   minWidth: 'min(400px, calc(100vw - 32px))',

@@ -1,13 +1,15 @@
 import { useScopedSelectAll } from '@/hooks';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useRef } from 'react';
-import { ModalStyled, ModalWrapperStyled } from './Modal.styled';
+import { ModalBodyStyled, ModalStyled, ModalWrapperStyled } from './Modal.styled';
+import ModalFooter from './ModalFooter/ModalFooter';
 import type { ModalProps } from './types';
 
 export default function Modal({
   open,
   title,
   children,
+  footer,
   padding,
   onClose,
   disableEnforceFocus,
@@ -39,7 +41,14 @@ export default function Modal({
             <Divider />
           </Box>
         )}
-        {children}
+        {footer ? (
+          <>
+            <ModalBodyStyled>{children}</ModalBodyStyled>
+            <ModalFooter>{footer}</ModalFooter>
+          </>
+        ) : (
+          children
+        )}
       </ModalWrapperStyled>
     </ModalStyled>
   );
