@@ -297,3 +297,13 @@ func MustChangePassword() error {
 		Err:     ErrMustChangePassword,
 	}
 }
+
+// AccountRejected is returned when the DBO website refuses an account request.
+// The reason is a stable code the app maps to a message, e.g. "account_email_taken".
+func AccountRejected(code int, reason string) error {
+	return &AppError{
+		Code:    code,
+		Message: reason,
+		Err:     errors.New(reason),
+	}
+}

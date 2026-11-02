@@ -66,7 +66,8 @@ export default function QueryScreen(): JSX.Element {
           </>
         }
       />
-      <ScreenBodyStyled>
+
+      <ScreenBodyStyled sx={{ marginTop: '-1px' }}>
         <PanelItem />
       </ScreenBodyStyled>
       {switcherOpen && <TabSwitcherSheet onClose={(): void => setSwitcherOpen(false)} />}

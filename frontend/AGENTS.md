@@ -69,13 +69,21 @@ On web login/logout/401, `applyUserWorkspaceScope` switches persist names, Index
 
 Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_queries` once (unscoped DB only), then writes IndexedDB and deletes the key.
 
+### Where a new panel goes
+
+Ask: "is it a list I pick from, or a page I work in?"
+
+- **List (browser)** — one entry in `explorerViews` in `layout/MainContainer/ExplorerContainer.tsx` (Items, Queries, History, Boards). Give it an icon: labels collapse to icons when the sidebar is narrow. Add a mobile `pushedScreens` entry only if what it opens works on mobile.
+- **Page (tool)** — its own `TabMode`, rendered by `PanelItem`, opened from an icon next to the SQL editor button in `layout/AppHeader/ConnectionInfo` (Settings, SQL editor; later Backup, Monitoring).
+- Never inject app-DB items (dashboards, reports, …) into the driver tree.
+
 ### Design system
 
 - Look and feel lives in `src/core/theme` (palette, typography, overrides, `mobileDensity.ts`). Screens consume it; they do not restyle it.
 - Colors: `theme.palette.*` / `alpha()` only. Selected or active emphasis is `primary.main`; body text is `text.primary`, muted is `text.secondary`, pink is `text.accent`.
 - Text: sentence case everywhere (the theme sets `button.textTransform: 'none'`). Use typography variants, not literal `fontSize`.
 - Buttons: contained = primary action, outlined = secondary, text = tertiary (e.g. Cancel). Destructive actions use `color='error'`. Heights come from `size` (small 24, medium 32, large 40); phone density lifts them for touch.
-- Dialogs: base `Modal` + `ModalFooter` (right-aligned actions; `spread` when a left action shares the row). Empty screens: base `EmptyState` with an `action`.
+- Dialogs: base `Modal` with actions in its `footer` prop (pinned under a scrollable body, right-aligned); footer buttons are `size='small'`, Cancel/Close as text, the primary action `contained` last. Tab toolbars (dashboard, report, like the SQL editor's): base `ToolbarStyled` with context controls left, `IconButton`s with tooltips right. Never put the primary/close buttons inside `children`. `ModalFooter spread` only for forms that already embed it. Empty screens: base `EmptyState` with an `action`.
 - ESLint errors on hex/rgb/hsl literals and literal `fontSize` outside `core/theme`. Type sizes come from `variables.fontSize` (xxs…xxxl) when no typography variant fits.
 
 ### Size budget

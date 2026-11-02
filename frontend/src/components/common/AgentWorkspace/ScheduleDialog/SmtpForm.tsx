@@ -11,9 +11,23 @@ type Security = 'starttls' | 'tls' | 'none';
 /** The outgoing mail account every schedule sends through. Only an admin can read or change it. */
 export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Element {
   const { data, error } = useQuery({ queryKey: ['smtp-settings'], queryFn: () => api.dashboard.getSmtpSettings() });
-  const [draft, setDraft] = useState<{ host: string; port: string; username: string; fromAddress: string; security: Security } | null>(null);
+  const [draft, setDraft] = useState<{
+    host: string;
+    port: string;
+    username: string;
+    fromAddress: string;
+    security: Security;
+  } | null>(null);
   const [password, setPassword] = useState('');
-  const form = draft ?? (data && { host: data.host, port: String(data.port), username: data.username, fromAddress: data.fromAddress, security: data.security });
+  const form =
+    draft ??
+    (data && {
+      host: data.host,
+      port: String(data.port),
+      username: data.username,
+      fromAddress: data.fromAddress,
+      security: data.security
+    });
 
   const { mutate: save, isPending } = useMutation({
     mutationFn: () =>
@@ -33,7 +47,12 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
     onError: () => toast.error(locales.action_failed)
   });
 
-  if (error) return <Typography variant='caption' color='error'>{locales.schedule_smtp_admin_only}</Typography>;
+  if (error)
+    return (
+      <Typography variant='caption' color='error'>
+        {locales.schedule_smtp_admin_only}
+      </Typography>
+    );
   if (!form || !data) return <Typography variant='caption'>…</Typography>;
 
   const set = (patch: Partial<typeof form>): void => setDraft({ ...form, ...patch });
@@ -71,13 +90,30 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
       </Stack>
       {field('fromAddress', locales.smtp_from)}
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <ToggleButtonGroup exclusive size='small' value={form.security} onChange={(_, next: Security | null) => next && set({ security: next })}>
-          <ToggleButton value='starttls' data-testid='smtp-security-starttls'>STARTTLS</ToggleButton>
-          <ToggleButton value='tls' data-testid='smtp-security-tls'>TLS</ToggleButton>
-          <ToggleButton value='none' data-testid='smtp-security-none'>{locales.smtp_security_none}</ToggleButton>
+        <ToggleButtonGroup
+          exclusive
+          size='small'
+          value={form.security}
+          onChange={(_, next: Security | null) => next && set({ security: next })}
+        >
+          <ToggleButton value='starttls' data-testid='smtp-security-starttls'>
+            STARTTLS
+          </ToggleButton>
+          <ToggleButton value='tls' data-testid='smtp-security-tls'>
+            TLS
+          </ToggleButton>
+          <ToggleButton value='none' data-testid='smtp-security-none'>
+            {locales.smtp_security_none}
+          </ToggleButton>
         </ToggleButtonGroup>
         <div style={{ flex: 1 }} />
-        <Button size='small' variant='contained' disabled={isPending || !form.host || !form.fromAddress} onClick={() => save()} data-testid='smtp-save'>
+        <Button
+          size='small'
+          variant='contained'
+          disabled={isPending || !form.host || !form.fromAddress}
+          onClick={() => save()}
+          data-testid='smtp-save'
+        >
           {locales.share_save}
         </Button>
       </Stack>

@@ -12,6 +12,8 @@ import { useTraySync } from '@/hooks/useTraySync';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
 import { withMobileDensity } from '@/core/theme/mobileDensity';
+import Onboarding from '@/components/common/Onboarding/Onboarding';
+import { useAccountStore } from '@/store/accountStore/account.store';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { ThemeProvider } from '@mui/material';
 import { type JSX, useEffect } from 'react';
@@ -29,6 +31,7 @@ export default function Home(): JSX.Element | null {
   const { ready, boot } = useStartup();
   useEscapeFullscreenGuard();
   const gate = useAuthStore((s) => s.gate);
+  const onboarded = useAccountStore((s) => s.onboarded);
   // Phones get the dedicated mobile shell; tablets keep the desktop layout with overlay sidebars.
   const { isMobile, isTablet, isTouch } = useLayoutMode();
 
@@ -66,6 +69,10 @@ export default function Home(): JSX.Element | null {
         onRetry={boot.status === 'error' ? boot.retry : undefined}
       />
     );
+  }
+
+  if (!onboarded) {
+    return <Onboarding onFinish={(): void => useAccountStore.getState().finishOnboarding()} />;
   }
 
   if (isMobile) {

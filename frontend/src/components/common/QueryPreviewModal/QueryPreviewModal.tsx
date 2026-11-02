@@ -3,7 +3,7 @@ import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlig
 import locales from '@/locales';
 import { Box, Button, CircularProgress, TextField } from '@mui/material';
 import React, { useState } from 'react';
-import { QueryPreviewActionsStyled, QueryPreviewContentStyled } from './QueryPreviewModal.styled';
+import { QueryPreviewContentStyled } from './QueryPreviewModal.styled';
 
 export type QueryPreviewModalProps = {
   open: boolean;
@@ -37,7 +37,34 @@ export default function QueryPreviewModal({
     .join('\n\n');
 
   return (
-    <Modal open={open} title={locales.query_preview} onClose={onCancel}>
+    <Modal
+      open={open}
+      title={locales.query_preview}
+      onClose={onCancel}
+      footer={
+        <>
+          <Button
+            size='small'
+            variant='text'
+            disabled={isExecuting}
+            onClick={onCancel}
+            data-testid={`${testIdPrefix}-preview-cancel`}
+          >
+            {locales.cancel}
+          </Button>
+          <Button
+            size='small'
+            variant='contained'
+            disabled={isExecuting || queries.length === 0 || !confirmed}
+            onClick={onConfirm}
+            data-testid={`${testIdPrefix}-execute`}
+            startIcon={isExecuting ? <CircularProgress size={14} color='inherit' /> : undefined}
+          >
+            {locales.object_form_execute_queries}
+          </Button>
+        </>
+      }
+    >
       <QueryPreviewContentStyled data-testid={`${testIdPrefix}-preview-modal`}>
         <Box sx={{ flex: 1 }}>
           <SyntaxHighlighter value={formattedQueries} />
@@ -52,27 +79,6 @@ export default function QueryPreviewModal({
             slotProps={{ htmlInput: { 'data-testid': `${testIdPrefix}-confirm-input` } }}
           />
         )}
-        <QueryPreviewActionsStyled>
-          <Button
-            variant='text'
-            size='small'
-            disabled={isExecuting}
-            onClick={onCancel}
-            data-testid={`${testIdPrefix}-preview-cancel`}
-          >
-            {locales.cancel}
-          </Button>
-          <Button
-            variant='contained'
-            size='small'
-            disabled={isExecuting || queries.length === 0 || !confirmed}
-            onClick={onConfirm}
-            data-testid={`${testIdPrefix}-execute`}
-            startIcon={isExecuting ? <CircularProgress size={14} color='inherit' /> : undefined}
-          >
-            {locales.object_form_execute_queries}
-          </Button>
-        </QueryPreviewActionsStyled>
       </QueryPreviewContentStyled>
     </Modal>
   );

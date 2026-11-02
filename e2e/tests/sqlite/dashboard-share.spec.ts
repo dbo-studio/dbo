@@ -3,7 +3,7 @@ import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { ensureSqliteDbFile, removeSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { ConnectionPage, ObjectTreePage } from "../../pages";
+import { BoardsPage, ConnectionPage, ObjectTreePage } from "../../pages";
 
 /** Share links: a read-only page for visitors without a session, with expiry, password and revoke. */
 test.describe("Dashboard share links", () => {
@@ -19,6 +19,7 @@ test.describe("Dashboard share links", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -45,12 +46,15 @@ test.describe("Dashboard share links", () => {
 
         await page.reload();
         await tree.waitForTreeLoad();
-        await tree.getTreeNode("Dashboards").click();
-        await tree.getTreeNode(boardName).dblclick();
+        await boards.openItem(boardName);
 
         let link = "";
         await test.step("The owner creates a password-protected link that expires tomorrow", async () => {
           await page.getByTestId("dashboard-share").click();
+          // Actions sit in the modal footer, below the form, not inline with the fields.
+          const form = await page.getByTestId("share-dialog").boundingBox();
+          const create = await page.getByTestId("share-create").boundingBox();
+          expect(create!.y).toBeGreaterThanOrEqual(form!.y + form!.height);
           await page.getByTestId("share-preset-1").click();
           await page.getByTestId("share-password").fill("open-sesame");
           await page.getByTestId("share-create").click();
@@ -255,8 +259,7 @@ test.describe("Dashboard share links", () => {
         await tree.waitForTreeLoad();
 
         await test.step("The owner turns filters on and reads the log in the dialog", async () => {
-          await tree.getTreeNode("Dashboards").click();
-          await tree.getTreeNode(boardName).dblclick();
+          await new BoardsPage(page).openItem(boardName);
           await page.getByTestId("dashboard-share").click();
           await page.getByTestId("share-visits-toggle").first().click();
           await expect(page.getByTestId("share-visit").first()).toBeVisible();

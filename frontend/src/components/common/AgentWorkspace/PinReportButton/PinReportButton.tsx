@@ -4,7 +4,8 @@ import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartRep
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Box, Button, Divider, Menu, MenuItem } from '@mui/material';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { Box, Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -12,10 +13,13 @@ import { toast } from 'sonner';
 /** Pins a chart to a board, saving it as a report first when needed; a new board can be named in the menu. */
 export default function PinReportButton({
   report,
-  onSaved
+  onSaved,
+  icon
 }: {
   report: ChartReport;
   onSaved?: (report: ChartReport) => void;
+  /** Toolbar style: an icon button with a tooltip instead of a text button. */
+  icon?: boolean;
 }): JSX.Element {
   const queryClient = useQueryClient();
   const connectionId = Number(useConnectionStore((state) => state.currentConnectionId));
@@ -47,14 +51,26 @@ export default function PinReportButton({
 
   return (
     <>
-      <Button
-        size='small'
-        variant='text'
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        data-testid='ai-report-pin'
-      >
-        {locales.ai_board_pin}
-      </Button>
+      {icon ? (
+        <Tooltip title={locales.ai_board_pin}>
+          <IconButton
+            aria-label={locales.ai_board_pin}
+            onClick={(event) => setAnchorEl(event.currentTarget)}
+            data-testid='ai-report-pin'
+          >
+            <CustomIcon type='pin' />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Button
+          size='small'
+          variant='text'
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+          data-testid='ai-report-pin'
+        >
+          {locales.ai_board_pin}
+        </Button>
+      )}
       <Menu open={!!anchorEl} anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
         {boards?.map((board) => (
           <MenuItem

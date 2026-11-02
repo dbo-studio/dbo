@@ -9,10 +9,9 @@ import locales from '@/locales';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { TreeNodeType } from '@/types/Tree';
 import { alpha, Box, LinearProgress, useTheme } from '@mui/material';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { buildDashboardGroup, buildReportGroup, isDashboardGroup } from './dashboardGroup';
-import { flattenTree, type FlatRow } from './flattenTree';
+import { flattenTree } from './flattenTree';
 import { mergeSearchResults } from './mergeSearchResults';
 import {
   TREE_ROW_HEIGHT,
@@ -110,32 +109,10 @@ export default function ObjectTreeView(): JSX.Element {
   );
 
   const expandedIds = useMemo(() => new Set(expandedList ?? EMPTY_IDS), [expandedList]);
-  const { data: dashboards } = useQuery({
-    queryKey: ['dashboards', connectionId],
-    queryFn: () => api.dashboard.getDashboards(Number(connectionId)),
-    enabled: !!connectionId && !!tree
-  });
-  const { data: questions } = useQuery({
-    queryKey: ['questions', connectionId],
-    queryFn: () => api.question.getQuestions(Number(connectionId)),
-    enabled: !!connectionId && !!tree
-  });
-  const rows = useMemo(() => {
-    const driverRows = flattenTree(displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch);
-    // The Dashboards and Reports folders sit right under the connection; a search only looks at the driver tree.
-    if (!connectionId || !displayTree || searchTerm.trim() || !dashboards || !questions) return driverRows;
-    const groups = [buildDashboardGroup(connectionId, dashboards), buildReportGroup(connectionId, questions)].flatMap(
-      (group) =>
-        flattenTree(group, expandedIds, EMPTY_SET, '').map(
-          (row): FlatRow => ({
-            ...row,
-            level: row.level + 1,
-            ...(row.kind === 'node' ? { parentId: row.parentId ?? displayTree.id } : {})
-          })
-        )
-    );
-    return [driverRows[0], ...groups, ...driverRows.slice(1)].filter((row): row is FlatRow => !!row);
-  }, [connectionId, dashboards, questions, displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch]);
+  const rows = useMemo(
+    () => flattenTree(displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch),
+    [displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch]
+  );
 
   const { virtualItems, totalSize, virtualizer } = useVirtualList({
     count: rows.length,
@@ -188,7 +165,7 @@ export default function ObjectTreeView(): JSX.Element {
 
   const loadChildren = useCallback(
     async (node: TreeNodeType, fromCache: boolean): Promise<void> => {
-      if (!connectionId || isDashboardGroup(node)) return;
+      if (!connectionId) return;
       setLoading(node.id, true);
       try {
         addLoadedParentId(node.id);

@@ -103,6 +103,12 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     keywords: ['update', 'version', 'release']
   },
   {
+    id: 'general.account',
+    sectionId: 0,
+    label: locales.account_row_title,
+    keywords: ['account', 'sign in', 'login', 'log in', 'sign out', 'dbo']
+  },
+  {
     id: 'general.analytics',
     sectionId: 0,
     label: locales.analytics,

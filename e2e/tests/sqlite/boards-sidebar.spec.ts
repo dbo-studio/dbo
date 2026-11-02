@@ -7,10 +7,10 @@ import {
   removeSqliteDbFile,
 } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { ConnectionPage, ObjectTreePage } from "../../pages";
+import { BoardsPage, ConnectionPage, ObjectTreePage } from "../../pages";
 
-/** Dashboards group in the connection tree: create, open, rename, duplicate and delete. */
-test.describe("Dashboards in the tree", () => {
+/** Boards sidebar view: dashboards and reports of the connection, create, open, rename, duplicate and delete. */
+test.describe("Boards in the sidebar", () => {
   test("create, rename, duplicate and delete a dashboard", async ({
     page,
   }, testInfo) => {
@@ -24,6 +24,7 @@ test.describe("Dashboards in the tree", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -35,8 +36,8 @@ test.describe("Dashboards in the tree", () => {
         const createdName = `Revenue ${suffix}`;
         const renamedName = `Revenue Q1 ${suffix}`;
 
-        await test.step("New dashboard from the group menu opens a tab", async () => {
-          await tree.runTreeAction("Dashboards", "New dashboard");
+        await test.step("New dashboard from the Boards view opens a tab", async () => {
+          await boards.newDashboard();
           await page.getByTestId("dashboard-name-input").fill(createdName);
           await page.getByTestId("dashboard-name-submit").click();
           await expect(page.getByTestId("dashboard-tab")).toBeVisible();
@@ -46,33 +47,33 @@ test.describe("Dashboards in the tree", () => {
           );
         });
 
-        await test.step("It is listed under the group and survives a reload", async () => {
+        await test.step("It is listed in the Boards view and survives a reload", async () => {
           await page.reload();
           await tree.waitForTreeLoad();
-          await tree.getTreeNode("Dashboards").click();
-          await expect(tree.getTreeNode(createdName)).toBeVisible();
+          await boards.open();
+          await expect(boards.item(createdName)).toBeVisible();
         });
 
-        await test.step("Rename updates the tree and the open tab", async () => {
-          await tree.runTreeAction(createdName, "Rename");
+        await test.step("Rename updates the list and the open tab", async () => {
+          await boards.runAction(createdName, "Rename");
           await page.getByTestId("dashboard-name-input").fill(renamedName);
           await page.getByTestId("dashboard-name-submit").click();
-          await expect(tree.getTreeNode(renamedName)).toBeVisible();
-          await expect(tree.getTreeNode(createdName)).toHaveCount(0);
+          await expect(boards.item(renamedName)).toBeVisible();
+          await expect(boards.item(createdName)).toHaveCount(0);
         });
 
         await test.step("Duplicate adds a copy", async () => {
-          await tree.runTreeAction(renamedName, "Duplicate");
-          await expect(tree.getTreeNode(`${renamedName} (copy)`)).toBeVisible();
+          await boards.runAction(renamedName, "Duplicate");
+          await expect(boards.item(`${renamedName} (copy)`)).toBeVisible();
         });
 
         await test.step("Delete asks first, then removes the dashboard", async () => {
-          await tree.runTreeAction(`${renamedName} (copy)`, "Delete");
-          await tree.confirmDangerAction();
-          await expect(tree.getTreeNode(`${renamedName} (copy)`)).toHaveCount(
+          await boards.runAction(`${renamedName} (copy)`, "Delete");
+          await boards.confirmDelete();
+          await expect(boards.item(`${renamedName} (copy)`)).toHaveCount(
             0,
           );
-          await expect(tree.getTreeNode(renamedName)).toBeVisible();
+          await expect(boards.item(renamedName)).toBeVisible();
         });
       });
     } finally {
@@ -93,6 +94,7 @@ test.describe("Dashboards in the tree", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -103,8 +105,8 @@ test.describe("Dashboards in the tree", () => {
 
         const name = `Signups ${suffix}`;
 
-        await test.step("New question from the group menu opens its editor", async () => {
-          await tree.runTreeAction("Reports", "New question");
+        await test.step("New report from the Boards view opens its editor", async () => {
+          await boards.newReport();
           await expect(page.getByTestId("question-tab")).toBeVisible();
           await expect(page.getByTestId("ai-report-editor")).toBeVisible();
         });
@@ -114,15 +116,14 @@ test.describe("Dashboards in the tree", () => {
           await page.getByTestId("ai-report-type-number").click();
           await page.getByTestId("ai-report-run").click();
           await page.getByTestId("ai-report-save-canvas").click();
-          await tree.getTreeNode("Reports").click();
-          await expect(tree.getTreeNode(name)).toBeVisible();
+          await boards.open();
+          await expect(boards.item(name)).toBeVisible();
         });
 
         await test.step("Saved changes survive a reload", async () => {
           await page.reload();
           await tree.waitForTreeLoad();
-          await tree.getTreeNode("Reports").click();
-          await tree.getTreeNode(name).click();
+          await boards.openItem(name);
           await expect(page.getByTestId("ai-report-title")).toHaveValue(name);
           await expect(page.getByTestId("ai-report-type-number")).toHaveAttribute(
             "aria-pressed",
@@ -131,9 +132,9 @@ test.describe("Dashboards in the tree", () => {
         });
 
         await test.step("Delete asks first, then removes it and its tab", async () => {
-          await tree.runTreeAction(name, "Delete");
-          await tree.confirmDangerAction();
-          await expect(tree.getTreeNode(name)).toHaveCount(0);
+          await boards.runAction(name, "Delete");
+          await boards.confirmDelete();
+          await expect(boards.item(name)).toHaveCount(0);
           await expect(page.getByTestId("question-tab")).toHaveCount(0);
         });
       });
@@ -155,6 +156,7 @@ test.describe("Dashboards in the tree", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -201,8 +203,7 @@ test.describe("Dashboards in the tree", () => {
         await tree.waitForTreeLoad();
 
         await test.step("One board filter feeds every card with that name", async () => {
-          await tree.getTreeNode("Dashboards").click();
-          await tree.getTreeNode(boardName).dblclick();
+          await boards.openItem(boardName);
           const cards = page.getByTestId("ai-board-card");
           await expect(cards).toHaveCount(3);
           await expect(cards.first().getByTestId("ai-board-card-needs-filter")).toContainText("label, n");
@@ -229,8 +230,7 @@ test.describe("Dashboards in the tree", () => {
         });
 
         await test.step("The editor asks for the filters of the SQL it runs", async () => {
-          await tree.getTreeNode("Reports").click();
-          await tree.getTreeNode(`Double ${suffix}`).dblclick();
+          await boards.openItem(`Double ${suffix}`);
           await expect(page.getByTestId("question-tab")).toBeVisible();
           await page.getByTestId("param-n").fill("5");
           await page.getByTestId("ai-report-run").click();
@@ -267,6 +267,7 @@ test.describe("Dashboards in the tree", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -298,8 +299,7 @@ test.describe("Dashboards in the tree", () => {
 
         await page.reload();
         await tree.waitForTreeLoad();
-        await tree.getTreeNode("Dashboards").click();
-        await tree.getTreeNode(boardName).dblclick();
+        await boards.openItem(boardName);
         const card = page.getByTestId("ai-board-card");
         await expect(card.getByTestId("ai-board-card-updated")).toBeVisible();
 
@@ -320,8 +320,7 @@ test.describe("Dashboards in the tree", () => {
           await page.getByRole("option", { name: "Every 5 min" }).click();
           await page.reload();
           await tree.waitForTreeLoad();
-          await tree.getTreeNode("Dashboards").click();
-          await tree.getTreeNode(boardName).dblclick();
+          await boards.openItem(boardName);
           await expect(page.getByTestId("dashboard-auto-refresh")).toContainText("Every 5 min");
         });
 
@@ -343,7 +342,7 @@ test.describe("Dashboards in the tree", () => {
           await page.request.delete(`/api/dashboards/${board}`);
           await page.request.delete(`/api/questions/${question}`);
           const chooser = page.waitForEvent("filechooser");
-          await tree.runTreeAction("Dashboards", "Import dashboard");
+          await boards.importDashboard();
           await (await chooser).setFiles({ name: "board.json", mimeType: "application/json", buffer: Buffer.from(exported) });
           await expect(page.getByTestId("ai-board")).toHaveAttribute("data-board", boardName);
           await expect(card).toHaveAttribute("data-width", "2");

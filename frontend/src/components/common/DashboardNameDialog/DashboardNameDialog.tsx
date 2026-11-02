@@ -10,6 +10,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 
+const FORM_ID = 'dashboard-name-form';
+
 function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
   const target = useDashboardDialogStore((state) => state.target);
   const connectionId = Number(useConnectionStore((state) => state.currentConnectionId));
@@ -34,38 +36,48 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
   if (!target) return null;
 
   return (
-    <Box
-      component='form'
-      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 320 }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (name.trim()) mutate(name.trim());
-      }}
+    <Modal
+      open
+      onClose={onDone}
+      title={target.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_new}
+      footer={
+        <>
+          <Button size='small' onClick={onDone}>
+            {locales.cancel}
+          </Button>
+          <Button
+            size='small'
+            variant='contained'
+            type='submit'
+            form={FORM_ID}
+            disabled={!name.trim() || isPending}
+            data-testid='dashboard-name-submit'
+          >
+            {target.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_create}
+          </Button>
+        </>
+      }
     >
-      <FieldInput
-        autoFocus
-        size='small'
-        margin='none'
-        placeholder={locales.dashboard_name}
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        inputProps={{ 'data-testid': 'dashboard-name-input', maxLength: 255 }}
-      />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Button size='small' onClick={onDone}>
-          {locales.cancel}
-        </Button>
-        <Button
+      <Box
+        component='form'
+        id={FORM_ID}
+        sx={{ minWidth: 320 }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (name.trim()) mutate(name.trim());
+        }}
+      >
+        <FieldInput
+          autoFocus
           size='small'
-          variant='contained'
-          type='submit'
-          disabled={!name.trim() || isPending}
-          data-testid='dashboard-name-submit'
-        >
-          {target.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_create}
-        </Button>
+          margin='none'
+          placeholder={locales.dashboard_name}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          inputProps={{ 'data-testid': 'dashboard-name-input', maxLength: 255 }}
+        />
       </Box>
-    </Box>
+    </Modal>
   );
 }
 
@@ -75,18 +87,10 @@ const renameTabs = (dashboardId: number, name: string) =>
     .getTabs()
     .map((tab) => ('dashboardId' in tab && tab.dashboardId === dashboardId ? { ...tab, name } : tab));
 
-export default function DashboardNameDialog(): JSX.Element {
+export default function DashboardNameDialog(): JSX.Element | null {
   const target = useDashboardDialogStore((state) => state.target);
   const close = useDashboardDialogStore((state) => state.close);
 
-  return (
-    <Modal
-      open={!!target}
-      onClose={close}
-      title={target?.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_new}
-    >
-      {/* Remounts per open so the field starts from the right name. */}
-      {target && <NameForm key={target.mode === 'rename' ? target.id : 'new'} onDone={close} />}
-    </Modal>
-  );
+  // Remounts per open so the field starts from the right name.
+  return target ? <NameForm key={target.mode === 'rename' ? target.id : 'new'} onDone={close} /> : null;
 }

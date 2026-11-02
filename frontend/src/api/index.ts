@@ -3,6 +3,7 @@ import * as ai from './ai';
 import * as aiAudit from './aiAudit';
 import * as aiChat from './aiChat';
 import * as aiProvider from './aiProvider';
+import * as account from './account';
 import * as auth from './auth';
 import * as backup from './backup';
 import * as config from './config';
@@ -21,6 +22,7 @@ import * as schema from './schema';
 import * as tree from './tree';
 
 const api = {
+  account,
   auth,
   backup,
   adminUsers,

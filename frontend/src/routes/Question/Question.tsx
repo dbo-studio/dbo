@@ -50,9 +50,13 @@ export default function Question(): JSX.Element {
   };
 
   return (
-    <Box sx={{ p: 2, height: '100%', overflow: 'auto' }} data-testid='question-tab'>
+    <Box sx={{ height: '100%' }} data-testid='question-tab'>
       {/* Keyed so a different question starts from its own SQL and chart. */}
-      <ReportEditor key={question.id} report={report} scope={{ database: question.database, schema: question.schema }} />
+      <ReportEditor
+        key={question.id}
+        report={report}
+        scope={{ database: question.database, schema: question.schema }}
+      />
     </Box>
   );
 }

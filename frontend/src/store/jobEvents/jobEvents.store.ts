@@ -1,9 +1,10 @@
+import type { JobDetailResponseType } from '@/api/job/types';
 import { create } from 'zustand';
 
 /** What the live stream last said about a job. The database stays the source of truth for results. */
 export type JobEvent = {
   id: number;
-  type: 'import' | 'export' | 'query';
+  type: JobDetailResponseType['type'];
   status: 'pending' | 'running' | 'completed' | 'failed' | 'canceled';
   progress: number;
   message: string;

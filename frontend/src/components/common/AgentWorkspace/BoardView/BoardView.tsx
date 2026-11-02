@@ -10,7 +10,8 @@ import locales from '@/locales';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Box, Button, CircularProgress, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { ToolbarSpacerStyled, ToolbarStyled } from '@/components/base/Toolbar/Toolbar.styled';
+import { Box, CircularProgress, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toCsv } from '@/core/utils/csv';
 import { tools } from '@/core/utils';
@@ -134,7 +135,10 @@ function BoardCard({
               <IconButton
                 size='small'
                 onClick={() =>
-                  tools.fileDownload(new Blob([toCsv(columns, data.rows)], { type: 'text/csv' }), `${card.question.name}.csv`)
+                  tools.fileDownload(
+                    new Blob([toCsv(columns, data.rows)], { type: 'text/csv' }),
+                    `${card.question.name}.csv`
+                  )
                 }
                 data-testid='ai-board-card-csv'
               >
@@ -206,8 +210,10 @@ function AddCard({ board }: { board: DashboardType }): JSX.Element {
   return (
     <Box sx={{ width: 260 }}>
       <SelectInput
+        size='small'
         testId='dashboard-add-card'
-        emptylabel={locales.dashboard_add_card}
+        // Shown only when the list is empty, where the select is disabled.
+        emptylabel={locales.dashboard_add_card_none}
         value=''
         options={options}
         onChange={(value) => pin((value as SelectInputOption).value as number)}
@@ -259,81 +265,104 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   };
 
   return (
-    <Stack spacing={1} data-testid='ai-board' data-board={board.name} data-editing={editing}>
-      <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <Typography variant='subtitle1' sx={{ fontWeight: 600, flex: 1 }}>
-          {board.name}
-        </Typography>
+    <Stack sx={{ height: '100%', minHeight: 0 }} data-testid='ai-board' data-board={board.name} data-editing={editing}>
+      <ToolbarStyled>
+        <SelectInput
+          size='small'
+          testId='dashboard-auto-refresh'
+          value={refreshMs as unknown as string}
+          options={REFRESH_OPTIONS}
+          onChange={(picked) => setRefreshMs((picked as SelectInputOption).value as number)}
+        />
         {editing && <AddCard board={board} />}
-        <Button
-          size='small'
-          startIcon={<CustomIcon type='refresh' size='xs' />}
-          onClick={() => void queryClient.invalidateQueries({ queryKey: ['question-run'], refetchType: 'all' })}
-          data-testid='ai-board-refresh'
-        >
-          {locales.ai_board_refresh}
-        </Button>
-        <Box sx={{ width: 120 }}>
-          <SelectInput
-            testId='dashboard-auto-refresh'
-            value={refreshMs as unknown as string}
-            options={REFRESH_OPTIONS}
-            onChange={(picked) => setRefreshMs((picked as SelectInputOption).value as number)}
-          />
-        </Box>
-        <Button size='small' onClick={() => setSharing(true)} data-testid='dashboard-share'>
-          {locales.share_title}
-        </Button>
-        <ShareDialog board={board} open={sharing} onClose={() => setSharing(false)} />
-        <Button size='small' onClick={() => setScheduling(true)} data-testid='dashboard-schedule'>
-          {locales.schedule_title}
-        </Button>
-        <ScheduleDialog board={board} open={scheduling} onClose={() => setScheduling(false)} />
-        <Tooltip title={locales.dashboard_export}>
-          <IconButton size='small' onClick={() => exportBoard(board)} data-testid='dashboard-export'>
-            <CustomIcon type='export' size='xs' />
-          </IconButton>
-        </Tooltip>
-        <Button
-          size='small'
-          variant={editing ? 'contained' : 'text'}
-          startIcon={<CustomIcon type={editing ? 'check' : 'pen'} size='xs' />}
-          onClick={() => setEditing(!editing)}
-          data-testid='dashboard-edit'
-        >
-          {editing ? locales.dashboard_done : locales.dashboard_edit}
-        </Button>
-      </Stack>
-      {filterParams.length > 0 && (
-        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} data-testid='dashboard-filters'>
-          {filterParams.map((param) => (
-            <ParamInput
-              key={param.name}
-              param={param}
-              value={shown[param.name] ?? ''}
-              onChange={(value) => setDraft((current) => ({ ...current, [param.name]: value }))}
-              onCommit={(value) => setApplied((current) => ({ ...current, [param.name]: value }))}
-              connectionId={board.connectionId}
-              scope={{ database: board.cards[0]?.question.database, schema: board.cards[0]?.question.schema }}
-            />
-          ))}
+        <ToolbarSpacerStyled />
+        <Stack direction='row' spacing={2}>
+          <Tooltip title={locales.ai_board_refresh}>
+            <IconButton
+              aria-label={locales.ai_board_refresh}
+              onClick={() => void queryClient.invalidateQueries({ queryKey: ['question-run'], refetchType: 'all' })}
+              data-testid='ai-board-refresh'
+            >
+              <CustomIcon type='refresh' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.share_title}>
+            <IconButton aria-label={locales.share_title} onClick={() => setSharing(true)} data-testid='dashboard-share'>
+              <CustomIcon type='share' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.schedule_title}>
+            <IconButton
+              aria-label={locales.schedule_title}
+              onClick={() => setScheduling(true)}
+              data-testid='dashboard-schedule'
+            >
+              <CustomIcon type='clock' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={locales.dashboard_export}>
+            <IconButton
+              aria-label={locales.dashboard_export}
+              onClick={() => exportBoard(board)}
+              data-testid='dashboard-export'
+            >
+              <CustomIcon type='export' />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={editing ? locales.dashboard_done : locales.dashboard_edit}>
+            <IconButton
+              aria-label={editing ? locales.dashboard_done : locales.dashboard_edit}
+              aria-pressed={editing}
+              color={editing ? 'primary' : 'default'}
+              onClick={() => setEditing(!editing)}
+              data-testid='dashboard-edit'
+            >
+              <CustomIcon type={editing ? 'check' : 'pen'} />
+            </IconButton>
+          </Tooltip>
         </Stack>
-      )}
-      {board.cards.length === 0 ? (
-        <Typography variant='body2' color='textSubdued'>
-          {locales.ai_boards_empty}
-        </Typography>
-      ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
-              {board.cards.map((card) => (
-                <BoardCard key={card.id} board={board} card={card} editing={editing} filters={filters} refreshMs={refreshMs} />
-              ))}
-            </Box>
-          </SortableContext>
-        </DndContext>
-      )}
+        <ShareDialog board={board} open={sharing} onClose={() => setSharing(false)} />
+        <ScheduleDialog board={board} open={scheduling} onClose={() => setScheduling(false)} />
+      </ToolbarStyled>
+      <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
+        {filterParams.length > 0 && (
+          <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} data-testid='dashboard-filters'>
+            {filterParams.map((param) => (
+              <ParamInput
+                key={param.name}
+                param={param}
+                value={shown[param.name] ?? ''}
+                onChange={(value) => setDraft((current) => ({ ...current, [param.name]: value }))}
+                onCommit={(value) => setApplied((current) => ({ ...current, [param.name]: value }))}
+                connectionId={board.connectionId}
+                scope={{ database: board.cards[0]?.question.database, schema: board.cards[0]?.question.schema }}
+              />
+            ))}
+          </Stack>
+        )}
+        {board.cards.length === 0 ? (
+          <Typography variant='body2' color='textSubdued'>
+            {locales.ai_boards_empty}
+          </Typography>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
+                {board.cards.map((card) => (
+                  <BoardCard
+                    key={card.id}
+                    board={board}
+                    card={card}
+                    editing={editing}
+                    filters={filters}
+                    refreshMs={refreshMs}
+                  />
+                ))}
+              </Box>
+            </SortableContext>
+          </DndContext>
+        )}
+      </Stack>
     </Stack>
   );
 }

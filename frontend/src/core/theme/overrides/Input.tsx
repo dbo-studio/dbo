@@ -1,9 +1,16 @@
 import type { Components, Theme } from '@mui/material/styles';
 import { variables } from '../variables';
 
+// Merged over each field's own inputProps by InputBase, so callers keep their test ids and aria labels.
+const NO_AUTO_CORRECT = { autoCorrect: 'off', autoCapitalize: 'off', spellCheck: false } as const;
+
 export default function Input(theme: Theme): Components {
   return {
     MuiInputBase: {
+      defaultProps: {
+        autoComplete: 'off',
+        slotProps: { input: NO_AUTO_CORRECT }
+      },
       styleOverrides: {
         root: {
           background: theme.palette.background.default,

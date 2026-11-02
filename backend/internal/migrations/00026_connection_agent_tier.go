@@ -13,7 +13,15 @@ func init() {
 
 // Existing connections keep what the agent could already do: data and schema changes, each reviewed.
 func upConnectionAgentTier(ctx context.Context, tx *sql.Tx) error {
-	_, err := tx.ExecContext(ctx, "ALTER TABLE connections ADD COLUMN agent_tier TEXT NOT NULL DEFAULT 'schema_change'")
+	has, err := sqliteHasColumn(ctx, tx, "connections", "agent_tier")
+	if err != nil {
+		return err
+	}
+	if has {
+		return nil
+	}
+
+	_, err = tx.ExecContext(ctx, "ALTER TABLE connections ADD COLUMN agent_tier TEXT NOT NULL DEFAULT 'schema_change'")
 
 	return err
 }

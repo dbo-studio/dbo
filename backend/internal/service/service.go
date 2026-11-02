@@ -4,6 +4,7 @@ import (
 	"github.com/dbo-studio/dbo/config"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceAccount "github.com/dbo-studio/dbo/internal/service/account"
 	serviceAdminUsers "github.com/dbo-studio/dbo/internal/service/admin_users"
 	serviceAI "github.com/dbo-studio/dbo/internal/service/ai"
 	serviceAiChangeset "github.com/dbo-studio/dbo/internal/service/ai_changeset"
@@ -56,6 +57,7 @@ type Service struct {
 	AiChatService                serviceAiChat.IAiChatService
 	AiChangesetService           serviceAiChangeset.IAiChangesetService
 	ConfigService                serviceConfig.IConfigService
+	AccountService               serviceAccount.IAccountService
 	McpService                   serviceMCP.IMcpService
 	SchemaService                serviceSchema.ISchemaService
 	SafeModePasswordService      serviceSafemode.ISafeModePasswordService
@@ -125,6 +127,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		AiProviderService:            aiProviderService,
 		AiChatService:                serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
 		AiChangesetService:           aiChangesetService,
+		AccountService:               serviceAccount.NewAccountService(deps.Config),
 		ConfigService:                serviceConfig.NewConfigService(repo.ConfigRepo, aiProviderService, authService, deps.Config, deps.Cache, deps.Logger),
 		McpService:                   mcpService,
 		SchemaService:                schemaService,
