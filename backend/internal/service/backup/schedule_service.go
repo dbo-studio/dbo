@@ -81,6 +81,7 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 		KeepLast:      req.KeepLast,
 		KeepDays:      req.KeepDays,
 		KeepSmart:     req.KeepSmart,
+		RetryMax:      req.RetryMax,
 		Compress:      req.Compress,
 		DestinationID: req.DestinationID,
 		ChannelIDs:    channelIDsJSON(req.ChannelIDs),
@@ -143,7 +144,7 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 		"name": schedule.Name, "database": schedule.Database, "schema": schedule.Schema,
 		"cadence": schedule.Cadence, "hour": schedule.Hour, "minute": schedule.Minute,
 		"weekday": schedule.Weekday, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
-		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "keep_smart": schedule.KeepSmart, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
+		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "keep_smart": schedule.KeepSmart, "retry_max": schedule.RetryMax, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
 		"destination_id": schedule.DestinationID, "channel_ids": schedule.ChannelIDs, "notify_on": schedule.NotifyOn,
 	}
 
@@ -238,6 +239,7 @@ func applyScheduleUpdate(s *model.BackupSchedule, req *dto.BackupScheduleUpdateR
 	s.KeepLast = lo.FromPtrOr(req.KeepLast, s.KeepLast)
 	s.KeepDays = lo.FromPtrOr(req.KeepDays, s.KeepDays)
 	s.KeepSmart = lo.FromPtrOr(req.KeepSmart, s.KeepSmart)
+	s.RetryMax = lo.FromPtrOr(req.RetryMax, s.RetryMax)
 	s.Compress = lo.FromPtrOr(req.Compress, s.Compress)
 	s.DestinationID = lo.FromPtrOr(req.DestinationID, s.DestinationID)
 	s.NotifyOn = lo.FromPtrOr(req.NotifyOn, s.NotifyOn)
@@ -305,7 +307,7 @@ func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 	return dto.BackupScheduleResponse{
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
 		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, Timezone: s.Timezone,
-		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, KeepSmart: s.KeepSmart, Compress: s.Compress, Encrypted: s.PublicKey != "",
+		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, KeepSmart: s.KeepSmart, RetryMax: s.RetryMax, Compress: s.Compress, Encrypted: s.PublicKey != "",
 		DestinationID: s.DestinationID, ChannelIDs: s.Channels(), NotifyOn: s.NotifyOn,
 		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,
 	}

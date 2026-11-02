@@ -21,6 +21,7 @@ type (
 		KeepLast     int    `json:"keepLast"`
 		KeepDays     int    `json:"keepDays"`
 		KeepSmart    bool   `json:"keepSmart"`
+		RetryMax     int    `json:"retryMax"`
 		Compress     bool   `json:"compress"`
 		// DestinationID also copies each backup to a destination; ChannelIDs and NotifyOn
 		// ("failure", "always" or "never") say who hears about each run.
@@ -46,6 +47,7 @@ type (
 		KeepLast      *int    `json:"keepLast"`
 		KeepDays      *int    `json:"keepDays"`
 		KeepSmart     *bool   `json:"keepSmart"`
+		RetryMax      *int    `json:"retryMax"`
 		Compress      *bool   `json:"compress"`
 		DestinationID *uint   `json:"destinationId"`
 		ChannelIDs    *[]uint `json:"channelIds"`
@@ -69,6 +71,7 @@ type (
 		KeepLast      int        `json:"keepLast"`
 		KeepDays      int        `json:"keepDays"`
 		KeepSmart     bool       `json:"keepSmart"`
+		RetryMax      int        `json:"retryMax"`
 		Compress      bool       `json:"compress"`
 		Encrypted     bool       `json:"encrypted"`
 		DestinationID uint       `json:"destinationId"`
@@ -106,6 +109,7 @@ func (req BackupScheduleRequest) Validate() error {
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
+		validation.Field(&req.RetryMax, validation.Min(0), validation.Max(5)),
 		validation.Field(&req.NotifyOn, validation.In(notifyModes...)),
 	)
 }
@@ -121,6 +125,7 @@ func (req BackupScheduleUpdateRequest) Validate() error {
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
+		validation.Field(&req.RetryMax, validation.Min(0), validation.Max(5)),
 		validation.Field(&req.NotifyOn, validation.In(notifyModes...)),
 	)
 }

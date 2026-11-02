@@ -1349,6 +1349,8 @@
   "backup_schedule_keep_days": "Keep days (0 = forever)",
   "backup_schedule_keep_smart": "Smart retention",
   "backup_schedule_keep_smart_hint": "Keeps one backup per day for a week, per week for a month and per month for a year. Older ones are deleted.",
+  "backup_schedule_retry": "Retries on failure",
+  "backup_schedule_retry_hint": "A failed run is tried again after 5 minutes, then 10, 20 and so on. Only the last failure is reported.",
   "backup_schedule_create": "Create schedule",
   "backup_schedule_empty": "No schedules yet",
   "backup_schedule_next": "Next run",

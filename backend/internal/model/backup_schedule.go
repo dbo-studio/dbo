@@ -46,8 +46,11 @@ type BackupSchedule struct {
 	// KeepSmart replaces both limits: one backup per day for a week, per week for
 	// four weeks, per month for a year.
 	KeepSmart bool `gorm:"not null;default:false"`
-	NextRunAt *time.Time
-	LastRunAt *time.Time
+	// RetryMax is how many times a failed run is tried again; RetryCount is the tries used so far.
+	RetryMax   int `gorm:"not null;default:0"`
+	RetryCount int `gorm:"not null;default:0"`
+	NextRunAt  *time.Time
+	LastRunAt  *time.Time
 	// LastSuccessAt and LastSize describe the newest completed run.
 	LastSuccessAt *time.Time
 	LastSize      int64      `gorm:"not null;default:0"`

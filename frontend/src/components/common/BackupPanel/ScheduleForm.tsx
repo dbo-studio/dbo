@@ -45,6 +45,7 @@ export default function ScheduleForm({
   const [keepLast, setKeepLast] = useState(job?.keepLast ?? 7);
   const [keepDays, setKeepDays] = useState(job?.keepDays ?? 0);
   const [keepSmart, setKeepSmart] = useState(job?.keepSmart ?? false);
+  const [retryMax, setRetryMax] = useState(job?.retryMax ?? 2);
   const [compress, setCompress] = useState(job?.compress ?? true);
   const [passphrase, setPassphrase] = useState('');
   const [destinationId, setDestinationId] = useState(job?.destinationId ?? 0);
@@ -79,6 +80,7 @@ export default function ScheduleForm({
       keepLast,
       keepDays,
       keepSmart,
+      retryMax,
       compress,
       destinationId,
       channelIds,
@@ -171,6 +173,14 @@ export default function ScheduleForm({
             value={String(minute)}
             onChange={(e) => setMinute(asNumber(e.target.value, minute))}
             margin='none'
+          />
+        </FormRow>
+        <FormRow label={locales.backup_schedule_retry} hint={locales.backup_schedule_retry_hint}>
+          <SelectInput
+            emptylabel=''
+            value={String(retryMax)}
+            onChange={(e) => setRetryMax(Number((e as SelectInputOption)?.value))}
+            options={[0, 1, 2, 3, 4, 5].map((n) => ({ label: String(n), value: String(n) }))}
           />
         </FormRow>
       </FormGroup>

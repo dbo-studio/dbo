@@ -90,6 +90,8 @@ export type BackupScheduleRequestType = {
   keepDays: number;
   /** One backup per day for a week, per week for a month, per month for a year; replaces keepLast and keepDays. */
   keepSmart?: boolean;
+  /** Times a failed run is tried again (5, 10, 20 min...), 0 to 5. */
+  retryMax?: number;
   compress?: boolean;
   /** 0 = keep backups on this machine only. */
   destinationId?: number;

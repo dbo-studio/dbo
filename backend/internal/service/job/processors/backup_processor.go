@@ -115,8 +115,13 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 			"error":  runErr.Error(),
 			"log":    artifact.Log + time.Now().Format("15:04:05") + " Failed: " + runErr.Error() + "\n",
 		})
-		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error(), 0)
-		p.notify(context.WithoutCancel(ctx), &jobData, connection, artifact, runErr.Error())
+		bg := context.WithoutCancel(ctx)
+		retrying := p.planRetry(bg, &jobData)
+		p.recordSchedule(bg, &jobData, "failed", runErr.Error(), 0)
+		// A failure that will be retried is not announced; only the last try is.
+		if !retrying {
+			p.notify(bg, &jobData, connection, artifact, runErr.Error())
+		}
 
 		return runErr
 	}
@@ -389,6 +394,7 @@ func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.Backu
 
 	fields := map[string]any{"last_status": status, "last_error": message}
 	if status == "completed" {
+		fields["retry_count"] = 0
 		fields["last_success_at"] = time.Now()
 		fields["last_size"] = size
 	}
@@ -398,6 +404,28 @@ func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.Backu
 	if status == "completed" {
 		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, p.remote, schedule, time.Now())
 	}
+}
+
+// planRetry moves a failed scheduled run's next slot up to a retry time and
+// reports whether it did. When tries are used up it resets the count instead.
+func (p *BackupProcessor) planRetry(ctx context.Context, jobData *dto.BackupJob) bool {
+	if jobData.ScheduleID == 0 {
+		return false
+	}
+
+	schedule, err := p.scheduleRepo.FindByOwner(ctx, jobData.ScheduleID, jobData.OwnerID)
+	if err != nil {
+		return false
+	}
+
+	at, ok := serviceBackup.PlanRetry(schedule, time.Now())
+	if !ok {
+		_ = p.scheduleRepo.UpdateFields(ctx, schedule.ID, map[string]any{"retry_count": 0})
+
+		return false
+	}
+
+	return p.scheduleRepo.UpdateFields(ctx, schedule.ID, map[string]any{"next_run_at": at, "retry_count": schedule.RetryCount + 1}) == nil
 }
 
 // minFreeBytes is the least free space a backup needs when no earlier backup

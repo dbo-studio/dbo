@@ -20,6 +20,7 @@ type Event struct {
 	Connection string
 	Database   string
 	Failed     bool
+	Missed     bool // the run never started: DBO was not running at its time
 	Size       int64
 	Error      string
 	At         time.Time
@@ -32,6 +33,8 @@ func (e Event) title() string {
 	switch {
 	case e.Test:
 		return "DBO test message"
+	case e.Missed:
+		return what + " missed"
 	case e.Failed:
 		return what + " failed"
 	default:

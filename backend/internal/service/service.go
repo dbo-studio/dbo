@@ -125,7 +125,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		JobManager:                   jobManager,
 		ConnectorService:             connectorService,
 		BackupScheduleService:        serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, repo.BackupConnectorRepo, ss),
-		BackupScheduler:              serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, deps.Logger),
+		BackupScheduler:              serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, repo.ConnectionRepo, connectorService, deps.Logger),
 		BackupService:                serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, repo.BackupConnectorRepo, connectorService, deps.Cache),
 		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:            aiProviderService,
