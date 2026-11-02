@@ -57,6 +57,14 @@ export function defineReportFilterTests(engine: DbEngine): void {
             expect(Number(answer.rows[0].n)).toBe(2);
           });
 
+          await test.step("A filter used on its own, with a number or text, returns the value", async () => {
+            for (const value of ["5", "hello"]) {
+              const answer = await run(await question("SELECT {{x}} AS v"), { x: value });
+              expect(answer.status, value).toBe(200);
+              expect(String(answer.rows[0]?.v), value).toBe(value);
+            }
+          });
+
           await test.step("A value that tries to be SQL stays a value", async () => {
             const id = await question(`SELECT count(*) AS n FROM ${table} WHERE region = {{region}}`);
             for (const attack of [`east' OR '1'='1`, `east'; DROP TABLE ${table}; --`, `\\' OR 1=1 --`]) {

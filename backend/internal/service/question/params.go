@@ -71,7 +71,13 @@ func (b *bound) add(value any, cast string) string {
 }
 
 // scalar is a number when it reads as one, otherwise text; the server settles the rest from the column it meets.
-func scalar(value string) any {
+// PostgreSQL gets text only: it sends the value for the server to read as whatever type the place needs,
+// where a Go number cannot be encoded into a parameter the server took to be text (SELECT {{x}}).
+func (b *bound) scalar(value string) any {
+	if b.numbered {
+		return value
+	}
+
 	if numberValue.MatchString(value) {
 		if n, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return n
@@ -88,7 +94,7 @@ func scalar(value string) any {
 func (b *bound) param(kind, field, value string) (string, error) {
 	switch kind {
 	case "":
-		return b.add(scalar(value), ""), nil
+		return b.add(b.scalar(value), ""), nil
 	case "text":
 		return b.add(value, "text"), nil
 	case "number":
@@ -96,7 +102,7 @@ func (b *bound) param(kind, field, value string) (string, error) {
 			return "", fmt.Errorf("%q is not a number", value)
 		}
 
-		return b.add(scalar(value), "numeric"), nil
+		return b.add(b.scalar(value), "numeric"), nil
 	case "date":
 		if !dateValue.MatchString(value) {
 			return "", fmt.Errorf("%q is not a date (YYYY-MM-DD)", value)
@@ -118,9 +124,9 @@ func (b *bound) param(kind, field, value string) (string, error) {
 			return "", fmt.Errorf("%q is not a range (low..high)", value)
 		}
 
-		return b.add(scalar(low), "") + " AND " + b.add(scalar(high), ""), nil
+		return b.add(b.scalar(low), "") + " AND " + b.add(b.scalar(high), ""), nil
 	case "field":
-		return field + " = " + b.add(scalar(value), ""), nil
+		return field + " = " + b.add(b.scalar(value), ""), nil
 	}
 
 	return "", fmt.Errorf("unknown filter type %q", kind)
