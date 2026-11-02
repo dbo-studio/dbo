@@ -5,7 +5,7 @@ import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { attachments, FakeMailbox, FakeWebhook, htmlBody } from "../../helpers/fakeMailbox";
 import { ensureSqliteDbFile, removeSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
-import { ConnectionPage, ObjectTreePage } from "../../pages";
+import { BoardsPage, ConnectionPage, ObjectTreePage } from "../../pages";
 
 type Sub = { id: number; nextRunAt: string; lastStatus: string; enabled: boolean };
 
@@ -27,6 +27,7 @@ test.describe("Dashboard subscriptions", () => {
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
         const tree = new ObjectTreePage(page);
+        const boards = new BoardsPage(page);
 
         await connectionPage.goto();
         await connectionPage.waitForReady();
@@ -61,8 +62,7 @@ test.describe("Dashboard subscriptions", () => {
 
         await page.reload();
         await tree.waitForTreeLoad();
-        await tree.getTreeNode("Dashboards").click();
-        await tree.getTreeNode(boardName).dblclick();
+        await boards.openItem(boardName);
 
         await test.step("Email cannot be scheduled before the mail account is set", async () => {
           const refused = await page.request.post(`/api/dashboards/${board}/subscriptions`, {

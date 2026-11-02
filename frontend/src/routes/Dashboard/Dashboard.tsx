@@ -31,7 +31,7 @@ export default function Dashboard(): JSX.Element {
   }
 
   return (
-    <Box sx={{ p: 2, height: '100%', overflow: 'auto' }} data-testid='dashboard-tab'>
+    <Box sx={{ height: '100%' }} data-testid='dashboard-tab'>
       <BoardView board={board} />
     </Box>
   );

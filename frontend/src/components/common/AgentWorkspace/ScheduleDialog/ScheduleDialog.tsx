@@ -19,13 +19,11 @@ import SmtpForm from './SmtpForm';
 
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const pad = (value: number): string => String(value).padStart(2, '0');
-const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6].map(
-  (day): SelectInputOption => ({
-    value: String(day),
-    // 2024-01-07 is a Sunday.
-    label: new Date(2024, 0, 7 + day).toLocaleDateString(undefined, { weekday: 'long' })
-  })
-);
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6].map((day): SelectInputOption => ({
+  value: String(day),
+  // 2024-01-07 is a Sunday.
+  label: new Date(2024, 0, 7 + day).toLocaleDateString(undefined, { weekday: 'long' })
+}));
 
 const describe = (sub: SubscriptionType): string => {
   const time = `${pad(sub.hour)}:${pad(sub.minute)}`;
@@ -34,9 +32,7 @@ const describe = (sub: SubscriptionType): string => {
       ? locales.schedule_hourly_at.replace('{minute}', pad(sub.minute))
       : sub.frequency === 'daily'
         ? locales.schedule_daily_at.replace('{time}', time)
-        : locales.schedule_weekly_at
-            .replace('{day}', WEEKDAYS[sub.weekday].label)
-            .replace('{time}', time);
+        : locales.schedule_weekly_at.replace('{day}', WEEKDAYS[sub.weekday].label).replace('{time}', time);
 
   return `${when} (${sub.timezone})`;
 };
@@ -52,9 +48,12 @@ function History({ boardId, sub }: { boardId: number; sub: SubscriptionType }): 
       {(data ?? []).length === 0 && <Typography variant='caption'>{locales.schedule_no_runs}</Typography>}
       {(data ?? []).map((run) => (
         <Typography key={run.id} variant='caption' data-testid='schedule-run' data-status={run.status}>
-          {new Date(run.startedAt).toLocaleString()} · {run.status === 'ok' ? locales.schedule_run_ok : locales.schedule_run_failed}
+          {new Date(run.startedAt).toLocaleString()} ·{' '}
+          {run.status === 'ok' ? locales.schedule_run_ok : locales.schedule_run_failed}
           {run.manual && ` · ${locales.schedule_run_manual}`}
-          {run.status === 'ok' ? ` · ${locales.schedule_reports.replace('{count}', String(run.reports))}` : ` · ${run.error}`}
+          {run.status === 'ok'
+            ? ` · ${locales.schedule_reports.replace('{count}', String(run.reports))}`
+            : ` · ${run.error}`}
         </Typography>
       ))}
     </Stack>
@@ -64,7 +63,8 @@ function History({ boardId, sub }: { boardId: number; sub: SubscriptionType }): 
 function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.Element {
   const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
-  const refresh = (): Promise<void> => queryClient.invalidateQueries({ queryKey: ['dashboard-subscriptions', boardId] });
+  const refresh = (): Promise<void> =>
+    queryClient.invalidateQueries({ queryKey: ['dashboard-subscriptions', boardId] });
   const failed = (): void => void toast.error(locales.action_failed);
 
   const { mutate: runNow, isPending: running } = useMutation({
@@ -97,10 +97,20 @@ function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.
     onError: failed
   });
 
-  const state = !sub.enabled ? (sub.consecutiveFailures > 0 ? 'paused_failing' : 'paused') : sub.lastStatus === 'failed' ? 'failing' : 'active';
+  const state = !sub.enabled
+    ? sub.consecutiveFailures > 0
+      ? 'paused_failing'
+      : 'paused'
+    : sub.lastStatus === 'failed'
+      ? 'failing'
+      : 'active';
 
   return (
-    <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }} data-testid='schedule-row' data-state={state}>
+    <Box
+      sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}
+      data-testid='schedule-row'
+      data-state={state}
+    >
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
         <Chip size='small' label={sub.kind === 'email' ? locales.schedule_email : locales.schedule_webhook} />
         <Typography variant='body2' noWrap sx={{ flex: 1, minWidth: 120 }}>
@@ -141,7 +151,7 @@ function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.
   );
 }
 
-function ScheduleForm({ board }: { board: DashboardType }): JSX.Element {
+function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () => void }): JSX.Element {
   const queryClient = useQueryClient();
   const [kind, setKind] = useState<SubscriptionKind>('email');
   const [target, setTarget] = useState('');
@@ -178,124 +188,165 @@ function ScheduleForm({ board }: { board: DashboardType }): JSX.Element {
       await queryClient.invalidateQueries({ queryKey: ['dashboard-subscriptions', board.id] });
     },
     // The server says what is wrong (a bad address, no mail account yet).
-    onError: (error: unknown) => toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message ?? locales.action_failed)
+    onError: (error: unknown) =>
+      toast.error(
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ?? locales.action_failed
+      )
   });
 
-  if (!data) return <Typography variant='body2'>…</Typography>;
-
   return (
-    <Stack spacing={1.5} sx={{ width: 600, maxWidth: '100%' }} data-testid='schedule-dialog'>
-      <Typography variant='body2' color='textSubdued'>
-        {locales.schedule_intro}
-      </Typography>
-      <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <Typography variant='caption' color={data.emailConfigured ? 'textSubdued' : 'error'} sx={{ flex: 1 }} data-testid='schedule-email-status'>
-          {data.emailConfigured ? locales.schedule_email_ready : locales.schedule_email_missing}
-        </Typography>
-        <Button size='small' onClick={() => setShowSmtp(!showSmtp)} data-testid='schedule-smtp-toggle'>
-          {locales.schedule_email_settings}
-        </Button>
-      </Stack>
-      {showSmtp && <SmtpForm onSaved={() => void queryClient.invalidateQueries({ queryKey: ['dashboard-subscriptions', board.id] })} />}
-
-      <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
-        <ToggleButtonGroup
-          exclusive
-          size='small'
-          value={kind}
-          onChange={(_, next: SubscriptionKind | null) => next && setKind(next)}
-        >
-          <ToggleButton value='email' data-testid='schedule-kind-email'>
-            {locales.schedule_email}
-          </ToggleButton>
-          <ToggleButton value='webhook' data-testid='schedule-kind-webhook'>
-            {locales.schedule_webhook}
-          </ToggleButton>
-        </ToggleButtonGroup>
-        <FieldInput
-          size='small'
-          placeholder={kind === 'email' ? locales.schedule_target_email : locales.schedule_target_webhook}
-          value={target}
-          onChange={(event) => setTarget(event.target.value)}
-          inputProps={{ 'aria-label': locales.schedule_target, 'data-testid': 'schedule-target' }}
-          mb={0}
-        />
-        {kind === 'webhook' && (
-          <FieldInput
+    <Modal
+      open
+      onClose={onClose}
+      title={locales.schedule_title}
+      footer={
+        <>
+          <Button size='small' onClick={onClose}>
+            {locales.close}
+          </Button>
+          <Button
             size='small'
-            type='password'
-            placeholder={locales.schedule_secret}
-            value={secret}
-            onChange={(event) => setSecret(event.target.value)}
-            inputProps={{ 'aria-label': locales.schedule_secret, 'data-testid': 'schedule-secret' }}
-            mb={0}
-          />
-        )}
-        <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-          <ToggleButtonGroup
-            exclusive
-            size='small'
-            value={frequency}
-            onChange={(_, next: SubscriptionFrequency | null) => next && setFrequency(next)}
+            variant='contained'
+            disabled={!data || isPending || !target.trim()}
+            onClick={() => create()}
+            data-testid='schedule-create'
           >
-            {(['hourly', 'daily', 'weekly'] as const).map((value) => (
-              <ToggleButton key={value} value={value} data-testid={`schedule-frequency-${value}`}>
-                {locales[`schedule_${value}`]}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-          {frequency === 'weekly' && (
-            <Box sx={{ width: 150 }}>
-              <SelectInput
-                testId='schedule-weekday'
-                value={weekday}
-                options={WEEKDAYS}
-                onChange={(picked) => setWeekday((picked as SelectInputOption).value as string)}
-              />
-            </Box>
-          )}
-          {frequency === 'hourly' ? (
-            <FieldInput
-              size='small'
-              type='number'
-              value={minute}
-              onChange={(event) => setMinute(event.target.value)}
-              inputProps={{ 'aria-label': locales.schedule_minute, 'data-testid': 'schedule-minute', min: 0, max: 59 }}
-              mb={0}
-              sx={{ width: 90 }}
-            />
-          ) : (
-            <FieldInput
-              size='small'
-              type='time'
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              inputProps={{ 'aria-label': locales.schedule_time, 'data-testid': 'schedule-time' }}
-              mb={0}
-            />
-          )}
-          <Typography variant='caption' color='textSubdued'>
-            {timezone}
-          </Typography>
-          <Box sx={{ flex: 1 }} />
-          <Button size='small' variant='contained' disabled={isPending || !target.trim()} onClick={() => create()} data-testid='schedule-create'>
             {locales.schedule_add}
           </Button>
-        </Stack>
-      </Stack>
+        </>
+      }
+    >
+      {!data ? (
+        <Typography variant='body2'>…</Typography>
+      ) : (
+        <Stack spacing={1.5} sx={{ width: 600, maxWidth: '100%' }} data-testid='schedule-dialog'>
+          <Typography variant='body2' color='textSubdued'>
+            {locales.schedule_intro}
+          </Typography>
+          <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+            <Typography
+              variant='caption'
+              color={data.emailConfigured ? 'textSubdued' : 'error'}
+              sx={{ flex: 1 }}
+              data-testid='schedule-email-status'
+            >
+              {data.emailConfigured ? locales.schedule_email_ready : locales.schedule_email_missing}
+            </Typography>
+            <Button size='small' onClick={() => setShowSmtp(!showSmtp)} data-testid='schedule-smtp-toggle'>
+              {locales.schedule_email_settings}
+            </Button>
+          </Stack>
+          {showSmtp && (
+            <SmtpForm
+              onSaved={() => void queryClient.invalidateQueries({ queryKey: ['dashboard-subscriptions', board.id] })}
+            />
+          )}
 
-      {data.items.map((sub) => (
-        <Row key={sub.id} boardId={board.id} sub={sub} />
-      ))}
-    </Stack>
+          <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+            <ToggleButtonGroup
+              exclusive
+              size='small'
+              value={kind}
+              onChange={(_, next: SubscriptionKind | null) => next && setKind(next)}
+            >
+              <ToggleButton value='email' data-testid='schedule-kind-email'>
+                {locales.schedule_email}
+              </ToggleButton>
+              <ToggleButton value='webhook' data-testid='schedule-kind-webhook'>
+                {locales.schedule_webhook}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <FieldInput
+              size='small'
+              placeholder={kind === 'email' ? locales.schedule_target_email : locales.schedule_target_webhook}
+              value={target}
+              onChange={(event) => setTarget(event.target.value)}
+              inputProps={{ 'aria-label': locales.schedule_target, 'data-testid': 'schedule-target' }}
+              mb={0}
+            />
+            {kind === 'webhook' && (
+              <FieldInput
+                size='small'
+                type='password'
+                placeholder={locales.schedule_secret}
+                value={secret}
+                onChange={(event) => setSecret(event.target.value)}
+                inputProps={{ 'aria-label': locales.schedule_secret, 'data-testid': 'schedule-secret' }}
+                mb={0}
+              />
+            )}
+            <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+              <ToggleButtonGroup
+                exclusive
+                size='small'
+                value={frequency}
+                onChange={(_, next: SubscriptionFrequency | null) => next && setFrequency(next)}
+              >
+                {(['hourly', 'daily', 'weekly'] as const).map((value) => (
+                  <ToggleButton key={value} value={value} data-testid={`schedule-frequency-${value}`}>
+                    {locales[`schedule_${value}`]}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              {frequency === 'weekly' && (
+                <Box sx={{ width: 150 }}>
+                  <SelectInput
+                    testId='schedule-weekday'
+                    value={weekday}
+                    options={WEEKDAYS}
+                    onChange={(picked) => setWeekday((picked as SelectInputOption).value as string)}
+                  />
+                </Box>
+              )}
+              {frequency === 'hourly' ? (
+                <FieldInput
+                  size='small'
+                  type='number'
+                  value={minute}
+                  onChange={(event) => setMinute(event.target.value)}
+                  inputProps={{
+                    'aria-label': locales.schedule_minute,
+                    'data-testid': 'schedule-minute',
+                    min: 0,
+                    max: 59
+                  }}
+                  mb={0}
+                  sx={{ width: 90 }}
+                />
+              ) : (
+                <FieldInput
+                  size='small'
+                  type='time'
+                  value={time}
+                  onChange={(event) => setTime(event.target.value)}
+                  inputProps={{ 'aria-label': locales.schedule_time, 'data-testid': 'schedule-time' }}
+                  mb={0}
+                />
+              )}
+              <Typography variant='caption' color='textSubdued'>
+                {timezone}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          {data.items.map((sub) => (
+            <Row key={sub.id} boardId={board.id} sub={sub} />
+          ))}
+        </Stack>
+      )}
+    </Modal>
   );
 }
 
 /** Schedules that send a board's reports by email or to a webhook: a CSV per report, on a timetable. */
-export default function ScheduleDialog({ board, open, onClose }: { board: DashboardType; open: boolean; onClose: () => void }): JSX.Element {
-  return (
-    <Modal open={open} onClose={onClose} title={locales.schedule_title}>
-      {open && <ScheduleForm board={board} />}
-    </Modal>
-  );
+export default function ScheduleDialog({
+  board,
+  open,
+  onClose
+}: {
+  board: DashboardType;
+  open: boolean;
+  onClose: () => void;
+}): JSX.Element {
+  return <>{open && <ScheduleForm board={board} onClose={onClose} />}</>;
 }

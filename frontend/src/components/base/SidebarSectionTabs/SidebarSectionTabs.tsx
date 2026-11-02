@@ -40,9 +40,9 @@ export default function SidebarSectionTabs<T extends string | number>({
             tabIndex={selected ? 0 : -1}
             selected={selected}
             isLast={index === tabs.length - 1}
-            onClick={(): void => onChange(tab.id)}
-            onKeyDown={(event): void => handleKeyDown(event, index)}
             title={tab.label}
+            onClick={(): void => onChange(tab.id)}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>): void => handleKeyDown(event, index)}
             {...Object.fromEntries(Object.entries(tab.data ?? {}).map(([key, value]) => [`data-${key}`, value]))}
           >
             {tab.icon && <CustomIcon type={tab.icon} size='xs' />}

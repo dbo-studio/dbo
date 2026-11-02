@@ -72,20 +72,12 @@ export default function WorkspaceCanvas({
       case 'result':
         return <ResultGrid key={artifact.id} result={artifact.result} />;
       case 'report':
-        return (
-          <Box sx={{ p: 1.5 }}>
-            <ReportEditor report={artifact.report} />
-          </Box>
-        );
+        return <ReportEditor report={artifact.report} />;
       case 'proposal':
         return <ProposalView changesetId={artifact.changesetId} />;
       case 'board': {
         const board = boards?.find((item) => item.id === artifact.boardId);
-        return board ? (
-          <Box sx={{ p: 1.5 }}>
-            <BoardView board={board} />
-          </Box>
-        ) : null;
+        return board ? <BoardView board={board} /> : null;
       }
     }
   };
@@ -118,7 +110,7 @@ export default function WorkspaceCanvas({
           </IconButton>
         </Tooltip>
       </WorkspaceCanvasHeaderStyled>
-      <WorkspaceCanvasBodyStyled sx={active?.kind === 'result' ? { overflow: 'hidden' } : undefined}>
+      <WorkspaceCanvasBodyStyled sx={active?.kind === 'proposal' ? undefined : { overflow: 'hidden' }}>
         {active && body(active)}
       </WorkspaceCanvasBodyStyled>
     </WorkspaceCanvasStyled>

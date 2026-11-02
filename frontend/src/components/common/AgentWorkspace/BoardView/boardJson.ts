@@ -50,7 +50,10 @@ export function exportBoard(board: DashboardType): void {
     }))
   };
 
-  tools.fileDownload(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }), `${board.name}.dashboard.json`);
+  tools.fileDownload(
+    new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }),
+    `${board.name}.dashboard.json`
+  );
 }
 
 /** Recreates a board file on a connection: each card's report is saved anew, then pinned in order. */
