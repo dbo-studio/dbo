@@ -145,6 +145,43 @@ test.describe("AI report charts", () => {
             2,
             { timeout: 15000 },
           );
+
+          // The types that need more than an x and one measure ask for the rest in extra selects.
+          const setSql = (sql: string) =>
+            page.evaluate((text) => {
+              type Editor = { setValue: (value: string) => void; getContainerDomNode: () => HTMLElement };
+              const monaco = (window as unknown as { monaco: { editor: { getEditors: () => Editor[] } } }).monaco;
+              monaco.editor
+                .getEditors()
+                .find((item) => item.getContainerDomNode().closest("[data-testid=ai-report-sql]"))
+                ?.setValue(text);
+            }, sql);
+          const pick = async (testId: string, option: string) => {
+            await editor.getByTestId(testId).getByRole("combobox").click();
+            await page.getByRole("option", { name: option, exact: true }).click();
+          };
+          await setSql(
+            `SELECT month, SUM(total) AS revenue, COUNT(*) AS n, MAX(total) AS best FROM ${orders} GROUP BY month ORDER BY month`,
+          );
+          await editor.getByTestId("ai-report-run").click();
+
+          await editor.getByTestId("ai-report-type-combo").click();
+          await pick("ai-report-line", "n");
+          await expect(editor.getByTestId("ai-chart")).toHaveAttribute("data-type", "combo");
+          await expect(editor.locator(".recharts-line-curve")).toHaveCount(1);
+
+          await editor.getByTestId("ai-report-type-scatter").click();
+          await pick("ai-report-x", "n");
+          await pick("ai-report-size", "best");
+          await expect(editor.locator(".recharts-scatter-symbol")).toHaveCount(3);
+
+          await editor.getByTestId("ai-report-type-heatmap").click();
+          await pick("ai-report-group", "month");
+          await expect(editor.getByTestId("heatmap-cell").first()).toBeVisible();
+
+          await editor.getByTestId("ai-report-type-gauge").click();
+          await editor.getByTestId("ai-report-goal").fill("50");
+          await expect(editor.getByTestId("gauge-value")).toContainText("/ 50");
           await page.getByTestId("ai-workspace-back").click();
         });
 
