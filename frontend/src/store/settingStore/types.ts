@@ -84,6 +84,8 @@ export type NotificationSettings = {
   query: boolean;
   import: boolean;
   export: boolean;
+  /** Covers backup, restore and tool downloads. */
+  backup: boolean;
 };
 
 export type SetupSettings = {

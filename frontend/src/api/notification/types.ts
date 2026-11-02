@@ -1,7 +1,9 @@
+import type { JobDetailResponseType } from '@/api/job/types';
+
 export type NotificationType = {
   id: number;
   kind: 'job_completed' | 'job_failed' | 'subscription_paused';
-  jobType: 'import' | 'export' | 'query' | 'subscription';
+  jobType: JobDetailResponseType['type'] | 'subscription';
   title: string;
   body: string;
   jobId: number | null;

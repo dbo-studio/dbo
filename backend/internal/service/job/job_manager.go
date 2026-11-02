@@ -150,6 +150,11 @@ func (jm *IJobManagerImpl) Announce(ctx context.Context, jobID uint) {
 		kind, title, body = model.NotificationJobFailed, jobLabel(job.Type)+" failed", job.Error
 	}
 
+	// Backup errors can carry paths, SQL or tool output, so those notifications say only what ran.
+	if isBackupFamily(job.Type) {
+		body = ""
+	}
+
 	if len(body) > 300 {
 		body = body[:300]
 	}
@@ -169,12 +174,22 @@ func (jm *IJobManagerImpl) announceRunning(job *model.Job) {
 	}})
 }
 
+func isBackupFamily(jobType model.JobType) bool {
+	return jobType == model.JobTypeBackup || jobType == model.JobTypeRestore || jobType == model.JobTypeToolInstall
+}
+
 func jobLabel(jobType model.JobType) string {
 	switch jobType {
 	case model.JobTypeImport:
 		return "Import"
 	case model.JobTypeExport:
 		return "Export"
+	case model.JobTypeBackup:
+		return "Backup"
+	case model.JobTypeRestore:
+		return "Restore"
+	case model.JobTypeToolInstall:
+		return "Tool install"
 	default:
 		return "Query"
 	}

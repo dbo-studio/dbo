@@ -9,7 +9,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Box, Switch } from '@mui/material';
 import { useEffect, useState, type JSX } from 'react';
 
-const KINDS = ['query', 'import', 'export'] as const;
+const KINDS = ['query', 'import', 'export', 'backup'] as const;
 
 export default function NotificationsPanel(): JSX.Element {
   const general = useSettingStore((state) => state.general);

@@ -2,6 +2,7 @@ import type { NotificationType } from '@/api/notification/types';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import type { NotificationSettings } from '@/store/settingStore/types';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { notificationTitle } from './openNotification';
@@ -19,6 +20,9 @@ const claim = (id: number): boolean => {
 
   return true;
 };
+
+const settingKey = (jobType: Exclude<NotificationType['jobType'], 'subscription'>): keyof NotificationSettings =>
+  jobType === 'restore' || jobType === 'tool_install' ? 'backup' : jobType;
 
 /** How long after a desktop notification a window focus counts as the click on it. */
 const CLICK_WINDOW_MS = 30_000;
@@ -63,7 +67,7 @@ const permitted = async (): Promise<boolean> =>
  */
 export async function announce(n: NotificationType, open: (n: NotificationType) => void): Promise<void> {
   const settings = useSettingStore.getState().general.notifications;
-  if (!settings.enabled || (n.jobType !== 'subscription' && !settings[n.jobType])) return;
+  if (!settings.enabled || (n.jobType !== 'subscription' && !settings[settingKey(n.jobType)])) return;
 
   const title = notificationTitle(n);
   const inFront = document.hasFocus();

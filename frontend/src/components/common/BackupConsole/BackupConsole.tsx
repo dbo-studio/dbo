@@ -10,8 +10,9 @@ import type { ConnectionType } from '@/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Alert, Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { isFinished, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import RestoreConfirm from '../BackupModal/RestoreConfirm';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
@@ -42,11 +43,19 @@ function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
 
   const { data: jobs = [] } = useQuery({
     queryKey: ['backup-schedules'],
-    queryFn: api.backup.schedules,
-    refetchInterval: 15_000
+    queryFn: api.backup.schedules
   });
 
   const refresh = (): void => void queryClient.invalidateQueries({ queryKey: ['backup-schedules'] });
+
+  // A scheduled run ends on the server; the job stream tells this screen to reload instead of a timer.
+  const finishedBackups = useJobEventsStore(
+    (s) => Object.values(s.jobs).filter((j) => j.type === 'backup' && isFinished(j.status)).length
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload only when the count of finished backups changes
+  useEffect(() => {
+    if (finishedBackups > 0) refresh();
+  }, [finishedBackups]);
   const connectionName = (id: number): string => connections.find((c) => c.id === id)?.name ?? `#${id}`;
   const failing = jobs.filter((j) => j.enabled && j.lastStatus === 'failed');
 
