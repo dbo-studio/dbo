@@ -22,10 +22,13 @@ type ChatRequest struct {
 	SelectedQuery      string                `json:"selectedQuery,omitempty"`
 	QueryResultSummary string                `json:"queryResultSummary,omitempty"`
 	ObjectDefinition   string                `json:"objectDefinition,omitempty"`
-	UseMarkdownPrompt  bool                  `json:"-"`
-	ModeInstructions   string                `json:"-"`
-	Tools              []openai.ChatCompletionToolUnionParam
-	ExtraMessages      []openai.ChatCompletionMessageParamUnion
+	// Engine is the connection type (postgresql, mysql, sqlite, ...), so SQL uses its dialect.
+	Engine           string `json:"-"`
+	ModeInstructions string `json:"-"`
+	// Summary stands in for the chat's older messages, which are no longer sent.
+	Summary       string `json:"-"`
+	Tools         []openai.ChatCompletionToolUnionParam
+	ExtraMessages []openai.ChatCompletionMessageParamUnion
 }
 
 type ToolCall struct {

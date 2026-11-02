@@ -36,6 +36,7 @@ export type UpdateConnectionRequestType = {
   options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
   safeMode?: ConnectionSafeMode;
   safeModePassword?: string;
+  agentTier?: 'read_only' | 'data_write' | 'schema_change';
 };
 
 export type SetConnectionCredentialsRequestType = {

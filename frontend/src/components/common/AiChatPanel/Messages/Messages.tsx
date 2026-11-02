@@ -8,17 +8,15 @@ import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
-import CodeMessage from './CodeMessage/CodeMessage';
-import { DiffBaselineContext } from './DiffBaselineContext';
-import ExplanationMessage from './ExplanationMessage/ExplanationMessage';
 import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
 import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
-import { formatMessageTime } from '../utils/messageTime';
 import AgentItemCard from './AgentItemCard/AgentItemCard';
+import MessageBlock from './MessageBlock/MessageBlock';
 import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
+import { useAiSession } from '../hooks/useAiSession';
 
 export default function Messages({
   messages,
@@ -31,9 +29,8 @@ export default function Messages({
   onFeedback
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const streaming = useAiStore((state) => state.streaming);
+  const { streaming, agentItems } = useAiSession();
   const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
-  const agentItems = useAiStore((state) => state.agentItems);
   const selectedQuery = useAiStore((state) => state.context.selectedQuery);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
   const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
@@ -62,59 +59,71 @@ export default function Messages({
       new Set(messages.filter((message) => message.role === 'assistant' && message.model).map((m) => m.model)).size > 1,
     [messages]
   );
+  // Stays true while the user is at the bottom; only the user scrolling up ends it.
   const isNearBottomRef = useRef(true);
+  // Our own smooth scroll fires scroll events on the way; they must not read as "user scrolled up".
+  const ignoreScrollUntilRef = useRef(0);
+  // The browser also scrolls on its own when content is swapped (the viewport clamps); only a scroll that
+  // follows a wheel, touch, key or pointer action counts as the user leaving the bottom.
+  const userIntentUntilRef = useRef(0);
+  const pointerDownRef = useRef(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const markUserIntent = useCallback(() => {
+    userIntentUntilRef.current = Date.now() + 250;
+  }, []);
+
+  useEffect(() => {
+    const release = (): void => {
+      pointerDownRef.current = false;
+    };
+    window.addEventListener('pointerup', release);
+    return (): void => window.removeEventListener('pointerup', release);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
-    if (!container) return;
+    if (!container || Date.now() < ignoreScrollUntilRef.current) return;
     const threshold = 100;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-    isNearBottomRef.current = nearBottom;
-    setShowScrollButton(!nearBottom);
-  }, []);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior
-      });
+    const userScrolling = pointerDownRef.current || Date.now() < userIntentUntilRef.current;
+    // A wheel or touch scroll animates for a while; every event of it keeps the user's intent alive.
+    if (userScrolling) markUserIntent();
+    if (nearBottom) {
       isNearBottomRef.current = true;
       setShowScrollButton(false);
+    } else if (userScrolling) {
+      isNearBottomRef.current = false;
+      setShowScrollButton(true);
     }
+  }, [markUserIntent]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    isNearBottomRef.current = true;
+    if (behavior === 'smooth') ignoreScrollUntilRef.current = Date.now() + 600;
+    container.scrollTo({ top: container.scrollHeight, behavior });
   }, []);
 
-  const autoScrollToBottom = useCallback(
-    (behavior: ScrollBehavior = 'smooth') => {
-      if (!isNearBottomRef.current) return;
-      scrollToBottom(behavior);
-    },
-    [scrollToBottom]
-  );
-
+  // Sending a message always brings the conversation to the bottom, wherever the user had scrolled.
+  const lastMessage = messages[messages.length - 1];
+  const sentJustNow = lastMessage?.role === 'user' && lastMessage.isNew;
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.isNew) {
-        autoScrollToBottom();
-      }
-    }
-  }, [messages, autoScrollToBottom]);
+    if (sentJustNow) scrollToBottom();
+  }, [sentJustNow, messages.length, scrollToBottom]);
 
+  // Whatever makes the conversation taller (tokens, cards, tables) is followed while pinned to the bottom.
   useEffect(() => {
-    if (loading || streaming.status === 'streaming') {
-      autoScrollToBottom('auto');
-    }
-  }, [
-    loading,
-    streaming.status,
-    streaming.thinkingContent,
-    streaming.previewContent,
-    streaming.statusLabel,
-    agentItems,
-    autoScrollToBottom
-  ]);
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver(() => {
+      if (isNearBottomRef.current) scrollToBottom();
+    });
+    observer.observe(list);
+    return (): void => observer.disconnect();
+  }, [scrollToBottom]);
 
   const showEmpty = messages.length === 0 && !loading && streaming.status !== 'streaming';
   const showLoadMore = messages.filter((message) => !message.isNew).length > 10;
@@ -123,6 +132,12 @@ export default function Messages({
     <MessagesStyled
       ref={messagesContainerRef}
       onScroll={handleScroll}
+      onWheel={markUserIntent}
+      onTouchMove={markUserIntent}
+      onKeyDown={markUserIntent}
+      onPointerDown={() => {
+        pointerDownRef.current = true;
+      }}
       compact={density === 'compact'}
       data-density={density}
     >
@@ -148,49 +163,13 @@ export default function Messages({
 
       {showEmpty && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
-      <MessagesListStyled>
+      <MessagesListStyled ref={listRef}>
         {blocks.map((block) => {
-          if (block.kind === 'message') {
-            const { message } = block;
-            const inLastTurn = message.role === 'assistant' && lastTurn.includes(message);
-            const baseline = (inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message);
-            return (
-              <MessageGroupStyled key={block.key} title={formatMessageTime(message.createdAt)} data-testid='ai-message'>
-                {message.thinking?.content && (
-                  <ThinkingMessage
-                    content={message.thinking.content}
-                    durationMs={message.thinking.durationMs}
-                    defaultCollapsed
-                  />
-                )}
-                {showModelLabel && message.role === 'assistant' && message.model && (
-                  <Typography variant='caption' color='textSubdued' data-testid='ai-message-model'>
-                    {message.model}
-                  </Typography>
-                )}
-                <DiffBaselineContext value={baseline}>
-                  {message.type === 'code' ? (
-                    <CodeMessage message={message} />
-                  ) : (
-                    <ExplanationMessage message={message} />
-                  )}
-                </DiffBaselineContext>
-              </MessageGroupStyled>
-            );
-          }
+          const message = block.kind === 'message' ? block.message : undefined;
+          const inLastTurn = message?.role === 'assistant' && lastTurn.includes(message);
+          const baseline = message ? ((inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message)) : undefined;
 
-          return (
-            <MessageGroupStyled key={block.key}>
-              {block.thinking?.content && (
-                <ThinkingMessage
-                  content={block.thinking.content}
-                  durationMs={block.thinking.durationMs}
-                  defaultCollapsed
-                />
-              )}
-              {block.kind === 'tools' ? <ToolCallGroup items={block.items} /> : <AgentItemCard item={block.item} />}
-            </MessageGroupStyled>
-          );
+          return <MessageBlock key={block.key} block={block} baseline={baseline} showModelLabel={showModelLabel} />;
         })}
 
         {streaming.status === 'streaming' && (
@@ -245,7 +224,10 @@ export default function Messages({
             size='small'
             icon={<CustomIcon type='arrowDown' size='xs' />}
             label={locales.ai_jump_to_latest}
-            onClick={() => scrollToBottom()}
+            onClick={() => {
+              scrollToBottom('smooth');
+              setShowScrollButton(false);
+            }}
             data-testid='ai-jump-to-latest'
             sx={{
               backgroundColor: 'background.paper',

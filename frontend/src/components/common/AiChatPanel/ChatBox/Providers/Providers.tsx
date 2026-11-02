@@ -1,5 +1,7 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { isProviderReady } from '@/core/ai/aiStatus';
+import { PROVIDER_NAMES } from '@/core/ai/providerNames';
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
@@ -9,7 +11,7 @@ import { Chip, Divider, ListSubheader, Menu, MenuItem, Tooltip, Typography } fro
 import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { useAiChatMode } from '../../hooks/useAiChatMode';
-import { ModelButtonStyled, ProvidersStyled } from './Providers.styled';
+import { CapabilityIconStyled, ModelButtonStyled, ProvidersStyled, VisuallyHidden } from './Providers.styled';
 import { variables } from '@/core/theme/variables';
 
 const badgeSx = { height: 18, fontSize: variables.fontSize.xxs, '& .MuiChip-label': { px: 0.75 } };
@@ -58,30 +60,46 @@ export default function Providers(): JSX.Element {
     openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' });
   };
 
-  const selectable = (providers ?? []).filter((item) => item.models.length > 0);
+  const selectable = (providers ?? []).filter((item) => isProviderReady(item) && item.models.length > 0);
 
   return (
     <ProvidersStyled>
-      <Tooltip title={locales.ai_select_model}>
+      <Tooltip
+        title={active ? `${PROVIDER_NAMES[active.type]} · ${active.model}` : locales.ai_select_model}
+        enterDelay={700}
+      >
         <ModelButtonStyled
           size='small'
           disabled={isPending}
           onClick={(event) => setAnchorEl(event.currentTarget)}
           data-testid='ai-model-picker'
         >
-          <span className='model-label'>{active ? `${active.type} · ${active.model}` : locales.ai_select_model}</span>
+          <span className='model-label'>{active ? active.model : locales.ai_select_model}</span>
           <CustomIcon type='chevronDown' size='xs' />
         </ModelButtonStyled>
       </Tooltip>
       {active && mode === 'agent' && (
-        <Tooltip title={activeCaps.tools ? locales.ai_tools_supported_desc : locales.ai_no_tools_desc}>
-          <span data-testid='ai-model-capability'>
-            {activeCaps.tools ? (
-              <CapabilityBadge provider={active} model={active.model} />
-            ) : (
-              <Chip size='small' variant='outlined' color='warning' label={locales.ai_no_tools} sx={badgeSx} />
-            )}
-          </span>
+        <Tooltip
+          enterDelay={500}
+          title={
+            activeCaps.tools
+              ? `${locales.ai_tools_supported_desc}${activeCaps.contextWindow ? ` · ${formatContextWindow(activeCaps.contextWindow)}` : ''}`
+              : locales.ai_no_tools_desc
+          }
+        >
+          {/* An icon keeps the footer narrow; the label stays for screen readers. */}
+          <CapabilityIconStyled
+            data-testid='ai-model-capability'
+            data-tools={activeCaps.tools}
+            warn={!activeCaps.tools}
+          >
+            <CustomIcon type={activeCaps.tools ? 'check' : 'stop'} size='xs' />
+            <VisuallyHidden>
+              {activeCaps.tools
+                ? `${locales.ai_tools_supported}${activeCaps.contextWindow ? ` · ${formatContextWindow(activeCaps.contextWindow)}` : ''}`
+                : locales.ai_no_tools}
+            </VisuallyHidden>
+          </CapabilityIconStyled>
         </Tooltip>
       )}
       <Menu
@@ -93,8 +111,12 @@ export default function Providers(): JSX.Element {
         slotProps={{ paper: { sx: { maxHeight: 360, minWidth: 240 } } }}
       >
         {selectable.flatMap((provider) => [
-          <ListSubheader key={`h-${provider.id}`} sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}>
-            {provider.type}
+          <ListSubheader
+            disableSticky
+            key={`h-${provider.id}`}
+            sx={{ lineHeight: '28px', fontSize: variables.fontSize.xs }}
+          >
+            {PROVIDER_NAMES[provider.type]}
           </ListSubheader>,
           ...provider.models.map((model) => (
             <MenuItem

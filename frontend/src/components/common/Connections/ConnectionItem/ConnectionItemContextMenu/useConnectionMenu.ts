@@ -97,8 +97,6 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
       resetTree();
     }
 
-    await queryClient.cancelQueries({ queryKey: ['startup-autocomplete'] });
-
     try {
       await api.connection.updateConnection(connection.id, { isActive: false, isClose: true });
 

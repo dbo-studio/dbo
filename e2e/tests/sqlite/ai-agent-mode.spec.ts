@@ -1,7 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { clearActiveAiProfile, saveAiSetup } from "../../helpers/aiSetup";
+import {
+  clearActiveAiProfile,
+  saveAiSetup,
+  setAiMode,
+} from "../../helpers/aiSetup";
+import {
+  proposeChangeset,
+  type ProposedChangeset,
+} from "../../helpers/changeset";
+import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
@@ -16,9 +25,10 @@ import {
 } from "../../pages";
 
 /**
- * Agent Mode UI against a mocked NDJSON stream (no real LLM): tool cards,
- * confirm-before-write card, and the diagram_diff → preview → apply path,
- * which runs real DDL on SQLite through /api/schema/changes/apply.
+ * Agent Mode UI against a mocked NDJSON stream (no real LLM): tool cards and
+ * the diagram_diff → preview → apply path.
+ * The changeset itself is real (proposed through the fake LLM), so apply runs
+ * real DDL on SQLite from the stored ops.
  */
 
 type Event = Record<string, unknown>;
@@ -34,7 +44,7 @@ const traceMessage = (type: string, payload: unknown) => ({
   createdAt: new Date().toISOString(),
 });
 
-function agentTurn(connectionId: number, usersTable: string, postsTable: string): Event[] {
+function agentTurn(usersTable: string, proposal: ProposedChangeset): Event[] {
   const describe = {
     id: "call_describe",
     name: "describe_table",
@@ -43,82 +53,39 @@ function agentTurn(connectionId: number, usersTable: string, postsTable: string)
     result: `CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT)`,
     durationMs: 4,
   };
-  const ops = [
-    {
-      op: "create_table",
-      table: postsTable,
-      columns: [
-        { name: "id", type: "INTEGER", primary: true },
-        { name: "user_id", type: "INTEGER", notNull: true },
-        { name: "title", type: "TEXT" },
-      ],
-    },
-    {
-      op: "add_foreign_key",
-      table: postsTable,
-      fkColumns: ["user_id"],
-      refTable: usersTable,
-      refColumns: ["id"],
-    },
-  ];
-  const diff = {
-    changesetId: "cs-e2e",
-    connectionId,
-    ops,
-    diagramOps: [
-      {
-        op: "add",
-        target: "node",
-        id: postsTable,
-        value: {
-          id: postsTable,
-          kind: "table",
-          name: postsTable,
-          columns: [
-            { name: "id", dataType: "INTEGER", isPrimaryKey: true, isForeignKey: false },
-            { name: "user_id", dataType: "INTEGER", isPrimaryKey: false, isForeignKey: true },
-            { name: "title", dataType: "TEXT", isPrimaryKey: false, isForeignKey: false },
-          ],
-        },
-      },
-      {
-        op: "add",
-        target: "edge",
-        id: `fk:${postsTable}->${usersTable}`,
-        value: {
-          id: `fk:${postsTable}->${usersTable}`,
-          source: postsTable,
-          target: usersTable,
-          sourceColumns: ["user_id"],
-          targetColumns: ["id"],
-        },
-      },
-    ],
-  };
-  const permission = {
-    requestId: "perm-e2e",
-    connectionId,
-    sql: `UPDATE ${usersTable} SET email = 'x' WHERE id = 1`,
-    class: "write_dml",
-  };
-
   return [
     { type: "status", label: "Thinking..." },
-    { type: "tool_start", id: describe.id, label: describe.name, content: describe.args },
-    { type: "tool_result", id: describe.id, label: describe.name, content: describe.result, durationMs: 4 },
-    { type: "diagram_diff", id: diff.changesetId, data: diff },
-    { type: "permission_request", id: permission.requestId, data: permission },
+    {
+      type: "tool_start",
+      id: describe.id,
+      label: describe.name,
+      content: describe.args,
+    },
+    {
+      type: "tool_result",
+      id: describe.id,
+      label: describe.name,
+      content: describe.result,
+      durationMs: 4,
+    },
+    {
+      type: "diagram_diff",
+      id: String(proposal.changeset.id),
+      data: proposal.changeset,
+    },
     { type: "block_start", blockType: "explanation" },
-    { type: "content_delta", content: "Proposed a posts table for your review." },
+    {
+      type: "content_delta",
+      content: "Proposed a posts table for your review.",
+    },
     { type: "block_end" },
     {
       type: "done",
-      chatId: 0,
+      chatId: proposal.chatId,
       title: "agent e2e",
       messages: [
         traceMessage("tool", describe),
-        traceMessage("diagram_diff", diff),
-        traceMessage("permission", permission),
+        traceMessage("diagram_diff", { changesetId: proposal.changeset.id }),
         {
           role: "assistant",
           type: "explanation",
@@ -137,11 +104,15 @@ async function openAssistant(page: Page): Promise<void> {
   await page.getByTestId("ai-empty-quick-setup").click();
   await expect(settingsPage.aiSetupForm()).toBeVisible({ timeout: 15000 });
   await saveAiSetup(page, "sk-e2e-fake-key");
-  await expect(page.getByPlaceholder(/ask anything/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByPlaceholder(/ask anything/i)).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 test.describe("AI Agent Mode", () => {
-  test("tool cards, write confirm card, and diagram changeset apply", async ({ page }, testInfo) => {
+  test("tool cards, write confirm card, and diagram changeset apply", async ({
+    page,
+  }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `ai-agent-${suffix}`;
     const usersTable = `e2e_agent_users_${suffix}`;
@@ -150,6 +121,10 @@ test.describe("AI Agent Mode", () => {
 
     ensureSqliteDbFile(dbPath);
 
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+    let proposal: ProposedChangeset | undefined;
+
     await withConnectionCleanup(page, connectionName, async () => {
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
@@ -157,21 +132,14 @@ test.describe("AI Agent Mode", () => {
       const diagram = new DiagramPage(page);
 
       const sentModes: string[] = [];
-      const rawQueries: string[] = [];
-
-      page.on("request", (request) => {
-        if (request.method() === "POST" && new URL(request.url()).pathname.endsWith("/api/query/raw")) {
-          rawQueries.push(String((request.postDataJSON() as { query?: string })?.query ?? ""));
-        }
-      });
 
       await page.route("**/api/ai/chat/stream", async (route) => {
-        const body = route.request().postDataJSON() as { connectionId: number; mode?: string };
+        const body = route.request().postDataJSON() as { mode?: string };
         sentModes.push(body.mode ?? "");
         await route.fulfill({
           status: 200,
           contentType: "application/x-ndjson",
-          body: ndjson(agentTurn(body.connectionId, usersTable, postsTable)),
+          body: ndjson(agentTurn(usersTable, proposal as ProposedChangeset)),
         });
       });
 
@@ -181,21 +149,53 @@ test.describe("AI Agent Mode", () => {
         await connectionPage.waitForReady();
 
         await test.step("Create SQLite connection and seed users", async () => {
-          await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+          await connectionPage.setupConnection(
+            getDbConfig("sqlite", connectionName, dbPath),
+          );
           await sqlEditor.open();
-          await sqlEditor.typeAndRun(`CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT);`);
+          await sqlEditor.typeAndRun(
+            `CREATE TABLE ${usersTable} (id INTEGER PRIMARY KEY, email TEXT);`,
+          );
         });
 
         await test.step("Switch to Agent mode and send", async () => {
           await openAssistant(page);
-          await page.getByTestId("ai-mode-agent").click();
-          await expect(page.getByTestId("ai-mode-agent")).toHaveAttribute("aria-pressed", "true");
+          await pointProviderAtFakeLlm(page, llmUrl);
+          const connections = (await (
+            await page.request.get("/api/connections")
+          ).json()) as {
+            data: Array<{ id: number; name: string }>;
+          };
+          const connectionId = connections.data.find(
+            (item) => item.name === connectionName,
+          )?.id as number;
+          proposal = await proposeChangeset(page, llm, connectionId, [
+            {
+              op: "create_table",
+              table: postsTable,
+              columns: [
+                { name: "id", type: "INTEGER", primary: true },
+                { name: "user_id", type: "INTEGER", notNull: true },
+                { name: "title", type: "TEXT" },
+              ],
+            },
+            {
+              op: "add_foreign_key",
+              table: postsTable,
+              fkColumns: ["user_id"],
+              refTable: usersTable,
+              refColumns: ["id"],
+            },
+          ]);
+          await setAiMode(page, "agent");
 
           const composer = page.getByPlaceholder(/ask anything/i);
           await composer.fill("design a posts table");
           await composer.press("Enter");
 
-          await expect(page.getByText("Proposed a posts table for your review.")).toBeVisible({
+          await expect(
+            page.getByText("Proposed a posts table for your review."),
+          ).toBeVisible({
             timeout: 15000,
           });
           expect(sentModes).toEqual(["agent"]);
@@ -203,19 +203,47 @@ test.describe("AI Agent Mode", () => {
 
         await test.step("Tool call renders as an expandable card", async () => {
           const group = page.getByTestId("ai-tool-group");
-          await expect(group).toContainText(/Used 1 tool/);
-          await group.getByText(/Used 1 tool/).click();
           const card = page.getByTestId("ai-tool-card");
           await expect(card).toHaveAttribute("data-tool", "describe_table");
           await expect(card).toHaveAttribute("data-status", "done");
+          // A readable step line, not the raw tool name.
+          await expect(card.getByTestId("ai-tool-step")).toHaveText(/^Read /);
+          await expect(group).toHaveAttribute("data-density", "balanced");
         });
 
-        await test.step("Rejecting the write request never runs it", async () => {
-          const permission = page.getByTestId("ai-permission-card");
-          await expect(permission).toContainText(`UPDATE ${usersTable}`);
-          await permission.getByTestId("ai-permission-reject").click();
-          await expect(permission).toHaveAttribute("data-decision", "rejected");
-          expect(rawQueries.filter((query) => query.includes("UPDATE"))).toHaveLength(0);
+        await test.step("Compact tool activity folds the steps behind the latest one", async () => {
+          const settings = new SettingsPage(page);
+          await settings.open();
+          await settings.navigateTo("AI");
+          await page.getByTestId("ai-tool-density").click();
+          await page.getByRole("option", { name: "Compact" }).click();
+          await settings.close();
+          const group = page.getByTestId("ai-tool-group").first();
+          await expect(group).toHaveAttribute("data-density", "compact");
+          await expect(group).toContainText("Read ");
+          await expect(group.getByTestId("ai-tool-card")).toBeHidden();
+
+          await settings.open();
+          await settings.navigateTo("AI");
+          await page.getByTestId("ai-tool-density").click();
+          await page.getByRole("option", { name: "Balanced" }).click();
+          await settings.close();
+        });
+
+        await test.step("A change can be kept right on the chat card", async () => {
+          const card = page.getByTestId("ai-diagram-diff-card");
+          const reviewed = page.waitForResponse(
+            (response) =>
+              response.request().method() === "PATCH" &&
+              /\/api\/ai\/chats\/\d+\/changesets\/\d+$/.test(
+                new URL(response.url()).pathname,
+              ),
+          );
+          await card.getByTestId("ai-card-op-accept").first().click();
+          const body = (await (await reviewed).json()) as {
+            data: { ops: Array<{ status: string }> };
+          };
+          expect(body.data.ops[0].status).toBe("accepted");
         });
 
         await test.step("Proposal shows as pending on the diagram", async () => {
@@ -223,8 +251,13 @@ test.describe("AI Agent Mode", () => {
           await expect(card).toHaveAttribute("data-decision", "pending");
           await card.getByTestId("ai-diagram-open").click();
           await diagram.expectTableVisible(postsTable);
-          await expect(diagram.getNode(postsTable)).toHaveAttribute("data-status", "added");
-          await expect(page.getByTestId("diagram-changeset-panel")).toBeVisible();
+          await expect(diagram.getNode(postsTable)).toHaveAttribute(
+            "data-status",
+            "added",
+          );
+          await expect(
+            page.getByTestId("diagram-changeset-panel"),
+          ).toBeVisible();
         });
 
         await test.step("Accept → SQL preview → apply creates the table", async () => {
@@ -234,28 +267,60 @@ test.describe("AI Agent Mode", () => {
 
           const applied = page.waitForResponse(
             (response) =>
-              new URL(response.url()).pathname.endsWith("/api/schema/changes/apply") && response.status() === 200,
+              /\/api\/ai\/chats\/\d+\/changesets\/\d+\/apply$/.test(
+                new URL(response.url()).pathname,
+              ) && response.status() === 200,
           );
           await page.getByTestId("diagram-changeset-execute").click();
           await applied;
 
-          await expect(page.getByTestId("diagram-changeset-panel")).toHaveCount(0);
-          await expect(diagram.getNode(postsTable)).toHaveAttribute("data-status", "unchanged", {
-            timeout: 15000,
-          });
-          await expect(page.getByTestId("ai-diagram-diff-card")).toHaveAttribute("data-decision", "applied");
+          await expect(page.getByTestId("diagram-changeset-panel")).toHaveCount(
+            0,
+          );
+          await expect(diagram.getNode(postsTable)).toHaveAttribute(
+            "data-status",
+            "unchanged",
+            {
+              timeout: 15000,
+            },
+          );
+          await expect(
+            page.getByTestId("ai-diagram-diff-card"),
+          ).toHaveAttribute("data-decision", "applied");
 
           await tree.expandPath([connectionName]);
           await tree.refreshExpandNode("Tables");
-          await expect(tree.getTreeNode(postsTable)).toBeVisible({ timeout: 15000 });
+          await expect(tree.getTreeNode(postsTable)).toBeVisible({
+            timeout: 15000,
+          });
+        });
+
+        await test.step("Undo on the applied card becomes a pending change of DROP TABLE", async () => {
+          const undone = page.waitForResponse((response) =>
+            /\/undo$/.test(new URL(response.url()).pathname),
+          );
+          await page.getByTestId("ai-undo").click();
+          const body = (await (await undone).json()) as {
+            data: { ops: Array<{ op: string; sql: string; status: string }> };
+          };
+          expect(body.data.ops).toEqual([
+            expect.objectContaining({
+              op: "undo",
+              sql: `DROP TABLE "${postsTable}"`,
+              status: "pending",
+            }),
+          ]);
         });
       } finally {
         removeSqliteDbFile(dbPath);
+        await llm.stop();
       }
     });
   });
 
-  test("chat UX: grid handoff, regenerate, rename, Esc stop, Ctrl+L", async ({ page }, testInfo) => {
+  test("chat UX: grid handoff, regenerate, rename, Esc stop, Ctrl+L", async ({
+    page,
+  }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `ai-ux-${suffix}`;
     const table = `e2e_ux_items_${suffix}`;
@@ -283,15 +348,31 @@ test.describe("AI Agent Mode", () => {
           name: "execute_sql",
           args: JSON.stringify({ sql: select }),
           status: "done",
-          result: JSON.stringify({ query: `${select} LIMIT 100`, columns: [{ name: "name" }, { name: "id" }], rows: [{ id: 1, name: "alpha" }], count: 1 }),
+          result: JSON.stringify({
+            query: `${select} LIMIT 100`,
+            columns: [{ name: "name" }, { name: "id" }],
+            rows: [{ id: 1, name: "alpha" }],
+            count: 1,
+          }),
           durationMs: 3,
         };
         await route.fulfill({
           status: 200,
           contentType: "application/x-ndjson",
           body: ndjson([
-            { type: "tool_start", id: trace.id, label: trace.name, content: trace.args },
-            { type: "tool_result", id: trace.id, label: trace.name, content: trace.result, durationMs: 3 },
+            {
+              type: "tool_start",
+              id: trace.id,
+              label: trace.name,
+              content: trace.args,
+            },
+            {
+              type: "tool_result",
+              id: trace.id,
+              label: trace.name,
+              content: trace.result,
+              durationMs: 3,
+            },
             {
               type: "done",
               chatId: 0,
@@ -315,9 +396,13 @@ test.describe("AI Agent Mode", () => {
         await clearActiveAiProfile(page);
         await connectionPage.goto();
         await connectionPage.waitForReady();
-        await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+        await connectionPage.setupConnection(
+          getDbConfig("sqlite", connectionName, dbPath),
+        );
         await sqlEditor.open();
-        await sqlEditor.typeAndRun(`CREATE TABLE ${table} (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO ${table} VALUES (1, 'alpha');`);
+        await sqlEditor.typeAndRun(
+          `CREATE TABLE ${table} (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO ${table} VALUES (1, 'alpha');`,
+        );
         await openAssistant(page);
 
         const composer = page.getByTestId("ai-chat-input");
@@ -325,17 +410,30 @@ test.describe("AI Agent Mode", () => {
         await test.step("Tool result table opens in the Data Grid", async () => {
           await composer.fill("list items");
           await composer.press("Enter");
-          await expect(page.getByText("Answer 1")).toBeVisible({ timeout: 15000 });
-          await page.getByTestId("ai-tool-group").getByText(/Used 1 tool/).click();
-          await page.getByTestId("ai-tool-card").getByText("execute_sql").click();
-          await expect(page.getByTestId("ai-table-row-count")).toHaveText("1 rows");
+          await expect(page.getByText("Answer 1")).toBeVisible({
+            timeout: 15000,
+          });
+          await expect(page.getByTestId("ai-tool-step").last()).toHaveText(
+            "Ran query · 1 row",
+          );
+          // The rows show once, as the answer below the step, not again inside it.
+          await expect(page.getByTestId("ai-table-row-count")).toHaveText(
+            "1 rows",
+          );
+          await page.getByTestId("ai-tool-step").last().click();
+          await expect(
+            page.getByTestId("ai-tool-card").getByTestId("ai-data-table"),
+          ).toHaveCount(0);
           // Columns follow the result order the server sent, not alphabetical key order.
-          await expect(page.getByTestId("ai-tool-card").getByRole("columnheader")).toHaveText(["name", "id"]);
+          await expect(
+            page.getByTestId("ai-data-table").getByRole("columnheader"),
+          ).toHaveText(["name", "id"]);
 
           const raw = page.waitForResponse(
             (response) =>
               new URL(response.url()).pathname.endsWith("/api/query/raw") &&
-              (response.request().postDataJSON() as { query: string }).query === select,
+              (response.request().postDataJSON() as { query: string }).query ===
+                select,
           );
           await page.getByTestId("ai-table-open-grid").click();
           expect((await raw).status()).toBe(200);
@@ -343,27 +441,41 @@ test.describe("AI Agent Mode", () => {
 
         await test.step("Regenerate re-runs the last prompt", async () => {
           await page.getByTestId("ai-regenerate").click();
-          await expect(page.getByText("Answer 2")).toBeVisible({ timeout: 15000 });
+          await expect(page.getByText("Answer 2")).toBeVisible({
+            timeout: 15000,
+          });
         });
 
         await test.step("Rename chat inline", async () => {
-          await page.getByTestId("ai-chat-item").first().getByText(/.+/).dblclick();
+          await page
+            .getByTestId("ai-chat-item")
+            .first()
+            .getByText(/.+/)
+            .dblclick();
           const input = page.getByTestId("ai-chat-rename-input");
           await input.fill("Renamed chat");
           const patched = page.waitForResponse(
-            (response) => response.request().method() === "PATCH" && /\/api\/ai\/chats\/\d+$/.test(new URL(response.url()).pathname),
+            (response) =>
+              response.request().method() === "PATCH" &&
+              /\/api\/ai\/chats\/\d+$/.test(new URL(response.url()).pathname),
           );
           await input.press("Enter");
           expect((await patched).status()).toBe(200);
-          await expect(page.getByTestId("ai-chat-item").first()).toContainText("Renamed chat");
+          await expect(page.getByTestId("ai-chat-item").first()).toContainText(
+            "Renamed chat",
+          );
         });
 
         await test.step("Esc stops a streaming turn", async () => {
           await composer.fill("hang");
           await composer.press("Enter");
-          await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({ timeout: 15000 });
+          await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({
+            timeout: 15000,
+          });
           await composer.press("Escape");
-          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 10000 });
+          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, {
+            timeout: 10000,
+          });
         });
 
         await test.step("A turn survives closing the panel and Stop still aborts it", async () => {
@@ -373,7 +485,9 @@ test.describe("AI Agent Mode", () => {
           );
           await composer.fill("hang");
           await composer.press("Enter");
-          await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({ timeout: 15000 });
+          await expect(page.getByTestId("ai-chat-cancel")).toBeVisible({
+            timeout: 15000,
+          });
 
           await settingsPage.toggleRightSidebar();
           await expect(composer).toHaveCount(0);
@@ -381,7 +495,9 @@ test.describe("AI Agent Mode", () => {
 
           await page.getByTestId("ai-chat-cancel").click();
           await aborted;
-          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, { timeout: 10000 });
+          await expect(page.getByTestId("ai-chat-cancel")).toHaveCount(0, {
+            timeout: 10000,
+          });
         });
 
         await test.step("Ctrl/Cmd+L focuses the composer", async () => {

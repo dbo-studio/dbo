@@ -1,65 +1,94 @@
 import api from '@/api';
-import { recordReview } from '@/core/ai/recordReview';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
-import { useAiStore } from '@/store/aiStore/ai.store';
-import type { AiReviewDecision } from '@/store/aiStore/types';
-import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
+import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { AiDiagramDiff } from '@/types';
+import type { AiChangeset, AiChangesetOpStatus, SchemaChangeOp } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 type ChangesetReview = {
-  decision: AiReviewDecision | undefined;
+  changeset: AiChangeset | undefined;
+  openCount: number;
+  /** Names of the tables the open ops drop, which the user types before applying. */
+  dropConfirm: string | undefined;
   previewQueries: string[] | undefined;
   isPreviewing: boolean;
   isApplying: boolean;
   openPreview: () => Promise<void>;
   closePreview: () => void;
   apply: () => Promise<void>;
-  reject: () => void;
+  /** Replaces an op's definition; the op goes back to pending. */
+  edit: (position: number, op: SchemaChangeOp) => Promise<void>;
+  /** Turns what was applied into a new changeset of compensating SQL, reviewed and applied from the review bar. */
+  undo: () => Promise<void>;
+  isUndoing: boolean;
+  /** Accepts, rejects or resets one op, or every open op when `position` is omitted. */
+  review: (status: Exclude<AiChangesetOpStatus, 'applied' | 'failed'>, position?: number) => Promise<void>;
 };
 
 /**
- * Accept/reject flow for an agent-proposed schema changeset: preview the
- * dialect SQL, then apply it through the Safe Mode gate. Nothing reaches the
- * database before the user confirms the preview.
+ * Review flow for an agent-proposed schema changeset, which lives on the
+ * server: per-op accept/reject, SQL preview, then apply through the Safe Mode
+ * gate. Nothing reaches the database before the user applies.
  */
-export const useChangesetReview = (diff: AiDiagramDiff): ChangesetReview => {
+export const useChangesetReview = (changesetId: number): ChangesetReview => {
   const queryClient = useQueryClient();
-  const decision = useAiStore((state) => state.reviews[diff.changesetId]) ?? diff.decision;
+  const changeset = useChangesetStore((state) => state.changesets[changesetId]);
+  const upsert = useChangesetStore((state) => state.upsert);
   const [previewQueries, setPreviewQueries] = useState<string[]>();
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
 
-  const request = {
-    connectionId: diff.connectionId,
-    database: diff.database || undefined,
-    schema: diff.schema || undefined,
-    ops: diff.ops
+  const undo = async (): Promise<void> => {
+    if (!changeset) return;
+    setIsUndoing(true);
+    try {
+      upsert([await api.aiChat.undoChangeset(changeset)]);
+      toast.success(locales.ai_undo_ready);
+    } catch {
+      /* the API layer shows the error */
+    } finally {
+      setIsUndoing(false);
+    }
+  };
+
+  const review: ChangesetReview['review'] = async (status, position) => {
+    if (changeset) upsert([await api.aiChat.reviewChangeset(changeset, status, position)]);
+  };
+
+  const edit: ChangesetReview['edit'] = async (position, op) => {
+    if (changeset) upsert([await api.aiChat.editChangesetOp(changeset, position, op)]);
   };
 
   const openPreview = async (): Promise<void> => {
+    if (!changeset) return;
     setIsPreviewing(true);
     try {
-      setPreviewQueries(await api.schema.previewChange(request));
+      setPreviewQueries(await api.aiChat.previewChangeset(changeset));
     } finally {
       setIsPreviewing(false);
     }
   };
 
   const apply = async (): Promise<void> => {
+    if (!changeset) return;
     setIsApplying(true);
     try {
-      const applied = await withSafeModeRetry((confirmed) => api.schema.applyChange({ ...request, confirmed }));
-      if (!applied) return;
+      const result = await withSafeModeRetry((confirmed) => api.aiChat.applyChangeset(changeset, !!confirmed));
+      if (!result) return;
 
-      recordReview(diff.changesetId, 'applied');
-      useDiagramChangesetStore.getState().discard(diff.changesetId);
+      upsert([result]);
       setPreviewQueries(undefined);
-      toast.success(locales.ai_changeset_applied);
+
+      const failed = result.ops.find((op) => op.status === 'failed');
+      if (failed) {
+        toast.error(failed.error ?? locales.ai_changeset_failed);
+      } else {
+        toast.success(locales.ai_changeset_applied);
+      }
 
       await useTreeStore.getState().reloadTree(false);
       await Promise.all([
@@ -72,19 +101,23 @@ export const useChangesetReview = (diff: AiDiagramDiff): ChangesetReview => {
     }
   };
 
-  const reject = useCallback((): void => {
-    recordReview(diff.changesetId, 'rejected');
-    useDiagramChangesetStore.getState().discard(diff.changesetId);
-  }, [diff.changesetId]);
-
   return {
-    decision,
+    changeset,
+    openCount: changeset?.ops.filter((op) => isOpen(op.status)).length ?? 0,
+    dropConfirm:
+      changeset?.ops
+        .filter((op) => op.op === 'drop_table' && isOpen(op.status))
+        .map((op) => op.table)
+        .join(', ') || undefined,
     previewQueries,
     isPreviewing,
     isApplying,
     openPreview,
     closePreview: () => setPreviewQueries(undefined),
     apply,
-    reject
+    undo,
+    isUndoing,
+    edit,
+    review
   };
 };

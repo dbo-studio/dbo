@@ -18,7 +18,7 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | SettingsTabType;
+export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | DashboardTabType | QuestionTabType | SettingsTabType;
 
 type BaseTab = {
   id: string;
@@ -65,6 +65,18 @@ export type DiagramTabType = BaseTab & {
   database: string;
   schema: string;
   focusTable?: string;
+};
+
+export type DashboardTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Dashboard;
+  dashboardId: number;
+};
+
+export type QuestionTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Question;
+  questionId: number;
 };
 
 export type SettingsTabType = BaseTab & {

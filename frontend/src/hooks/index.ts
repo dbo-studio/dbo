@@ -4,7 +4,6 @@ export * from './useCurrentConnection';
 export * from './useDesktopMenu';
 export * from './useDesktopOpenFiles';
 export * from './useEditorSessionContext';
-export * from './useJobPolling';
 export * from './useLayoutMode';
 export * from './useResponsiveSidebar';
 export * from './useScopedSelectAll';

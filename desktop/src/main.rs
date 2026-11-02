@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod menu;
+#[cfg_attr(not(desktop), path = "tray_mobile.rs")]
+mod tray;
 
 use std::env;
 use std::fs;
@@ -63,11 +65,15 @@ fn main() {
         .manage(sidecar_stopping.clone())
         .manage(sidecar_events.clone())
         .manage(pending_open_files.clone())
+        .manage(tray::TrayState::new())
         .invoke_handler(tauri::generate_handler![
             get_backend_host,
             restart_backend,
             take_pending_open_files,
-            read_sql_file
+            read_sql_file,
+            tray::set_keep_running,
+            tray::update_tray_status,
+            tray::quit_app
         ]);
 
     #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
@@ -80,17 +86,35 @@ fn main() {
         builder = builder.plugin(tauri_plugin_haptics::init());
     }
 
+    // Signing in starts DBO hidden in the tray (see --minimized in setup).
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ));
+    }
+
     builder
         .setup(|app| {
             setup_macos_toolbar(app)?;
             menu::setup_menu(app)?;
+            tray::setup(app)?;
+            setup_close_to_tray(app)?;
+            // Started at login: stay in the tray until the user opens DBO.
+            if env::args().any(|arg| arg == "--minimized") {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+                tray::hide_dock(app.handle());
+            }
             setup_environment();
             start_backend_server(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(move |_app, event| {
+        .run(move |app, event| {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             if let RunEvent::Opened { urls } = &event {
                 let paths: Vec<String> = urls
@@ -99,8 +123,15 @@ fn main() {
                     .map(|p| p.to_string_lossy().into_owned())
                     .filter(|p| is_sql_file(p))
                     .collect();
-                queue_open_files(_app, paths);
+                queue_open_files(app, paths);
             }
+            // Clicking the Dock icon while DBO sits in the tray brings the window back.
+            #[cfg(target_os = "macos")]
+            if let RunEvent::Reopen { .. } = event {
+                tray::show_main(app);
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = app;
 
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 cleanup_sidecar(
@@ -110,6 +141,24 @@ fn main() {
                 );
             }
         });
+}
+
+/// With "keep running in the background" on, the window's close button hides it to the tray.
+fn setup_close_to_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let main_window = app
+        .get_webview_window("main")
+        .ok_or("main window not found")?;
+    let window = main_window.as_ref().window();
+    let window_for_events = window.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            if tray::hide_instead_of_close(&window_for_events) {
+                api.prevent_close();
+            }
+        }
+    });
+
+    Ok(())
 }
 
 /// An empty unified toolbar gives the window native toolbar chrome: AppKit places

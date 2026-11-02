@@ -4,5 +4,7 @@ export enum TabMode {
   Object = 'object',
   ObjectDetail = 'object-detail',
   Diagram = 'diagram',
+  Dashboard = 'dashboard',
+  Question = 'question',
   Settings = 'settings'
 }

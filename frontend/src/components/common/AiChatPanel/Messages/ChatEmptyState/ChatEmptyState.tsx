@@ -20,7 +20,7 @@ import {
   NO_CONNECTION_PROMPTS,
   type ChatPromptKey
 } from '../../utils/chatPromptSuggestions';
-import { StarterCardStyled, StarterGridStyled } from './ChatEmptyState.styled';
+import { KbdStyled, StarterCardStyled, StarterGridStyled } from './ChatEmptyState.styled';
 import EmptyIllustration from './EmptyIllustration';
 import { variables } from '@/core/theme/variables';
 
@@ -29,7 +29,8 @@ function EmptyLayout({ children }: { children: ReactNode }): JSX.Element {
     <Stack
       spacing={2.5}
       data-testid='ai-chat-empty'
-      sx={{ flex: 1, py: 3, px: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200 }}
+      // Sits just above the composer, where the eye already is, like Cursor's empty chat.
+      sx={{ flex: 1, py: 3, px: 1, alignItems: 'center', justifyContent: 'flex-end', minHeight: 200 }}
     >
       {children}
     </Stack>
@@ -122,10 +123,32 @@ function WhatsNewTip(): JSX.Element | null {
 }
 
 function ShortcutsHint(): JSX.Element {
+  const mod = tools.isMac() ? '⌘' : 'Ctrl';
+  const keys: [string, string][] = [
+    ['Enter', locales.ai_shortcut_send],
+    ['Esc', locales.ai_shortcut_stop],
+    [`${mod} L`, locales.ai_shortcut_focus]
+  ];
+
   return (
-    <Typography variant='caption' color='textSubdued' sx={{ opacity: 0.8 }}>
-      {locales.ai_shortcuts_hint.replace('{mod}', tools.isMac() ? '⌘' : 'Ctrl')}
-    </Typography>
+    <Stack
+      direction='row'
+      spacing={1.5}
+      sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
+      data-testid='ai-shortcuts-hint'
+    >
+      {keys.map(([key, label]) => (
+        <Typography
+          key={key}
+          variant='caption'
+          color='textSubdued'
+          sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center' }}
+        >
+          <KbdStyled>{key}</KbdStyled>
+          {label}
+        </Typography>
+      ))}
+    </Stack>
   );
 }
 

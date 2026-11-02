@@ -7,6 +7,8 @@ type DatabaseRepository interface {
 	AIContextRepository
 	AIMetadataRepository
 	DiagramRepository
+	TableStructureRepository
+	WritePreviewRepository
 }
 
 type QueryRepository interface {

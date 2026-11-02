@@ -8,6 +8,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -41,12 +42,14 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
+	s.refreshSummary(ctx, provider, dbProvider.Model, chat)
+
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
@@ -55,7 +58,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 	}
 
 	if providerResErr != nil {
-		return nil, providerResErr
+		return nil, aiProvider.ProviderError(providerResErr)
 	}
 
 	response := &dto.AiChatResponse{

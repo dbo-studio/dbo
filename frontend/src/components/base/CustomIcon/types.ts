@@ -61,6 +61,7 @@ export const IconTypes = {
   light: 'Sun',
   dark: 'Moon',
   sheet: 'Sheet',
+  chart: 'ChartColumn',
   databaseZap: 'DatabaseZap',
   theme: 'Palette',
   shortcuts: 'SquareSlash',
@@ -93,6 +94,7 @@ export const IconTypes = {
   layout: 'LayoutGrid',
   fit: 'Maximize2',
   expand: 'Maximize2',
+  collapse: 'Minimize2',
   send: 'Send',
   at: 'AtSign',
   history: 'RotateCcwClock',
@@ -108,9 +110,12 @@ export const IconTypes = {
   sparkles: 'Sparkles',
   calendar: 'Calendar',
   clock: 'Clock',
+  share: 'Share2',
+  link: 'Link',
   bookmark: 'Bookmark',
   layoutList: 'LayoutList',
   compare: 'GitCompare',
   thumbUp: 'ThumbsUp',
-  thumbDown: 'ThumbsDown'
+  thumbDown: 'ThumbsDown',
+  bell: 'Bell'
 };

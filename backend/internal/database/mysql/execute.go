@@ -12,6 +12,10 @@ import (
 func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
 
+	if action == contract.ExecuteSQLAction {
+		return databaseCore.SQLFromParams(params)
+	}
+
 	type ExecuteParams map[contract.TreeTab]any
 
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)

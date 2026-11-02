@@ -5,6 +5,7 @@ import locales from '@/locales/index.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Badge, IconButton, Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
+import NotificationBell from '../NotificationBell/NotificationBell';
 import McpStatusButton from './McpStatusButton';
 
 export default function Actions(): JSX.Element {
@@ -27,6 +28,7 @@ export default function Actions(): JSX.Element {
         justifyContent: 'flex-end'
       }}
     >
+      <NotificationBell />
       <McpStatusButton />
       {release ? (
         <Tooltip title={locales.new_version_available}>

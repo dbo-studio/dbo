@@ -2,61 +2,114 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
+import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
-import { useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
+import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
+import { IconButton, Tooltip } from '@mui/material';
+import type { AiChangesetOp } from '@/types';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiDiagramDiff } from '@/types';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useWorkspaceCanvas } from '@/components/common/AgentWorkspace/workspaceCanvas.store';
 import { Box, Button, Chip, CircularProgress, Stack, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
 import { AgentCardBodyStyled, AgentCardStyled, CardActionsStyled } from '../AgentCards.styled';
 import DiagramThumbnail from '../DiagramThumbnail/DiagramThumbnail';
 import { variables } from '@/core/theme/variables';
 
-/** Chat embed for an agent schema proposal: summary, Open in Diagram, Accept/Reject. */
-export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.Element {
+/** Keep or skip one change, like Cursor's per-change keep/undo. */
+function OpReview({
+  status,
+  onReview
+}: {
+  status: AiChangesetOp['status'];
+  onReview: (status: 'accepted' | 'rejected') => void;
+}): JSX.Element {
+  return (
+    <Box component='span' sx={{ display: 'inline-flex', ml: 0.5, verticalAlign: 'middle' }}>
+      <Tooltip title={locales.ai_keep_change}>
+        <IconButton
+          size='small'
+          sx={{ p: 0.25, color: status === 'accepted' ? 'success.main' : undefined }}
+          onClick={() => onReview('accepted')}
+          data-testid='ai-card-op-accept'
+        >
+          <CustomIcon type='check' size='xs' />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title={locales.ai_drop_change}>
+        <IconButton size='small' sx={{ p: 0.25 }} onClick={() => onReview('rejected')} data-testid='ai-card-op-reject'>
+          <CustomIcon type='close' size='xs' />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+}
+
+/** Chat embed for an agent schema proposal: summary, keep/skip per change, apply, and Undo once applied. */
+export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
-  const review = useChangesetReview(diff);
-  const pending = review.decision === undefined;
-  const lines = summarizeChangeset(diff.ops);
+  const review = useChangesetReview(changesetId);
+  const { changeset } = review;
+  if (!changeset) return null;
+
+  const pending = review.openCount > 0;
+  const decision = pending ? undefined : changeset.ops.some((op) => op.status === 'applied') ? 'applied' : 'rejected';
+  const lines = summarizeChangeset(changeset.ops);
 
   const openInDiagram = (): void => {
-    if (pending) {
-      useDiagramChangesetStore.getState().stage(diff);
+    // The workstation covers the app, so a diagram tab would open out of sight; its canvas draws the design instead.
+    if (useSettingStore.getState().ui.agentWorkspaceOpen) {
+      useWorkspaceCanvas.getState().openProposal(changeset.id, 'design');
+      return;
     }
-    useTabStore.getState().addDiagramTab({ database: diff.database ?? '', schema: diff.schema ?? '' });
+    if (pending) {
+      useChangesetStore.getState().stage(changeset);
+    }
+    useTabStore.getState().addDiagramTab({ database: changeset.database ?? '', schema: changeset.schema ?? '' });
   };
 
   const accent =
-    review.decision === 'applied'
+    decision === 'applied'
       ? theme.palette.success.main
-      : review.decision === 'rejected'
+      : decision === 'rejected'
         ? undefined
         : theme.palette.warning.main;
 
   return (
-    <AgentCardStyled accent={accent} data-testid='ai-diagram-diff-card' data-decision={review.decision ?? 'pending'}>
+    <AgentCardStyled accent={accent} data-testid='ai-diagram-diff-card' data-decision={decision ?? 'pending'}>
       <Stack direction='row' spacing={0.75} sx={{ alignItems: 'center', px: 1, py: 0.75 }}>
         <CustomIcon type='network' size='xs' />
         <Typography variant='caption' sx={{ fontWeight: 600, flex: 1 }}>
-          {locales.ai_schema_proposal.replace('{n}', String(diff.ops.length))}
+          {locales.ai_schema_proposal.replace('{changes}', changeCount(changeset.ops.length))}
         </Typography>
         <Chip
           size='small'
           variant='outlined'
-          color={review.decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
-          label={review.decision ? locales[`ai_review_${review.decision}`] : locales.ai_review_pending}
+          color={decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
+          label={decision ? locales[`ai_review_${decision}`] : locales.ai_review_pending}
           sx={{ height: 18, fontSize: variables.fontSize.xs }}
         />
       </Stack>
       <AgentCardBodyStyled>
-        <DiagramThumbnail ops={diff.diagramOps} />
+        <DiagramThumbnail ops={changeset.diagramOps} />
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
-          {lines.map((line) => (
-            <Typography component='li' variant='caption' key={`${line.label}-${line.detail}`}>
+          {lines.map((line, index) => (
+            <Typography
+              component='li'
+              variant='caption'
+              key={`${line.label}-${line.detail}`}
+              sx={{ textDecoration: changeset.ops[index].status === 'rejected' ? 'line-through' : undefined }}
+            >
               <Box component='span' sx={{ color: 'success.main', fontWeight: 600 }}>
                 {line.label}
               </Box>{' '}
               {line.detail}
+              {isOpen(changeset.ops[index].status) && (
+                <OpReview
+                  status={changeset.ops[index].status}
+                  onReview={(status) => void review.review(status, changeset.ops[index].position)}
+                />
+              )}
             </Typography>
           ))}
         </Box>
@@ -70,7 +123,7 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
                 size='small'
                 variant='text'
                 color='inherit'
-                onClick={review.reject}
+                onClick={() => void review.review('rejected')}
                 data-testid='ai-diagram-reject'
               >
                 {locales.ai_reject}
@@ -87,7 +140,27 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
               </Button>
             </>
           )}
+          {changeset.undoSql.length > 0 && !pending && (
+            <Button
+              size='small'
+              variant='text'
+              disabled={review.isUndoing}
+              onClick={() => void review.undo()}
+              startIcon={<CustomIcon type='undo' size='xs' />}
+              data-testid='ai-undo'
+            >
+              {locales.ai_changes_undo_title}
+            </Button>
+          )}
         </CardActionsStyled>
+        {!pending &&
+          changeset.ops
+            .filter((op) => op.status === 'applied' && op.undoNote)
+            .map((op) => (
+              <Typography key={op.position} variant='caption' color='textSubdued' data-testid='ai-undo-note'>
+                {locales.ai_undo_unavailable.replace('{reason}', op.undoNote ?? '')}
+              </Typography>
+            ))}
       </AgentCardBodyStyled>
       <QueryPreviewModal
         open={review.previewQueries !== undefined}
@@ -95,6 +168,7 @@ export default function DiagramDiffCard({ diff }: { diff: AiDiagramDiff }): JSX.
         isExecuting={review.isApplying}
         onCancel={review.closePreview}
         onConfirm={() => void review.apply()}
+        confirmText={review.dropConfirm}
         testIdPrefix='ai-changeset'
       />
     </AgentCardStyled>

@@ -1,6 +1,10 @@
 package server
 
 import (
+	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/static"
 
 	"github.com/dbo-studio/dbo/internal/app/handler"
@@ -39,8 +43,6 @@ func (r *Server) routing() {
 
 	schema := api.Group("schema")
 	schema.Get("/diagram", r.handlers.Schema.Diagram)
-	schema.Post("/changes/preview", r.handlers.Schema.PreviewChange)
-	schema.Post("/changes/apply", r.handlers.Schema.ApplyChange)
 
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
@@ -65,13 +67,24 @@ func (r *Server) routing() {
 	aiProvider := ai.Group("providers")
 	aiProvider.Get("/", r.handlers.AiProvider.Providers)
 	aiProvider.Patch("/:id", r.handlers.AiProvider.Update)
+	aiProvider.Post("/:id/models", r.handlers.AiProvider.Models)
+
+	ai.Get("/audit", r.handlers.AiChangeset.Audit)
 
 	aiChat := ai.Group("chats")
 	aiChat.Get("/", r.handlers.AiChat.Chats)
 	aiChat.Post("/", r.handlers.AiChat.Create)
 	aiChat.Get("/:id", r.handlers.AiChat.Detail)
 	aiChat.Patch("/:id", r.handlers.AiChat.Update)
-	aiChat.Post("/:id/review", r.handlers.AiChat.Review)
+	aiChat.Get("/:id/changesets", r.handlers.AiChangeset.Changesets)
+	aiChat.Post("/:id/changesets", r.handlers.AiChangeset.Propose)
+	aiChat.Patch("/:id/changesets/:changesetId", r.handlers.AiChangeset.Review)
+	aiChat.Get("/:id/changesets/:changesetId/ops/:position/preview", r.handlers.AiChangeset.PreviewOp)
+	aiChat.Put("/:id/changesets/:changesetId/ops/:position", r.handlers.AiChangeset.EditOp)
+	aiChat.Get("/:id/changesets/:changesetId/before", r.handlers.AiChangeset.Before)
+	aiChat.Post("/:id/changesets/:changesetId/preview", r.handlers.AiChangeset.Preview)
+	aiChat.Post("/:id/changesets/:changesetId/apply", r.handlers.AiChangeset.Apply)
+	aiChat.Post("/:id/changesets/:changesetId/undo", r.handlers.AiChangeset.Undo)
 	aiChat.Post("/:id/feedback", r.handlers.AiChat.Feedback)
 	aiChat.Delete("/:id", r.handlers.AiChat.Delete)
 
@@ -112,6 +125,60 @@ func (r *Server) routing() {
 	saved.Patch("/:id", r.handlers.SavedQuery.Update)
 	saved.Delete("/:id", r.handlers.SavedQuery.Delete)
 
+	questions := api.Group("questions")
+	questions.Get("/", r.handlers.Question.Questions)
+	questions.Post("/", r.handlers.Question.Create)
+	questions.Patch("/:id", r.handlers.Question.Update)
+	questions.Delete("/:id", r.handlers.Question.Delete)
+	questions.Post("/preview", r.handlers.Question.Preview)
+	questions.Post("/field-values", r.handlers.Question.FieldValues)
+	questions.Post("/:id/run", r.handlers.Question.Run)
+
+	dashboards := api.Group("dashboards")
+	dashboards.Get("/", r.handlers.Dashboard.Dashboards)
+	dashboards.Post("/", r.handlers.Dashboard.Create)
+	dashboards.Patch("/:id", r.handlers.Dashboard.Rename)
+	dashboards.Post("/:id/duplicate", r.handlers.Dashboard.Duplicate)
+	dashboards.Delete("/:id", r.handlers.Dashboard.Delete)
+	dashboards.Post("/:id/cards", r.handlers.Dashboard.Pin)
+	dashboards.Put("/:id/cards/order", r.handlers.Dashboard.ReorderCards)
+	dashboards.Patch("/:id/cards/:cardId", r.handlers.Dashboard.UpdateCard)
+	dashboards.Delete("/:id/cards/:cardId", r.handlers.Dashboard.Unpin)
+	dashboards.Get("/:id/subscriptions", r.handlers.DashboardSubscription.List)
+	dashboards.Post("/:id/subscriptions", r.handlers.DashboardSubscription.Create)
+	dashboards.Patch("/:id/subscriptions/:subId", r.handlers.DashboardSubscription.Update)
+	dashboards.Delete("/:id/subscriptions/:subId", r.handlers.DashboardSubscription.Delete)
+	dashboards.Post("/:id/subscriptions/:subId/run", r.handlers.DashboardSubscription.RunNow)
+	dashboards.Get("/:id/subscriptions/:subId/runs", r.handlers.DashboardSubscription.Runs)
+	dashboards.Get("/:id/shares", r.handlers.DashboardShare.List)
+	dashboards.Post("/:id/shares", r.handlers.DashboardShare.Create)
+	dashboards.Patch("/:id/shares/:shareId", r.handlers.DashboardShare.Update)
+	dashboards.Delete("/:id/shares/:shareId", r.handlers.DashboardShare.Revoke)
+	dashboards.Get("/:id/shares/:shareId/visits", r.handlers.DashboardShare.Visits)
+
+	// Visitors of a share link have no session: the token is their proof, so this group skips sign-in
+	// (see OwnerSessionMiddleware) and is rate limited per address and link.
+	public := api.Group("public", limiter.New(limiter.Config{
+		Max:        30,
+		Expiration: time.Minute,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return c.IP() + c.Path()
+		},
+	}))
+	public.Post("/dashboards/:token", r.handlers.DashboardShare.View)
+
+	// The one outgoing mail account the schedules send through; an instance admin sets it.
+	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSmtp)
+	api.Put("/subscriptions/smtp", r.handlers.DashboardSubscription.SaveSmtp)
+
+	// One live stream per client replaces polling jobs, and the inbox of finished jobs.
+	api.Get("/events", r.handlers.Notification.Stream)
+	notifications := api.Group("notifications")
+	notifications.Get("/", r.handlers.Notification.List)
+	notifications.Post("/read", r.handlers.Notification.MarkAllRead)
+	notifications.Post("/:id/read", r.handlers.Notification.MarkRead)
+	notifications.Delete("/:id", r.handlers.Notification.Delete)
+
 	history := api.Group("histories")
 	history.Get("/", r.handlers.History.Histories)
 	history.Delete("/", r.handlers.History.Delete)
@@ -120,11 +187,15 @@ func (r *Server) routing() {
 	api.Post("/export", r.handlers.ImportExport.Export)
 
 	job := api.Group("jobs")
+	job.Get("/active", r.handlers.Job.Active)
+	job.Post("/:id/retry", r.handlers.Job.Retry)
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)
 	job.Get("/:id/result", r.handlers.Job.Result)
 
 	// The SPA catch-all is registered last so it can never shadow an API
 	// route regardless of registration order.
+	// A share link is a page of the SPA: serve its shell for any token.
+	r.app.Get("/share/*", func(c fiber.Ctx) error { return c.SendFile("out/index.html") })
 	r.app.Get("/*", static.New("out"))
 }

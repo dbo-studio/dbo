@@ -53,7 +53,10 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           ignoredRelease: '',
           logsPath: '',
           version: '',
-          release: undefined
+          release: undefined,
+          backgroundAfterSeconds: 10,
+          keepRunningInBackground: true,
+          notifications: { enabled: true, onlyWhenUnfocused: true, sound: false, query: true, import: true, export: true }
         },
         setup: {
           hasCompletedSetup: false
@@ -121,6 +124,12 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           return {
             ...currentState,
             ...persisted,
+            // Settings added later fall back to their defaults for people who saved before them.
+            general: {
+              ...currentState.general,
+              ...persisted?.general,
+              notifications: { ...currentState.general.notifications, ...persisted?.general?.notifications }
+            },
             ui: {
               ...currentState.ui,
               sidebar: {

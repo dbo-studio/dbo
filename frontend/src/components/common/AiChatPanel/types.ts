@@ -27,27 +27,13 @@ export type ChatTextInputProps = {
   autocomplete?: AutoCompleteType;
 };
 
-export type ChatContextModalProps = {
-  open: boolean;
-  onClose: () => void;
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
-  children: React.ReactElement;
-};
-
 export type ChatContextProps = {
   autocomplete: AutoCompleteType;
 };
 
-export type ChatContextModalItemProps = {
-  name: string;
-  type: ContextItemType;
-  isActive: boolean;
-  onClick: (name: string, type: ContextItemType) => void;
-};
-
 export type ChatContextItemProps = {
   name: string;
-  type: 'tables' | 'views' | 'database' | 'schema';
+  type: 'tables' | 'views' | 'database' | 'schema' | 'query';
   onClick: () => void;
 };
 
@@ -73,7 +59,8 @@ export type CodeMessageProps = {
 };
 
 export type ChatBoxProps = {
-  onSend: () => void;
+  /** Sends the composer text, or `prompt` when given (a queued message). */
+  onSend: (prompt?: string) => void;
   onCancel: () => void;
   loading: boolean;
   autocomplete?: AutoCompleteType;
@@ -114,6 +101,8 @@ export type ChatDataTableProps = {
   columns?: string[];
   /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
   query?: string;
+  /** Lets the table grow, for the workstation canvas; the chat keeps a short table. */
+  tall?: boolean;
 };
 
 export type StreamingMarkdownProps = {

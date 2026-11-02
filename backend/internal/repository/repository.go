@@ -70,6 +70,7 @@ type IJobRepo interface {
 	UpdateProgress(ctx context.Context, id uint, progress int, message string) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
+	ListActiveByOwner(ctx context.Context, ownerID string) ([]model.Job, error)
 	DeleteOldJobs(ctx context.Context, days int) error
 }
 
@@ -126,10 +127,81 @@ type IAiChatRepo interface {
 	Find(ctx context.Context, id uint, pagination *dto.PaginationRequest) (*model.AiChat, error)
 	Update(ctx context.Context, chat *model.AiChat) error
 	UpdateContext(ctx context.Context, chatID uint, contextJSON string) error
+	UpdateSummary(ctx context.Context, chatID uint, summary string, upTo uint) error
 	Create(ctx context.Context, dto *dto.AiChatCreateRequest) (*model.AiChat, error)
 	Delete(ctx context.Context, chat *model.AiChat) error
 	AddMessage(ctx context.Context, m *model.AiChatMessage) error
-	UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error)
+}
+
+type IAiChangesetRepo interface {
+	List(ctx context.Context, chatID uint) ([]model.AiChangeset, error)
+	Find(ctx context.Context, chatID, id uint) (*model.AiChangeset, error)
+	Create(ctx context.Context, changeset *model.AiChangeset) error
+	AddOps(ctx context.Context, ops []model.AiChangesetOp) error
+	SaveOps(ctx context.Context, ops []model.AiChangesetOp) error
+}
+
+type IQuestionRepo interface {
+	List(ctx context.Context, connectionID uint) ([]model.Question, error)
+	Find(ctx context.Context, id uint) (*model.Question, error)
+	Create(ctx context.Context, question *model.Question) error
+	Save(ctx context.Context, question *model.Question) error
+	Delete(ctx context.Context, question *model.Question) error
+}
+
+type IDashboardRepo interface {
+	List(ctx context.Context, connectionID uint) ([]model.Dashboard, error)
+	Find(ctx context.Context, id uint) (*model.Dashboard, error)
+	FindByName(ctx context.Context, connectionID uint, name string) (*model.Dashboard, error)
+	Create(ctx context.Context, dashboard *model.Dashboard) error
+	Rename(ctx context.Context, dashboard *model.Dashboard) error
+	Delete(ctx context.Context, dashboard *model.Dashboard) error
+	AddCard(ctx context.Context, card *model.DashboardCard) error
+	SaveCard(ctx context.Context, card *model.DashboardCard) error
+	DeleteCard(ctx context.Context, card *model.DashboardCard) error
+}
+
+type IDashboardShareRepo interface {
+	List(ctx context.Context, dashboardID uint) ([]model.DashboardShare, error)
+	Find(ctx context.Context, dashboardID, id uint) (*model.DashboardShare, error)
+	FindByTokenHash(ctx context.Context, hash string) (*model.DashboardShare, error)
+	Create(ctx context.Context, share *model.DashboardShare) error
+	Save(ctx context.Context, share *model.DashboardShare) error
+	RecordView(ctx context.Context, id uint) error
+	AddVisit(ctx context.Context, visit *model.DashboardShareView) error
+	Visits(ctx context.Context, shareID uint, limit int) ([]model.DashboardShareView, error)
+}
+
+type IDashboardSubscriptionRepo interface {
+	List(ctx context.Context, dashboardID uint) ([]model.DashboardSubscription, error)
+	Find(ctx context.Context, dashboardID, id uint) (*model.DashboardSubscription, error)
+	Due(ctx context.Context, now time.Time, limit int) ([]model.DashboardSubscription, error)
+	Overdue(ctx context.Context, cutoff time.Time) ([]model.DashboardSubscription, error)
+	Create(ctx context.Context, sub *model.DashboardSubscription) error
+	Save(ctx context.Context, sub *model.DashboardSubscription) error
+	// SetNextRun moves only the next run; the scheduler uses it so a user's edit is not overwritten.
+	SetNextRun(ctx context.Context, id uint, next time.Time) error
+	// SaveResult stores what a run left behind (last run, status, failures, and whether it was paused).
+	SaveResult(ctx context.Context, sub *model.DashboardSubscription) error
+	Delete(ctx context.Context, sub *model.DashboardSubscription) error
+	AddRun(ctx context.Context, run *model.DashboardSubscriptionRun) error
+	Runs(ctx context.Context, subscriptionID uint) ([]model.DashboardSubscriptionRun, error)
+	GetSmtp(ctx context.Context) (*model.SmtpSettings, error)
+	SaveSmtp(ctx context.Context, settings *model.SmtpSettings) error
+}
+
+type INotificationRepo interface {
+	Create(ctx context.Context, n *model.Notification) error
+	List(ctx context.Context, ownerID string, limit, offset int) ([]model.Notification, error)
+	CountUnread(ctx context.Context, ownerID string) (int64, error)
+	MarkRead(ctx context.Context, ownerID string, id uint) error
+	MarkAllRead(ctx context.Context, ownerID string) error
+	Delete(ctx context.Context, ownerID string, id uint) error
+}
+
+type IAiAuditRepo interface {
+	Create(ctx context.Context, entry *model.AiAuditEntry) error
+	List(ctx context.Context, req *dto.AiAuditListRequest) ([]model.AiAuditEntry, error)
 }
 
 type Repository struct {
@@ -144,6 +216,13 @@ type Repository struct {
 	SavedQueryRepo             ISavedQueryRepo
 	JobRepo                    IJobRepo
 	AiChatRepo                 IAiChatRepo
+	AiChangesetRepo            IAiChangesetRepo
+	AiAuditRepo                IAiAuditRepo
+	QuestionRepo               IQuestionRepo
+	DashboardRepo              IDashboardRepo
+	DashboardShareRepo         IDashboardShareRepo
+	NotificationRepo           INotificationRepo
+	DashboardSubscriptionRepo  IDashboardSubscriptionRepo
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
@@ -163,6 +242,13 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		SavedQueryRepo:             NewSavedQueryRepo(db),
 		JobRepo:                    NewJobRepo(db),
 		AiChatRepo:                 NewAiChatRepo(db),
+		AiChangesetRepo:            NewAiChangesetRepo(db),
+		AiAuditRepo:                NewAiAuditRepo(db),
+		QuestionRepo:               NewQuestionRepo(db),
+		DashboardRepo:              NewDashboardRepo(db),
+		DashboardShareRepo:         NewDashboardShareRepo(db),
+		NotificationRepo:           NewNotificationRepo(db),
+		DashboardSubscriptionRepo:  NewDashboardSubscriptionRepo(db),
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),

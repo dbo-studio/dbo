@@ -5,7 +5,7 @@ import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSafeModePasswordStore } from '@/store/safeModePassword/safeModePassword.store';
-import type { ConnectionSafeMode } from '@/types';
+import type { AgentTier, ConnectionSafeMode } from '@/types';
 import {
   Box,
   CircularProgress,
@@ -13,6 +13,7 @@ import {
   IconButton,
   ListItemIcon,
   ListItemText,
+  ListSubheader,
   Menu,
   MenuItem,
   Tooltip,
@@ -21,6 +22,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, type MouseEvent, useState } from 'react';
 import { toast } from 'sonner';
+
+const AGENT_TIERS: AgentTier[] = ['read_only', 'data_write', 'schema_change'];
 
 type SafeModeOption = {
   value: ConnectionSafeMode;
@@ -145,6 +148,24 @@ export default function SafeModeMenu(): JSX.Element {
     await queryClient.invalidateQueries({ queryKey: ['connections'] });
     toast.success(locales.safe_mode_updated);
     handleClose();
+  };
+
+  const agentTier = currentConnection?.agentTier ?? 'schema_change';
+
+  // How far the AI agent may go on this connection; the server enforces it on every turn and apply.
+  const handleTier = async (tier: AgentTier): Promise<void> => {
+    handleClose();
+    if (!currentConnection || tier === agentTier) return;
+    try {
+      const updated = await api.connection.updateConnection(currentConnection.id, { agentTier: tier });
+      const connections = useConnectionStore.getState().connections;
+      if (connections) {
+        updateConnections(connections.map((connection) => (connection.id === updated.id ? updated : connection)));
+      }
+      toast.success(locales.ai_agent_tier_updated);
+    } catch {
+      toast.error(locales.safe_mode_update_failed);
+    }
   };
 
   const handleSelect = async (safeMode: ConnectionSafeMode): Promise<void> => {
@@ -285,6 +306,31 @@ export default function SafeModeMenu(): JSX.Element {
             </Box>
           );
         })}
+        <Divider />
+        <ListSubheader disableSticky sx={{ lineHeight: '28px' }}>
+          {locales.ai_agent_tier}
+        </ListSubheader>
+        {AGENT_TIERS.map((tier) => (
+          <MenuItem
+            key={tier}
+            selected={tier === agentTier}
+            data-testid={`ai-agent-tier-${tier}`}
+            onClick={() => void handleTier(tier)}
+            sx={{ py: 0.75, px: 2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              {tier === agentTier ? <CustomIcon type='check' size='s' /> : null}
+            </ListItemIcon>
+            <ListItemText
+              primary={locales[`ai_agent_tier_${tier}`]}
+              secondary={locales[`ai_agent_tier_${tier}_desc`]}
+              slotProps={{
+                primary: { variant: 'body2' },
+                secondary: { variant: 'caption', color: 'text.secondary', sx: { whiteSpace: 'normal' } }
+              }}
+            />
+          </MenuItem>
+        ))}
       </Menu>
     </>
   );

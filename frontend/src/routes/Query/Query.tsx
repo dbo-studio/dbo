@@ -11,6 +11,8 @@ import { useEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import locales from '@/locales';
+import BackgroundQueryNotice from '@/components/common/BackgroundQueryNotice/BackgroundQueryNotice';
+import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
@@ -109,6 +111,13 @@ export default function Query(): JSX.Element {
 
     void loadData().catch(() => undefined);
   }, [selectedTab?.id, loadData, dataStoreApi]);
+
+  // A query that ran in the background hands its rows over here when it ends.
+  const waitingOnBackground = useBackgroundQueryStore((state) => (selectedTab ? !!state.byTab[selectedTab.id] : false));
+  const delivered = useBackgroundQueryStore((state) => (selectedTab ? (state.delivered[selectedTab.id] ?? 0) : 0));
+  useEffect(() => {
+    if (delivered > 0) void loadData();
+  }, [delivered, loadData]);
 
   const applyQueryResult = useCallback(
     (res: RunQueryResponseType | undefined): void => {
@@ -229,7 +238,9 @@ export default function Query(): JSX.Element {
         )}
         {isMobile && mobileView === 'editor' && <SqlKeyBar editorRef={sqlEditorRef} />}
 
-        {hasResults ? (
+        {waitingOnBackground && selectedTab ? (
+          <BackgroundQueryNotice tabId={selectedTab.id} />
+        ) : hasResults ? (
           isMobile ? (
             mobileView === 'results' && (
               <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />

@@ -84,10 +84,21 @@ test.describe("AI chat composer and message polish", () => {
             break;
           }
           case "diagram": {
-            const diff = {
-              changesetId: "cs-thumb",
+            const changeset = {
+              id: 9001,
+              undoSql: [],
+              chatId: 0,
               connectionId: 1,
-              ops: [{ op: "create_table", table: "posts", columns: [{ name: "id", type: "INTEGER", primary: true }] }],
+              ops: [
+                {
+                  op: "create_table",
+                  table: "posts",
+                  columns: [{ name: "id", type: "INTEGER", primary: true }],
+                  position: 0,
+                  status: "pending",
+                  tableId: "posts",
+                },
+              ],
               diagramOps: [
                 {
                   op: "add",
@@ -104,8 +115,8 @@ test.describe("AI chat composer and message polish", () => {
               ],
             };
             events = [
-              { type: "diagram_diff", id: diff.changesetId, data: diff },
-              done([message("diagram_diff", JSON.stringify(diff), "json")]),
+              { type: "diagram_diff", id: String(changeset.id), data: changeset },
+              done([message("diagram_diff", JSON.stringify({ changesetId: changeset.id }), "json")]),
             ];
             break;
           }
@@ -159,10 +170,9 @@ test.describe("AI chat composer and message polish", () => {
 
       await test.step("Result table: Copy JSON, Rerun, tool-card link", async () => {
         await send(page, "table");
-        await page.getByTestId("ai-tool-group").getByText(/Used 1 tool/).click();
         const card = page.getByTestId("ai-tool-card").last();
         await expect(card).toBeVisible({ timeout: 15000 });
-        await card.getByText("execute_sql").click();
+        await card.getByTestId("ai-tool-step").click();
 
         await page.getByTestId("ai-table-copy-json").last().click();
         await expect

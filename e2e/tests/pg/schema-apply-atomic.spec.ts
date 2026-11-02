@@ -1,6 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getDbConfig } from "../../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
+import { clearActiveAiProfile } from "../../helpers/aiSetup";
+import { applyChangeset, proposeChangeset } from "../../helpers/changeset";
+import { FakeLlm, pointProviderAtFakeLlm } from "../../helpers/fakeLlm";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage } from "../../pages";
 
@@ -21,19 +24,26 @@ async function tableCount(page: Page, connectionId: number, table: string): Prom
   return body.data.data[0]?.v;
 }
 
-test.describe("Schema change apply is atomic", () => {
+test.describe("Persisted changeset apply is atomic", () => {
   test("a failing step rolls back the steps that already ran (postgres)", async ({ page }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `schema-atomic-${suffix}`;
     const existing = `e2e_atomic_existing_${suffix}`;
     const fresh = `e2e_atomic_fresh_${suffix}`;
 
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+
+    try {
     await withConnectionCleanup(page, connectionName, async () => {
       const connectionPage = new ConnectionPage(page);
+      await clearActiveAiProfile(page);
       await connectionPage.goto();
       await connectionPage.waitForReady();
       await connectionPage.setupConnection(getDbConfig("postgresql", connectionName));
+      await pointProviderAtFakeLlm(page, llmUrl);
       const connectionId = await connectionIdByName(page, connectionName);
+      const scope = { database: "default", schema: "public" };
 
       const created = await page.request.post("/api/query/raw", {
         data: { connectionId, query: `CREATE TABLE ${existing} (id INTEGER PRIMARY KEY)` },
@@ -48,19 +58,20 @@ test.describe("Schema change apply is atomic", () => {
       ];
 
       await test.step("Failing changeset is refused and leaves nothing behind", async () => {
-        const response = await page.request.post("/api/schema/changes/apply", { data: { connectionId, database: "default", schema: "public", ops: failing } });
+        const response = await applyChangeset(page, await proposeChangeset(page, llm, connectionId, failing, scope));
         expect(response.status()).toBe(500);
         expect(await tableCount(page, connectionId, fresh)).toBe(0);
         expect(await tableCount(page, connectionId, existing)).toBe(1);
       });
 
       await test.step("A valid changeset still applies", async () => {
-        const response = await page.request.post("/api/schema/changes/apply", {
-          data: { connectionId, database: "default", schema: "public", ops: [failing[0]] },
-        });
+        const response = await applyChangeset(page, await proposeChangeset(page, llm, connectionId, [failing[0]], scope));
         expect(response.status()).toBe(200);
         expect(await tableCount(page, connectionId, fresh)).toBe(1);
       });
     });
+    } finally {
+      await llm.stop();
+    }
   });
 });

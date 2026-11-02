@@ -107,6 +107,12 @@ func (r AiChatRepoImpl) Update(ctx context.Context, chat *model.AiChat) error {
 	return r.db.WithContext(ctx).Save(chat).Error
 }
 
+// UpdateSummary stores the running summary without touching updated_at.
+func (r AiChatRepoImpl) UpdateSummary(ctx context.Context, chatID uint, summary string, upTo uint) error {
+	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
+		UpdateColumns(map[string]any{"summary": summary, "summary_up_to": upTo}).Error
+}
+
 // UpdateContext stores the chat context without touching updated_at, so history order is unchanged.
 func (r AiChatRepoImpl) UpdateContext(ctx context.Context, chatID uint, contextJSON string) error {
 	return r.db.WithContext(ctx).Model(&model.AiChat{}).Where("id = ?", chatID).
@@ -123,14 +129,4 @@ func (r AiChatRepoImpl) AddMessage(ctx context.Context, m *model.AiChatMessage) 
 	}
 
 	return r.db.WithContext(ctx).Create(m).Error
-}
-
-// UpdateMessageContent swaps the content only if it still equals oldContent,
-// so two concurrent writers cannot both win. It reports whether a row changed.
-func (r AiChatRepoImpl) UpdateMessageContent(ctx context.Context, id uint, oldContent, newContent string) (bool, error) {
-	result := r.db.WithContext(ctx).Model(&model.AiChatMessage{}).
-		Where("id = ? AND content = ?", id, oldContent).
-		Update("content", newContent)
-
-	return result.RowsAffected == 1, result.Error
 }

@@ -1,6 +1,6 @@
 import type { TabMode } from '@/core/enums';
 import type { PaneId, SelectedByPane } from './tabs';
-import type { DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
+import type { QuestionTabType, DashboardTabType, DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
@@ -42,6 +42,8 @@ export type TabSettingSlice = {
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addEditorTab: (query?: string, options?: { forceNew?: boolean }) => TabType;
   addDiagramTab: (args: { database: string; schema: string; focusTable?: string }) => DiagramTabType;
+  addDashboardTab: (dashboard: { id: number; name: string }) => DashboardTabType;
+  addQuestionTab: (question: { id: number; name: string }) => QuestionTabType;
   addSettingsTab: (options?: AddSettingsTabOptions) => SettingsTabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;

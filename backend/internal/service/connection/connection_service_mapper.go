@@ -81,6 +81,7 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		SafeMode:            string(policy.Mode),
 		SafeModeUnlocked:    policy.Unlocked,
 		SafeModeUnlockUntil: unlockUntil,
+		AgentTier:           string(connection.AgentTier),
 		Access:              access,
 		Shared:              access != "owner",
 		PasswordShared:      view.passwordShared,

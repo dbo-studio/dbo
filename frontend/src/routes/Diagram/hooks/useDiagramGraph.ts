@@ -1,8 +1,8 @@
 import { applyOps, neighborIds } from '@/core/diagram/applyOps';
 import { EMPTY_DIAGRAM_GRAPH, type ViewGraph } from '@/core/diagram/types';
 import { useSchemaDiagramQuery } from '@/core/diagram/useSchemaDiagramQuery';
-import { changesetKey, useDiagramChangesetStore } from '@/store/diagramChangesetStore/diagramChangeset.store';
-import type { AiDiagramDiff } from '@/types';
+import { changesetKey, isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
+import type { AiChangeset } from '@/types';
 import { useMemo } from 'react';
 
 type Args = {
@@ -20,7 +20,7 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
   activeNodeId: string | null;
   highlightedIds: Set<string>;
   shownNodeIds: Set<string>;
-  changeset: AiDiagramDiff | undefined;
+  changeset: AiChangeset | undefined;
 } {
   const { data, isLoading } = useSchemaDiagramQuery({
     connectionId,
@@ -30,9 +30,13 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
     enabled
   });
 
-  const changeset = useDiagramChangesetStore((state) =>
-    connectionId === undefined ? undefined : state.changesets[changesetKey(connectionId, database, schema)]
+  const staged = useChangesetStore((state) =>
+    connectionId === undefined
+      ? undefined
+      : state.changesets[state.staged[changesetKey(connectionId, database, schema)]]
   );
+  // Only ops still waiting for the user belong on the canvas.
+  const changeset = staged?.ops.some((op) => isOpen(op.status)) ? staged : undefined;
 
   // Pending agent proposals overlay the live schema until accepted or rejected.
   const viewGraph = useMemo(

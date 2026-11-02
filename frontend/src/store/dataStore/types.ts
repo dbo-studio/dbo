@@ -5,8 +5,8 @@ import type { ColumnType, RowType } from '@/types/Data';
 import { FormFieldWithState } from '@/types/Tree';
 
 export type DataStore = {
-  /** Split-view pane this store belongs to. */
-  paneId: PaneId;
+  /** Split-view pane this store belongs to; 'scoped' for a grid outside the panes, which has no tab. */
+  paneId: PaneId | 'scoped';
   loadDataFromIndexedDB: () => Promise<{ rows: RowType[]; columns: ColumnType[] } | null>;
 };
 

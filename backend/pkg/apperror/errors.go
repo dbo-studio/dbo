@@ -16,6 +16,7 @@ var (
 	ErrJobNotCompleted                = errors.New("job not completed")
 	ErrJobNotFound                    = errors.New("job not found")
 	ErrAiChatNotFound                 = errors.New("ai chat not found")
+	ErrAiChangesetNotFound            = errors.New("ai changeset not found")
 	ErrProviderNotConfigured          = errors.New("provider not configured")
 	ErrAiNoSelectedModel              = errors.New("select a model first")
 	ErrAiNotConfigured                = errors.New("ai is not configured")
