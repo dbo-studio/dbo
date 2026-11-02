@@ -74,7 +74,9 @@ Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_que
 Ask: "is it a list I pick from, or a page I work in?"
 
 - **List (browser)** — one entry in `explorerViews` in `layout/MainContainer/ExplorerContainer.tsx` (Items, Queries, History, Boards). Give it an icon: labels collapse to icons when the sidebar is narrow. Add a mobile `pushedScreens` entry only if what it opens works on mobile.
-- **Page (tool)** — its own `TabMode`, rendered by `PanelItem`, opened from an icon next to the SQL editor button in `layout/AppHeader/ConnectionInfo` (Settings, SQL editor; later Backup, Monitoring).
+- **Area** — a place in the app: an entry in `layout/ActivityBar` (icons only) whose list fills the left sidebar, with its detail opening in the centre. Add it to `ActivityBar`, to `ExplorerArea` (`store/explorerArea`) and to the switch in `layout/MainContainer/ExplorerContainer` (Explorer, Boards, Backup). Never add a header icon for a feature.
+- **Page (tool)** — its own `TabMode`, rendered by `PanelItem`, reached from its area's sidebar list (see `BackupSidebar`); the page has no navigation of its own. A global page (Backup, Settings) is exempt from per-connection tab filtering (`isGlobalTab`).
+- **Connection** is the explorer's scope, not an area: it is chosen in `layout/ConnectionSwitcher` at the top of the explorer sidebar. The header holds context (connection, SQL editor) and global state (notifications, settings, panel toggles). The command palette (`CommandPalette`, add commands in `useCommands`) opens from its shortcut. `layout/StatusBar` has three zones: connection (left), active tab info (centre) and app state (right: jobs, backups, MCP, unread). Backup pages are built from `SettingGroup`/`SettingRow` rows (`BackupPanel/FormRow`), never rounded cards.
 - Never inject app-DB items (dashboards, reports, …) into the driver tree.
 
 ### Design system

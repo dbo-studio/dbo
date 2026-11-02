@@ -1,12 +1,12 @@
 import { SettingGroup, SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import { requestNotificationPermission } from '@/core/notifications/announce';
+import { requestNotificationPermission, sendTestNotification } from '@/core/notifications/announce';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { NotificationSettings } from '@/store/settingStore/types';
 import { invoke } from '@tauri-apps/api/core';
-import { Box, Switch } from '@mui/material';
+import { Box, Button, Switch } from '@mui/material';
 import { useEffect, useState, type JSX } from 'react';
 
 const KINDS = ['query', 'import', 'export', 'backup'] as const;
@@ -83,6 +83,16 @@ export default function NotificationsPanel(): JSX.Element {
               slotProps={{ input: { 'aria-label': locales.notification_settings_sound, 'data-testid': 'notifications-sound' } as React.InputHTMLAttributes<HTMLInputElement> }}
               onChange={(event): void => set({ sound: event.target.checked })}
             />
+          }
+        />
+        <SettingRow
+          id='notifications.test'
+          label={locales.notification_settings_test}
+          description={locales.notification_settings_test_hint}
+          control={
+            <Button size='small' variant='outlined' onClick={() => void sendTestNotification()} data-testid='notifications-test'>
+              {locales.notification_settings_test_action}
+            </Button>
           }
         />
         <SettingRow

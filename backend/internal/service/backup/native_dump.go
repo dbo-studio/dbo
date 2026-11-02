@@ -166,6 +166,11 @@ func bestTool(tools []dto.BackupTool, name string) (dto.BackupTool, bool) {
 		return dto.BackupTool{}, false
 	}
 
+	// A path the user configured always wins over auto-detected installs.
+	if configured, ok := lo.Find(candidates, func(t dto.BackupTool) bool { return t.Source == ToolSourceConfigured }); ok {
+		return configured, true
+	}
+
 	best := candidates[0]
 	for _, c := range candidates[1:] {
 		if compareVersions(c.Version, best.Version) > 0 {

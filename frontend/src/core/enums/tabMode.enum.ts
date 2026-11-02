@@ -6,5 +6,6 @@ export enum TabMode {
   Diagram = 'diagram',
   Dashboard = 'dashboard',
   Question = 'question',
-  Settings = 'settings'
+  Settings = 'settings',
+  Backup = 'backup'
 }

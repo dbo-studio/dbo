@@ -3,6 +3,7 @@ package serviceBackup
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -32,15 +33,17 @@ type IBackupScheduleServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	shareRepo      repository.IConnectionShareRepo
 	scheduleRepo   repository.IBackupScheduleRepo
+	connectorRepo  repository.IBackupConnectorRepo
 	secrets        serviceSecretStore.ISecretStore
 }
 
-func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore) IBackupScheduleService {
+func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, scheduleRepo repository.IBackupScheduleRepo, connectorRepo repository.IBackupConnectorRepo, secrets serviceSecretStore.ISecretStore) IBackupScheduleService {
 	return &IBackupScheduleServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
 		shareRepo:      shareRepo,
 		scheduleRepo:   scheduleRepo,
+		connectorRepo:  connectorRepo,
 		secrets:        secrets,
 	}
 }
@@ -64,20 +67,27 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 	}
 
 	schedule := &model.BackupSchedule{
-		OwnerID:      ownerID,
-		ConnectionID: uint(req.ConnectionID),
-		Name:         req.Name,
-		Database:     req.Database,
-		Schema:       req.Schema,
-		Cadence:      req.Cadence,
-		Hour:         req.Hour,
-		Minute:       req.Minute,
-		Weekday:      req.Weekday,
-		Timezone:     lo.CoalesceOrEmpty(req.Timezone, "UTC"),
-		Enabled:      true,
-		KeepLast:     req.KeepLast,
-		KeepDays:     req.KeepDays,
-		Compress:     req.Compress,
+		OwnerID:       ownerID,
+		ConnectionID:  uint(req.ConnectionID),
+		Name:          req.Name,
+		Database:      req.Database,
+		Schema:        req.Schema,
+		Cadence:       req.Cadence,
+		Hour:          req.Hour,
+		Minute:        req.Minute,
+		Weekday:       req.Weekday,
+		Timezone:      lo.CoalesceOrEmpty(req.Timezone, "UTC"),
+		Enabled:       true,
+		KeepLast:      req.KeepLast,
+		KeepDays:      req.KeepDays,
+		Compress:      req.Compress,
+		DestinationID: req.DestinationID,
+		ChannelIDs:    channelIDsJSON(req.ChannelIDs),
+		NotifyOn:      lo.CoalesceOrEmpty(req.NotifyOn, "failure"),
+	}
+
+	if err := s.checkConnectors(ctx, ownerID, req.DestinationID, req.ChannelIDs); err != nil {
+		return nil, err
 	}
 
 	if req.Passphrase != "" {
@@ -116,6 +126,10 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 
 	applyScheduleUpdate(schedule, req)
 
+	if err := s.checkConnectors(ctx, ownerID, schedule.DestinationID, schedule.Channels()); err != nil {
+		return nil, err
+	}
+
 	// A new passphrase means a new key pair; backups already made keep the key
 	// they were written with.
 	if req.Passphrase != nil && *req.Passphrase != "" {
@@ -129,6 +143,7 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 		"cadence": schedule.Cadence, "hour": schedule.Hour, "minute": schedule.Minute,
 		"weekday": schedule.Weekday, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
 		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
+		"destination_id": schedule.DestinationID, "channel_ids": schedule.ChannelIDs, "notify_on": schedule.NotifyOn,
 	}
 
 	// Timing or enabling changes recompute the next run from now.
@@ -222,6 +237,36 @@ func applyScheduleUpdate(s *model.BackupSchedule, req *dto.BackupScheduleUpdateR
 	s.KeepLast = lo.FromPtrOr(req.KeepLast, s.KeepLast)
 	s.KeepDays = lo.FromPtrOr(req.KeepDays, s.KeepDays)
 	s.Compress = lo.FromPtrOr(req.Compress, s.Compress)
+	s.DestinationID = lo.FromPtrOr(req.DestinationID, s.DestinationID)
+	s.NotifyOn = lo.FromPtrOr(req.NotifyOn, s.NotifyOn)
+
+	if req.ChannelIDs != nil {
+		s.ChannelIDs = channelIDsJSON(*req.ChannelIDs)
+	}
+}
+
+func channelIDsJSON(ids []uint) string {
+	raw, _ := json.Marshal(lo.Uniq(ids))
+
+	return string(raw)
+}
+
+// checkConnectors makes sure the destination and channels belong to the caller,
+// so a schedule cannot point at someone else's storage.
+func (s IBackupScheduleServiceImpl) checkConnectors(ctx context.Context, ownerID string, destinationID uint, channelIDs []uint) error {
+	if destinationID != 0 {
+		if c, err := s.connectorRepo.FindByOwner(ctx, destinationID, ownerID); err != nil || c.Kind != model.ConnectorKindDestination {
+			return apperror.Validation(errors.New("destinationId: unknown destination"))
+		}
+	}
+
+	for _, id := range channelIDs {
+		if c, err := s.connectorRepo.FindByOwner(ctx, id, ownerID); err != nil || c.Kind != model.ConnectorKindChannel {
+			return apperror.Validation(errors.New("channelIds: unknown channel"))
+		}
+	}
+
+	return nil
 }
 
 // response maps a schedule and reports whether a run can authenticate without
@@ -259,6 +304,7 @@ func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
 		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, Timezone: s.Timezone,
 		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, Compress: s.Compress, Encrypted: s.PublicKey != "",
+		DestinationID: s.DestinationID, ChannelIDs: s.Channels(), NotifyOn: s.NotifyOn,
 		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,
 	}
 }
@@ -269,12 +315,15 @@ func queueScheduledBackup(ctx context.Context, jobs serviceJob.IJobManager, repo
 	job, err := jobs.CreateJob(model.JobTypeBackup, s.OwnerID, helper.StructToJSON(dto.BackupJob{
 		OwnerID: s.OwnerID,
 		BackupRequest: dto.BackupRequest{
-			ConnectionID: int32(s.ConnectionID),
-			Database:     s.Database,
-			Schema:       s.Schema,
-			Note:         "Schedule: " + s.Name,
-			Compress:     s.Compress,
+			ConnectionID:  int32(s.ConnectionID),
+			Database:      s.Database,
+			Schema:        s.Schema,
+			Note:          "Schedule: " + s.Name,
+			Compress:      s.Compress,
+			DestinationID: s.DestinationID,
 		},
+		ChannelIDs: s.Channels(),
+		NotifyOn:   s.NotifyOn,
 		ScheduleID: s.ID,
 		PublicKey:  s.PublicKey,
 		WrappedKey: s.WrappedKey,

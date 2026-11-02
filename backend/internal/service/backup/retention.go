@@ -14,7 +14,7 @@ import (
 // anything past the newest KeepLast, and anything older than KeepDays. The
 // newest backup is always kept, so retention can never leave a schedule with
 // nothing to restore.
-func ApplyRetention(ctx context.Context, repo repository.IBackupArtifactRepo, schedule *model.BackupSchedule, now time.Time) error {
+func ApplyRetention(ctx context.Context, repo repository.IBackupArtifactRepo, remote Remote, schedule *model.BackupSchedule, now time.Time) error {
 	if schedule.KeepLast == 0 && schedule.KeepDays == 0 {
 		return nil
 	}
@@ -43,6 +43,8 @@ func ApplyRetention(ctx context.Context, repo repository.IBackupArtifactRepo, sc
 				return err
 			}
 		}
+
+		removeRemote(ctx, remote, a)
 
 		if err := repo.Delete(ctx, a.ID); err != nil {
 			return err

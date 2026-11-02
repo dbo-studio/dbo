@@ -21,25 +21,33 @@ type (
 		KeepLast     int    `json:"keepLast"`
 		KeepDays     int    `json:"keepDays"`
 		Compress     bool   `json:"compress"`
+		// DestinationID also copies each backup to a destination; ChannelIDs and NotifyOn
+		// ("failure", "always" or "never") say who hears about each run.
+		DestinationID uint   `json:"destinationId"`
+		ChannelIDs    []uint `json:"channelIds"`
+		NotifyOn      string `json:"notifyOn"`
 		// Passphrase encrypts every backup of the schedule; it is never returned.
 		Passphrase string `json:"passphrase"`
 	}
 
 	// BackupScheduleUpdateRequest changes only the fields that are sent.
 	BackupScheduleUpdateRequest struct {
-		ID       uint
-		Enabled  *bool   `json:"enabled"`
-		Name     *string `json:"name"`
-		Database *string `json:"database"`
-		Schema   *string `json:"schema"`
-		Cadence  *string `json:"cadence"`
-		Hour     *int    `json:"hour"`
-		Minute   *int    `json:"minute"`
-		Weekday  *int    `json:"weekday"`
-		Timezone *string `json:"timezone"`
-		KeepLast *int    `json:"keepLast"`
-		KeepDays *int    `json:"keepDays"`
-		Compress *bool   `json:"compress"`
+		ID            uint
+		Enabled       *bool   `json:"enabled"`
+		Name          *string `json:"name"`
+		Database      *string `json:"database"`
+		Schema        *string `json:"schema"`
+		Cadence       *string `json:"cadence"`
+		Hour          *int    `json:"hour"`
+		Minute        *int    `json:"minute"`
+		Weekday       *int    `json:"weekday"`
+		Timezone      *string `json:"timezone"`
+		KeepLast      *int    `json:"keepLast"`
+		KeepDays      *int    `json:"keepDays"`
+		Compress      *bool   `json:"compress"`
+		DestinationID *uint   `json:"destinationId"`
+		ChannelIDs    *[]uint `json:"channelIds"`
+		NotifyOn      *string `json:"notifyOn"`
 		// Passphrase, when sent and not empty, sets or replaces the passphrase.
 		Passphrase *string `json:"passphrase"`
 	}
@@ -60,6 +68,9 @@ type (
 		KeepDays      int        `json:"keepDays"`
 		Compress      bool       `json:"compress"`
 		Encrypted     bool       `json:"encrypted"`
+		DestinationID uint       `json:"destinationId"`
+		ChannelIDs    []uint     `json:"channelIds"`
+		NotifyOn      string     `json:"notifyOn"`
 		NextRunAt     *time.Time `json:"nextRunAt"`
 		LastRunAt     *time.Time `json:"lastRunAt"`
 		LastSuccessAt *time.Time `json:"lastSuccessAt"`
@@ -76,6 +87,8 @@ type (
 	}
 )
 
+var notifyModes = []any{"failure", "always", "never"}
+
 var cadences = []any{model.ScheduleCadenceHourly, model.ScheduleCadenceDaily, model.ScheduleCadenceWeekly}
 
 func (req BackupScheduleRequest) Validate() error {
@@ -90,6 +103,7 @@ func (req BackupScheduleRequest) Validate() error {
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
+		validation.Field(&req.NotifyOn, validation.In(notifyModes...)),
 	)
 }
 
@@ -104,5 +118,6 @@ func (req BackupScheduleUpdateRequest) Validate() error {
 		validation.Field(&req.Weekday, validation.Min(0), validation.Max(6)),
 		validation.Field(&req.KeepLast, validation.Min(0), validation.Max(10000)),
 		validation.Field(&req.KeepDays, validation.Min(0), validation.Max(36500)),
+		validation.Field(&req.NotifyOn, validation.In(notifyModes...)),
 	)
 }

@@ -12,12 +12,23 @@ import {
   selectTabs,
   selectVisibleTabs,
   SETTINGS_CONNECTION_ID,
+  isGlobalTab,
   tabPane
 } from '@/store/tabStore/tabs';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import type { QuestionTabType, DashboardTabType, DataTabType, DiagramTabType, EditorTabType, ObjectTabType, SettingsTabType, TabType } from '@/types/Tab';
+import type {
+  QuestionTabType,
+  DashboardTabType,
+  DataTabType,
+  DiagramTabType,
+  EditorTabType,
+  ObjectTabType,
+  SettingsTabType,
+  BackupTabType,
+  TabType
+} from '@/types/Tab';
 import type { StateCreator } from 'zustand';
-import type { AddSettingsTabOptions, TabQuerySlice, TabSettingSlice, TabStore } from '../types';
+import type { AddBackupTabOptions, AddSettingsTabOptions, TabQuerySlice, TabSettingSlice, TabStore } from '../types';
 
 const maxTabs = 15;
 
@@ -305,6 +316,37 @@ export const createTabSettingSlice: StateCreator<
 
     return get().handleAddNewTab(tabs, newTab) as SettingsTabType;
   },
+  addBackupTab: (options?: AddBackupTabOptions): BackupTabType => {
+    const tabs = selectTabs(get());
+    const existing = tabs.find((tab): tab is BackupTabType => tab.mode === TabMode.Backup);
+
+    if (existing) {
+      const updated: BackupTabType = {
+        ...existing,
+        section: options?.section ?? existing.section,
+        targetConnectionId: options?.connectionId ?? existing.targetConnectionId,
+        database: options?.connectionId !== undefined ? options.database : existing.database,
+        scheduleId: options?.scheduleId
+      };
+      const nextTabs = tabs.map((tab) => (tab.id === existing.id ? updated : tab));
+      set({ tabs: nextTabs, ...selectionPatch(nextTabs, get().selectedByPane, updated.id) }, undefined, 'addBackupTab');
+      return updated;
+    }
+
+    const newTab: BackupTabType = {
+      id: tools.uuid(),
+      name: locales.backup_restore,
+      connectionId: SETTINGS_CONNECTION_ID,
+      nodeId: '',
+      mode: TabMode.Backup,
+      section: options?.section ?? 'backups',
+      targetConnectionId: options?.connectionId,
+      database: options?.database,
+      scheduleId: options?.scheduleId
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as BackupTabType;
+  },
   removeTab: (tabId: string): TabType | null | undefined => {
     const tabs = selectTabs(get());
     const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
@@ -331,15 +373,13 @@ export const createTabSettingSlice: StateCreator<
         nextSelectedId = undefined;
       } else {
         // Prefer a connection tab at the same visual index when possible.
-        const removedWasSettings = removed?.mode === TabMode.Settings;
+        const removedWasSettings = removed ? isGlobalTab(removed) : false;
         if (removedWasSettings) {
           nextTab = visible[visible.length - 1] ?? null;
         } else {
-          const connectionVisible = visible.filter((tab) => tab.mode !== TabMode.Settings);
+          const connectionVisible = visible.filter((tab) => !isGlobalTab(tab));
           const connectionIndex = tabs
-            .filter(
-              (tab) => tab.mode !== TabMode.Settings && (tab.id === tabId || visible.some((v) => v.id === tab.id))
-            )
+            .filter((tab) => !isGlobalTab(tab) && (tab.id === tabId || visible.some((v) => v.id === tab.id)))
             .findIndex((tab) => tab.id === tabId);
           nextTab =
             (connectionIndex >= 0 && connectionIndex < connectionVisible.length
@@ -377,10 +417,9 @@ export const createTabSettingSlice: StateCreator<
 
   handleAddNewTab: (_tabs: TabType[], addedTab: TabType): TabType => {
     const tabs = selectTabs(get());
-    const newTab: TabType =
-      get().focusedPane === 1 && addedTab.mode !== TabMode.Settings ? { ...addedTab, pane: 1 } : addedTab;
+    const newTab: TabType = get().focusedPane === 1 && !isGlobalTab(addedTab) ? { ...addedTab, pane: 1 } : addedTab;
 
-    if (newTab.mode === TabMode.Settings) {
+    if (isGlobalTab(newTab)) {
       const nextTabs = [...tabs, newTab];
       set(
         { tabs: nextTabs, ...selectionPatch(nextTabs, get().selectedByPane, newTab.id) },
@@ -390,7 +429,7 @@ export const createTabSettingSlice: StateCreator<
       return newTab;
     }
 
-    const otherTabs = tabs.filter((tab) => tab.mode !== TabMode.Settings);
+    const otherTabs = tabs.filter((tab) => !isGlobalTab(tab));
     const nextTabs =
       otherTabs.length < maxTabs ? [...tabs, newTab] : [...tabs.filter((tab) => tab.id !== otherTabs[0].id), newTab];
 

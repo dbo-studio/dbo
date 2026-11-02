@@ -170,6 +170,8 @@ func (r *Server) routing() {
 		},
 	}))
 	public.Post("/dashboards/:token", r.handlers.DashboardShare.View)
+	// Google sends the browser here after consent; the encrypted state identifies the owner.
+	public.Get("/backup-destinations/oauth/callback", r.handlers.BackupDestination.OAuthCallback)
 
 	// The one outgoing mail account the schedules send through; an instance admin sets it.
 	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSmtp)
@@ -197,6 +199,10 @@ func (r *Server) routing() {
 	backup.Get("/tools", r.handlers.Backup.Tools)
 	backup.Get("/tools/downloads", r.handlers.Backup.ToolDownloads)
 	backup.Post("/tools/install", r.handlers.Backup.InstallTool)
+	backup.Put("/tools/:name/path", r.handlers.Backup.SetToolPath)
+	backup.Post("/tools/:name/path/test", r.handlers.Backup.TestToolPath)
+	backup.Delete("/tools/:name/path", r.handlers.Backup.ClearToolPath)
+	// Registered after the /path routes: ':driver/:version' would swallow them.
 	backup.Delete("/tools/:driver/:version", r.handlers.Backup.RemoveTool)
 	backup.Get("/history", r.handlers.Backup.History)
 	backup.Post("/:id/verify", r.handlers.Backup.Verify)
@@ -208,6 +214,21 @@ func (r *Server) routing() {
 	schedules.Patch("/:id", r.handlers.BackupSchedule.Update)
 	schedules.Delete("/:id", r.handlers.BackupSchedule.Delete)
 	schedules.Post("/:id/run", r.handlers.BackupSchedule.Run)
+
+	destinations := api.Group("backup-destinations")
+	destinations.Get("/", r.handlers.BackupDestination.List)
+	destinations.Post("/", r.handlers.BackupDestination.Create)
+	destinations.Patch("/:id", r.handlers.BackupDestination.Update)
+	destinations.Delete("/:id", r.handlers.BackupDestination.Delete)
+	destinations.Post("/:id/test", r.handlers.BackupDestination.Test)
+	destinations.Post("/:id/oauth/url", r.handlers.BackupDestination.AuthURL)
+
+	channels := api.Group("notification-channels")
+	channels.Get("/", r.handlers.NotificationChannel.List)
+	channels.Post("/", r.handlers.NotificationChannel.Create)
+	channels.Patch("/:id", r.handlers.NotificationChannel.Update)
+	channels.Delete("/:id", r.handlers.NotificationChannel.Delete)
+	channels.Post("/:id/test", r.handlers.NotificationChannel.Test)
 
 	job := api.Group("jobs")
 	job.Get("/active", r.handlers.Job.Active)

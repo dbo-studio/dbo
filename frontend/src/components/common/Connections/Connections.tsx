@@ -17,7 +17,7 @@ import { EmptySpaceStyle } from './EmptySpace.styled';
 import type { ConnectionsProps } from './types';
 import { useConnectionsList } from './useConnectionsList';
 
-export default function Connections({ expanded = false }: ConnectionsProps): JSX.Element {
+export default function Connections({ expanded = false, footer }: ConnectionsProps): JSX.Element {
   const { showConnectionsRail } = useLayoutMode();
   const { connections, currentConnectionId, activatingConnectionId, selectConnection, reorder } = useConnectionsList();
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -76,6 +76,7 @@ export default function Connections({ expanded = false }: ConnectionsProps): JSX
             </ConnectionsListStyled>
           )}
           {!expanded && <EmptySpaceStyle />}
+          {!expanded && footer}
         </>
       )}
     </ConnectionsStyled>

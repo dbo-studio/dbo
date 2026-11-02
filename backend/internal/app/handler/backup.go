@@ -119,6 +119,57 @@ func (h BackupHandler) InstallTool(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithMessage("Tool download started").WithData(result).Send(c)
 }
 
+func (h BackupHandler) toolPath(c fiber.Ctx) (*dto.ToolPathRequest, error) {
+	req := new(dto.ToolPathRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	req.Name = c.Params("name")
+	if err := req.Validate(); err != nil {
+		return nil, apperror.Validation(err)
+	}
+
+	return req, nil
+}
+
+func (h BackupHandler) SetToolPath(c fiber.Ctx) error {
+	req, err := h.toolPath(c)
+	if err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	tool, err := h.service.SetToolPath(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(tool).Send(c)
+}
+
+func (h BackupHandler) TestToolPath(c fiber.Ctx) error {
+	req, err := h.toolPath(c)
+	if err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	tool, err := h.service.TestToolPath(c, req)
+	if err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(tool).Send(c)
+}
+
+func (h BackupHandler) ClearToolPath(c fiber.Ctx) error {
+	if err := h.service.ClearToolPath(c, c.Params("name")); err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().Send(c)
+}
+
 func (h BackupHandler) RemoveTool(c fiber.Ctx) error {
 	req := &dto.ToolRemoveRequest{
 		Driver:  c.Params("driver"),

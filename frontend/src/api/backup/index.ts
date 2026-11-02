@@ -8,6 +8,9 @@ import type {
   BackupToolDownloadType,
   BackupToolType,
   BackupVerifyResultType,
+  ConnectorKind,
+  ConnectorRequestType,
+  ConnectorType,
   RestoreRequestType
 } from './types';
 
@@ -22,6 +25,8 @@ const endpoint = {
   toolDownloads: (): string => '/backups/tools/downloads',
   installTool: (): string => '/backups/tools/install',
   removeTool: (driver: string, version: string): string => `/backups/tools/${driver}/${version}`,
+  toolPath: (name: string): string => `/backups/tools/${name}/path`,
+  toolPathTest: (name: string): string => `/backups/tools/${name}/path/test`,
   schedules: (): string => '/backup-schedules',
   schedule: (id: number): string => `/backup-schedules/${id}`,
   runSchedule: (id: number): string => `/backup-schedules/${id}/run`
@@ -99,4 +104,46 @@ export const runSchedule = async (id: number): Promise<BackupJobResponseType> =>
 
 export const verify = async (id: number, passphrase?: string): Promise<BackupVerifyResultType> => {
   return (await api.post<{ data: BackupVerifyResultType }>(endpoint.verify(id), { passphrase })).data.data;
+};
+
+export const setToolPath = async (name: string, path: string): Promise<BackupToolType> => {
+  return (await api.put<{ data: BackupToolType }>(endpoint.toolPath(name), { path })).data.data;
+};
+
+export const testToolPath = async (name: string, path: string): Promise<BackupToolType> => {
+  return (await api.post<{ data: BackupToolType }>(endpoint.toolPathTest(name), { path })).data.data;
+};
+
+export const clearToolPath = async (name: string): Promise<void> => {
+  await api.delete(endpoint.toolPath(name));
+};
+
+const connectorBase = (kind: ConnectorKind): string => (kind === 'destination' ? '/backup-destinations' : '/notification-channels');
+
+export const connectors = async (kind: ConnectorKind): Promise<ConnectorType[]> => {
+  return (await api.get<{ data: ConnectorType[] }>(connectorBase(kind))).data.data;
+};
+
+export const createConnector = async (kind: ConnectorKind, request: ConnectorRequestType): Promise<ConnectorType> => {
+  return (await api.post<{ data: ConnectorType }>(connectorBase(kind), request)).data.data;
+};
+
+export const updateConnector = async (
+  kind: ConnectorKind,
+  id: number,
+  request: ConnectorRequestType
+): Promise<ConnectorType> => {
+  return (await api.patch<{ data: ConnectorType }>(`${connectorBase(kind)}/${id}`, request)).data.data;
+};
+
+export const deleteConnector = async (kind: ConnectorKind, id: number): Promise<void> => {
+  await api.delete(`${connectorBase(kind)}/${id}`);
+};
+
+export const testConnector = async (kind: ConnectorKind, id: number): Promise<void> => {
+  await api.post(`${connectorBase(kind)}/${id}/test`);
+};
+
+export const driveAuthUrl = async (id: number): Promise<string> => {
+  return (await api.post<{ data: { url: string } }>(`${connectorBase('destination')}/${id}/oauth/url`)).data.data.url;
 };

@@ -25,8 +25,11 @@ export async function openNotification(
     try {
       const job = await api.job.detail(String(n.jobId));
       const request = job.data?.request;
-      const connection = useConnectionStore.getState().connections?.find((item) => Number(item.id) === Number(request?.connectionId));
-      if (job.data?.kind !== 'raw' || !connection || typeof request?.query !== 'string') throw new Error('not a query to rerun');
+      const connection = useConnectionStore
+        .getState()
+        .connections?.find((item) => Number(item.id) === Number(request?.connectionId));
+      if (job.data?.kind !== 'raw' || !connection || typeof request?.query !== 'string')
+        throw new Error('not a query to rerun');
 
       await switchConnection(connection);
       const tab = useTabStore.getState().addEditorTab(request.query, { forceNew: true });
@@ -51,12 +54,16 @@ export async function openNotification(
     const request = job.data?.request;
     if (!res || !request) throw new Error('expired');
 
-    const connection = useConnectionStore.getState().connections?.find((item) => Number(item.id) === Number(request.connectionId));
+    const connection = useConnectionStore
+      .getState()
+      .connections?.find((item) => Number(item.id) === Number(request.connectionId));
     if (!connection) throw new Error('connection gone');
     await switchConnection(connection);
 
     const tabs = useTabStore.getState();
-    const tab = tabs.addEditorTab(res.query || (typeof request.query === 'string' ? request.query : ''), { forceNew: true });
+    const tab = tabs.addEditorTab(res.query || (typeof request.query === 'string' ? request.query : ''), {
+      forceNew: true
+    });
     // The rows go where a normal run leaves them, then the tab loads them as it would after one.
     await storeQueryResult(tab.id, 'raw', res);
     useBackgroundQueryStore.getState().deliver(tab.id);

@@ -117,5 +117,13 @@ export const IconTypes = {
   compare: 'GitCompare',
   thumbUp: 'ThumbsUp',
   thumbDown: 'ThumbsDown',
-  bell: 'Bell'
+  bell: 'Bell',
+  backup: 'DatabaseBackup',
+  hardDrive: 'HardDrive',
+  wrench: 'Wrench',
+  cloud: 'Cloud',
+  upload: 'Upload',
+  mail: 'Mail',
+  webhook: 'Webhook',
+  folder: 'Folder'
 };

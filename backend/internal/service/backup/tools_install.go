@@ -156,13 +156,13 @@ func InstallTool(ctx context.Context, driver, version string, progress func(perc
 
 	archivePath := filepath.Join(staging, "archive")
 
-	progress(5, "Downloading "+entry.URL)
+	progress(0, progressMessage("download", 0, entry.Size, 0))
 
-	if err := downloadVerified(ctx, entry, archivePath); err != nil {
+	if err := downloadVerified(ctx, entry, archivePath, progress); err != nil {
 		return err
 	}
 
-	progress(70, "Checksum verified")
+	progress(85, progressMessage("verify", entry.Size, entry.Size, 0))
 
 	extracted := filepath.Join(staging, "out")
 	if err := os.MkdirAll(extracted, 0o755); err != nil {
@@ -195,12 +195,12 @@ func InstallTool(ctx context.Context, driver, version string, progress func(perc
 		return err
 	}
 
-	progress(95, "Installing")
+	progress(98, progressMessage("install", entry.Size, entry.Size, 0))
 
 	return os.Rename(extracted, dest)
 }
 
-func downloadVerified(ctx context.Context, entry toolManifestEntry, dest string) error {
+func downloadVerified(ctx context.Context, entry toolManifestEntry, dest string, progress func(percent int, message string)) error {
 	ctx, cancel := context.WithTimeout(ctx, toolDownloadTimeout)
 	defer cancel()
 
@@ -230,7 +230,8 @@ func downloadVerified(ctx context.Context, entry toolManifestEntry, dest string)
 	h := sha256.New()
 
 	// Read one byte past the pinned size so a longer body is caught.
-	n, err := io.Copy(io.MultiWriter(f, h), io.LimitReader(resp.Body, entry.Size+1))
+	meter := &progressWriter{total: entry.Size, start: time.Now(), report: progress}
+	n, err := io.Copy(io.MultiWriter(f, h, meter), io.LimitReader(resp.Body, entry.Size+1))
 	if err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
@@ -317,4 +318,44 @@ func RemoveTool(driver, version string) error {
 	}
 
 	return os.RemoveAll(dir)
+}
+
+// progressWriter counts downloaded bytes and reports them at most every 150ms.
+// Download fills 0-80% of the job; verify, extract and install take the rest.
+type progressWriter struct {
+	total  int64
+	done   int64
+	start  time.Time
+	last   time.Time
+	report func(percent int, message string)
+}
+
+func (w *progressWriter) Write(p []byte) (int, error) {
+	w.done += int64(len(p))
+
+	if now := time.Now(); now.Sub(w.last) >= 150*time.Millisecond {
+		w.last = now
+
+		var speed int64
+		if secs := now.Sub(w.start).Seconds(); secs > 0 {
+			speed = int64(float64(w.done) / secs)
+		}
+
+		percent := 0
+		if w.total > 0 {
+			percent = int(w.done * 80 / w.total)
+		}
+
+		w.report(min(percent, 80), progressMessage("download", w.done, w.total, speed))
+	}
+
+	return len(p), nil
+}
+
+// progressMessage is the job message for tool installs. The UI parses it to
+// draw a byte-level progress bar; plain-text messages still render as text.
+func progressMessage(phase string, done, total, speed int64) string {
+	data, _ := json.Marshal(map[string]any{"phase": phase, "done": done, "total": total, "speed": speed})
+
+	return string(data)
 }

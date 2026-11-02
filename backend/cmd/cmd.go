@@ -110,6 +110,8 @@ func Execute() {
 		ImportExport:          handler.NewImportExportHandler(appLogger, ss.ImportExportService),
 		Backup:                handler.NewBackupHandler(appLogger, ss.BackupService),
 		BackupSchedule:        handler.NewBackupScheduleHandler(appLogger, ss.BackupScheduleService),
+		BackupDestination:     handler.NewDestinationHandler(appLogger, ss.ConnectorService),
+		NotificationChannel:   handler.NewChannelHandler(appLogger, ss.ConnectorService),
 		Job:                   handler.NewJobHandler(appLogger, ss.JobService),
 		AI:                    handler.NewAiHandler(appLogger, ss.AiService),
 		AiProvider:            handler.NewAiProviderHandler(appLogger, ss.AiProviderService),

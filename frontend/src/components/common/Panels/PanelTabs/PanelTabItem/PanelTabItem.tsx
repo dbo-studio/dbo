@@ -31,13 +31,14 @@ const TAB_MODE_ICON: Record<TabMode, keyof typeof IconTypes> = {
   [TabMode.Diagram]: 'layout',
   [TabMode.Dashboard]: 'layout',
   [TabMode.Question]: 'chart',
-  [TabMode.Settings]: 'settings'
+  [TabMode.Settings]: 'settings',
+  [TabMode.Backup]: 'backup'
 };
 
 export default function PanelTabItem({ tab, overlay = false }: { tab: TabType; overlay?: boolean }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRef = useRef<HTMLDivElement | null>(null);
-  const isSettings = tab.mode === TabMode.Settings;
+  const isSettings = tab.mode === TabMode.Settings || tab.mode === TabMode.Backup;
   const selected = selectedTabId === tab.id;
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();

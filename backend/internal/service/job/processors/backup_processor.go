@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
+	serviceConnector "github.com/dbo-studio/dbo/internal/service/connector"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -37,10 +39,11 @@ type BackupProcessor struct {
 	artifactRepo   repository.IBackupArtifactRepo
 	scheduleRepo   repository.IBackupScheduleRepo
 	secrets        serviceSecretStore.ISecretStore
+	remote         serviceBackup.Remote
 	cache          cache.Cache
 }
 
-func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, appCache cache.Cache) *BackupProcessor {
+func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, scheduleRepo repository.IBackupScheduleRepo, secrets serviceSecretStore.ISecretStore, remote serviceBackup.Remote, appCache cache.Cache) *BackupProcessor {
 	return &BackupProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
@@ -48,6 +51,7 @@ func NewBackupProcessor(jobManager serviceJob.IJobManager, cm *databaseConnectio
 		artifactRepo:   artifactRepo,
 		scheduleRepo:   scheduleRepo,
 		secrets:        secrets,
+		remote:         remote,
 		cache:          appCache,
 	}
 }
@@ -112,6 +116,7 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 			"log":    artifact.Log + time.Now().Format("15:04:05") + " Failed: " + runErr.Error() + "\n",
 		})
 		p.recordSchedule(context.WithoutCancel(ctx), &jobData, "failed", runErr.Error(), 0)
+		p.notify(context.WithoutCancel(ctx), &jobData, connection, artifact, runErr.Error())
 
 		return runErr
 	}
@@ -130,7 +135,16 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		"checksum":     artifact.Checksum,
 	})
 
-	p.recordSchedule(ctx, &jobData, "completed", "", artifact.Size)
+	// The local file is the backup; a failed upload is reported but never fails the job.
+	uploadErr := p.upload(ctx, job, &jobData, artifact)
+	if uploadErr != nil {
+		msg := "Saved locally, but the upload failed: " + uploadErr.Error()
+		p.recordSchedule(ctx, &jobData, "failed", msg, artifact.Size)
+		p.notify(ctx, &jobData, connection, artifact, msg)
+	} else {
+		p.recordSchedule(ctx, &jobData, "completed", "", artifact.Size)
+		p.notify(ctx, &jobData, connection, artifact, "")
+	}
 
 	job.Result = model.JobResult{
 		FileName:   artifact.FileName,
@@ -382,7 +396,7 @@ func (p *BackupProcessor) recordSchedule(ctx context.Context, jobData *dto.Backu
 	_ = p.scheduleRepo.UpdateFields(ctx, schedule.ID, fields)
 
 	if status == "completed" {
-		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, schedule, time.Now())
+		_ = serviceBackup.ApplyRetention(ctx, p.artifactRepo, p.remote, schedule, time.Now())
 	}
 }
 
@@ -448,4 +462,48 @@ func (p *BackupProcessor) seal(artifact *model.BackupArtifact) error {
 // logLine adds a line to the run's log, kept with the artifact for the console.
 func logLine(artifact *model.BackupArtifact, format string, args ...any) {
 	artifact.Log += time.Now().Format("15:04:05") + " " + fmt.Sprintf(format, args...) + "\n"
+}
+
+// upload copies a finished backup to the job's destination and records the result on the artifact.
+func (p *BackupProcessor) upload(ctx context.Context, job *model.Job, jobData *dto.BackupJob, artifact *model.BackupArtifact) error {
+	if jobData.DestinationID == 0 {
+		return nil
+	}
+
+	var last time.Time
+
+	remote, err := p.remote.Upload(ctx, jobData.OwnerID, jobData.DestinationID, artifact.FilePath, artifact.FileName, func(done, total int64) {
+		if now := time.Now(); now.Sub(last) >= 500*time.Millisecond {
+			last = now
+			msg, _ := json.Marshal(map[string]any{"phase": "upload", "done": done, "total": total})
+			_ = p.jobManager.UpdateJobProgress(ctx, job, 90+int(9*done/max(total, 1)), string(msg))
+		}
+	})
+
+	fields := map[string]any{"destination_id": jobData.DestinationID, "remote_path": remote, "remote_status": "uploaded", "remote_error": ""}
+	if err != nil {
+		fields["remote_status"], fields["remote_error"] = "failed", err.Error()
+	}
+
+	_ = p.artifactRepo.UpdateFields(context.WithoutCancel(ctx), artifact.ID, fields)
+
+	return err
+}
+
+// notify tells the schedule's channels how the run went, honoring its notify mode.
+func (p *BackupProcessor) notify(ctx context.Context, jobData *dto.BackupJob, connection *model.Connection, artifact *model.BackupArtifact, failure string) {
+	if len(jobData.ChannelIDs) == 0 || jobData.NotifyOn == "never" || (failure == "" && jobData.NotifyOn != "always") {
+		return
+	}
+
+	p.remote.Notify(ctx, jobData.OwnerID, jobData.ChannelIDs, serviceConnector.Event{
+		Kind:       "backup",
+		Name:       strings.TrimPrefix(jobData.Note, "Schedule: "),
+		Connection: connection.Name,
+		Database:   artifact.Database,
+		Failed:     failure != "",
+		Size:       artifact.Size,
+		Error:      failure,
+		At:         time.Now(),
+	})
 }

@@ -6,6 +6,8 @@ export type BackupRequestType = {
   compress?: boolean;
   /** Encrypts the backup; turned into key material on the server and never stored. */
   passphrase?: string;
+  /** Also copy the finished backup to this destination. */
+  destinationId?: number;
 };
 
 export type RestoreRequestType = {
@@ -46,6 +48,9 @@ export type BackupArtifactType = {
   error: string;
   startedAt: string;
   completedAt?: string;
+  destinationId: number;
+  remoteStatus: '' | 'uploaded' | 'failed';
+  remoteError: string;
 };
 
 export type BackupToolType = {
@@ -54,7 +59,7 @@ export type BackupToolType = {
   found: boolean;
   path: string;
   version: string;
-  source: 'path' | 'managed' | '';
+  source: 'configured' | 'managed' | 'path' | 'known' | '';
   error: string;
 };
 
@@ -66,6 +71,8 @@ export type BackupToolDownloadType = {
   size: number;
   installed: boolean;
 };
+
+export type NotifyOnType = 'failure' | 'always' | 'never';
 
 export type BackupCadenceType = 'hourly' | 'daily' | 'weekly';
 
@@ -82,6 +89,10 @@ export type BackupScheduleRequestType = {
   keepLast: number;
   keepDays: number;
   compress?: boolean;
+  /** 0 = keep backups on this machine only. */
+  destinationId?: number;
+  channelIds?: number[];
+  notifyOn?: NotifyOnType;
   /** Write-only: sets the passphrase that encrypts every backup of the job. */
   passphrase?: string;
 };
@@ -105,4 +116,28 @@ export type BackupScheduleType = Omit<BackupScheduleRequestType, 'database' | 's
 export type BackupVerifyResultType = {
   ok: boolean;
   message: string;
+};
+
+export type DestinationType = 'folder' | 's3' | 'sftp' | 'ftp' | 'gdrive';
+export type ChannelType = 'email' | 'slack' | 'discord' | 'telegram' | 'webhook';
+export type ConnectorKind = 'destination' | 'channel';
+
+export type ConnectorRequestType = {
+  type: DestinationType | ChannelType;
+  name: string;
+  enabled?: boolean;
+  config: Record<string, string | number | boolean>;
+  /** Write-only. A key left empty keeps the saved value. */
+  secrets: Record<string, string>;
+};
+
+export type ConnectorType = {
+  id: number;
+  kind: ConnectorKind;
+  type: DestinationType | ChannelType;
+  name: string;
+  enabled: boolean;
+  config: Record<string, string | number | boolean>;
+  /** Which secrets are saved; their values are never returned. */
+  secretsSet: Record<string, boolean>;
 };

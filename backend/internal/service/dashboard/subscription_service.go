@@ -420,7 +420,7 @@ func (s *ISubscriptionServiceImpl) deliver(ctx context.Context, sub *model.Dashb
 		// With it off, anyone who reaches the app can already reach whatever its connections reach.
 		allowInternal := s.cfg == nil || s.cfg.App.Client == config.ClientDesktop || s.cfg.App.Auth.Mode == config.AuthModeNone
 
-		return okCards(cards), postWebhook(ctx, sub.Target, body, secret, allowInternal)
+		return okCards(cards), postWebhook(ctx, sub.Target, body, secret, "dashboard.snapshot", allowInternal)
 	}
 }
 

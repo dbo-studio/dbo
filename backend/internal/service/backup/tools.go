@@ -34,27 +34,46 @@ var toolsByDriver = []struct {
 
 var versionPattern = regexp.MustCompile(`\d+(\.\d+)+`)
 
-// DetectTools finds every known tool on PATH and in DBO's own tool directory
-// (data/tools/<driver>/<version>/). Missing tools are listed with Found false
-// so the UI can offer a download.
+// DetectTools finds every known tool: the user's configured path first, then
+// DBO's own tool directory (data/tools/<driver>/<version>/), PATH, and the
+// usual install directories. Missing tools are listed with Found false so the
+// UI can offer a download or a path field.
 func DetectTools(ctx context.Context) []dto.BackupTool {
 	tools := make([]dto.BackupTool, 0, 6)
+	overrides := loadToolPaths()
 
 	for _, group := range toolsByDriver {
 		for _, name := range group.names {
-			found := false
+			var seen []string
+
+			add := func(path, source string) {
+				for _, s := range seen {
+					if sameFile(s, path) {
+						return
+					}
+				}
+
+				seen = append(seen, path)
+				tools = append(tools, probeTool(ctx, group.driver, name, path, source))
+			}
+
+			if path, ok := overrides[name]; ok {
+				add(path, ToolSourceConfigured)
+			}
 
 			for _, candidate := range managedCandidates(group.driver, name) {
-				tools = append(tools, probeTool(ctx, group.driver, name, candidate, ToolSourceManaged))
-				found = true
+				add(candidate, ToolSourceManaged)
 			}
 
 			if path, err := exec.LookPath(name); err == nil {
-				tools = append(tools, probeTool(ctx, group.driver, name, path, ToolSourcePath))
-				found = true
+				add(path, ToolSourcePath)
 			}
 
-			if !found {
+			for _, candidate := range knownToolCandidates(name) {
+				add(candidate, ToolSourceKnown)
+			}
+
+			if len(seen) == 0 {
 				tools = append(tools, dto.BackupTool{Driver: group.driver, Name: name})
 			}
 		}

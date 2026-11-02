@@ -87,6 +87,14 @@ type IBackupArtifactRepo interface {
 	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
 }
 
+type IBackupConnectorRepo interface {
+	Create(ctx context.Context, c *model.BackupConnector) error
+	FindByOwner(ctx context.Context, id uint, ownerID string) (*model.BackupConnector, error)
+	ListByOwner(ctx context.Context, ownerID, kind string) ([]model.BackupConnector, error)
+	UpdateFields(ctx context.Context, id uint, fields map[string]any) error
+	Delete(ctx context.Context, id uint) error
+}
+
 type IBackupScheduleRepo interface {
 	Create(ctx context.Context, schedule *model.BackupSchedule) error
 	FindByOwner(ctx context.Context, id uint, ownerID string) (*model.BackupSchedule, error)
@@ -240,6 +248,7 @@ type Repository struct {
 	JobRepo                    IJobRepo
 	BackupArtifactRepo         IBackupArtifactRepo
 	BackupScheduleRepo         IBackupScheduleRepo
+	BackupConnectorRepo        IBackupConnectorRepo
 	AiChatRepo                 IAiChatRepo
 	AiChangesetRepo            IAiChangesetRepo
 	AiAuditRepo                IAiAuditRepo
@@ -268,6 +277,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		JobRepo:                    NewJobRepo(db),
 		BackupArtifactRepo:         NewBackupArtifactRepo(db),
 		BackupScheduleRepo:         NewBackupScheduleRepo(db),
+		BackupConnectorRepo:        NewBackupConnectorRepo(db),
 		AiChatRepo:                 NewAiChatRepo(db),
 		AiChangesetRepo:            NewAiChangesetRepo(db),
 		AiAuditRepo:                NewAiAuditRepo(db),

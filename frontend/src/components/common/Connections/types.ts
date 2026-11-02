@@ -20,6 +20,8 @@ export type ConnectionContextMenuProps = {
 
 export type ConnectionsProps = {
   expanded?: boolean;
+  /** Pinned under the connection list (the rail's areas). */
+  footer?: React.ReactNode;
 };
 
 export type MobileConnectionListProps = {

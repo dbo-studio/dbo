@@ -1,6 +1,7 @@
 'use no memo';
 
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import Backup from '@/routes/Backup/Backup';
 import Settings from '@/components/common/Settings/Settings';
 import { canCreateConnection } from '@/core/auth/permissions';
 import { TabMode } from '@/core/enums';
@@ -82,7 +83,8 @@ export default function PanelItem(): JSX.Element {
           )) ||
           (selectedTab.mode === TabMode.Dashboard && <Dashboard />) ||
           (selectedTab.mode === TabMode.Question && <Question />) ||
-          (selectedTab.mode === TabMode.Settings && <Settings />)
+          (selectedTab.mode === TabMode.Settings && <Settings />) ||
+          (selectedTab.mode === TabMode.Backup && <Backup />)
         : null}
     </PanelItemStyled>
   );

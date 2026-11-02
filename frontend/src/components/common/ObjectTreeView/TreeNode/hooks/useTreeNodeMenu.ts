@@ -3,7 +3,8 @@ import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
-import { useBackupModalStore } from '@/store/backupModal/backup.store';
+import { openBackup } from '@/core/backup/openBackup';
+import { useTransferStore } from '@/store/transfer/transfer.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TreeNodeType } from '@/types/Tree';
 
@@ -54,7 +55,8 @@ export function useTreeNodeMenuBuilder(
   const { prefillChat } = useAiBridge();
   const currentConnection = useCurrentConnection();
   const addDiagramTab = useTabStore((state) => state.addDiagramTab);
-  const openBackup = useBackupModalStore((state) => state.open);
+  const openExport = useTransferStore((state) => state.openExport);
+  const openImport = useTransferStore((state) => state.openImport);
 
   return (node: TreeNodeType): MenuType[] => {
     const menu: MenuType[] =
@@ -79,10 +81,34 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
+    // Whole-object transfer: a table's rows, a schema's tables or a database. The grid's own
+    // Export button only exports the rows it shows.
+    if (scope && currentConnection && (node.type === 'table' || node.type === 'schema' || node.type === 'database')) {
+      menu.push({
+        name: locales.export,
+        action: () =>
+          openExport(currentConnection.id, {
+            kind: node.type as 'table' | 'schema' | 'database',
+            database: scope.database,
+            schema: scope.schema,
+            table: scope.focusTable
+          }),
+        closeAfterAction: true
+      });
+    }
+
+    if (node.type === 'table' && scope?.focusTable && currentConnection) {
+      menu.push({
+        name: locales.import,
+        action: () => openImport(currentConnection.id, scope.focusTable as string),
+        closeAfterAction: true
+      });
+    }
+
     if (node.type === 'database' && currentConnection && currentConnection.type !== 'sqlite') {
       menu.push({
         name: locales.backup_restore,
-        action: () => openBackup(currentConnection.id, node.name),
+        action: () => openBackup({ connectionId: currentConnection.id, database: node.name }),
         closeAfterAction: true
       });
     }

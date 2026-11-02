@@ -174,9 +174,11 @@ test.describe("Shared connections (local auth)", () => {
           await expect(
             memberPage.getByTestId("connections-group-shared"),
           ).toHaveCount(0);
+          await memberPage.getByTestId("connection-switcher").click();
           await expect(
             memberPage.getByTestId(`connection-item-${connectionName}`),
           ).toBeVisible();
+          await memberPage.keyboard.press("Escape");
 
           const memberSettings = new SettingsPage(memberPage);
           await memberSettings.open();

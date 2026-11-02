@@ -14,6 +14,7 @@ import (
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
+	serviceConnector "github.com/dbo-studio/dbo/internal/service/connector"
 	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	serviceEvents "github.com/dbo-studio/dbo/internal/service/events"
@@ -51,6 +52,7 @@ type Service struct {
 	JobManager                   serviceJob.IJobManager
 	BackupService                serviceBackup.IBackupService
 	BackupScheduleService        serviceBackup.IBackupScheduleService
+	ConnectorService             serviceConnector.IConnectorService
 	BackupScheduler              *serviceBackup.Scheduler
 	AiService                    serviceAI.IAiService
 	AiProviderService            serviceAiProvider.IAiProviderService
@@ -78,11 +80,12 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	eventHub := serviceEvents.NewHub()
 	notificationService := serviceNotification.NewNotificationService(repo.NotificationRepo, eventHub)
 	jobManager := serviceJob.NewJobManager(repo.JobRepo, deps.Logger, eventHub, notificationService)
+	connectorService := serviceConnector.NewService(repo.BackupConnectorRepo, repo.DashboardSubscriptionRepo, deps.Config, deps.CipherKey, deps.Logger)
 
 	jobManager.RegisterProcessor(processors.NewImportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
-	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, deps.Cache))
-	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss))
+	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, connectorService, deps.Cache))
+	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss, connectorService))
 	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
@@ -120,9 +123,10 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		ImportExportService:          serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:                   serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:                   jobManager,
-		BackupScheduleService:        serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, ss),
+		ConnectorService:             connectorService,
+		BackupScheduleService:        serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, repo.BackupConnectorRepo, ss),
 		BackupScheduler:              serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, deps.Logger),
-		BackupService:                serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, deps.Cache),
+		BackupService:                serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, repo.BackupConnectorRepo, connectorService, deps.Cache),
 		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:            aiProviderService,
 		AiChatService:                serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),

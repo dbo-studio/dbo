@@ -20,6 +20,8 @@ type (
 		// into key material in the service and is never put in the job.
 		Compress   bool   `json:"compress"`
 		Passphrase string `json:"passphrase"`
+		// DestinationID also copies the finished backup to that destination.
+		DestinationID uint `json:"destinationId"`
 	}
 
 	BackupResponse struct {
@@ -31,6 +33,9 @@ type (
 		BackupRequest
 		// ScheduleID is set for runs started by a schedule.
 		ScheduleID uint `json:"scheduleId"`
+		// ChannelIDs and NotifyOn come from the schedule and say who is told how the run went.
+		ChannelIDs []uint `json:"channelIds"`
+		NotifyOn   string `json:"notifyOn"`
 		// PublicKey and WrappedKey are hex; together they encrypt the backup.
 		PublicKey  string `json:"publicKey"`
 		WrappedKey string `json:"wrappedKey"`
@@ -99,6 +104,10 @@ type (
 		Error        string     `json:"error"`
 		StartedAt    time.Time  `json:"startedAt"`
 		CompletedAt  *time.Time `json:"completedAt"`
+		// DestinationID is where the remote copy went; RemoteStatus is "uploaded" or "failed".
+		DestinationID uint   `json:"destinationId"`
+		RemoteStatus  string `json:"remoteStatus"`
+		RemoteError   string `json:"remoteError"`
 	}
 
 	// BackupTool is one native tool as detected on this host. Found false means
@@ -135,6 +144,11 @@ type (
 
 	ToolInstallResponse struct {
 		JobID int32 `json:"jobId"`
+	}
+
+	ToolPathRequest struct {
+		Name string `json:"-"`
+		Path string `json:"path"`
 	}
 
 	ToolRemoveRequest struct {
@@ -186,6 +200,13 @@ func (req ToolInstallRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.Driver, validation.Required),
 		validation.Field(&req.Version, validation.Required),
+	)
+}
+
+func (req ToolPathRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Name, validation.Required),
+		validation.Field(&req.Path, validation.Required, validation.Length(1, 1024)),
 	)
 }
 

@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 const (
 	ScheduleCadenceHourly = "hourly"
@@ -31,6 +34,12 @@ type BackupSchedule struct {
 	Compress   bool   `gorm:"not null;default:false"`
 	PublicKey  string `gorm:"not null;default:''"`
 	WrappedKey string `gorm:"not null;default:''"`
+	// DestinationID is the connector that also receives each backup (0 = local only).
+	// ChannelIDs is a JSON array of channel connector ids told about each run; NotifyOn
+	// is "failure", "always" or "never".
+	DestinationID uint   `gorm:"not null;default:0"`
+	ChannelIDs    string `gorm:"not null;default:'[]'"`
+	NotifyOn      string `gorm:"not null;default:'failure'"`
 	// KeepLast and KeepDays are retention limits; zero means no limit of that kind.
 	KeepLast  int `gorm:"not null;default:0"`
 	KeepDays  int `gorm:"not null;default:0"`
@@ -43,6 +52,15 @@ type BackupSchedule struct {
 	LastStatus    string     `gorm:"not null;default:''"`
 	LastError     string     `gorm:"not null;default:''"`
 	CreatedAt     *time.Time `gorm:"autoCreateTime"`
+}
+
+// Channels decodes ChannelIDs.
+func (s BackupSchedule) Channels() []uint {
+	var ids []uint
+
+	_ = json.Unmarshal([]byte(s.ChannelIDs), &ids)
+
+	return ids
 }
 
 func (BackupSchedule) TableName() string { return "backup_schedules" }

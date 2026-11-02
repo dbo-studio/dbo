@@ -18,7 +18,7 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | DashboardTabType | QuestionTabType | SettingsTabType;
+export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | DashboardTabType | QuestionTabType | SettingsTabType | BackupTabType;
 
 type BaseTab = {
   id: string;
@@ -86,6 +86,19 @@ export type SettingsTabType = BaseTab & {
   aiTab?: 'providers' | 'mcp';
   query?: string;
   highlightId?: string;
+};
+
+export type BackupSection = 'backups' | 'restore' | 'schedules' | 'destinations' | 'notifications' | 'tools';
+
+/** Global singleton like Settings; `targetConnectionId`/`database` pick what the Backups section shows. */
+export type BackupTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Backup;
+  section: BackupSection;
+  targetConnectionId?: string | number;
+  database?: string;
+  /** Schedules section: the schedule shown, or 'new' for the create form. */
+  scheduleId?: number | 'new';
 };
 
 export type EditedRow = {

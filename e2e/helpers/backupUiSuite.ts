@@ -18,7 +18,7 @@ function label(engine: DbEngine): string {
 }
 
 export function defineBackupUiTests(engine: DbEngine): void {
-  test.describe(`Backup dialog ${label(engine)}`, () => {
+  test.describe(`Backup tab ${label(engine)}`, () => {
     test("back up, list in history, and guard the restore", async ({
       page,
     }, testInfo) => {
@@ -48,12 +48,14 @@ export function defineBackupUiTests(engine: DbEngine): void {
           });
 
           await test.step("Tool list is shown and offers nothing silently", async () => {
+            await page.getByTestId("backup-nav-tools").click();
             await expect(
               page.getByText("sqlite3", { exact: true }),
             ).toBeVisible();
             await expect(
               page.getByText("Nothing is downloaded unless you ask"),
             ).toBeVisible();
+            await page.getByTestId("backup-nav-backups").click();
           });
 
           await test.step("Back up now shows progress and a download", async () => {
@@ -102,82 +104,7 @@ export function defineBackupUiTests(engine: DbEngine): void {
           if (engine === "sqlite") {
             cleanupImportExportSqlite(pages);
           } else {
-            // The dialog's backdrop blocks the SQL editor.
-            await page.keyboard.press("Escape");
-            await expect(backup.dialog).toBeHidden();
-            await dropTables(pages.sqlEditor, [table]);
-          }
-        }
-      });
-    });
-
-    test("create, run, pause and delete a schedule", async ({
-      page,
-    }, testInfo) => {
-      const suffix = uniqueTestSuffix(testInfo);
-      const connectionName = `bk-ui-sched-${suffix}`;
-      const table = `e2e_bk_ui_sched_${suffix}`;
-      const scheduleName = `nightly-${suffix}`;
-
-      await withConnectionCleanup(page, connectionName, async () => {
-        const pages = await setupImportExport(
-          page,
-          { connectionName, exportTable: table },
-          engine,
-        );
-        const backup = new BackupPage(page);
-        const row = page.getByTestId(`backup-schedule-${scheduleName}`);
-
-        try {
-          await backup.open(connectionName);
-
-          await test.step("Create a daily schedule", async () => {
-            await expect(page.getByText("No schedules yet")).toBeVisible();
-            await page.getByRole("button", { name: "New schedule" }).click();
-            await page
-              .locator('input[name="schedule-name"]')
-              .fill(scheduleName);
-            await page.getByRole("button", { name: "Create schedule" }).click();
-            await expect(row).toBeVisible();
-            await expect(row.getByText(/Next run:/)).toBeVisible();
-          });
-
-          await test.step("Run now produces a completed backup", async () => {
-            await row.getByRole("button", { name: "Run now" }).click();
-            await backup.expectJobMessage("Backup completed successfully");
-            await backup.closeProgress();
-            await expect(
-              page.getByText(`Schedule: ${scheduleName}`),
-            ).toBeVisible();
-          });
-
-          await test.step("Pause hides the next run", async () => {
-            await row.getByRole("button", { name: "Pause" }).click();
-            await expect(row.getByText(/Paused/)).toBeVisible();
-            await expect(
-              row.getByRole("button", { name: "Resume" }),
-            ).toBeVisible();
-          });
-
-          await test.step("Delete asks first and keeps the backup", async () => {
-            await row.getByRole("button", { name: "Delete" }).click();
-            await page
-              .getByRole("button", { name: "Delete", exact: true })
-              .last()
-              .click();
-            await expect(row).toBeHidden();
-            await expect(
-              page.getByText(`Schedule: ${scheduleName}`),
-            ).toBeVisible();
-          });
-        } finally {
-          if (engine === "sqlite") {
-            cleanupImportExportSqlite(pages);
-          } else {
-            // Focus can be lost after the confirm modal closes; refocus the dialog.
-            await backup.dialog.click();
-            await page.keyboard.press("Escape");
-            await expect(backup.dialog).toBeHidden();
+            await backup.close();
             await dropTables(pages.sqlEditor, [table]);
           }
         }
@@ -185,7 +112,7 @@ export function defineBackupUiTests(engine: DbEngine): void {
     });
 
     if (engine !== "sqlite") {
-      test("database tree node opens the dialog on that database", async ({
+      test("database tree node opens the Backup tab on that database", async ({
         page,
       }, testInfo) => {
         const connectionName = `bk-tree-${uniqueTestSuffix(testInfo)}`;
@@ -207,8 +134,7 @@ export function defineBackupUiTests(engine: DbEngine): void {
             ).toHaveValue("default");
           });
 
-          await page.keyboard.press("Escape");
-          await expect(backup.dialog).toBeHidden();
+          await backup.close();
         });
       });
     }

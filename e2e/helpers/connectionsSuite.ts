@@ -218,6 +218,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
             });
 
             await test.step("Drag second connection above the first", async () => {
+              await connectionPage.openSwitcher();
               const before = connectionPage.getConnectionItems();
               await expect(before).toHaveCount(2);
               await expect(before.nth(0)).toHaveAttribute(

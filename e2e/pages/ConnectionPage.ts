@@ -77,6 +77,23 @@ export class ConnectionPage extends BasePage {
     this.copyUriButton = page.getByTestId("copy-connection-uri");
   }
 
+  /** Connections live in the switcher at the top of the explorer sidebar. */
+  get switcherPanel(): Locator {
+    return this.page.getByTestId("connection-switcher-panel");
+  }
+
+  async openSwitcher(): Promise<void> {
+    if (await this.switcherPanel.isVisible().catch(() => false)) return;
+    await this.page.getByTestId("connection-switcher").click();
+    await expect(this.switcherPanel).toBeVisible();
+  }
+
+  async closeSwitcher(): Promise<void> {
+    if (!(await this.switcherPanel.isVisible().catch(() => false))) return;
+    await this.page.keyboard.press("Escape");
+    await expect(this.switcherPanel).toBeHidden();
+  }
+
   getConnectionItem(name: string): Locator {
     return this.page.getByTestId(`connection-item-${name}`);
   }
@@ -86,7 +103,9 @@ export class ConnectionPage extends BasePage {
   }
 
   async expectConnectionActive(name: string): Promise<void> {
+    await this.openSwitcher();
     await expect(this.getConnectionItem(name)).toBeVisible();
+    await this.closeSwitcher();
     await this.waitForConnectionActive();
     await expect(
       this.page.getByRole("heading", { name: /^No active connection$/i }),
@@ -94,9 +113,12 @@ export class ConnectionPage extends BasePage {
   }
 
   async connectionExists(name: string): Promise<boolean> {
-    return await this.getConnectionItem(name)
+    await this.openSwitcher().catch(() => undefined);
+    const exists = await this.getConnectionItem(name)
       .isVisible()
       .catch(() => false);
+    await this.closeSwitcher().catch(() => undefined);
+    return exists;
   }
 
   async isNewConnectionModalVisible(): Promise<boolean> {
@@ -315,9 +337,11 @@ export class ConnectionPage extends BasePage {
       .check();
     await this.testConnection();
     await this.submitConnection();
+    await this.openSwitcher();
     await expect(this.getConnectionItem(name)).toBeVisible({
       timeout: 30000,
     });
+    await this.closeSwitcher();
   }
 
   async expectSslMode(
@@ -369,6 +393,7 @@ export class ConnectionPage extends BasePage {
     await this.fillConnectionForm(config);
     await this.testConnection();
     await this.submitConnection();
+    await this.openSwitcher();
     await expect(this.getConnectionItem(config.name)).toBeVisible({
       timeout: 30000,
     });
@@ -407,6 +432,7 @@ export class ConnectionPage extends BasePage {
   async activateConnection(name: string, password = "secret"): Promise<void> {
     // Do not soft-wait for PUT/PATCH — already-active connections may not hit the
     // API, and a caught timeout still burns ~15s in the report.
+    await this.openSwitcher();
     await this.getConnectionItem(name).click();
     await this.handlePasswordPrompt(password);
     await this.waitForConnectionActive();
@@ -425,6 +451,7 @@ export class ConnectionPage extends BasePage {
   }
 
   async openContextMenu(connectionName: string): Promise<void> {
+    await this.openSwitcher();
     await this.getConnectionItem(connectionName).click({ button: "right" });
     await this.wait(300);
   }
@@ -487,6 +514,7 @@ export class ConnectionPage extends BasePage {
     sourceName: string,
     targetName: string,
   ): Promise<void> {
+    await this.openSwitcher();
     const source = this.getConnectionItem(sourceName);
     const target = this.getConnectionItem(targetName);
     await expect(source).toBeVisible();

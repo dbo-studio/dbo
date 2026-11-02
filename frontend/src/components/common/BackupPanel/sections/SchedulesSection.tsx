@@ -1,12 +1,10 @@
 import api from '@/api';
 import type { BackupArtifactType, BackupScheduleType } from '@/api/backup/types';
-import Modal from '@/components/base/Modal/Modal';
-import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
+import { openBackup } from '@/core/backup/openBackup';
 import { tools } from '@/core/utils/tools';
+import type { BackupTabType } from '@/types';
 import locales from '@/locales';
-import { useBackupModalStore } from '@/store/backupModal/backup.store';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import type { ConnectionType } from '@/types';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Alert, Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,30 +12,37 @@ import { type JSX, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { isFinished, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import RestoreConfirm from '../BackupModal/RestoreConfirm';
-import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
-import { describeCadence, formatDate, formatSize, statusLabel } from './format';
-import JobWizard from './JobWizard';
+import RestoreConfirm from '../RestoreConfirm';
+import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
+import { describeCadence, formatDate, formatSize, statusLabel } from '../format';
+import { restoreCandidates } from '../restoreCandidates';
+import ScheduleForm from '../ScheduleForm';
 
 type View = { kind: 'dashboard' } | { kind: 'wizard'; editId?: number } | { kind: 'job'; id: number };
 
 const statusColor = (status: BackupScheduleType['lastStatus']): 'success' | 'error' | 'default' =>
   status === 'completed' ? 'success' : status === 'failed' ? 'error' : 'default';
 
-export default function BackupConsole(): JSX.Element | null {
-  const open = useBackupModalStore((s) => s.consoleOpen);
-  const close = useBackupModalStore((s) => s.closeConsole);
-
-  if (!open) return null;
-
-  return <ConsoleBody onClose={close} />;
-}
-
-function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
+export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.Element {
   const queryClient = useQueryClient();
   const confirm = useConfirmModalStore((s) => s.danger);
   const connections = useConnectionStore((s) => s.connections) ?? [];
-  const [view, setView] = useState<View>({ kind: 'dashboard' });
+  // Which schedule is open lives on the tab, so the sidebar list and this page always agree.
+  const [editing, setEditing] = useState<number | null>(null);
+  const [seen, setSeen] = useState(tab.scheduleId);
+  if (seen !== tab.scheduleId) {
+    setSeen(tab.scheduleId);
+    setEditing(null);
+  }
+  const view: View =
+    editing !== null
+      ? { kind: 'wizard', editId: editing }
+      : tab.scheduleId === 'new'
+        ? { kind: 'wizard' }
+        : typeof tab.scheduleId === 'number'
+          ? { kind: 'job', id: tab.scheduleId }
+          : { kind: 'dashboard' };
+  const open = (scheduleId?: number | 'new'): void => openBackup({ section: 'schedules', scheduleId });
   const [jobId, setJobId] = useState<string | null>(null);
   const [restoreRun, setRestoreRun] = useState<BackupArtifactType | null>(null);
 
@@ -81,7 +86,7 @@ function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
       void api.backup
         .deleteSchedule(job.id)
         .then(() => {
-          setView({ kind: 'dashboard' });
+          open();
           refresh();
         })
         .catch(() => undefined);
@@ -92,71 +97,68 @@ function ConsoleBody({ onClose }: { onClose: () => void }): JSX.Element {
 
   return (
     <>
-      <Modal open title={locales.backup_console} onClose={onClose} padding='24px'>
-        <Box
-          sx={{ width: 'min(1000px, calc(100vw - 64px))', maxHeight: '78vh', overflowY: 'auto' }}
-          data-testid='backup-console'
-        >
-          {failing.length > 0 && view.kind === 'dashboard' && (
-            <Alert severity='error' sx={{ mb: 2 }} data-testid='backup-console-banner'>
-              {locales.backup_console_failing.replace('{count}', String(failing.length))}
-            </Alert>
-          )}
+      <Box data-testid='backup-console' sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {failing.length > 0 && view.kind === 'dashboard' && (
+          <Alert severity='error' sx={{ mb: 2 }} data-testid='backup-console-banner'>
+            {locales.backup_console_failing.replace('{count}', String(failing.length))}
+          </Alert>
+        )}
 
-          {view.kind === 'wizard' && (
-            <JobWizard
-              job={view.editId === undefined ? undefined : jobs.find((j) => j.id === view.editId)}
-              onCancel={() =>
-                setView(view.editId === undefined ? { kind: 'dashboard' } : { kind: 'job', id: view.editId })
-              }
-              onDone={() => {
-                refresh();
-                setView(view.editId === undefined ? { kind: 'dashboard' } : { kind: 'job', id: view.editId });
-              }}
-            />
-          )}
+        {view.kind === 'wizard' && (
+          <ScheduleForm
+            job={view.editId === undefined ? undefined : jobs.find((j) => j.id === view.editId)}
+            onCancel={() => {
+              setEditing(null);
+              open(view.editId);
+            }}
+            onDone={() => {
+              refresh();
+              setEditing(null);
+              open(view.editId);
+            }}
+          />
+        )}
 
-          {view.kind === 'dashboard' && (
-            <>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography variant='subtitle2' sx={{ flex: 1 }}>
-                  {locales.backup_jobs}
-                </Typography>
-                <Button size='small' variant='contained' onClick={() => setView({ kind: 'wizard' })}>
-                  {locales.backup_job_new}
-                </Button>
-              </Box>
-              {jobs.length === 0 && (
-                <Typography variant='body2' color='textSubdued'>
-                  {locales.backup_job_empty}
-                </Typography>
-              )}
-              {jobs.map((job) => (
-                <JobRow
-                  key={job.id}
-                  job={job}
-                  connection={connectionName(job.connectionId)}
-                  onRun={() => void run(job)}
-                  onOpen={() => setView({ kind: 'job', id: job.id })}
-                />
-              ))}
-            </>
-          )}
+        {view.kind === 'dashboard' && (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Typography variant='subtitle2' sx={{ flex: 1 }}>
+                {locales.backup_jobs}
+              </Typography>
+              <Button size='small' variant='contained' onClick={() => open('new')}>
+                {locales.backup_job_new}
+              </Button>
+            </Box>
+            {jobs.length === 0 && (
+              <Typography variant='body2' color='textSubdued'>
+                {locales.backup_job_empty}
+              </Typography>
+            )}
+            {jobs.map((job) => (
+              <JobRow
+                key={job.id}
+                job={job}
+                connection={connectionName(job.connectionId)}
+                onRun={() => void run(job)}
+                onOpen={() => open(job.id)}
+              />
+            ))}
+          </>
+        )}
 
-          {view.kind === 'job' && selected && (
-            <JobDetail
-              job={selected}
-              connection={connectionName(selected.connectionId)}
-              onBack={() => setView({ kind: 'dashboard' })}
-              onRun={() => void run(selected)}
-              onEdit={() => setView({ kind: 'wizard', editId: selected.id })}
-              onToggle={() => void toggle(selected)}
-              onDelete={() => remove(selected)}
-              onRestore={setRestoreRun}
-            />
-          )}
-        </Box>
-      </Modal>
+        {view.kind === 'job' && selected && (
+          <JobDetail
+            job={selected}
+            connection={connectionName(selected.connectionId)}
+            onBack={() => open()}
+            onRun={() => void run(selected)}
+            onEdit={() => setEditing(selected.id)}
+            onToggle={() => void toggle(selected)}
+            onDelete={() => remove(selected)}
+            onRestore={setRestoreRun}
+          />
+        )}
+      </Box>
 
       {restoreRun && selected && (
         <RestoreConfirm
@@ -414,19 +416,4 @@ function JobDetail({
       ))}
     </Box>
   );
-}
-
-/** The job's own connection first, then others of the same engine the user can write to. */
-function restoreCandidates(connectionId: number, all: ConnectionType[]): ConnectionType[] {
-  const home = all.find((c) => c.id === connectionId);
-  if (!home) return [];
-
-  const sameFamily = (c: ConnectionType): boolean =>
-    isPostgresDriver(home.type)
-      ? isPostgresDriver(c.type)
-      : isMysqlDriver(home.type)
-        ? isMysqlDriver(c.type)
-        : c.type === home.type;
-
-  return [home, ...all.filter((c) => c.id !== home.id && sameFamily(c) && (c.access ?? 'owner') !== 'viewer')];
 }

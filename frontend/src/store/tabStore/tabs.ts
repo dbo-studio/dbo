@@ -5,6 +5,10 @@ import { matchConnectionId } from './connectionId';
 /** Sentinel connectionId for the global Settings tab (numeric so matchConnectionId works). */
 export const SETTINGS_CONNECTION_ID = -1;
 
+/** Global singleton tabs (Settings, Backup) are visible without a connection and exempt from eviction. */
+export const isGlobalTab = (tab: Pick<TabType, 'mode'>): boolean =>
+  tab.mode === TabMode.Settings || tab.mode === TabMode.Backup;
+
 const knownModes = new Set<string>([
   TabMode.Data,
   TabMode.Query,
@@ -13,7 +17,8 @@ const knownModes = new Set<string>([
   TabMode.Diagram,
   TabMode.Dashboard,
   TabMode.Question,
-  TabMode.Settings
+  TabMode.Settings,
+  TabMode.Backup
 ]);
 
 const EMPTY_TABS: TabType[] = [];
@@ -36,15 +41,13 @@ export const coerceTabs = (tabs: unknown): TabType[] => {
 
 export const selectTabs = (state: { tabs: unknown }): TabType[] => coerceTabs(state.tabs);
 
-/** Connection-scoped tabs plus the Settings singleton (if any), even with no connection. */
+/** Connection-scoped tabs plus the global singletons (Settings, Backup), even with no connection. */
 export const selectVisibleTabs = (tabs: TabType[], currentConnectionId: string | number | undefined): TabType[] => {
   if (!currentConnectionId) {
-    return tabs.filter((tab) => tab.mode === TabMode.Settings);
+    return tabs.filter(isGlobalTab);
   }
 
-  return tabs.filter(
-    (tab) => tab.mode === TabMode.Settings || matchConnectionId(tab.connectionId, currentConnectionId)
-  );
+  return tabs.filter((tab) => isGlobalTab(tab) || matchConnectionId(tab.connectionId, currentConnectionId));
 };
 
 export type PaneId = 0 | 1;

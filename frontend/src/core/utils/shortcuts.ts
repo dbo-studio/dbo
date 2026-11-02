@@ -144,6 +144,13 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: ['↑'],
     shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
   },
+  commandPalette: {
+    id: 'commandPalette',
+    group: 'app',
+    label: locales.command_palette,
+    command: [altKey(), 'K'],
+    shortcut: (event: KeyboardEvent) => event.altKey && event.code === 'KeyK'
+  },
   openShortcuts: {
     id: 'openShortcuts',
     group: 'app',
@@ -287,6 +294,13 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     label: locales.edit_last_message,
     command: ['↑'],
     shortcut: (event: KeyboardEvent) => !isMod(event) && !event.shiftKey && !event.altKey && event.code === 'ArrowUp'
+  },
+  commandPalette: {
+    id: 'commandPalette',
+    group: 'app',
+    label: locales.command_palette,
+    command: [modKey(), 'K'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && event.code === 'KeyK'
   },
   openShortcuts: {
     id: 'openShortcuts',

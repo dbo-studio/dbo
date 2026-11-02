@@ -5,10 +5,19 @@ import { type JSX, useState } from 'react';
 import { FieldInputInputStyled, FieldInputLabelRowStyled } from './FieldInput.styled';
 import type { FieldInputProps } from './types';
 
+/** Keeps Bitwarden, 1Password and LastPass from offering to fill app fields. */
+export const PASSWORD_MANAGER_OFF = {
+  'data-bwignore': 'true',
+  'data-1p-ignore': 'true',
+  'data-lpignore': 'true',
+  'data-form-type': 'other'
+};
+
 export default function FieldInput({
   ref,
   label,
   helpertext,
+  helpertone = 'error',
   typelabel,
   value: valueProp,
   type,
@@ -68,10 +77,11 @@ export default function FieldInput({
         sx={sx}
         type={type}
         {...props}
+        inputProps={{ ...PASSWORD_MANAGER_OFF, ...props.inputProps }}
       />
       {helpertext && (
         <Typography
-          color={'error'}
+          color={helpertone === 'success' ? 'success.main' : helpertone === 'muted' ? 'textSecondary' : 'error'}
           variant='caption'
           sx={{
             mb: theme.spacing(mb ?? 0)

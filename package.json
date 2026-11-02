@@ -3,6 +3,8 @@
   "scripts": {
     "dev": "concurrently --kill-others --names backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && go run .",
+    "dev:air": "concurrently --kill-others --names backend,frontend \"npm run dev:air:backend\" \"npm run dev:frontend\"",
+    "dev:air:backend": "cd backend && { [ -f .env ] || cp .env.example .env; } && air",
     "dev:frontend": "npm --prefix frontend run dev",
     "lefthook": "lefthook",
     "tauri": "tauri"

@@ -1,6 +1,16 @@
 import type { TabMode } from '@/core/enums';
 import type { PaneId, SelectedByPane } from './tabs';
-import type { QuestionTabType, DashboardTabType, DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
+import type {
+  BackupSection,
+  BackupTabType,
+  QuestionTabType,
+  DashboardTabType,
+  DiagramTabType,
+  FilterType,
+  SettingsTabType,
+  SortType,
+  TabType
+} from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
@@ -37,6 +47,13 @@ export type AddSettingsTabOptions = {
   highlightId?: string;
 };
 
+export type AddBackupTabOptions = {
+  section?: BackupSection;
+  connectionId?: string | number;
+  database?: string;
+  scheduleId?: number | 'new';
+};
+
 export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
@@ -45,6 +62,7 @@ export type TabSettingSlice = {
   addDashboardTab: (dashboard: { id: number; name: string }) => DashboardTabType;
   addQuestionTab: (question: { id: number; name: string }) => QuestionTabType;
   addSettingsTab: (options?: AddSettingsTabOptions) => SettingsTabType;
+  addBackupTab: (options?: AddBackupTabOptions) => BackupTabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;

@@ -37,6 +37,8 @@ type Handlers struct {
 	ImportExport          *handler.ImportExportHandler
 	Backup                *handler.BackupHandler
 	BackupSchedule        *handler.BackupScheduleHandler
+	BackupDestination     *handler.ConnectorHandler
+	NotificationChannel   *handler.ConnectorHandler
 	Job                   *handler.JobHandler
 	AI                    *handler.AiHandler
 	AiProvider            *handler.AiProviderHandler

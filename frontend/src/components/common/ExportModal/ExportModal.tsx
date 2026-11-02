@@ -5,10 +5,9 @@ import Modal from '@/components/base/Modal/Modal';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
-import { parseObjectNodeId } from '@/core/db';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { save } from '@tauri-apps/plugin-dialog';
 import type React from 'react';
@@ -18,9 +17,8 @@ import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import { ExportModalContainerStyled, ExportModalPathRowStyled } from './ExportModal.styled';
 import type { ExportModalProps } from './types';
 
-export function ExportModal({ show, connectionId, query, table, nodeId, onClose }: ExportModalProps) {
+export function ExportModal({ show, connectionId, query, table, target, onClose }: ExportModalProps) {
   const [format, setFormat] = useState('sql');
-  const [allTables, setAllTables] = useState(false);
   const [content, setContent] = useState<ExportContentType>('data');
   const [showProgress, setShowProgress] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -38,9 +36,9 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
       .catch(() => undefined);
   }, []);
 
-  const location = nodeId ? parseObjectNodeId(nodeId) : undefined;
-  const canExportAll = !!location && !!table;
-  const multiTable = canExportAll && allTables;
+  // A tree export covers a whole object; a grid export covers only the rows it shows.
+  const multiTable = !!target;
+  const label = target ? (target.table ?? (target.schema || target.database)) : table;
   // Schema (DDL) only exists in sql files.
   const showContent = multiTable && format === 'sql';
   // Several tables as csv/json cannot share one file, so the backend zips them.
@@ -54,7 +52,7 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
     try {
       const now = new Date();
       const timestamp = now.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
-      const defaultFileName = `export_${multiTable ? 'tables' : table}_${timestamp}.${fileExtension}`;
+      const defaultFileName = `export_${label}_${timestamp}.${fileExtension}`;
 
       const filePath = await save({
         defaultPath: defaultFileName,
@@ -82,11 +80,12 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
     try {
       const response = await exportDataMutation({
         connectionId,
-        ...(multiTable
+        ...(target
           ? {
-              scope: location?.schema ? 'schema' : 'database',
-              database: location?.database,
-              schema: location?.schema,
+              scope: target.kind === 'table' ? 'tables' : target.kind === 'schema' ? 'schema' : 'database',
+              tables: target.kind === 'table' && target.table ? [target.table] : undefined,
+              database: target.database || undefined,
+              schema: target.schema || undefined,
               content: showContent ? content : undefined
             }
           : { table, query }),
@@ -116,9 +115,15 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
           <Box
             sx={{
               flex: 1,
-              minHeight: 0
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5
             }}
           >
+            <Typography variant='caption' color='textSecondary' component='p' data-testid='export-scope-hint'>
+              {target ? locales[`export_hint_${target.kind}` as const] : locales.export_hint_result}
+            </Typography>
             <SelectInput
               emptylabel={locales.no_column_found}
               value={format}
@@ -130,24 +135,6 @@ export function ExportModal({ show, connectionId, query, table, nodeId, onClose 
                 { label: 'CSV', value: 'csv' }
               ]}
             />
-
-            {canExportAll && (
-              <SelectInput
-                emptylabel={locales.no_column_found}
-                value={allTables ? 'all' : 'one'}
-                onChange={(e) => setAllTables((e as SelectInputOption)?.value === 'all')}
-                label={locales.export_scope}
-                options={[
-                  { label: table, value: 'one' },
-                  {
-                    label: location?.schema
-                      ? locales.export_all_tables_in_schema
-                      : locales.export_all_tables_in_database,
-                    value: 'all'
-                  }
-                ]}
-              />
-            )}
 
             {showContent && (
               <SelectInput

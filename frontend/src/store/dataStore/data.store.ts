@@ -169,3 +169,10 @@ export const useDataStore: UseDataStore = Object.assign(
       focusedStore().setState(...args)) as StoreApi<DataState>['setState']
   }
 );
+
+/** Reads the data store of the focused split-view pane, for UI outside the panes (the status bar). */
+export const useFocusedDataStore = <T>(selector: (state: DataState) => T): T => {
+  const focusedPane = useTabStore((state) => state.focusedPane);
+
+  return useStore(dataStores[focusedPane === 1 ? 1 : 0], selector);
+};

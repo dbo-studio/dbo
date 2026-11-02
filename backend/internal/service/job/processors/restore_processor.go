@@ -34,15 +34,17 @@ type RestoreProcessor struct {
 	connectionRepo repository.IConnectionRepo
 	artifactRepo   repository.IBackupArtifactRepo
 	secrets        serviceSecretStore.ISecretStore
+	remote         serviceBackup.Remote
 }
 
-func NewRestoreProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, secrets serviceSecretStore.ISecretStore) *RestoreProcessor {
+func NewRestoreProcessor(jobManager serviceJob.IJobManager, cm *databaseConnection.ConnectionManager, connectionRepo repository.IConnectionRepo, artifactRepo repository.IBackupArtifactRepo, secrets serviceSecretStore.ISecretStore, remote serviceBackup.Remote) *RestoreProcessor {
 	return &RestoreProcessor{
 		jobManager:     jobManager,
 		cm:             cm,
 		connectionRepo: connectionRepo,
 		artifactRepo:   artifactRepo,
 		secrets:        secrets,
+		remote:         remote,
 	}
 }
 
@@ -73,6 +75,10 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 		if err != nil || safety.Status != model.BackupStatusCompleted {
 			return apperror.ErrSafetyBackupFailed
 		}
+	}
+
+	if err := serviceBackup.EnsureLocal(ctx, p.remote, artifact); err != nil {
+		return err
 	}
 
 	if !helper.IsReadableBackupPath(artifact.FilePath) {

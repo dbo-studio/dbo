@@ -2,10 +2,10 @@ import { expect, type Locator } from "@playwright/test";
 import { BasePage } from "./BasePage";
 import { ConnectionPage } from "./ConnectionPage";
 
-/** Backup & Restore dialog opened from a connection's context menu. */
+/** Backup & Restore workspace tab, opened from a connection's context menu or the header. */
 export class BackupPage extends BasePage {
   get dialog(): Locator {
-    return this.page.getByRole("heading", { name: "Backup & Restore" });
+    return this.page.getByTestId("backup-panel");
   }
 
   get backupNowButton(): Locator {
@@ -28,6 +28,16 @@ export class BackupPage extends BasePage {
     await connections.openContextMenu(connectionName);
     await connections.clickContextMenuItem("Backup & Restore");
     await expect(this.dialog).toBeVisible();
+  }
+
+  /** Closes the Backup tab so the SQL editor tab is in front again. */
+  async close(): Promise<void> {
+    await this.page
+      .getByTestId("workspace-tab-backup-&-restore")
+      .locator("svg")
+      .last()
+      .click();
+    await expect(this.dialog).toBeHidden();
   }
 
   historyRows(): Locator {

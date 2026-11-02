@@ -6,6 +6,7 @@ import { useAiBridge } from '@/hooks/useAiBridge';
 import { useDesktopMenu } from '@/hooks/useDesktopMenu';
 import { useDesktopOpenFiles } from '@/hooks/useDesktopOpenFiles';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useCommandPaletteStore } from '@/store/commandPalette/commandPalette.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { type JSX, useEffect } from 'react';
@@ -17,6 +18,7 @@ import { LayoutBodyStyled, LayoutMainStyled, LayoutStyled } from './Layout.style
 import CenterContainer from './MainContainer/CenterContainer.tsx';
 import EndContainer from './MainContainer/EndContainer.tsx';
 import ExplorerContainer from './MainContainer/ExplorerContainer.tsx';
+import StatusBar from './StatusBar/StatusBar';
 import StartContainer from './MainContainer/StartContainer';
 import MobileConnectionsPanel from './MobileConnectionsPanel/MobileConnectionsPanel';
 import SidebarDrawer from './SidebarDrawer/SidebarDrawer';
@@ -72,6 +74,10 @@ export default function Layout(): JSX.Element {
     }
   });
 
+  useShortcut(shortcuts.commandPalette, () => {
+    useCommandPaletteStore.getState().toggle();
+  });
+
   useShortcut(shortcuts.openShortcuts, () => {
     openSettings({ section: 2 });
   });
@@ -88,7 +94,8 @@ export default function Layout(): JSX.Element {
     updateUI({ showConnectionsDrawer: false });
   };
 
-  const showExplorer = Boolean(currentConnection && sidebar.showLeft);
+  // The activity bar areas (Boards, Backup) and the connection switcher work without a connection.
+  const showExplorer = Boolean(sidebar.showLeft && (showConnectionsRail || currentConnection));
   const showAssistant = Boolean(currentConnection && sidebar.showRight);
   const assistantVisible = showAssistant && Number(sidebar.rightSidebarTab ?? 0) === 0;
 
@@ -128,6 +135,7 @@ export default function Layout(): JSX.Element {
           {showConnectionsRail && <StartContainer />}
           <LayoutMainStyled>{renderMain()}</LayoutMainStyled>
         </LayoutBodyStyled>
+        {!useSidebarOverlay && <StatusBar />}
       </LayoutStyled>
       {workspaceOpen && <AgentWorkspace />}
     </AiChatProvider>

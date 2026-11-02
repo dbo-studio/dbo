@@ -35,33 +35,29 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
         );
         const backup = new BackupPage(page);
         const row = page.getByTestId(`backup-job-${jobName}`);
-        const next = page.getByRole("button", { name: "Next", exact: true });
 
         try {
           await test.step("Open the Backup console from the header", async () => {
-            await page.getByTestId("backup-console-open").click();
-            await expect(
-              page.getByRole("heading", { name: "Backup console" }),
-            ).toBeVisible();
+            await page.getByTestId("activity-backup").click();
+            await page.getByTestId("backup-nav-schedules").click();
+            await expect(page.getByTestId("backup-console")).toBeVisible();
             await expect(page.getByText(/No backup jobs yet/)).toBeVisible();
           });
 
-          await test.step("Walk the five wizard steps", async () => {
+          await test.step("Fill the one-page schedule form", async () => {
             await page.getByRole("button", { name: "New backup job" }).click();
             await expect(page.getByTestId("backup-job-wizard")).toBeVisible();
-            await expect(next).toBeDisabled();
+            // Nothing can be saved without a name.
+            await expect(page.getByTestId("schedule-save")).toBeDisabled();
             await page.locator('input[name="job-name"]').fill(jobName);
-            await next.click(); // Destination
-            await expect(page.getByText("Local folder").first()).toBeVisible();
-            await next.click(); // Source: first connection is preselected
-            await next.click(); // Schedule
-            await next.click(); // Options
+            // The first connection is preselected; storage defaults to this machine.
+            await expect(page.getByText("This machine only").first()).toBeVisible();
             await page
               .locator('input[name="job-passphrase"]')
               .fill("e2e-secret");
             await expect(page.getByText(/cannot be restored/)).toBeVisible();
-            await expect(page.getByText(/Runs Every day/)).toBeVisible();
-            await page.getByRole("button", { name: "Create schedule" }).click();
+            await expect(page.getByText(/Every day/).first()).toBeVisible();
+            await page.getByTestId("schedule-save").click();
             await expect(row).toBeVisible();
             await expect(row.getByText("Not run")).toBeVisible();
             await expect(row.getByText(/Encrypted/)).toBeVisible();
@@ -107,8 +103,7 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
             await expect(page.locator('input[name="job-name"]')).toHaveValue(
               jobName,
             );
-            for (let i = 0; i < 4; i++) await next.click();
-            await page.getByRole("button", { name: "Save changes" }).click();
+            await page.getByTestId("schedule-save").click();
             await expect(page.getByTestId("backup-job-detail")).toBeVisible();
           });
 
@@ -155,12 +150,7 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
           if (engine === "sqlite") {
             cleanupImportExportSqlite(pages);
           } else {
-            // Focus can be lost after the confirm modal closes; refocus the console.
-            await page.getByRole("heading", { name: "Backup console" }).click();
-            await page.keyboard.press("Escape");
-            await expect(
-              page.getByRole("heading", { name: "Backup console" }),
-            ).toBeHidden();
+            await backup.close();
             await dropTables(pages.sqlEditor, [table]);
           }
         }

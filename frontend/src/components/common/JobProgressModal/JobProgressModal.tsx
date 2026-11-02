@@ -4,7 +4,10 @@ import { tools } from '@/core/utils/tools';
 import { useJob } from '@/hooks/useJob';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
-import { Box, Button, LinearProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { useWatchJob } from '@/core/notifications/watching';
+import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
+import { parseTransfer, transferDetail, transferLabel } from '@/core/utils/transferProgress';
+import { Box, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,6 +30,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
     })();
   }, []);
 
+  useWatchJob(jobId, open);
   const { job, cancelJob } = useJob(jobId === null || jobId === undefined || jobId === '' ? null : Number(jobId));
 
   const handleDownload = async () => {
@@ -49,6 +53,8 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
     }
   };
 
+  const transfer = job ? parseTransfer(job.message) : null;
+
   const getStatusMessage = () => {
     if (!job) return `${locales.connecting}...`;
 
@@ -70,7 +76,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
       case 'canceled':
         return locales.job_cancelled;
       default:
-        return job.message || `${locales.processing}...`;
+        return (transfer ? transferLabel(transfer) : job.message) || `${locales.processing}...`;
     }
   };
 
@@ -143,11 +149,13 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
               </Typography>
             )}
 
-            <LinearProgress variant='determinate' value={job.progress} sx={{ mb: 2 }} />
-
-            <Typography variant='body2' color='textSubdued'>
-              {locales.progress}: {job.progress}%
-            </Typography>
+            <ProgressBar
+              testId='job-progress'
+              value={job.status === 'pending' ? undefined : job.progress}
+              status={job.status === 'failed' ? 'error' : job.status === 'completed' ? 'success' : 'active'}
+              label={`${locales.progress}: ${job.progress}%`}
+              detail={transfer ? transferDetail(transfer) : undefined}
+            />
 
             {job.status === 'completed' &&
               job.type === 'import' &&

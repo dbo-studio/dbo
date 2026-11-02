@@ -2,7 +2,12 @@ import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.sty
 import type { SelectInputOption, SelectInputProps } from '@/components/base/SelectInput/types.ts';
 import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import Select from 'react-select';
+import Select, { components, type InputProps } from 'react-select';
+import { PASSWORD_MANAGER_OFF } from '../FieldInput/FieldInput';
+
+const SelectSearchInput = (props: InputProps<SelectInputOption, boolean>): JSX.Element => (
+  <components.Input {...props} autoComplete='off' {...PASSWORD_MANAGER_OFF} />
+);
 
 export default function SelectInput({
   label,
@@ -43,13 +48,13 @@ export default function SelectInput({
       }}
     >
       {label && (
-        <Typography color={theme.palette.text.text} variant='caption'>
+        <Typography color={theme.palette.text.text} variant='caption' sx={{ mb: '4px' }}>
           {label}
         </Typography>
       )}
       <Select
         isMulti={isMulti}
-        components={{ IndicatorSeparator: null }}
+        components={{ IndicatorSeparator: null, Input: SelectSearchInput }}
         placeholder={options.length === 0 && emptylabel}
         isDisabled={disabled || options.length === 0}
         value={getValue()}

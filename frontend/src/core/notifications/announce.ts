@@ -5,7 +5,9 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { NotificationSettings } from '@/store/settingStore/types';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
+import api from '@/api';
 import { notificationTitle } from './openNotification';
+import { isWatched } from './watching';
 
 // Several tabs of one browser each get the event; one of them speaks.
 const claims = typeof BroadcastChannel === 'undefined' ? undefined : new BroadcastChannel('dbo-notifications');
@@ -69,6 +71,13 @@ export async function announce(n: NotificationType, open: (n: NotificationType) 
   const settings = useSettingStore.getState().general.notifications;
   if (!settings.enabled || (n.jobType !== 'subscription' && !settings[settingKey(n.jobType)])) return;
 
+  // The user is looking at this job's progress; it already saw the outcome, so no second message.
+  if (isWatched(n.jobId)) {
+    void api.notification.markRead(n.id).catch(() => undefined);
+
+    return;
+  }
+
   const title = notificationTitle(n);
   const inFront = document.hasFocus();
 
@@ -97,4 +106,38 @@ export async function announce(n: NotificationType, open: (n: NotificationType) 
     open(n);
     notification.close();
   };
+}
+
+const showSystem = async (title: string, body: string, sound: boolean): Promise<void> => {
+  if (await tools.isTauri()) {
+    await invoke('plugin:notification|notify', { options: { title, body, sound: sound ? 'default' : undefined } });
+
+    return;
+  }
+
+  new Notification(title, { body, silent: !sound });
+};
+
+/**
+ * Settings > Notifications "send a test": shows the in-app message and a system notification so the user
+ * can see both work, whatever the toggles say. Reports what the system refused.
+ */
+export async function sendTestNotification(): Promise<void> {
+  toast.success(locales.notification_test_title, { description: locales.notification_test_in_app });
+
+  if (!(await requestNotificationPermission())) {
+    toast.warning(locales.notification_test_denied);
+
+    return;
+  }
+
+  try {
+    await showSystem(
+      locales.notification_test_title,
+      locales.notification_test_system,
+      useSettingStore.getState().general.notifications.sound
+    );
+  } catch {
+    toast.error(locales.notification_test_failed);
+  }
 }

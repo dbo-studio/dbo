@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -37,6 +38,9 @@ type IBackupService interface {
 	ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error)
 	InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error)
 	RemoveTool(ctx context.Context, req *dto.ToolRemoveRequest) error
+	SetToolPath(ctx context.Context, req *dto.ToolPathRequest) (*dto.BackupTool, error)
+	TestToolPath(ctx context.Context, req *dto.ToolPathRequest) (*dto.BackupTool, error)
+	ClearToolPath(ctx context.Context, name string) error
 }
 
 type IBackupServiceImpl struct {
@@ -44,15 +48,19 @@ type IBackupServiceImpl struct {
 	connectionRepo repository.IConnectionRepo
 	shareRepo      repository.IConnectionShareRepo
 	artifactRepo   repository.IBackupArtifactRepo
+	connectorRepo  repository.IBackupConnectorRepo
+	remote         Remote
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, artifactRepo repository.IBackupArtifactRepo, appCache cache.Cache) IBackupService {
+func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, artifactRepo repository.IBackupArtifactRepo, connectorRepo repository.IBackupConnectorRepo, remote Remote, appCache cache.Cache) IBackupService {
 	return &IBackupServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
 		shareRepo:      shareRepo,
 		artifactRepo:   artifactRepo,
+		connectorRepo:  connectorRepo,
+		remote:         remote,
 		unlockStore:    serviceSafemode.NewUnlockStore(appCache),
 	}
 }
@@ -65,6 +73,12 @@ func (s IBackupServiceImpl) Create(ctx context.Context, req *dto.BackupRequest) 
 	}
 
 	ownerID := helper.CtxOwnerID(ctx)
+
+	if req.DestinationID != 0 {
+		if c, err := s.connectorRepo.FindByOwner(ctx, req.DestinationID, ownerID); err != nil || c.Kind != model.ConnectorKindDestination {
+			return nil, apperror.Validation(errors.New("destinationId: unknown destination"))
+		}
+	}
 
 	jobData := dto.BackupJob{OwnerID: ownerID, BackupRequest: *req}
 	jobData.Passphrase = ""
@@ -196,6 +210,10 @@ func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloa
 		return nil, apperror.BadRequest(apperror.ErrBackupNotCompleted)
 	}
 
+	if err := EnsureLocal(ctx, s.remote, artifact); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
 	if !helper.IsReadableBackupPath(artifact.FilePath) {
 		return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
 	}
@@ -263,6 +281,47 @@ func (s IBackupServiceImpl) RemoveTool(ctx context.Context, req *dto.ToolRemoveR
 
 	if err := RemoveTool(req.Driver, req.Version); err != nil {
 		return apperror.NotFound(err)
+	}
+
+	return nil
+}
+
+// SetToolPath stores a user-chosen binary for one tool after probing it.
+// Overrides are host-wide, so signed-in users need the admin role.
+func (s IBackupServiceImpl) SetToolPath(ctx context.Context, req *dto.ToolPathRequest) (*dto.BackupTool, error) {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	tool, err := SetToolPath(ctx, req.Name, req.Path)
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	return &tool, nil
+}
+
+// TestToolPath probes a candidate path without storing it.
+func (s IBackupServiceImpl) TestToolPath(ctx context.Context, req *dto.ToolPathRequest) (*dto.BackupTool, error) {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	tool, err := TestToolPath(ctx, req.Name, req.Path)
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	return &tool, nil
+}
+
+func (s IBackupServiceImpl) ClearToolPath(ctx context.Context, name string) error {
+	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+		return err
+	}
+
+	if err := ClearToolPath(name); err != nil {
+		return apperror.BadRequest(err)
 	}
 
 	return nil
@@ -378,27 +437,30 @@ func saveUpload(header *multipart.FileHeader, dest string) (int64, string, error
 
 func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 	return dto.BackupArtifactResponse{
-		ID:           a.ID,
-		ConnectionID: a.ConnectionID,
-		JobID:        a.JobID,
-		ScheduleID:   a.ScheduleID,
-		Database:     a.Database,
-		Schema:       a.Schema,
-		Driver:       a.Driver,
-		Method:       string(a.Method),
-		Log:          a.Log,
-		Compressed:   a.Compressed,
-		Encrypted:    a.Encrypted,
-		Tool:         a.Tool,
-		ToolVersion:  a.ToolVersion,
-		Status:       string(a.Status),
-		Note:         a.Note,
-		FileName:     a.FileName,
-		Size:         a.Size,
-		Checksum:     a.Checksum,
-		Error:        a.Error,
-		StartedAt:    a.StartedAt,
-		CompletedAt:  a.CompletedAt,
+		ID:            a.ID,
+		ConnectionID:  a.ConnectionID,
+		JobID:         a.JobID,
+		ScheduleID:    a.ScheduleID,
+		Database:      a.Database,
+		Schema:        a.Schema,
+		Driver:        a.Driver,
+		Method:        string(a.Method),
+		Log:           a.Log,
+		Compressed:    a.Compressed,
+		Encrypted:     a.Encrypted,
+		Tool:          a.Tool,
+		ToolVersion:   a.ToolVersion,
+		Status:        string(a.Status),
+		Note:          a.Note,
+		FileName:      a.FileName,
+		Size:          a.Size,
+		Checksum:      a.Checksum,
+		Error:         a.Error,
+		StartedAt:     a.StartedAt,
+		CompletedAt:   a.CompletedAt,
+		DestinationID: a.DestinationID,
+		RemoteStatus:  a.RemoteStatus,
+		RemoteError:   a.RemoteError,
 	}
 }
 
@@ -432,6 +494,10 @@ func (s IBackupServiceImpl) Verify(ctx context.Context, req *dto.BackupVerifyReq
 
 	if artifact.Status != model.BackupStatusCompleted {
 		return nil, apperror.BadRequest(apperror.ErrBackupNotCompleted)
+	}
+
+	if err := EnsureLocal(ctx, s.remote, artifact); err != nil {
+		return nil, apperror.InternalServerError(err)
 	}
 
 	if !helper.IsReadableBackupPath(artifact.FilePath) {
