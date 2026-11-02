@@ -72,6 +72,13 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     group: 'prefs'
   },
   {
+    id: 7,
+    name: locales.notifications,
+    icon: 'bell',
+    keywords: ['notifications', 'alerts', 'background', 'tray', 'sound', 'query', 'export', 'import'],
+    group: 'prefs'
+  },
+  {
     id: 6,
     name: locales.administration,
     description: locales.administration_description,
@@ -120,6 +127,24 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     label: locales.reset_factory,
     keywords: ['reset', 'factory', 'clear'],
     instanceAdminOnly: true
+  },
+  {
+    id: 'notifications.enabled',
+    sectionId: 7,
+    label: locales.notification_settings_enabled,
+    keywords: ['notifications', 'alerts', 'desktop']
+  },
+  {
+    id: 'notifications.background',
+    sectionId: 7,
+    label: locales.notification_settings_background,
+    keywords: ['background', 'long query', 'seconds']
+  },
+  {
+    id: 'notifications.keep-running',
+    sectionId: 7,
+    label: locales.notification_settings_keep_running,
+    keywords: ['tray', 'background', 'close', 'quit']
   },
   {
     id: 'appearance.theme',
