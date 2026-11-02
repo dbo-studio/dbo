@@ -21,6 +21,11 @@ func sshKnownHostsPath() string {
 		return override
 	}
 
+	// Docker persists only the data volume, so keep known hosts there.
+	if os.Getenv("APP_ENV") == "docker" {
+		return filepath.Join("data", "ssh_known_hosts")
+	}
+
 	if dir, err := os.UserConfigDir(); err == nil {
 		return filepath.Join(dir, "dbo", "ssh_known_hosts")
 	}

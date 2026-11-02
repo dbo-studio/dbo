@@ -261,11 +261,34 @@ func mergeSSHParams(newSSH, oldSSH *dto.ConnectionSSHParams) *dto.ConnectionSSHP
 		return oldSSH
 	}
 
+	if oldSSH == nil {
+		return newSSH
+	}
+
+	// Disabling keeps the stored hop so re-enabling does not start from scratch.
+	if !newSSH.Enabled {
+		kept := *oldSSH
+		kept.Enabled = false
+
+		return &kept
+	}
+
 	merged := *newSSH
-	if oldSSH != nil {
-		merged.Password = helperOptionalNonEmpty(newSSH.Password, oldSSH.Password)
+	// A blank secret keeps the stored one, but only for the active auth method.
+	switch merged.AuthMethod {
+	case dto.SSHAuthKey:
+		merged.Password = nil
 		merged.PrivateKey = helperOptionalNonEmpty(newSSH.PrivateKey, oldSSH.PrivateKey)
 		merged.Passphrase = helperOptionalNonEmpty(newSSH.Passphrase, oldSSH.Passphrase)
+	case dto.SSHAuthAgent:
+		merged.Password, merged.PrivateKey, merged.Passphrase = nil, nil, nil
+	default:
+		merged.Password = helperOptionalNonEmpty(newSSH.Password, oldSSH.Password)
+		merged.PrivateKey, merged.Passphrase = nil, nil
+	}
+
+	// No jump in the request means the jump host was turned off.
+	if newSSH.Jump != nil {
 		merged.Jump = mergeSSHParams(newSSH.Jump, oldSSH.Jump)
 	}
 
