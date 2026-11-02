@@ -91,4 +91,50 @@ test.describe("Notification center", () => {
       removeSqliteDbFile(dbPath);
     }
   });
+
+  test("a failed export opens with its reason and can be retried", async ({ page }, testInfo) => {
+    test.setTimeout(120_000);
+    const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+    const connectionName = `nretry-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-nretry-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+
+        const connections = (await (await page.request.get("/api/connections")).json()) as {
+          data: Array<{ id: number; name: string }>;
+        };
+        const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+        await page.request.post("/api/export", {
+          data: { connectionId, table: "nope", query: "SELECT * FROM nope", format: "csv", chunkSize: 100 },
+        });
+
+        await expect(page.getByTestId("notification-unread")).toHaveText("1", { timeout: 30_000 });
+        await page.getByTestId("notification-bell").click();
+        await expect(page.getByTestId("notification-item")).toHaveAttribute("data-kind", "job_failed");
+        await page.getByTestId("notification-item").click();
+
+        await test.step("The modal says why it failed and offers a retry", async () => {
+          await expect(page.getByText(/failed/i).first()).toBeVisible();
+          await expect(page.getByTestId("job-retry")).toBeVisible();
+        });
+
+        await test.step("Retry starts a new job, which ends the same way and is listed too", async () => {
+          await page.getByTestId("job-retry").click();
+          await expect(page.getByTestId("job-retry")).toBeHidden();
+          await expect(page.getByTestId("job-retry")).toBeVisible({ timeout: 30_000 });
+          await expect
+            .poll(async () => ((await (await page.request.get("/api/notifications")).json()) as { data: { items: unknown[] } }).data.items.length)
+            .toBe(2);
+        });
+      });
+    } finally {
+      removeSqliteDbFile(dbPath);
+    }
+  });
 });

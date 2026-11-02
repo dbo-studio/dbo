@@ -84,6 +84,20 @@ test.describe("Job events and notifications", () => {
           expect(inbox.items[0].body).not.toBe("");
         });
 
+        await test.step("A failed export can be retried, a finished one cannot", async () => {
+          const failedId = stream.of("job.failed")[0].data.id as number;
+          const retried = await page.request.post(`/api/jobs/${failedId}/retry`);
+          expect(retried.status()).toBe(200);
+          const next = ((await retried.json()) as { data: { jobId: number } }).data.jobId;
+          expect(next).not.toBe(failedId);
+          // Same request, same failure: a new job that ends the same way, with its own notification.
+          await expect.poll(() => stream.of("job.failed").length, { timeout: 30_000 }).toBe(2);
+          expect(stream.of("job.failed")[1].data.id).toBe(next);
+          expect((await list()).items).toHaveLength(3);
+
+          expect((await page.request.post(`/api/jobs/${okJob}/retry`)).status()).toBe(400);
+        });
+
         await test.step("A cancel is an event, not a notification", async () => {
           // Queued behind the worker's 5 second tick, so there is time to cancel it first.
           const canceled = await startExport(`SELECT * FROM ${table}`);
@@ -91,8 +105,8 @@ test.describe("Job events and notifications", () => {
           await expect.poll(() => stream.of("job.canceled").length, { timeout: 15_000 }).toBe(1);
           expect(stream.of("job.canceled")[0].data).toMatchObject({ id: canceled, status: "canceled" });
           await page.waitForTimeout(6_000);
-          expect((await list()).items).toHaveLength(2);
-          expect(stream.of("notification.created")).toHaveLength(2);
+          expect((await list()).items).toHaveLength(3);
+          expect(stream.of("notification.created")).toHaveLength(3);
         });
 
         await test.step("Progress arrives on the stream while a job runs", async () => {
@@ -102,12 +116,12 @@ test.describe("Job events and notifications", () => {
         await test.step("Read, read all and delete", async () => {
           const before = await list();
           await page.request.post(`/api/notifications/${before.items[1].id}/read`);
-          expect((await list()).unread).toBe(1);
+          expect((await list()).unread).toBe(2);
           await page.request.post("/api/notifications/read");
           expect((await list()).unread).toBe(0);
           await page.request.delete(`/api/notifications/${before.items[0].id}`);
           const after = await list();
-          expect(after.items.map((item) => item.id)).toEqual([before.items[1].id]);
+          expect(after.items.map((item) => item.id)).toEqual([before.items[1].id, before.items[2].id]);
         });
 
         await test.step("A client that reconnects finds what it missed in the inbox", async () => {

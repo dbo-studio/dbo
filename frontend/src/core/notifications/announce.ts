@@ -20,6 +20,23 @@ const claim = (id: number): boolean => {
   return true;
 };
 
+/** How long after a desktop notification a window focus counts as the click on it. */
+const CLICK_WINDOW_MS = 30_000;
+let awaitingClick: { n: NotificationType; open: (n: NotificationType) => void; at: number } | undefined;
+let listening = false;
+
+function rememberForFocus(n: NotificationType, open: (n: NotificationType) => void): void {
+  awaitingClick = { n, open, at: Date.now() };
+  if (listening) return;
+
+  listening = true;
+  window.addEventListener('focus', () => {
+    const pending = awaitingClick;
+    awaitingClick = undefined;
+    if (pending && Date.now() - pending.at < CLICK_WINDOW_MS) pending.open(pending.n);
+  });
+}
+
 /** The system's notification permission, asked for on a click, never on load. */
 export async function requestNotificationPermission(): Promise<boolean> {
   if (await tools.isTauri()) {
@@ -61,10 +78,11 @@ export async function announce(n: NotificationType, open: (n: NotificationType) 
   if (!claim(n.id) || !(await permitted())) return;
 
   if (await tools.isTauri()) {
-    // Desktop notifications cannot call back into the app: a click only brings it forward, and the bell has the entry.
-    await invoke('plugin:notification|notify', { options: { title, sound: settings.sound ? 'default' : undefined } }).catch(
-      () => undefined
-    );
+    // The desktop plugin has no click callback. A click brings the window forward, so coming forward soon after
+    // the notification is taken as the click, and opens what it was about.
+    await invoke('plugin:notification|notify', { options: { title, sound: settings.sound ? 'default' : undefined } })
+      .then(() => rememberForFocus(n, open))
+      .catch(() => undefined);
 
     return;
   }

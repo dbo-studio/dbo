@@ -20,6 +20,25 @@ export async function openNotification(
 ): Promise<void> {
   if (n.jobId === null) return;
 
+  // A failed query opens in an editor tab, ready to run again.
+  if (n.jobType === 'query' && n.kind === 'job_failed') {
+    try {
+      const job = await api.job.detail(String(n.jobId));
+      const request = job.data?.request;
+      const connection = useConnectionStore.getState().connections?.find((item) => Number(item.id) === Number(request?.connectionId));
+      if (job.data?.kind !== 'raw' || !connection || typeof request?.query !== 'string') throw new Error('not a query to rerun');
+
+      await switchConnection(connection);
+      const tab = useTabStore.getState().addEditorTab(request.query, { forceNew: true });
+      useTabStore.getState().switchTab(tab.id);
+      toast.info(locales.notification_query_reopened);
+    } catch {
+      useJobResultModalStore.getState().open(n.jobId, notificationTitle(n));
+    }
+
+    return;
+  }
+
   if (n.jobType !== 'query' || n.kind !== 'job_completed') {
     useJobResultModalStore.getState().open(n.jobId, notificationTitle(n));
 

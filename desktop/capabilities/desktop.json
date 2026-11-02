@@ -15,6 +15,9 @@
     "core:window:default",
     "decorum:allow-show-snap-overlay",
     "opener:allow-default-urls",
-    "notification:default"
+    "notification:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

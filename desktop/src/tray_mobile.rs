@@ -19,6 +19,9 @@ pub fn hide_instead_of_close(_window: &tauri::Window) -> bool {
 }
 
 #[allow(dead_code)]
+pub fn hide_dock(_app: &AppHandle) {}
+
+#[allow(dead_code)]
 pub fn show_main(_app: &AppHandle) {}
 
 #[tauri::command]

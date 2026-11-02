@@ -13,7 +13,7 @@ import type { JobProgressModalProps } from './types';
 const formatBytes = (bytes: number): string =>
   bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
-export function JobProgressModal({ open, jobId, onClose, title }: JobProgressModalProps) {
+export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobProgressModalProps) {
   const [isTauri, setIsTauri] = useState(false);
 
   const { mutateAsync: jobResultMutation } = useMutation({
@@ -83,6 +83,21 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
             {finished && (
               <Button size='small' onClick={onClose}>
                 {locales.close}
+              </Button>
+            )}
+            {onRetry && job && job.type !== 'query' && (job.status === 'failed' || job.status === 'canceled') && (
+              <Button
+                size='small'
+                variant='contained'
+                data-testid='job-retry'
+                onClick={() =>
+                  void api.job
+                    .retry(String(job.id))
+                    .then(onRetry)
+                    .catch(() => toast.error(locales.action_failed))
+                }
+              >
+                {locales.job_retry}
               </Button>
             )}
             {canDownload && (

@@ -44,8 +44,19 @@ fn jobs_label(count: u32) -> String {
     }
 }
 
+/// While the window is hidden DBO lives in the tray alone: no Dock icon on macOS.
+pub fn hide_dock(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
+}
+
 /// Brings the main window back from the tray (or from behind other windows).
 pub fn show_main(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
+
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.unminimize();
@@ -107,6 +118,7 @@ pub fn hide_instead_of_close(window: &tauri::Window) -> bool {
     }
 
     let _ = window.hide();
+    hide_dock(app);
     let _ = app.emit(HIDDEN_EVENT, ());
 
     true

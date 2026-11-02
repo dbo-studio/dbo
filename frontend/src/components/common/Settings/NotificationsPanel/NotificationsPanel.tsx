@@ -5,6 +5,7 @@ import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { NotificationSettings } from '@/store/settingStore/types';
+import { invoke } from '@tauri-apps/api/core';
 import { Box, Switch } from '@mui/material';
 import { useEffect, useState, type JSX } from 'react';
 
@@ -14,10 +15,14 @@ export default function NotificationsPanel(): JSX.Element {
   const general = useSettingStore((state) => state.general);
   const updateGeneral = useSettingStore((state) => state.updateGeneral);
   const [desktop, setDesktop] = useState(false);
+  const [autostart, setAutostart] = useState(false);
   const settings = general.notifications;
 
   useEffect(() => {
-    void tools.isTauri().then(setDesktop);
+    void tools.isTauri().then(async (isDesktop) => {
+      setDesktop(isDesktop);
+      if (isDesktop) setAutostart(await invoke<boolean>('plugin:autostart|is_enabled').catch(() => false));
+    });
   }, []);
 
   const set = (patch: Partial<NotificationSettings>): void => updateGeneral({ notifications: { ...settings, ...patch } });
@@ -96,6 +101,23 @@ export default function NotificationsPanel(): JSX.Element {
             />
           }
         />
+        {desktop && (
+          <SettingRow
+            id='notifications.autostart'
+            label={locales.notification_settings_autostart}
+            description={locales.notification_settings_autostart_hint}
+            control={
+              <Switch
+                checked={autostart}
+                slotProps={{ input: { 'aria-label': locales.notification_settings_autostart, 'data-testid': 'notifications-autostart' } as React.InputHTMLAttributes<HTMLInputElement> }}
+                onChange={(event): void => {
+                  setAutostart(event.target.checked);
+                  void invoke(`plugin:autostart|${event.target.checked ? 'enable' : 'disable'}`).catch(() => setAutostart(!event.target.checked));
+                }}
+              />
+            }
+          />
+        )}
         {desktop && (
           <SettingRow
             id='notifications.keep-running'

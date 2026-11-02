@@ -187,6 +187,7 @@ func (r *Server) routing() {
 
 	job := api.Group("jobs")
 	job.Get("/active", r.handlers.Job.Active)
+	job.Post("/:id/retry", r.handlers.Job.Retry)
 	job.Get("/:id", r.handlers.Job.Detail)
 	job.Delete("/:id", r.handlers.Job.Cancel)
 	job.Get("/:id/result", r.handlers.Job.Result)

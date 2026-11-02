@@ -20,6 +20,8 @@ type IJobService interface {
 	Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error)
 	Cancel(ctx context.Context, req *dto.JobDetailRequest) error
 	Result(ctx context.Context, req *dto.JobDetailRequest) (*response.FileDownload, error)
+	// Retry starts an ended import or export again from the same request and returns the new job's id.
+	Retry(ctx context.Context, req *dto.JobDetailRequest) (uint, error)
 	// Active lists the caller's jobs that have not ended.
 	Active(ctx context.Context) ([]dto.JobDetailResponse, error)
 }
@@ -54,6 +56,25 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 		StartedAt:   job.StartedAt,
 		CompletedAt: job.CompletedAt,
 	}, nil
+}
+
+func (i IJobServiceImpl) Retry(ctx context.Context, req *dto.JobDetailRequest) (uint, error) {
+	job, err := i.jobRepo.FindByOwner(ctx, req.JobID, helper.CtxOwnerID(ctx))
+	if err != nil {
+		return 0, apperror.NotFound(apperror.ErrJobNotFound)
+	}
+
+	// A query is run again from its tab, where its result goes; only queued work is restarted here.
+	if job.Type == model.JobTypeQuery || (job.Status != model.JobStatusFailed && job.Status != model.JobStatusCancelled) {
+		return 0, apperror.BadRequest(errors.New("this job cannot be retried"))
+	}
+
+	retried, err := i.jobManager.CreateJob(job.Type, job.OwnerID, job.Data)
+	if err != nil {
+		return 0, apperror.InternalServerError(err)
+	}
+
+	return retried.ID, nil
 }
 
 func (i IJobServiceImpl) Active(ctx context.Context) ([]dto.JobDetailResponse, error) {

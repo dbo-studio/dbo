@@ -75,12 +75,28 @@ fn main() {
         builder = builder.plugin(tauri_plugin_haptics::init());
     }
 
+    // Signing in starts DBO hidden in the tray (see --minimized in setup).
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ));
+    }
+
     builder
         .setup(|app| {
             setup_macos_window(app)?;
             menu::setup_menu(app)?;
             tray::setup(app)?;
             setup_close_to_tray(app)?;
+            // Started at login: stay in the tray until the user opens DBO.
+            if env::args().any(|arg| arg == "--minimized") {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+                tray::hide_dock(app.handle());
+            }
             setup_environment();
             start_backend_server(app.handle());
             Ok(())
