@@ -56,8 +56,30 @@ func (r DashboardShareRepoImpl) Create(ctx context.Context, share *model.Dashboa
 
 func (r DashboardShareRepoImpl) Save(ctx context.Context, share *model.DashboardShare) error {
 	return r.db.WithContext(ctx).Model(share).
-		Select("expires_at", "revoked_at", "password_hash").
+		Select("expires_at", "revoked_at", "password_hash", "allow_filters").
 		Updates(share).Error
+}
+
+// shareViewLogLimit is how many visits a link keeps.
+const shareViewLogLimit = 200
+
+func (r DashboardShareRepoImpl) AddVisit(ctx context.Context, visit *model.DashboardShareView) error {
+	if err := r.db.WithContext(ctx).Create(visit).Error; err != nil {
+		return err
+	}
+
+	return r.db.WithContext(ctx).
+		Where("share_id = ? AND id NOT IN (?)", visit.ShareID,
+			r.db.Model(&model.DashboardShareView{}).Select("id").Where("share_id = ?", visit.ShareID).Order("id DESC").Limit(shareViewLogLimit)).
+		Delete(&model.DashboardShareView{}).Error
+}
+
+func (r DashboardShareRepoImpl) Visits(ctx context.Context, shareID uint, limit int) ([]model.DashboardShareView, error) {
+	var visits []model.DashboardShareView
+
+	err := r.db.WithContext(ctx).Where("share_id = ?", shareID).Order("id DESC").Limit(limit).Find(&visits).Error
+
+	return visits, err
 }
 
 func (r DashboardShareRepoImpl) RecordView(ctx context.Context, id uint) error {

@@ -3,6 +3,8 @@ import type { PublicCardType } from '@/api/dashboard/types';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import ChartView from '@/components/common/ChartView/ChartView';
+import ParamInput from '@/components/common/AgentWorkspace/ParamInput/ParamInput';
+import type { QuestionParam } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -48,9 +50,14 @@ export default function SharedDashboard({ token }: { token: string }): JSX.Eleme
   // The password lives for this tab only, so a reload does not ask again but a new tab does.
   const [password, setPassword] = useState(() => sessionStorage.getItem(PASSWORD_KEY(token)) ?? '');
   const [typed, setTyped] = useState('');
+  // What the viewer has applied; the page starts from each report's saved values (none sent).
+  const [applied, setApplied] = useState<Record<string, string> | undefined>(undefined);
+  const [draft, setDraft] = useState<Record<string, string>>({});
   const { data, error, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['shared-dashboard', token, password],
-    queryFn: () => api.dashboard.viewSharedDashboard(token, password || undefined)
+    queryKey: ['shared-dashboard', token, password, applied],
+    queryFn: () => api.dashboard.viewSharedDashboard(token, password || undefined, applied),
+    // Moving between filter values should not blank the page.
+    placeholderData: (previous) => previous
   });
   const reason = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
   const needsPassword = reason === 'share_password_required' || reason === 'share_password_invalid';
@@ -117,6 +124,26 @@ export default function SharedDashboard({ token }: { token: string }): JSX.Eleme
           {locales.dashboard_card_refresh}
         </Button>
       </Stack>
+      {data.filters.length > 0 && (
+        <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 1 }} data-testid='shared-filters'>
+          {data.filters.map((filter) => (
+            <ParamInput
+              key={filter.name}
+              param={{ name: filter.name, type: filter.type === 'text' ? '' : (filter.type as QuestionParam['type']) }}
+              value={draft[filter.name] ?? applied?.[filter.name] ?? filter.value}
+              onChange={(value) => setDraft((current) => ({ ...current, [filter.name]: value }))}
+              onCommit={(value) =>
+                setApplied((current) => ({
+                  ...Object.fromEntries(data.filters.map((item) => [item.name, current?.[item.name] ?? item.value])),
+                  [filter.name]: value
+                }))
+              }
+              connectionId={0}
+              lookup={false}
+            />
+          ))}
+        </Stack>
+      )}
       {data.cards.length === 0 ? (
         <Typography variant='body2' color='textSubdued'>
           {locales.ai_boards_empty}

@@ -16,15 +16,25 @@ type ParamInputProps = {
   onCommit: (value: string) => void;
   connectionId: number;
   scope?: { database?: string; schema?: string };
+  /** Fetch a field filter's values for a dropdown. Off where there is no session to ask with. */
+  lookup?: boolean;
 };
 
 /** One {{filter}} of a report, drawn for its type: text, number, date, true/false, a low..high range, or a column's values. */
-export default function ParamInput({ param, value, onChange, onCommit, connectionId, scope }: ParamInputProps): JSX.Element {
+export default function ParamInput({
+  param,
+  value,
+  onChange,
+  onCommit,
+  connectionId,
+  scope,
+  lookup = true
+}: ParamInputProps): JSX.Element {
   const testId = `param-${param.name}`;
   const { data: fieldValues } = useQuery({
     queryKey: ['question-field-values', connectionId, scope, param.field],
     queryFn: () => api.question.getFieldValues({ connectionId, field: param.field as string, ...scope }),
-    enabled: param.type === 'field' && !!param.field
+    enabled: lookup && param.type === 'field' && !!param.field
   });
 
   const pick = (options: SelectInputOption[], emptylabel: string): JSX.Element => (
@@ -43,7 +53,13 @@ export default function ParamInput({ param, value, onChange, onCommit, connectio
     </Box>
   );
 
-  const text = (props: { type?: string; current: string; set: (next: string) => void; label: string; id: string }): JSX.Element => (
+  const text = (props: {
+    type?: string;
+    current: string;
+    set: (next: string) => void;
+    label: string;
+    id: string;
+  }): JSX.Element => (
     <FieldInput
       size='small'
       type={props.type}
@@ -59,6 +75,9 @@ export default function ParamInput({ param, value, onChange, onCommit, connectio
 
   switch (param.type) {
     case 'field':
+      // Without a lookup there is nothing to pick from: the value is typed, empty meaning any.
+      if (!lookup) return text({ current: value, set: onChange, label: param.name, id: testId });
+
       return pick(
         [{ value: '', label: locales.param_any }, ...(fieldValues ?? []).map((item) => ({ value: item, label: item }))],
         param.name
@@ -73,7 +92,8 @@ export default function ParamInput({ param, value, onChange, onCommit, connectio
       );
     case 'range': {
       const [low = '', high = ''] = value.split('..');
-      const join = (nextLow: string, nextHigh: string): void => onChange(nextLow || nextHigh ? `${nextLow}..${nextHigh}` : '');
+      const join = (nextLow: string, nextHigh: string): void =>
+        onChange(nextLow || nextHigh ? `${nextLow}..${nextHigh}` : '');
 
       return (
         <Stack direction='row' spacing={0.5} data-testid={testId}>

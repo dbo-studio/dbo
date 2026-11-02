@@ -23,6 +23,29 @@ var (
 
 var errParamNul = errors.New("a filter value cannot contain a NUL character")
 
+// Decl is one filter a report's SQL declares.
+type Decl struct {
+	Name  string
+	Type  string
+	Field string
+}
+
+// Declared lists the filters in a report's SQL, each name once (its first use wins), in order.
+func Declared(sql string) []Decl {
+	var out []Decl
+
+	seen := map[string]bool{}
+
+	for _, match := range paramPattern.FindAllStringSubmatch(sql, -1) {
+		if !seen[match[1]] {
+			seen[match[1]] = true
+			out = append(out, Decl{Name: match[1], Type: match[2], Field: match[3]})
+		}
+	}
+
+	return out
+}
+
 // bound collects the placeholders and values of one statement.
 type bound struct {
 	// numbered is PostgreSQL's $1, $2 style; the other engines take ? in order.

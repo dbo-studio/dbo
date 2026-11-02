@@ -12,17 +12,28 @@ type (
 		ExpiresAt *time.Time `json:"expiresAt"`
 		// Password is empty for a link anyone can open.
 		Password string `json:"password"`
+		// AllowFilters lets viewers change the report filters; off, they see the saved values.
+		AllowFilters bool `json:"allowFilters"`
 	}
 
 	DashboardShareUpdateRequest struct {
 		ExpiresAt   *time.Time `json:"expiresAt"`
 		ClearExpiry bool       `json:"clearExpiry"`
 		// Password: absent leaves it, empty removes it, anything else replaces it.
-		Password *string `json:"password"`
+		Password     *string `json:"password"`
+		AllowFilters *bool   `json:"allowFilters"`
 	}
 
 	DashboardShareViewRequest struct {
 		Password string `json:"password"`
+		// Params are the viewer's filter values; they only count on a link that allows filters.
+		Params map[string]string `json:"params"`
+	}
+
+	DashboardShareVisitResponse struct {
+		ViewedAt time.Time `json:"viewedAt"`
+		Outcome  string    `json:"outcome"`
+		IP       string    `json:"ip"`
 	}
 
 	DashboardShareResponse struct {
@@ -31,6 +42,7 @@ type (
 		ExpiresAt    *time.Time `json:"expiresAt"`
 		Revoked      bool       `json:"revoked"`
 		HasPassword  bool       `json:"hasPassword"`
+		AllowFilters bool       `json:"allowFilters"`
 		ViewCount    int        `json:"viewCount"`
 		LastViewedAt *time.Time `json:"lastViewedAt"`
 		// Token is the secret part of the link. It is only sent when the link is made.
@@ -63,8 +75,17 @@ type (
 		Error  string        `json:"error,omitempty"`
 	}
 
+	// PublicFilter is a filter a viewer may set: its name and type, and the value the page starts from.
+	PublicFilter struct {
+		Name  string `json:"name"`
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	}
+
 	PublicDashboardResponse struct {
-		Name        string               `json:"name"`
+		Name string `json:"name"`
+		// Filters is empty unless the link lets viewers change them.
+		Filters     []PublicFilter       `json:"filters"`
 		GeneratedAt time.Time            `json:"generatedAt"`
 		Cards       []PublicCardResponse `json:"cards"`
 	}

@@ -5,6 +5,7 @@ import type {
   DashboardShareType,
   DashboardType,
   PublicDashboardType,
+  ShareVisitType,
   SmtpRequestType,
   SmtpSettingsType,
   SubscriptionListType,
@@ -52,12 +53,19 @@ export const createShare = async (id: number, data: CreateShareRequestType): Pro
 export const updateShare = async (id: number, shareId: number, data: UpdateShareRequestType): Promise<DashboardShareType> =>
   (await api.patch<{ data: DashboardShareType }>(`/dashboards/${id}/shares/${shareId}`, data)).data.data;
 
+export const getShareVisits = async (id: number, shareId: number): Promise<ShareVisitType[]> =>
+  (await api.get<{ data: ShareVisitType[] }>(`/dashboards/${id}/shares/${shareId}/visits`)).data.data;
+
 export const revokeShare = async (id: number, shareId: number): Promise<DashboardShareType> =>
   (await api.delete<{ data: DashboardShareType }>(`/dashboards/${id}/shares/${shareId}`)).data.data;
 
 /** The page behind a share link. A wrong or missing password answers 401 `share_password_required` / `share_password_invalid`. */
-export const viewSharedDashboard = async (token: string, password?: string): Promise<PublicDashboardType> =>
-  (await api.post<{ data: PublicDashboardType }>(`/public/dashboards/${encodeURIComponent(token)}`, { password })).data.data;
+export const viewSharedDashboard = async (
+  token: string,
+  password?: string,
+  params?: Record<string, string>
+): Promise<PublicDashboardType> =>
+  (await api.post<{ data: PublicDashboardType }>(`/public/dashboards/${encodeURIComponent(token)}`, { password, params })).data.data;
 
 export const getSubscriptions = async (id: number): Promise<SubscriptionListType> =>
   (await api.get<{ data: SubscriptionListType }>(`/dashboards/${id}/subscriptions`)).data.data;

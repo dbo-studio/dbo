@@ -24,6 +24,8 @@ export type DashboardShareType = {
   expiresAt: string | null;
   revoked: boolean;
   hasPassword: boolean;
+  /** Viewers may change the report filters. */
+  allowFilters: boolean;
   viewCount: number;
   lastViewedAt: string | null;
   /** The secret part of the link; only sent when the link is made. */
@@ -36,13 +38,16 @@ export type DashboardShareListType = {
   items: DashboardShareType[];
 };
 
-export type CreateShareRequestType = { expiresAt?: string; password?: string };
+export type CreateShareRequestType = { expiresAt?: string; password?: string; allowFilters?: boolean };
+
+export type ShareVisitType = { viewedAt: string; outcome: 'ok' | 'password_required' | 'wrong_password'; ip: string };
 
 export type UpdateShareRequestType = {
   expiresAt?: string;
   clearExpiry?: boolean;
   /** Absent leaves it, empty removes it. */
   password?: string;
+  allowFilters?: boolean;
 };
 
 /** One report of a shared board: what to draw and its rows, never its SQL. */
@@ -55,7 +60,15 @@ export type PublicCardType = {
   error?: string;
 };
 
-export type PublicDashboardType = { name: string; generatedAt: string; cards: PublicCardType[] };
+/** A filter a viewer of a shared page may set. */
+export type PublicFilterType = { name: string; type: string; value: string };
+
+export type PublicDashboardType = {
+  name: string;
+  generatedAt: string;
+  filters: PublicFilterType[];
+  cards: PublicCardType[];
+};
 
 export type SubscriptionKind = 'email' | 'webhook';
 export type SubscriptionFrequency = 'hourly' | 'daily' | 'weekly';

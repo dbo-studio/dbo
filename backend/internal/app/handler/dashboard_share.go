@@ -66,6 +66,12 @@ func (h DashboardShareHandler) Update(c fiber.Ctx) error {
 	return h.send(c, share, err)
 }
 
+func (h DashboardShareHandler) Visits(c fiber.Ctx) error {
+	visits, err := h.shareService.Visits(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "shareId"))
+
+	return h.send(c, visits, err)
+}
+
 func (h DashboardShareHandler) Revoke(c fiber.Ctx) error {
 	share, err := h.shareService.Revoke(c, fiber.Params[uint](c, "id"), fiber.Params[uint](c, "shareId"))
 
@@ -81,7 +87,7 @@ func (h DashboardShareHandler) View(c fiber.Ctx) error {
 		}
 	}
 
-	view, err := h.shareService.View(c, c.Params("token"), req.Password)
+	view, err := h.shareService.View(c, c.Params("token"), req.Password, req.Params, c.IP())
 
 	return h.send(c, view, err)
 }

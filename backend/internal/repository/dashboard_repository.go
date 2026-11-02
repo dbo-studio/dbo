@@ -74,6 +74,11 @@ func (r DashboardRepoImpl) Delete(ctx context.Context, dashboard *model.Dashboar
 			return err
 		}
 
+		shares := tx.Model(&model.DashboardShare{}).Select("id").Where("dashboard_id = ?", dashboard.ID)
+		if err := tx.Where("share_id IN (?)", shares).Delete(&model.DashboardShareView{}).Error; err != nil {
+			return err
+		}
+
 		return tx.Select("Cards", "Shares", "Subscriptions").Delete(dashboard).Error
 	})
 }

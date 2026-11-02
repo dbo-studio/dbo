@@ -341,7 +341,7 @@ func (s *ISubscriptionServiceImpl) deliver(ctx context.Context, sub *model.Dashb
 	}
 
 	now := time.Now()
-	cards := runCards(ctx, s.questionService, s.logger, fmt.Sprintf("dashboard subscription %d", sub.ID), dashboard)
+	cards := runCards(ctx, s.questionService, s.logger, fmt.Sprintf("dashboard subscription %d", sub.ID), dashboard, nil)
 
 	if len(cards) > 0 && okCards(cards) == 0 {
 		return 0, errNothingToSend

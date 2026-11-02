@@ -151,4 +151,124 @@ test.describe("Dashboard share links", () => {
       removeSqliteDbFile(dbPath);
     }
   });
+
+  test("viewer filters are opt in and bound, and every visit is logged", async ({ page, browser }, testInfo) => {
+    test.setTimeout(120_000);
+    const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+    const connectionName = `share-filters-${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-share-filters-${suffix}.db`;
+    ensureSqliteDbFile(dbPath);
+    const baseURL = testInfo.project.use.baseURL as string;
+
+    try {
+      await withConnectionCleanup(page, connectionName, async () => {
+        const connectionPage = new ConnectionPage(page);
+        const tree = new ObjectTreePage(page);
+
+        await connectionPage.goto();
+        await connectionPage.waitForReady();
+        await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+        await tree.waitForTreeLoad();
+
+        const connections = (await (await page.request.get("/api/connections")).json()) as {
+          data: Array<{ id: number; name: string }>;
+        };
+        const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+        const question = (
+          await (
+            await page.request.post("/api/questions", {
+              data: {
+                connectionId,
+                name: `Doubled ${suffix}`,
+                sql: "SELECT {{n:number}} * 2 AS doubled",
+                chart: { type: "number", y: ["doubled"] },
+                params: { n: "5" },
+              },
+            })
+          ).json()
+        ).data.id;
+        const boardName = `Filtered share ${suffix}`;
+        const board = (
+          await (await page.request.post("/api/dashboards", { data: { connectionId, name: boardName } })).json()
+        ).data.id;
+        await page.request.post(`/api/dashboards/${board}/cards`, { data: { questionId: question } });
+
+        const visitor = await browser.newContext({ baseURL });
+        const view = async (token: string, data: object = {}) => {
+          const answer = await visitor.request.post(`/api/public/dashboards/${token}`, { data });
+          return { status: answer.status(), body: (await answer.json()) as { data?: any } };
+        };
+        const makeLink = async (data: object): Promise<{ id: number; token: string }> =>
+          ((await (await page.request.post(`/api/dashboards/${board}/shares`, { data })).json()) as { data: { id: number; token: string } }).data;
+
+        await test.step("A link without filters ignores what a viewer sends", async () => {
+          const link = await makeLink({});
+          const answer = await view(link.token, { params: { n: "21" } });
+          expect(answer.body.data.filters).toEqual([]);
+          expect(JSON.stringify(answer.body.data.cards[0].result.rows)).toContain("10");
+        });
+
+        const open = await makeLink({ allowFilters: true });
+
+        await test.step("A link that allows filters lists them and runs the viewer's values", async () => {
+          const start = await view(open.token);
+          expect(start.body.data.filters).toEqual([{ name: "n", type: "number", value: "5" }]);
+
+          const changed = await view(open.token, { params: { n: "21" } });
+          expect(JSON.stringify(changed.body.data.cards[0].result.rows)).toContain("42");
+        });
+
+        await test.step("A value that is not a number is refused as data, with no query in the answer", async () => {
+          const bad = await view(open.token, { params: { n: "1 OR 1=1" } });
+          expect(bad.status).toBe(200);
+          expect(bad.body.data.cards[0].error).toBe("this report could not be loaded");
+          expect(JSON.stringify(bad.body)).not.toContain("SELECT");
+        });
+
+        await test.step("The shared page shows the filter and reruns on a new value", async () => {
+          const shared = await visitor.newPage();
+          await shared.goto(`/share/${open.token}`);
+          await expect(shared.getByTestId("shared-filters")).toBeVisible();
+          await expect(shared.getByTestId("param-n")).toHaveValue("5");
+          await expect(shared.getByTestId("shared-card").getByTestId("ai-chart")).toContainText("10");
+          await shared.getByTestId("param-n").fill("21");
+          await shared.getByTestId("param-n").press("Enter");
+          await expect(shared.getByTestId("shared-card").getByTestId("ai-chart")).toContainText("42");
+          await shared.close();
+        });
+
+        await test.step("Every visit is in the link's log, with how it went", async () => {
+          const locked = await makeLink({ password: "pw-1234" });
+          await view(locked.token);
+          await view(locked.token, { password: "wrong" });
+          await view(locked.token, { password: "pw-1234" });
+          const visits = (
+            (await (await page.request.get(`/api/dashboards/${board}/shares/${locked.id}/visits`)).json()) as {
+              data: Array<{ outcome: string; ip: string }>;
+            }
+          ).data;
+          expect(visits.map((visit) => visit.outcome)).toEqual(["ok", "wrong_password", "password_required"]);
+          expect(visits[0].ip).not.toBe("");
+        });
+
+        await page.reload();
+        await tree.waitForTreeLoad();
+
+        await test.step("The owner turns filters on and reads the log in the dialog", async () => {
+          await tree.getTreeNode("Dashboards").click();
+          await tree.getTreeNode(boardName).dblclick();
+          await page.getByTestId("dashboard-share").click();
+          await page.getByTestId("share-visits-toggle").first().click();
+          await expect(page.getByTestId("share-visit").first()).toBeVisible();
+          await page.getByTestId("share-allow-filters").check();
+          await page.getByTestId("share-create").click();
+          await expect(page.getByText("Filters open").first()).toBeVisible();
+        });
+
+        await visitor.close();
+      });
+    } finally {
+      removeSqliteDbFile(dbPath);
+    }
+  });
 });

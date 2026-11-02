@@ -154,6 +154,7 @@ func (r *Server) routing() {
 	dashboards.Post("/:id/shares", r.handlers.DashboardShare.Create)
 	dashboards.Patch("/:id/shares/:shareId", r.handlers.DashboardShare.Update)
 	dashboards.Delete("/:id/shares/:shareId", r.handlers.DashboardShare.Revoke)
+	dashboards.Get("/:id/shares/:shareId/visits", r.handlers.DashboardShare.Visits)
 
 	// Visitors of a share link have no session: the token is their proof, so this group skips sign-in
 	// (see OwnerSessionMiddleware) and is rate limited per address and link.

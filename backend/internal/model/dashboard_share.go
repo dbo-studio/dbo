@@ -12,7 +12,24 @@ type DashboardShare struct {
 	PasswordHash string `gorm:"not null;default:''"`
 	ExpiresAt    *time.Time
 	RevokedAt    *time.Time
-	ViewCount    int `gorm:"not null;default:0"`
+	// AllowFilters lets a viewer change the report filters; otherwise the link shows each report's saved values.
+	AllowFilters bool `gorm:"not null;default:false"`
+	ViewCount    int  `gorm:"not null;default:0"`
 	LastViewedAt *time.Time
 	CreatedAt    *time.Time `gorm:"autoCreateTime"`
+}
+
+const (
+	ShareViewOK               = "ok"
+	ShareViewPasswordRequired = "password_required"
+	ShareViewWrongPassword    = "wrong_password"
+)
+
+// DashboardShareView is one visit to a share link: when, how it went, and from where.
+type DashboardShareView struct {
+	ID       uint      `gorm:"primaryKey,autoIncrement"`
+	ShareID  uint      `gorm:"index;not null"`
+	ViewedAt time.Time `gorm:"not null"`
+	Outcome  string    `gorm:"not null"`
+	IP       string    `gorm:"not null;default:''"`
 }

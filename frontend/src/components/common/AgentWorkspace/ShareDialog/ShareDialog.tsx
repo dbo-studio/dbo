@@ -3,7 +3,7 @@ import type { DashboardShareType, DashboardType } from '@/api/dashboard/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Stack, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
   const [editing, setEditing] = useState(false);
   const [date, setDate] = useState(() => toDateInput(share.expiresAt));
   const [password, setPassword] = useState('');
+  const [showVisits, setShowVisits] = useState(false);
   const state = status(share);
   const refresh = (): Promise<void> => queryClient.invalidateQueries({ queryKey: ['dashboard-shares', boardId] });
 
@@ -46,6 +47,16 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
       setPassword('');
     },
     onError: () => toast.error(locales.action_failed)
+  });
+  const { mutate: setFilters } = useMutation({
+    mutationFn: (allow: boolean) => api.dashboard.updateShare(boardId, share.id, { allowFilters: allow }),
+    onSuccess: refresh,
+    onError: () => toast.error(locales.action_failed)
+  });
+  const { data: visits } = useQuery({
+    queryKey: ['dashboard-share-visits', boardId, share.id, share.viewCount],
+    queryFn: () => api.dashboard.getShareVisits(boardId, share.id),
+    enabled: showVisits
   });
   const { mutate: removePassword } = useMutation({
     mutationFn: () => api.dashboard.updateShare(boardId, share.id, { password: '' }),
@@ -68,9 +79,13 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
             ? locales.share_expires_on.replace('{date}', new Date(share.expiresAt).toLocaleDateString())
             : locales.share_expiry_never}
           {share.hasPassword && ` · ${locales.share_password_set}`}
+          {share.allowFilters && ` · ${locales.share_filters_on}`}
           {` · ${locales.share_views.replace('{count}', String(share.viewCount))}`}
           {share.lastViewedAt && ` · ${locales.share_last_viewed.replace('{date}', new Date(share.lastViewedAt).toLocaleString())}`}
         </Typography>
+        <Button size='small' onClick={() => setShowVisits(!showVisits)} data-testid='share-visits-toggle'>
+          {locales.share_activity}
+        </Button>
         {state !== 'revoked' && (
           <>
             <Button size='small' onClick={() => setEditing(!editing)} data-testid='share-edit'>
@@ -82,6 +97,28 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
           </>
         )}
       </Stack>
+      {showVisits && (
+        <Stack spacing={0.25} sx={{ mt: 1 }} data-testid='share-visits'>
+          {(visits ?? []).length === 0 && <Typography variant='caption'>{locales.share_no_visits}</Typography>}
+          {(visits ?? []).map((visit) => (
+            <Typography key={`${visit.viewedAt}-${visit.outcome}-${visit.ip}`} variant='caption' data-testid='share-visit' data-outcome={visit.outcome}>
+              {new Date(visit.viewedAt).toLocaleString()} · {locales[`share_visit_${visit.outcome}`]}
+              {visit.ip && ` · ${visit.ip}`}
+            </Typography>
+          ))}
+        </Stack>
+      )}
+      {editing && state !== 'revoked' && (
+        <Stack direction='row' spacing={1} sx={{ mt: 1, alignItems: 'center' }}>
+          <Switch
+            size='small'
+            checked={share.allowFilters}
+            onChange={(event) => setFilters(event.target.checked)}
+            slotProps={{ input: { 'aria-label': locales.share_allow_filters, 'data-testid': 'share-edit-filters' } as React.InputHTMLAttributes<HTMLInputElement> }}
+          />
+          <Typography variant='caption'>{locales.share_allow_filters}</Typography>
+        </Stack>
+      )}
       {editing && state !== 'revoked' && (
         <Stack direction='row' spacing={1} sx={{ mt: 1, alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
           <FieldInput
@@ -123,6 +160,7 @@ function ShareForm({ board }: { board: DashboardType }): JSX.Element {
   const [password, setPassword] = useState('');
   // The link exists in full only now; the server keeps a hash, so it is shown here once.
   const [created, setCreated] = useState('');
+  const [allowFilters, setAllowFilters] = useState(false);
   const { data } = useQuery({ queryKey: ['dashboard-shares', board.id], queryFn: () => api.dashboard.getShares(board.id) });
 
   const { mutate: create, isPending } = useMutation({
@@ -131,7 +169,8 @@ function ShareForm({ board }: { board: DashboardType }): JSX.Element {
 
       return api.dashboard.createShare(board.id, {
         ...(expiry ? { expiresAt: endOfDay(expiry) } : {}),
-        ...(password ? { password } : {})
+        ...(password ? { password } : {}),
+        ...(allowFilters ? { allowFilters } : {})
       });
     },
     onSuccess: async (share) => {
@@ -194,6 +233,15 @@ function ShareForm({ board }: { board: DashboardType }): JSX.Element {
         <Button size='small' variant='contained' disabled={isPending} onClick={() => create()} data-testid='share-create'>
           {locales.share_create}
         </Button>
+      </Stack>
+      <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+        <Switch
+          size='small'
+          checked={allowFilters}
+          onChange={(event) => setAllowFilters(event.target.checked)}
+          slotProps={{ input: { 'aria-label': locales.share_allow_filters, 'data-testid': 'share-allow-filters' } as React.InputHTMLAttributes<HTMLInputElement> }}
+        />
+        <Typography variant='caption'>{locales.share_allow_filters}</Typography>
       </Stack>
       {created && (
         <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }} data-testid='share-created'>

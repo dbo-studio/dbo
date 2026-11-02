@@ -168,6 +168,8 @@ type IDashboardShareRepo interface {
 	Create(ctx context.Context, share *model.DashboardShare) error
 	Save(ctx context.Context, share *model.DashboardShare) error
 	RecordView(ctx context.Context, id uint) error
+	AddVisit(ctx context.Context, visit *model.DashboardShareView) error
+	Visits(ctx context.Context, shareID uint, limit int) ([]model.DashboardShareView, error)
 }
 
 type IDashboardSubscriptionRepo interface {
