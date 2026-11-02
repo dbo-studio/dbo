@@ -141,6 +141,18 @@ function BackupModalBody({
     }
   };
 
+  const handleRemoveTool = async (tool: BackupToolType): Promise<void> => {
+    const [, driver, version] = /data[\\/]tools[\\/]([^\\/]+)[\\/]([^\\/]+)/.exec(tool.path) ?? [];
+    if (!driver || !version) return;
+
+    try {
+      await api.backup.removeTool(driver, version);
+      refresh();
+    } catch {
+      /* the api layer already toasted */
+    }
+  };
+
   return (
     <>
       <Modal open title={locales.backup_restore} onClose={onClose} padding='24px'>
@@ -273,7 +285,12 @@ function BackupModalBody({
           <Typography variant='caption' color='textSubdued' component='p' sx={{ mb: 1 }}>
             {locales.backup_tools_hint}
           </Typography>
-          <ToolList detected={detectedTools} downloads={downloads} onInstall={(item) => void handleInstall(item)} />
+          <ToolList
+            detected={detectedTools}
+            downloads={downloads}
+            onInstall={(item) => void handleInstall(item)}
+            onRemove={(tool) => void handleRemoveTool(tool)}
+          />
         </Box>
       </Modal>
 
@@ -307,11 +324,13 @@ function BackupModalBody({
 function ToolList({
   detected,
   downloads,
-  onInstall
+  onInstall,
+  onRemove
 }: {
   detected: BackupToolType[];
   downloads: BackupToolDownloadType[];
   onInstall: (item: BackupToolDownloadType) => void;
+  onRemove: (tool: BackupToolType) => void;
 }): JSX.Element {
   return (
     <>
@@ -343,7 +362,14 @@ function ToolList({
                 {locales.backup_tool_download}
               </Button>
             )}
-            {tool.found && tool.source === 'managed' && <Chip size='small' label={locales.backup_tool_installed} />}
+            {tool.found && tool.source === 'managed' && (
+              <>
+                <Chip size='small' label={locales.backup_tool_installed} />
+                <Button size='small' onClick={() => onRemove(tool)}>
+                  {locales.backup_tool_remove}
+                </Button>
+              </>
+            )}
           </Box>
         );
       })}

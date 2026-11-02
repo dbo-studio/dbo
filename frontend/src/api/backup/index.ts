@@ -21,6 +21,7 @@ const endpoint = {
   tools: (): string => '/backups/tools',
   toolDownloads: (): string => '/backups/tools/downloads',
   installTool: (): string => '/backups/tools/install',
+  removeTool: (driver: string, version: string): string => `/backups/tools/${driver}/${version}`,
   schedules: (): string => '/backup-schedules',
   schedule: (id: number): string => `/backup-schedules/${id}`,
   runSchedule: (id: number): string => `/backup-schedules/${id}/run`
@@ -67,6 +68,10 @@ export const toolDownloads = async (): Promise<BackupToolDownloadType[]> => {
 
 export const installTool = async (driver: string, version: string): Promise<BackupJobResponseType> => {
   return (await api.post<{ data: BackupJobResponseType }>(endpoint.installTool(), { driver, version })).data.data;
+};
+
+export const removeTool = async (driver: string, version: string): Promise<void> => {
+  await api.delete(endpoint.removeTool(driver, version));
 };
 
 export const schedules = async (): Promise<BackupScheduleType[]> => {

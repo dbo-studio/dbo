@@ -758,6 +758,7 @@
   "backup_tool_download": "Download",
   "backup_tool_download_info": "Downloads {name} {version} from {url} ({size})",
   "backup_tool_installed": "Installed",
+  "backup_tool_remove": "Remove",
   "backup_tool_installing": "Installing tool",
   "backup_tool_install_completed": "Tool installed",
   "backup_tool_admin_only": "Only an administrator can download tools",
