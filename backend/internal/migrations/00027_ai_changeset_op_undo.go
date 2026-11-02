@@ -12,11 +12,21 @@ func init() {
 }
 
 func upAiChangesetOpUndo(ctx context.Context, tx *sql.Tx) error {
-	for _, statement := range []string{
-		"ALTER TABLE ai_changeset_ops ADD COLUMN undo_sql TEXT NOT NULL DEFAULT ''",
-		"ALTER TABLE ai_changeset_ops ADD COLUMN undo_note TEXT NOT NULL DEFAULT ''",
+	for _, col := range []struct {
+		name string
+		ddl  string
+	}{
+		{"undo_sql", "ALTER TABLE ai_changeset_ops ADD COLUMN undo_sql TEXT NOT NULL DEFAULT ''"},
+		{"undo_note", "ALTER TABLE ai_changeset_ops ADD COLUMN undo_note TEXT NOT NULL DEFAULT ''"},
 	} {
-		if _, err := tx.ExecContext(ctx, statement); err != nil {
+		has, err := sqliteHasColumn(ctx, tx, "ai_changeset_ops", col.name)
+		if err != nil {
+			return err
+		}
+		if has {
+			continue
+		}
+		if _, err := tx.ExecContext(ctx, col.ddl); err != nil {
 			return err
 		}
 	}
