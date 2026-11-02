@@ -162,6 +162,13 @@ func (jm *IJobManagerImpl) Announce(ctx context.Context, jobID uint) {
 	}
 }
 
+// announceRunning tells the owner a job began, so a screen that was not watching can count it.
+func (jm *IJobManagerImpl) announceRunning(job *model.Job) {
+	jm.hub.Publish(job.OwnerID, serviceEvents.Event{Type: "job.running", Data: jobEvent{
+		ID: job.ID, Type: job.Type, Status: model.JobStatusRunning, Message: job.Message,
+	}})
+}
+
 func jobLabel(jobType model.JobType) string {
 	switch jobType {
 	case model.JobTypeImport:
@@ -352,6 +359,7 @@ func (jm *IJobManagerImpl) RunWithHandover(ctx context.Context, opts HandoverOpt
 	jm.mu.Unlock()
 
 	jm.workerWg.Add(1)
+	jm.announceRunning(job)
 
 	go func() {
 		defer jm.workerWg.Done()
@@ -504,6 +512,7 @@ func (jm *IJobManagerImpl) processPendingJobs() {
 	}
 
 	jm.workerWg.Add(1)
+	jm.announceRunning(job)
 
 	go func() {
 		defer jm.workerWg.Done()

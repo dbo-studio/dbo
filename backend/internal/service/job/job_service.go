@@ -20,6 +20,8 @@ type IJobService interface {
 	Detail(ctx context.Context, req *dto.JobDetailRequest) (*dto.JobDetailResponse, error)
 	Cancel(ctx context.Context, req *dto.JobDetailRequest) error
 	Result(ctx context.Context, req *dto.JobDetailRequest) (*response.FileDownload, error)
+	// Active lists the caller's jobs that have not ended.
+	Active(ctx context.Context) ([]dto.JobDetailResponse, error)
 }
 
 type IJobServiceImpl struct {
@@ -52,6 +54,23 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 		StartedAt:   job.StartedAt,
 		CompletedAt: job.CompletedAt,
 	}, nil
+}
+
+func (i IJobServiceImpl) Active(ctx context.Context) ([]dto.JobDetailResponse, error) {
+	jobs, err := i.jobRepo.ListActiveByOwner(ctx, helper.CtxOwnerID(ctx))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	out := make([]dto.JobDetailResponse, 0, len(jobs))
+	for _, job := range jobs {
+		out = append(out, dto.JobDetailResponse{
+			ID: job.ID, Type: string(job.Type), Status: string(job.Status), Progress: job.Progress, Message: job.Message,
+			StartedAt: job.StartedAt,
+		})
+	}
+
+	return out, nil
 }
 
 // rawJSON passes stored JSON through as it is, and leaves out what is not JSON.

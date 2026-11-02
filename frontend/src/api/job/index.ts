@@ -11,6 +11,11 @@ export const detail = async (jobId: string): Promise<JobDetailResponseType> => {
   return (await api.get<{ data: JobDetailResponseType }>(endpoint.detail(jobId))).data.data;
 };
 
+/** Jobs of the signed-in user that have not ended. */
+export const active = async (): Promise<JobDetailResponseType[]> => {
+  return (await api.get<{ data: JobDetailResponseType[] }>('/jobs/active')).data.data;
+};
+
 export const cancel = async (jobId: string): Promise<void> => {
   await api.delete(endpoint.cancel(jobId));
 };

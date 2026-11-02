@@ -34,6 +34,16 @@ func (h JobHandler) Detail(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(job).Send(c)
 }
 
+func (h JobHandler) Active(c fiber.Ctx) error {
+	jobs, err := h.jobService.Active(c)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(jobs).Send(c)
+}
+
 func (h JobHandler) Cancel(c fiber.Ctx) error {
 	req := &dto.JobDetailRequest{
 		JobID: fiber.Params[int32](c, "id"),

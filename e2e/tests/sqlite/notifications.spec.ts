@@ -50,6 +50,11 @@ test.describe("Job events and notifications", () => {
         let okJob = 0;
         await test.step("A finished export emits one event and makes one notification", async () => {
           okJob = await startExport(`SELECT * FROM ${table}`);
+          // Until it ends, the job is listed as active: that is what the tray counts.
+          const active = ((await (await page.request.get("/api/jobs/active")).json()) as { data: Array<{ id: number }> }).data;
+          expect(active.map((job) => job.id)).toContain(okJob);
+          await expect.poll(() => stream.of("job.running").length, { timeout: 30_000 }).toBe(1);
+          expect(stream.of("job.running")[0].data).toMatchObject({ id: okJob, status: "running" });
           await expect.poll(() => stream.of("job.completed").length, { timeout: 30_000 }).toBe(1);
           await expect.poll(() => stream.of("notification.created").length).toBe(1);
 
@@ -58,6 +63,9 @@ test.describe("Job events and notifications", () => {
           // Events carry no result payload: that stays on the job.
           expect(completed).not.toHaveProperty("result");
           expect(stream.of("notification.created")[0].data).toMatchObject({ kind: "job_completed", jobType: "export", jobId: okJob, read: false });
+
+          const stillActive = ((await (await page.request.get("/api/jobs/active")).json()) as { data: Array<{ id: number }> }).data;
+          expect(stillActive.map((job) => job.id)).not.toContain(okJob);
 
           const inbox = await list();
           expect(inbox.unread).toBe(1);

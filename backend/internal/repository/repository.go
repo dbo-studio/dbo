@@ -70,6 +70,7 @@ type IJobRepo interface {
 	UpdateProgress(ctx context.Context, id uint, progress int, message string) error
 	GetPendingJobs(ctx context.Context) ([]model.Job, error)
 	GetRunningJobs(ctx context.Context) ([]model.Job, error)
+	ListActiveByOwner(ctx context.Context, ownerID string) ([]model.Job, error)
 	DeleteOldJobs(ctx context.Context, days int) error
 }
 

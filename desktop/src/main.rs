@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod menu;
+#[cfg_attr(not(desktop), path = "tray_mobile.rs")]
+mod tray;
 
 use std::env;
 use std::net::TcpListener;
@@ -54,7 +56,14 @@ fn main() {
         .manage(sidecar_child.clone())
         .manage(sidecar_stopping.clone())
         .manage(sidecar_events.clone())
-        .invoke_handler(tauri::generate_handler![get_backend_host, restart_backend]);
+        .manage(tray::TrayState::new())
+        .invoke_handler(tauri::generate_handler![
+            get_backend_host,
+            restart_backend,
+            tray::set_keep_running,
+            tray::update_tray_status,
+            tray::quit_app
+        ]);
 
     #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))]
     {
@@ -70,13 +79,23 @@ fn main() {
         .setup(|app| {
             setup_macos_window(app)?;
             menu::setup_menu(app)?;
+            tray::setup(app)?;
+            setup_close_to_tray(app)?;
             setup_environment();
             start_backend_server(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(move |_, event| {
+        .run(move |app, event| {
+            // Clicking the Dock icon while DBO sits in the tray brings the window back.
+            #[cfg(target_os = "macos")]
+            if let RunEvent::Reopen { .. } = event {
+                tray::show_main(app);
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = app;
+
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 cleanup_sidecar(
                     &sidecar_child_for_cleanup,
@@ -85,6 +104,24 @@ fn main() {
                 );
             }
         });
+}
+
+/// With "keep running in the background" on, the window's close button hides it to the tray.
+fn setup_close_to_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let main_window = app
+        .get_webview_window("main")
+        .ok_or("main window not found")?;
+    let window = main_window.as_ref().window();
+    let window_for_events = window.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            if tray::hide_instead_of_close(&window_for_events) {
+                api.prevent_close();
+            }
+        }
+    });
+
+    Ok(())
 }
 
 #[cfg(target_os = "macos")]

@@ -2,7 +2,7 @@ import { api } from '@/core/api';
 import type { NotificationType } from '@/api/notification/types';
 import { useJobEventsStore, type JobEvent } from '@/store/jobEvents/jobEvents.store';
 
-const JOB_EVENTS = ['job.progress', 'job.completed', 'job.failed', 'job.canceled'] as const;
+const JOB_EVENTS = ['job.running', 'job.progress', 'job.completed', 'job.failed', 'job.canceled'] as const;
 
 type Handlers = {
   /** A job moved: progress, or its end. */
