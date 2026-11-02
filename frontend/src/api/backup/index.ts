@@ -149,6 +149,11 @@ export const testConnectorDraft = async (kind: ConnectorKind, id: number, reques
   await api.post(`${connectorBase(kind)}/${id}/test`, request);
 };
 
-export const driveAuthUrl = async (id: number): Promise<string> => {
+/** Which sign-in types work with one click here, with no OAuth app of the user's own. */
+export const oauthProviders = async (): Promise<Record<string, boolean>> => {
+  return (await api.get<{ data: Record<string, boolean> }>(`${connectorBase('destination')}/oauth/providers`)).data.data;
+};
+
+export const oauthUrl = async (id: number): Promise<string> => {
   return (await api.post<{ data: { url: string } }>(`${connectorBase('destination')}/${id}/oauth/url`)).data.data.url;
 };

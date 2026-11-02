@@ -124,7 +124,7 @@ export type BackupVerifyResultType = {
   message: string;
 };
 
-export type DestinationType = 'folder' | 's3' | 'sftp' | 'ftp' | 'gdrive' | 'webdav';
+export type DestinationType = 'folder' | 's3' | 'sftp' | 'ftp' | 'gdrive' | 'webdav' | 'dropbox' | 'onedrive';
 export type ChannelType = 'email' | 'slack' | 'discord' | 'telegram' | 'webhook';
 export type ConnectorKind = 'destination' | 'channel';
 

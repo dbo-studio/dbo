@@ -16,41 +16,18 @@ import (
 // driveScope only reaches files this app created, never the rest of the user's Drive.
 const driveScope = "https://www.googleapis.com/auth/drive.file"
 
-// googleEndpoint is spelled out so the app does not pull in the Google Cloud metadata client.
-var googleEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://accounts.google.com/o/oauth2/auth",
-	TokenURL: "https://oauth2.googleapis.com/token",
-}
-
-var errDriveNotAuthorized = errors.New("Google Drive is not authorized yet; use Authorize")
-
 type gdriveDestination struct {
 	client   *http.Client
 	folderID string
 }
 
-// DriveOAuthConfig is the OAuth client the admin registered in Google Cloud.
-func DriveOAuthConfig(clientID, clientSecret, redirect string) *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirect,
-		Scopes:       []string{driveScope},
-		Endpoint:     googleEndpoint,
-	}
-}
-
 func newGDrive(f fields) (Destination, error) {
-	if err := f.require("clientId", "clientSecret"); err != nil {
+	conf, token, err := refreshClient(TypeGDrive, f)
+	if err != nil {
 		return nil, err
 	}
 
-	if f.secret("refreshToken") == "" {
-		return nil, errDriveNotAuthorized
-	}
-
-	conf := DriveOAuthConfig(f.secret("clientId"), f.secret("clientSecret"), "")
-	client := conf.Client(context.Background(), &oauth2.Token{RefreshToken: f.secret("refreshToken")})
+	client := conf.Client(context.Background(), &oauth2.Token{RefreshToken: token})
 
 	return &gdriveDestination{client: client, folderID: f.str("folderId")}, nil
 }

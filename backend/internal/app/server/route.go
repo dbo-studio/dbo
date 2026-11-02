@@ -221,6 +221,7 @@ func (r *Server) routing() {
 	destinations.Patch("/:id", r.handlers.BackupDestination.Update)
 	destinations.Delete("/:id", r.handlers.BackupDestination.Delete)
 	destinations.Post("/:id/test", r.handlers.BackupDestination.Test)
+	destinations.Get("/oauth/providers", r.handlers.BackupDestination.OAuthProviders)
 	destinations.Post("/:id/oauth/url", r.handlers.BackupDestination.AuthURL)
 
 	channels := api.Group("notification-channels")

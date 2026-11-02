@@ -114,11 +114,18 @@ func (h ConnectorHandler) Test(c fiber.Ctx) error {
 	return response.SuccessBuilder().Send(c)
 }
 
-// AuthURL starts the Google Drive consent flow; the browser then returns to OAuthCallback.
+// OAuthProviders tells the UI which sign-in types work with one click here.
+func (h ConnectorHandler) OAuthProviders(c fiber.Ctx) error {
+	return response.SuccessBuilder().WithData(h.service.OAuthProviders()).Send(c)
+}
+
+var providerNames = map[string]string{"gdrive": "Google Drive", "dropbox": "Dropbox", "onedrive": "OneDrive"}
+
+// AuthURL starts the consent flow; the browser then returns to OAuthCallback.
 func (h ConnectorHandler) AuthURL(c fiber.Ctx) error {
 	redirect := c.BaseURL() + "/api/public/backup-destinations/oauth/callback"
 
-	url, err := h.service.DriveAuthURL(c, fiber.Params[uint](c, "id"), redirect)
+	url, err := h.service.OAuthURL(c, fiber.Params[uint](c, "id"), redirect)
 	if err != nil {
 		return h.fail(c, err)
 	}
@@ -135,11 +142,12 @@ func (h ConnectorHandler) OAuthCallback(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("<p>Authorization was cancelled. You can close this window.</p>")
 	}
 
-	if err := h.service.DriveExchange(c, c.Query("state"), c.Query("code")); err != nil {
+	connType, err := h.service.OAuthExchange(c, c.Query("state"), c.Query("code"))
+	if err != nil {
 		h.logger.Error(err.Error())
 
 		return c.Status(fiber.StatusBadRequest).SendString("<p>Authorization failed. Close this window and try again.</p>")
 	}
 
-	return c.SendString("<p>Google Drive is connected. You can close this window and return to DBO.</p>")
+	return c.SendString("<p>" + providerNames[connType] + " is connected. You can close this window and return to DBO.</p>")
 }

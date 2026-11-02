@@ -9,12 +9,14 @@ import (
 
 // Destination types a backup can be sent to.
 const (
-	TypeFolder = "folder"
-	TypeS3     = "s3"
-	TypeSFTP   = "sftp"
-	TypeFTP    = "ftp"
-	TypeGDrive = "gdrive"
-	TypeWebDAV = "webdav"
+	TypeFolder   = "folder"
+	TypeS3       = "s3"
+	TypeSFTP     = "sftp"
+	TypeFTP      = "ftp"
+	TypeGDrive   = "gdrive"
+	TypeWebDAV   = "webdav"
+	TypeDropbox  = "dropbox"
+	TypeOneDrive = "onedrive"
 )
 
 // Channel types a backup result can be announced on.
@@ -94,6 +96,10 @@ func OpenDestination(connType string, f fields) (Destination, error) {
 		return newGDrive(f)
 	case TypeWebDAV:
 		return newWebDAV(f)
+	case TypeDropbox:
+		return newDropbox(f)
+	case TypeOneDrive:
+		return newOneDrive(f)
 	default:
 		return nil, ErrUnknownType
 	}

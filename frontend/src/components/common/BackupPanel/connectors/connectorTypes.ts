@@ -11,6 +11,8 @@ export type FieldSpec = {
   options?: { label: string; value: string }[];
   placeholder?: string;
   required?: boolean;
+  /** Tucked under "Advanced": only needed when the user brings their own OAuth app. */
+  advanced?: boolean;
 };
 
 export type ConnectorTypeSpec = {
@@ -20,6 +22,8 @@ export type ConnectorTypeSpec = {
   description: string;
   icon: keyof typeof IconTypes;
   fields: FieldSpec[];
+  /** Signs in through the provider's page instead of a password. */
+  oauth?: boolean;
 };
 
 const includeError: FieldSpec = { key: 'includeError', label: locales.connector_include_error, input: 'bool' };
@@ -116,10 +120,36 @@ export const CONNECTOR_TYPES: ConnectorTypeSpec[] = [
     label: locales.connector_gdrive,
     description: locales.connector_gdrive_hint,
     icon: 'cloud',
+    oauth: true,
     fields: [
-      { key: 'clientId', label: locales.connector_client_id, secret: true, required: true },
-      { key: 'clientSecret', label: locales.connector_client_secret, secret: true, required: true },
-      { key: 'folderId', label: locales.connector_folder_id }
+      { key: 'folderId', label: locales.connector_folder_id },
+      { key: 'clientId', label: locales.connector_client_id, secret: true, advanced: true },
+      { key: 'clientSecret', label: locales.connector_client_secret, secret: true, advanced: true }
+    ]
+  },
+  {
+    type: 'dropbox',
+    kind: 'destination',
+    label: locales.connector_dropbox,
+    description: locales.connector_dropbox_hint,
+    icon: 'cloud',
+    oauth: true,
+    fields: [
+      { key: 'path', label: locales.connector_remote_path, placeholder: 'backups' },
+      { key: 'clientId', label: locales.connector_app_key, secret: true, advanced: true },
+      { key: 'clientSecret', label: locales.connector_app_secret, secret: true, advanced: true }
+    ]
+  },
+  {
+    type: 'onedrive',
+    kind: 'destination',
+    label: locales.connector_onedrive,
+    description: locales.connector_onedrive_hint,
+    icon: 'cloud',
+    oauth: true,
+    fields: [
+      { key: 'path', label: locales.connector_remote_path, placeholder: 'backups' },
+      { key: 'clientId', label: locales.connector_app_id, secret: true, advanced: true }
     ]
   },
   {

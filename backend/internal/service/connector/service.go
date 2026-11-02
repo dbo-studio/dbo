@@ -31,8 +31,10 @@ type IConnectorService interface {
 	// TestDraft checks a connector as typed in the form, before it is saved. A request id
 	// of an existing connector lets saved secrets stand in for ones left blank.
 	TestDraft(ctx context.Context, kind string, req *dto.ConnectorRequest) error
-	DriveAuthURL(ctx context.Context, id uint, redirect string) (string, error)
-	DriveExchange(ctx context.Context, state, code string) error
+	OAuthURL(ctx context.Context, id uint, redirect string) (string, error)
+	// OAuthExchange stores the refresh token and returns the destination's type, for the confirmation page.
+	OAuthExchange(ctx context.Context, state, code string) (string, error)
+	OAuthProviders() map[string]bool
 
 	// Upload copies a finished backup file to a destination and returns its remote reference.
 	Upload(ctx context.Context, ownerID string, destinationID uint, localPath, name string, progress func(done, total int64)) (string, error)
@@ -49,6 +51,7 @@ type service struct {
 	dashboardRepo repository.IDashboardSubscriptionRepo
 	cipherKey     []byte
 	allowInternal bool
+	desktop       bool // the built-in OAuth apps are for the desktop app only
 	logger        logger.Logger
 }
 
@@ -56,7 +59,7 @@ func NewService(repo repository.IBackupConnectorRepo, dashboardRepo repository.I
 	// With sign-in on, other people use this server: keep webhooks from being aimed at its own network.
 	allow := cfg == nil || cfg.App.Client == config.ClientDesktop || cfg.App.Auth.Mode == config.AuthModeNone
 
-	return &service{repo: repo, dashboardRepo: dashboardRepo, cipherKey: cipherKey, allowInternal: allow, logger: log}
+	return &service{repo: repo, dashboardRepo: dashboardRepo, cipherKey: cipherKey, allowInternal: allow, desktop: cfg == nil || cfg.App.Client == config.ClientDesktop, logger: log}
 }
 
 type typeSpec struct {
@@ -71,6 +74,8 @@ var specs = map[string]typeSpec{
 	TypeSFTP:     {model.ConnectorKindDestination, []string{"host", "port", "username", "path", "hostKey"}, []string{"password", "privateKey"}},
 	TypeFTP:      {model.ConnectorKindDestination, []string{"host", "port", "username", "path", "security"}, []string{"password"}},
 	TypeWebDAV:   {model.ConnectorKindDestination, []string{"url", "username", "path"}, []string{"password"}},
+	TypeDropbox:  {model.ConnectorKindDestination, []string{"path"}, []string{"clientId", "clientSecret", "refreshToken"}},
+	TypeOneDrive: {model.ConnectorKindDestination, []string{"path"}, []string{"clientId", "refreshToken"}},
 	TypeGDrive:   {model.ConnectorKindDestination, []string{"folderId"}, []string{"clientId", "clientSecret", "refreshToken"}},
 	TypeEmail:    {model.ConnectorKindChannel, []string{"recipients", "includeError"}, nil},
 	TypeSlack:    {model.ConnectorKindChannel, []string{"includeError"}, []string{"webhookUrl"}},
@@ -449,80 +454,97 @@ func (s *service) Notify(ctx context.Context, ownerID string, channelIDs []uint,
 	}
 }
 
-// --- Google Drive OAuth ---
+// --- OAuth sign-in (Google Drive, Dropbox, OneDrive) ---
 
-type driveState struct {
+type oauthState struct {
 	ID       uint   `json:"id"`
 	Owner    string `json:"owner"`
 	Redirect string `json:"redirect"`
+	Verifier string `json:"verifier"` // PKCE: proves the code goes to whoever asked for it
 	Expires  int64  `json:"exp"`
 }
 
-func (s *service) driveConfig(c *model.BackupConnector, redirect string) (*oauth2.Config, error) {
+// oauthConfigFor picks the OAuth app for a connector. The built-in one is for the desktop app only:
+// a server has its own address, which the project cannot register ahead of time.
+func (s *service) oauthConfigFor(c *model.BackupConnector, redirect string) (*oauth2.Config, error) {
 	f, err := s.fieldsOf(c)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := f.require("clientId", "clientSecret"); err != nil {
-		return nil, err
+	if f.secret("clientId") == "" && !s.desktop {
+		return nil, errNoOAuthApp
 	}
 
-	return DriveOAuthConfig(f.secret("clientId"), f.secret("clientSecret"), redirect), nil
+	return oauthConfig(c.Type, f, redirect)
 }
 
-// DriveAuthURL starts the Google consent flow. The state is encrypted and expires, so the public
-// callback can trust it without a session.
-func (s *service) DriveAuthURL(ctx context.Context, id uint, redirect string) (string, error) {
+// OAuthProviders says which sign-in types work with one click here, with no client ID of the user's own.
+func (s *service) OAuthProviders() map[string]bool {
+	out := map[string]bool{}
+	for t := range oauthProviders {
+		out[t] = s.desktop && BuiltinAvailable(t)
+	}
+
+	return out
+}
+
+// OAuthURL starts the consent flow. The state is encrypted and expires, so the public callback can
+// trust it without a session.
+func (s *service) OAuthURL(ctx context.Context, id uint, redirect string) (string, error) {
 	c, err := s.find(ctx, model.ConnectorKindDestination, id)
 	if err != nil {
 		return "", err
 	}
 
-	if c.Type != TypeGDrive {
+	if !IsOAuthType(c.Type) {
 		return "", apperror.BadRequest(errBadType)
 	}
 
-	conf, err := s.driveConfig(c, redirect)
+	conf, err := s.oauthConfigFor(c, redirect)
 	if err != nil {
 		return "", apperror.BadRequest(err)
 	}
 
-	raw, _ := json.Marshal(driveState{ID: c.ID, Owner: helper.CtxOwnerID(ctx), Redirect: redirect, Expires: time.Now().Add(10 * time.Minute).Unix()})
+	verifier := oauth2.GenerateVerifier()
+
+	raw, _ := json.Marshal(oauthState{ID: c.ID, Owner: helper.CtxOwnerID(ctx), Redirect: redirect, Verifier: verifier, Expires: time.Now().Add(10 * time.Minute).Unix()})
 
 	state, err := cryptoutil.EncryptAESGCM(s.cipherKey, raw)
 	if err != nil {
 		return "", apperror.InternalServerError(err)
 	}
 
-	return conf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent")), nil
+	opts := append([]oauth2.AuthCodeOption{oauth2.S256ChallengeOption(verifier)}, oauthProviders[c.Type].authParams...)
+
+	return conf.AuthCodeURL(state, opts...), nil
 }
 
-// DriveExchange finishes the flow and stores the refresh token as the destination's secret.
-func (s *service) DriveExchange(ctx context.Context, state, code string) error {
+// OAuthExchange finishes the flow and stores the refresh token as the destination's secret.
+func (s *service) OAuthExchange(ctx context.Context, state, code string) (string, error) {
 	plain, err := cryptoutil.DecryptAESGCM(s.cipherKey, state)
 	if err != nil {
-		return apperror.BadRequest(errors.New("invalid state"))
+		return "", apperror.BadRequest(errors.New("invalid state"))
 	}
 
-	var st driveState
+	var st oauthState
 	if err := json.Unmarshal(plain, &st); err != nil || time.Now().Unix() > st.Expires {
-		return apperror.BadRequest(errors.New("the authorization expired; start again"))
+		return "", apperror.BadRequest(errors.New("the authorization expired; start again"))
 	}
 
 	c, err := s.repo.FindByOwner(ctx, st.ID, st.Owner)
-	if err != nil || c.Type != TypeGDrive {
-		return apperror.NotFound(errNotFound)
+	if err != nil || !IsOAuthType(c.Type) {
+		return "", apperror.NotFound(errNotFound)
 	}
 
-	conf, err := s.driveConfig(c, st.Redirect)
+	conf, err := s.oauthConfigFor(c, st.Redirect)
 	if err != nil {
-		return apperror.BadRequest(err)
+		return "", apperror.BadRequest(err)
 	}
 
-	tok, err := conf.Exchange(ctx, code)
+	tok, err := conf.Exchange(ctx, code, oauth2.VerifierOption(st.Verifier))
 	if err != nil || tok.RefreshToken == "" {
-		return apperror.BadRequest(errors.New("Google did not return a refresh token; try again"))
+		return "", apperror.BadRequest(errors.New("the provider did not return a refresh token; try again"))
 	}
 
 	secrets, _ := s.secretsOf(c)
@@ -532,8 +554,8 @@ func (s *service) DriveExchange(ctx context.Context, state, code string) error {
 
 	enc, err := cryptoutil.EncryptAESGCM(s.cipherKey, raw)
 	if err != nil {
-		return apperror.InternalServerError(err)
+		return "", apperror.InternalServerError(err)
 	}
 
-	return s.repo.UpdateFields(ctx, c.ID, map[string]any{"secrets_enc": enc})
+	return c.Type, s.repo.UpdateFields(ctx, c.ID, map[string]any{"secrets_enc": enc})
 }

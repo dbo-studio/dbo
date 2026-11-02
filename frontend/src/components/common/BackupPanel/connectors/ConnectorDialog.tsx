@@ -5,8 +5,8 @@ import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
-import { Box, Button, Checkbox, FormControlLabel, Typography } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
+import { Box, Button, Checkbox, Collapse, FormControlLabel, Typography } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import { CONNECTOR_TYPES, type ConnectorTypeSpec, specOf } from './connectorTypes';
@@ -18,7 +18,7 @@ type Props = {
   /** Set to edit; omit to create. */
   connector?: ConnectorType;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (saved: ConnectorType) => void;
 };
 
 export default function ConnectorDialog({ kind, connector, onClose, onSaved }: Props): JSX.Element {
@@ -28,10 +28,22 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
   const [config, setConfig] = useState<Record<string, string | number | boolean>>(connector?.config ?? {});
   const [secrets, setSecrets] = useState<Record<string, string>>({});
 
-  const missing = spec.fields.some((f) => {
-    if (!f.required) return false;
-    return f.secret ? !secrets[f.key] && !connector?.secretsSet[f.key] : !config[f.key];
+  const { data: builtIn = {} } = useQuery({
+    queryKey: ['backup-oauth-providers'],
+    queryFn: api.backup.oauthProviders,
+    enabled: kind === 'destination'
   });
+  const hasOwnApp = Boolean(secrets.clientId || connector?.secretsSet.clientId);
+  // Without a built-in sign-in, the user's own OAuth app is the only way in, so it cannot stay hidden.
+  const needsOwnApp = spec.oauth === true && !builtIn[spec.type] && !hasOwnApp;
+  const [showAdvanced, setShowAdvanced] = useState(connector?.secretsSet.clientId === true);
+
+  const missing =
+    needsOwnApp ||
+    spec.fields.some((f) => {
+      if (!f.required) return false;
+      return f.secret ? !secrets[f.key] && !connector?.secretsSet[f.key] : !config[f.key];
+    });
 
   const request = (): ConnectorRequestType => ({ type: spec.type, name: name.trim(), config, secrets });
 
@@ -52,6 +64,65 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
   const setConfigValue = (key: string, value: string | number | boolean): void =>
     setConfig((prev) => ({ ...prev, [key]: value }));
 
+  const renderField = (field) => {
+          if (field.input === 'bool') {
+            return (
+              <FormControlLabel
+                key={field.key}
+                label={field.label}
+                control={
+                  <Checkbox
+                    checked={config[field.key] === true}
+                    onChange={(e) => setConfigValue(field.key, e.target.checked)}
+                  />
+                }
+              />
+            );
+          }
+          if (field.input === 'select') {
+            return (
+              <SelectInput
+                key={field.key}
+                emptylabel=''
+                label={field.label}
+                value={String(config[field.key] ?? field.options?.[0]?.value ?? '')}
+                onChange={(e) => setConfigValue(field.key, (e as SelectInputOption).value as string)}
+                options={field.options ?? []}
+              />
+            );
+          }
+          if (field.secret) {
+            return (
+              <FieldInput
+                margin='none'
+                key={field.key}
+                name={`connector-${field.key}`}
+                type={field.input === 'textarea' ? 'text' : 'password'}
+                multiline={field.input === 'textarea'}
+                minRows={field.input === 'textarea' ? 3 : undefined}
+                label={field.label}
+                value={secrets[field.key] ?? ''}
+                placeholder={connector?.secretsSet[field.key] ? locales.connector_secret_saved : undefined}
+                onChange={(e) => setSecrets((prev) => ({ ...prev, [field.key]: e.target.value }))}
+              />
+            );
+          }
+          return (
+            <FieldInput
+              margin='none'
+              key={field.key}
+              name={`connector-${field.key}`}
+              type={field.input === 'number' ? 'number' : 'text'}
+              label={field.label}
+              placeholder={field.placeholder}
+              value={String(config[field.key] ?? '')}
+              onChange={(e) =>
+                setConfigValue(field.key, field.input === 'number' ? Number(e.target.value) : e.target.value)
+              }
+            />
+          );
+        };
+
   return (
     <Modal
       open
@@ -65,8 +136,8 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
       }
       footer={
         <>
-          {/* Drive needs a saved record to authorize against, so it can only be tested after saving. */}
-          {spec.type !== 'gdrive' && (
+          {/* A sign-in destination needs a saved, approved record, so it can only be tested after that. */}
+          {(!spec.oauth || connector?.secretsSet.refreshToken) && (
             <Button
               size='small'
               onClick={() => test()}
@@ -125,65 +196,25 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
           onChange={(e) => setName(e.target.value)}
           margin='none'
         />
-        {spec.fields.map((field) => {
-          if (field.input === 'bool') {
-            return (
-              <FormControlLabel
-                key={field.key}
-                label={field.label}
-                control={
-                  <Checkbox
-                    checked={config[field.key] === true}
-                    onChange={(e) => setConfigValue(field.key, e.target.checked)}
-                  />
-                }
-              />
-            );
-          }
-          if (field.input === 'select') {
-            return (
-              <SelectInput
-                key={field.key}
-                emptylabel=''
-                label={field.label}
-                value={String(config[field.key] ?? field.options?.[0]?.value ?? '')}
-                onChange={(e) => setConfigValue(field.key, (e as SelectInputOption).value as string)}
-                options={field.options ?? []}
-              />
-            );
-          }
-          if (field.secret) {
-            return (
-              <FieldInput
-                margin='none'
-                key={field.key}
-                name={`connector-${field.key}`}
-                type={field.input === 'textarea' ? 'text' : 'password'}
-                multiline={field.input === 'textarea'}
-                minRows={field.input === 'textarea' ? 3 : undefined}
-                label={field.label}
-                value={secrets[field.key] ?? ''}
-                placeholder={connector?.secretsSet[field.key] ? locales.connector_secret_saved : undefined}
-                onChange={(e) => setSecrets((prev) => ({ ...prev, [field.key]: e.target.value }))}
-              />
-            );
-          }
-          return (
-            <FieldInput
-              margin='none'
-              key={field.key}
-              name={`connector-${field.key}`}
-              type={field.input === 'number' ? 'number' : 'text'}
-              label={field.label}
-              placeholder={field.placeholder}
-              value={String(config[field.key] ?? '')}
-              onChange={(e) =>
-                setConfigValue(field.key, field.input === 'number' ? Number(e.target.value) : e.target.value)
-              }
-            />
-          );
-        })}
-        {spec.type === 'gdrive' && (
+        {spec.fields.filter((f) => !f.advanced).map(renderField)}
+        {spec.fields.some((f) => f.advanced) && (
+          <>
+            <Button size='small' sx={{ alignSelf: 'flex-start' }} onClick={() => setShowAdvanced((v) => !v)} data-testid='connector-advanced'>
+              {locales.connector_advanced}
+            </Button>
+            <Collapse in={showAdvanced || needsOwnApp} unmountOnExit>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {needsOwnApp && (
+                  <Typography variant='caption' color='error'>
+                    {locales.connector_advanced_required}
+                  </Typography>
+                )}
+                {spec.fields.filter((f) => f.advanced).map(renderField)}
+              </Box>
+            </Collapse>
+          </>
+        )}
+        {spec.oauth && !connector && (
           <Typography variant='caption' color='textSecondary'>
             {locales.connector_authorize_hint}
           </Typography>

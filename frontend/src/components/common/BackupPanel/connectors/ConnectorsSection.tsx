@@ -45,7 +45,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
 
   const authorize = async (item: ConnectorType): Promise<void> => {
     try {
-      const url = await api.backup.driveAuthUrl(item.id);
+      const url = await api.backup.oauthUrl(item.id);
       if (await tools.isTauri()) await openUrl(url);
       else window.open(url, '_blank');
     } catch {
@@ -85,7 +85,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
         <CardStyled>
           {items.map((item) => {
             const spec = specOf(item.type);
-            const needsAuth = item.type === 'gdrive' && !item.secretsSet.refreshToken;
+            const needsAuth = spec?.oauth === true && !item.secretsSet.refreshToken;
 
             return (
               <CardRowStyled key={item.id} data-testid={`connector-${item.id}`}>
@@ -101,7 +101,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
                   </Typography>
                 </CardRowMainStyled>
                 {!item.enabled && <Chip size='small' label={locales.connector_disabled} />}
-                {item.type === 'gdrive' && (
+                {spec?.oauth && (
                   <Chip
                     size='small'
                     color={needsAuth ? 'default' : 'success'}
@@ -134,9 +134,11 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
           kind={kind}
           connector={editing.connector}
           onClose={() => setEditing(null)}
-          onSaved={() => {
+          onSaved={(saved) => {
             setEditing(null);
             refresh();
+            // A new sign-in destination is useless until approved, so take the user straight there.
+            if (specOf(saved.type)?.oauth && !saved.secretsSet.refreshToken) void authorize(saved);
           }}
         />
       )}
