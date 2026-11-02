@@ -25,6 +25,8 @@ type ToolContext struct {
 	ConnectionID int32
 	Schema       *string
 	Database     *string
+	// Args are values bound to the placeholders of the statement, for callers that fill it from user input.
+	Args []any
 }
 
 type Registry struct {
@@ -269,6 +271,7 @@ func (r *Registry) query(ctx context.Context, conn *model.Connection, safeSQL st
 		Query:        safeSQL,
 		Database:     toolCtx.Database,
 		Schema:       toolCtx.Schema,
+		Args:         toolCtx.Args,
 	})
 	if err != nil {
 		return nil, err

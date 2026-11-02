@@ -56,6 +56,8 @@ type (
 		// BackgroundAfterSeconds is how long the request waits before the query moves to the background
 		// (default 10, 0 keeps it in the request).
 		BackgroundAfterSeconds *int `json:"backgroundAfterSeconds"`
+		// Args are bound to the placeholders in Query. They are never read from a request body.
+		Args []any `json:"-"`
 	}
 
 	RawQueryResponse struct {

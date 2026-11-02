@@ -221,10 +221,12 @@ func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.To
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	rendered, err := RenderParams(sql, params, databaseContract.IsMysqlFamily(conn.ConnectionType))
+	rendered, args, err := RenderParams(sql, params, databaseContract.IsPostgresFamily(conn.ConnectionType))
 	if err != nil {
 		return nil, apperror.BadRequest(err)
 	}
+
+	toolCtx.Args = args
 
 	result, err := s.toolRegistry.Execute(ctx, serviceDbtools.ToolExecuteSQL, map[string]any{"sql": rendered}, toolCtx)
 	if err != nil {
