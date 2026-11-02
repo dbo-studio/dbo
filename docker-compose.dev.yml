@@ -68,6 +68,24 @@ services:
       POSTGRES_USER: default
       POSTGRES_PASSWORD: secret
 
+  # SSH bastion for tunnel e2e: reaches sample-pgsql / sample-mysql by service name.
+  sample-sshd:
+    container_name: dbo-studio-sample-sshd
+    image: lscr.io/linuxserver/openssh-server:latest
+    ports:
+      - "${SSH_TEST_PORT-2222}:2222"
+    volumes:
+      - "./e2e/fixtures/ssh/id_ed25519.pub:/keys/id_ed25519.pub:ro"
+      - "./docker/sshd/10-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
+    restart: always
+    environment:
+      PUID: 1000
+      PGID: 1000
+      USER_NAME: tunnel
+      USER_PASSWORD: secret
+      PASSWORD_ACCESS: "true"
+      PUBLIC_KEY_FILE: /keys/id_ed25519.pub
+
   sample-mysql:
     container_name: dbo-studio-sample-mysql
     image: mysql:8.4

@@ -55,3 +55,27 @@ export function getSslPostgresConfig(name: string): ConnectionConfig {
     },
   };
 }
+
+/** SSH bastion (sample-sshd) that can reach sample-pgsql / sample-mysql by service name. */
+export function getSshBastionConfig(): {
+  host: string;
+  port: string;
+  username: string;
+  password: string;
+} {
+  return {
+    host: process.env.SSH_TEST_HOST ?? "127.0.0.1",
+    port: process.env.SSH_TEST_PORT ?? "2222",
+    username: process.env.SSH_TEST_USER ?? "tunnel",
+    password: process.env.SSH_TEST_PASSWORD ?? "secret",
+  };
+}
+
+/** Postgres as seen from inside the bastion network (not reachable from the host by this name). */
+export function getBastionOnlyPostgresConfig(name: string): ConnectionConfig {
+  return {
+    ...getDbConfig("postgresql", name),
+    host: "sample-pgsql",
+    port: "5432",
+  };
+}

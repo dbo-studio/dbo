@@ -13,7 +13,10 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/invopop/validation"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -31,9 +34,15 @@ func CreatePostgresqlConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
+	if err := dto.ValidateSSHSecrets(options.SSH); err != nil {
+		return "", apperror.Validation(err)
+	}
+
 	if options.SSL != nil {
 		options.SSL.Mode = dto.NormalizeSSLMode(options.SSL.Mode)
 	}
+
+	dto.NormalizeSSH(options.SSH)
 
 	return helper.StructToJSON(options), nil
 }
@@ -60,6 +69,7 @@ func UpdatePostgresqlConnection(oldParams json.RawMessage, newParams json.RawMes
 	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
 	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
 	newOptions.SSL = mergeSSLParams(newOptions.SSL, oldOptions.SSL)
+	newOptions.SSH = mergeSSHParams(newOptions.SSH, oldOptions.SSH)
 
 	return pgsqlUpdateParamsToCreateJSON(newOptions), nil
 }
@@ -73,6 +83,7 @@ func pgsqlUpdateParamsToCreateJSON(opts PgsqlUpdateParams) string {
 		Database: opts.Database,
 		URI:      opts.URI,
 		SSL:      opts.SSL,
+		SSH:      opts.SSH,
 	}
 
 	return helper.StructToJSON(params)
@@ -131,7 +142,7 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 
 		uri = appendPostgresqlURISSL(uri, options.SSL)
 
-		return postgres.Open(uri)
+		return postgresDialector(connection, uri)
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s ",
@@ -155,9 +166,33 @@ func openPostgresqlConnection(connection *model.Connection, databaseName string)
 
 	dsn = appendPostgresqlSSLDSN(dsn, options.SSL)
 
-	return postgres.New(postgres.Config{
-		DSN: dsn,
-	})
+	return postgresDialector(connection, dsn)
+}
+
+// postgresDialector opens dsn. For a tunneled connection the server address is
+// a loopback port, so TLS verification is pinned to the real DB host name.
+func postgresDialector(connection *model.Connection, dsn string) gorm.Dialector {
+	serverName := gjson.Get(connection.Options, tlsServerNameKey).String()
+	if serverName == "" {
+		return postgres.New(postgres.Config{DSN: dsn})
+	}
+
+	cfg, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		return nil
+	}
+
+	if cfg.TLSConfig != nil {
+		cfg.TLSConfig.ServerName = serverName
+	}
+
+	for _, fallback := range cfg.Fallbacks {
+		if fallback.TLSConfig != nil {
+			fallback.TLSConfig.ServerName = serverName
+		}
+	}
+
+	return postgres.New(postgres.Config{Conn: stdlib.OpenDB(*cfg)})
 }
 
 // quoteDSNValue quotes a libpq keyword/value DSN value when it contains
@@ -193,6 +228,7 @@ func (req PgsqlCreateParams) Validate() error {
 		validation.Field(&req.Port, validation.When(lo.FromPtr(req.URI) == "", validation.Required), validation.Min(0)),
 		validation.Field(&req.URI, validation.Length(0, 2048)),
 		validation.Field(&req.SSL),
+		validation.Field(&req.SSH),
 	)
 }
 
@@ -204,5 +240,6 @@ func (req PgsqlUpdateParams) Validate() error {
 		validation.Field(&req.Port, validation.Min(0)),
 		validation.Field(&req.URI, validation.Length(0, 2048)),
 		validation.Field(&req.SSL),
+		validation.Field(&req.SSH),
 	)
 }

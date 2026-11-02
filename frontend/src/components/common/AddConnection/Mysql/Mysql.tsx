@@ -15,9 +15,11 @@ import {
   ConnectionFormContainerStyled
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
+import ConnectionSSHFields from '../ConnectionSSHFields';
 import ConnectionSSLFields from '../ConnectionSSLFields';
 import { buildConnectionUri, DEFAULT_PORTS, parseConnectionUri } from '../connectionUri';
 import { applyParsedConnectionUri } from '../connectionUriForm';
+import { sshFormDefaults, sshFormSchema, sshOptionsFromForm } from '../ssh';
 import { sslFormDefaults, sslOptionsFromForm } from '../ssl';
 import type { ConnectionSettingsProps } from '../types';
 
@@ -36,7 +38,8 @@ const formSchema = v.union([
     sslMode: v.string(),
     sslCaCert: v.string(),
     sslClientCert: v.string(),
-    sslClientKey: v.string()
+    sslClientKey: v.string(),
+    ssh: sshFormSchema
   }),
   v.object({
     useUri: v.literal(false),
@@ -55,7 +58,8 @@ const formSchema = v.union([
     sslMode: v.string(),
     sslCaCert: v.string(),
     sslClientCert: v.string(),
-    sslClientKey: v.string()
+    sslClientKey: v.string(),
+    ssh: sshFormSchema
   })
 ]);
 
@@ -90,7 +94,8 @@ export default function Mysql({
           password: value.password,
           database: value.database,
           uri: value.useUri ? value.uri : '',
-          ssl: sslOptionsFromForm(value)
+          ssl: sslOptionsFromForm(value),
+          ssh: sshOptionsFromForm(value.ssh)
         }
       } as CreateConnectionRequestType;
 
@@ -115,6 +120,7 @@ export default function Mysql({
       database: options?.database || parsedUri?.database || '',
       uri: parsedUri?.redactedUri ?? options?.uri ?? '',
       ...sslDefaults,
+      ssh: sshFormDefaults(options?.ssh),
       sslMode: options?.ssl?.mode || parsedUri?.sslMode || sslDefaults.sslMode
     }
   });
@@ -187,6 +193,7 @@ export default function Mysql({
         <ConnectionFormTabs
           generalLabel={locales.general}
           sslLabel={locales.ssl}
+          sshLabel={locales.ssh}
           general={
             <>
               <form.Field name='name'>
@@ -414,6 +421,13 @@ export default function Mysql({
                 </form.Field>
               </ConnectionFormCheckboxRowStyled>
             </>
+          }
+          ssh={
+            <form.Subscribe selector={(state) => state.values.ssh}>
+              {(ssh): JSX.Element => (
+                <ConnectionSSHFields value={ssh} onChange={(next): void => form.setFieldValue('ssh', next)} />
+              )}
+            </form.Subscribe>
           }
           ssl={
             <form.Subscribe

@@ -9,6 +9,7 @@ import {
 } from "./objectFormSqliteLifecycle";
 import {
   ConnectionPage,
+  type ConnectionConfig,
   DataBrowserPage,
   DataGridPage,
   SqlEditorPage,
@@ -129,6 +130,7 @@ export async function setupImportExport(
   page: Page,
   names: ImportExportSetupNames,
   engine: DbEngine = "postgresql",
+  configOverride: Partial<ConnectionConfig> = {},
 ): Promise<ImportExportPages> {
   const connectionPage = new ConnectionPage(page);
   const sqlEditor = new SqlEditorPage(page);
@@ -143,9 +145,10 @@ export async function setupImportExport(
 
   await connectionPage.goto();
   await connectionPage.waitForReady();
-  await connectionPage.setupConnection(
-    getDbConfig(engine, names.connectionName, sqliteDbPath),
-  );
+  await connectionPage.setupConnection({
+    ...getDbConfig(engine, names.connectionName, sqliteDbPath),
+    ...configOverride,
+  });
   await sqlEditor.open();
   if (engine === "postgresql") {
     await sqlEditor.selectContext("default", "public");

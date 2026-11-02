@@ -145,7 +145,16 @@ func mysqlTLSParam(ssl *dto.ConnectionSSLParams, serverName string) (string, err
 		case dto.SSLModeRequire:
 			return "skip-verify", nil
 		case dto.SSLModeVerifyCA, dto.SSLModeVerifyFull:
-			return "true", nil
+			if serverName == "" {
+				return "true", nil
+			}
+
+			name := fmt.Sprintf("dbo-mysql-tls-%d", mysqlTLSConfigCounter.Add(1))
+			if err := mysqldriver.RegisterTLSConfig(name, &tls.Config{ServerName: serverName, MinVersion: tls.VersionTLS12}); err != nil {
+				return "", fmt.Errorf("register mysql tls config: %w", err)
+			}
+
+			return name, nil
 		default:
 			return "preferred", nil
 		}

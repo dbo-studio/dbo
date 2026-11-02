@@ -8,6 +8,7 @@ type PostgresqlCreateConnectionParams struct {
 	Password *string              `json:"password"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 type PostgresqlUpdateConnectionParams struct {
@@ -18,6 +19,7 @@ type PostgresqlUpdateConnectionParams struct {
 	Database *string              `json:"database"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 type PostgresDatabaseParams struct {

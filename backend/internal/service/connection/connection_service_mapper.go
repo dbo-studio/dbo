@@ -33,6 +33,18 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 
 func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection, view connectionView) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
+
+	access := view.access
+	if access == "" {
+		if connection.OwnerID == ownerID {
+			access = "owner"
+		} else {
+			access = model.ConnectionShareViewer
+		}
+	}
+
+	options = databaseConnection.RedactSSHSecrets(options, access == model.ConnectionShareViewer)
+
 	if uri := gjson.Get(options, "uri").String(); uri != "" {
 		if cleaned, _, stripErr := databaseConnection.StripURIPassword(uri); stripErr == nil && cleaned != uri {
 			options, _ = sjson.Set(options, "uri", cleaned)
@@ -58,15 +70,6 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 	if policy.UnlockedUntil != nil {
 		formatted := policy.UnlockedUntil.UTC().Format(time.RFC3339)
 		unlockUntil = &formatted
-	}
-
-	access := view.access
-	if access == "" {
-		if connection.OwnerID == ownerID {
-			access = "owner"
-		} else {
-			access = model.ConnectionShareViewer
-		}
 	}
 
 	return dto.Connection{
