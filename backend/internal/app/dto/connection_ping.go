@@ -17,6 +17,7 @@ type (
 		ServerVersion string  `json:"serverVersion,omitempty"`
 		SSLNegotiated *bool   `json:"sslNegotiated,omitempty"`
 		SSLMode       *string `json:"sslMode,omitempty"`
+		SSHTunnel     bool    `json:"sshTunnel,omitempty"`
 	}
 )
 

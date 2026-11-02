@@ -11,12 +11,14 @@ import (
 )
 
 type IConnectionRepoImpl struct {
-	db *gorm.DB
+	db        *gorm.DB
+	cipherKey []byte
 }
 
-func NewConnectionRepo(db *gorm.DB) IConnectionRepo {
+func NewConnectionRepo(db *gorm.DB, cipherKey []byte) IConnectionRepo {
 	return &IConnectionRepoImpl{
-		db: db,
+		db:        db,
+		cipherKey: cipherKey,
 	}
 }
 
@@ -29,7 +31,36 @@ func (c IConnectionRepoImpl) Index(ctx context.Context) (*[]model.Connection, er
 		Order("id ASC").
 		Find(&connections)
 
+	c.openAll(connections)
+
 	return &connections, result.Error
+}
+
+func (c IConnectionRepoImpl) open(connection *model.Connection) {
+	connection.Options = openSSHSecrets(c.cipherKey, connection.Options)
+}
+
+func (c IConnectionRepoImpl) openAll(connections []model.Connection) {
+	for i := range connections {
+		c.open(&connections[i])
+	}
+}
+
+// save persists connection with SSH secrets encrypted, leaving the in-memory
+// struct decrypted for the caller.
+func (c IConnectionRepoImpl) save(ctx context.Context, connection *model.Connection) error {
+	plain := connection.Options
+
+	sealed, err := sealSSHSecrets(c.cipherKey, plain)
+	if err != nil {
+		return err
+	}
+
+	connection.Options = sealed
+	err = c.db.WithContext(ctx).Save(connection).Error
+	connection.Options = plain
+
+	return err
 }
 
 func (c IConnectionRepoImpl) Find(ctx context.Context, id int32) (*model.Connection, error) {
@@ -49,6 +80,7 @@ func (c IConnectionRepoImpl) FindByID(ctx context.Context, id int32) (*model.Con
 	var connection model.Connection
 
 	result := c.db.WithContext(ctx).Where("id = ?", id).First(&connection)
+	c.open(&connection)
 
 	return &connection, result.Error
 }
@@ -57,6 +89,7 @@ func (c IConnectionRepoImpl) ListAll(ctx context.Context) ([]model.Connection, e
 	var connections []model.Connection
 
 	result := c.db.WithContext(ctx).Order("id ASC").Find(&connections)
+	c.openAll(connections)
 
 	return connections, result.Error
 }
@@ -88,9 +121,7 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 		UpdatedAt:      nil,
 	}
 
-	result := c.db.WithContext(ctx).Save(connection)
-
-	return connection, result.Error
+	return connection, c.save(ctx, connection)
 }
 
 func (c IConnectionRepoImpl) Delete(ctx context.Context, connection *model.Connection) error {
@@ -107,9 +138,7 @@ func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Conne
 		connection.SafeMode = model.SafeMode(*req.SafeMode)
 	}
 
-	result := c.db.WithContext(ctx).Save(&connection)
-
-	return connection, result.Error
+	return connection, c.save(ctx, connection)
 }
 
 func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, exceptedConnection *model.Connection) error {
@@ -126,7 +155,5 @@ func (c IConnectionRepoImpl) MakeAllConnectionsNotDefault(ctx context.Context, e
 func (c IConnectionRepoImpl) UpdateVersion(ctx context.Context, connection *model.Connection, version string) (*model.Connection, error) {
 	connection.Version = lo.ToPtr(version)
 
-	result := c.db.WithContext(ctx).Save(&connection)
-
-	return connection, result.Error
+	return connection, c.save(ctx, connection)
 }

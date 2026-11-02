@@ -9,6 +9,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -22,9 +23,12 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 	ownerID := helper.CtxOwnerID(ctx)
 
 	if req.ID != nil {
-		if _, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID)); err != nil {
+		stored, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID))
+		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 		}
+
+		req.Options = databaseConnection.FillSSHSecrets(req.Options, stored.Options)
 	}
 
 	if _, err := s.createConnectionDto(&dto.CreateConnectionRequest{
@@ -38,6 +42,8 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		ConnectionType: req.Type,
 		Options:        string(req.Options),
 	}
+
+	sshCfg := databaseConnection.SSHOptions(connection)
 
 	start := time.Now()
 	dbConn, err := s.cm.GetConnection(ctx, connection, false)
@@ -70,6 +76,7 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		ServerVersion: version,
 		SSLNegotiated: sslNegotiated,
 		SSLMode:       sslMode,
+		SSHTunnel:     sshCfg != nil,
 	}, nil
 }
 
@@ -169,6 +176,8 @@ func classifyConnectionFailure(err error) (string, string) {
 
 	msg := strings.ToLower(err.Error())
 	switch {
+	case strings.Contains(msg, "ssh tunnel"):
+		return "ssh", err.Error()
 	case strings.Contains(msg, "file not found"),
 		strings.Contains(msg, "no such file"),
 		strings.Contains(msg, "unable to open database"):

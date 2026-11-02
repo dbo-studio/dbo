@@ -8,8 +8,10 @@ import type { ConnectionFormTabId, ConnectionFormTabsProps } from './types';
 export default function ConnectionFormTabs({
   general,
   ssl,
+  ssh,
   generalLabel,
-  sslLabel
+  sslLabel,
+  sshLabel
 }: ConnectionFormTabsProps): JSX.Element {
   const [tab, setTab] = useState<ConnectionFormTabId>('general');
 
@@ -38,7 +40,7 @@ export default function ConnectionFormTabs({
           tabIndex={0}
           data-testid='connection-tab-ssl'
           selected={tab === 'ssl'}
-          isLast
+          isLast={false}
           aria-selected={tab === 'ssl'}
           onClick={(): void => setTab('ssl')}
           onKeyDown={(e): void => {
@@ -50,12 +52,32 @@ export default function ConnectionFormTabs({
         >
           {sslLabel}
         </ConnectionFormTabStyled>
+        <ConnectionFormTabStyled
+          role='tab'
+          tabIndex={0}
+          data-testid='connection-tab-ssh'
+          selected={tab === 'ssh'}
+          isLast
+          aria-selected={tab === 'ssh'}
+          onClick={(): void => setTab('ssh')}
+          onKeyDown={(e): void => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setTab('ssh');
+            }
+          }}
+        >
+          {sshLabel}
+        </ConnectionFormTabStyled>
       </ConnectionFormTabsRootStyled>
       <ConnectionFormTabPanelStyled sx={{ display: tab === 'general' ? 'flex' : 'none' }}>
         {general}
       </ConnectionFormTabPanelStyled>
       <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssl' ? 'flex' : 'none' }}>
         {ssl}
+      </ConnectionFormTabPanelStyled>
+      <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssh' ? 'flex' : 'none' }}>
+        {ssh}
       </ConnectionFormTabPanelStyled>
     </Box>
   );

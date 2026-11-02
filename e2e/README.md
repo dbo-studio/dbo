@@ -27,6 +27,7 @@ npm test
 | Go toolchain        | Builds/runs backend via `go run . serve`                                   |
 | Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
 | Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql` |
+| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 2222; set `SSH_KNOWN_HOSTS_PATH` for the host-key test) |
 | TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 5433) |
 | Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 
@@ -89,6 +90,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
+| Connection SSH tunnel    | `pg/connection-ssh.spec.ts`, `mysql/connection-ssh.spec.ts` | password/key/jump auth via sample-sshd, host-key mismatch, secrets not returned |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Connection URI import    | `pg/connection-uri.spec.ts`                   | Paste URI → fields/SSL; save strips password; connect   |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |

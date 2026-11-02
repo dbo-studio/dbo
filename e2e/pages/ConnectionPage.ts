@@ -14,6 +14,17 @@ export interface ConnectionSslConfig {
   clientKey?: string;
 }
 
+export interface ConnectionSshConfig {
+  host: string;
+  port: string;
+  username: string;
+  authMethod: "password" | "key" | "agent";
+  password?: string;
+  privateKey?: string;
+  passphrase?: string;
+  jump?: Omit<ConnectionSshConfig, "jump">;
+}
+
 export interface ConnectionConfig {
   name: string;
   host: string;
@@ -23,6 +34,7 @@ export interface ConnectionConfig {
   database?: string;
   type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite";
   ssl?: ConnectionSslConfig;
+  ssh?: ConnectionSshConfig;
 }
 
 /**
@@ -151,6 +163,67 @@ export class ConnectionPage extends BasePage {
 
     if (config.ssl) {
       await this.applySslConfig(config.ssl);
+    }
+
+    if (config.ssh) {
+      await this.applySshConfig(config.ssh);
+    }
+  }
+
+  async openSshTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-ssh").click();
+    await expect(this.page.getByTestId("connection-ssh-fields")).toBeVisible();
+  }
+
+  async setSshEnabled(enabled: boolean): Promise<void> {
+    await this.openSshTab();
+    await this.page.getByTestId("ssh-enabled").setChecked(enabled);
+  }
+
+  private async fillSshHop(
+    prefix: "ssh" | "sshJump",
+    hop: Omit<ConnectionSshConfig, "jump">,
+  ): Promise<void> {
+    const labels = {
+      password: "Password",
+      key: "Private key",
+      agent: "SSH agent",
+    };
+    const page = this.page;
+    const root = page.getByTestId(`${prefix}-fields`);
+
+    await root.locator(`input[name="${prefix}Host"]`).fill(hop.host);
+    await root.locator(`input[name="${prefix}Port"]`).fill(hop.port);
+    await root.locator(`input[name="${prefix}Username"]`).fill(hop.username);
+    await root.locator(`.${prefix}-auth__control`).click();
+    await page
+      .getByRole("option", { name: labels[hop.authMethod], exact: true })
+      .click();
+
+    if (hop.authMethod === "password") {
+      await root
+        .locator(`input[name="${prefix}Password"]`)
+        .fill(hop.password ?? "");
+    }
+    if (hop.authMethod === "key") {
+      await page
+        .getByTestId(`${prefix}-private-key`)
+        .fill(hop.privateKey ?? "");
+      if (hop.passphrase) {
+        await root
+          .locator(`input[name="${prefix}Passphrase"]`)
+          .fill(hop.passphrase);
+      }
+    }
+  }
+
+  async applySshConfig(ssh: ConnectionSshConfig): Promise<void> {
+    await this.setSshEnabled(true);
+    await this.fillSshHop("ssh", ssh);
+
+    if (ssh.jump) {
+      await this.page.getByTestId("ssh-jump-enabled").check();
+      await this.fillSshHop("sshJump", ssh.jump);
     }
   }
 

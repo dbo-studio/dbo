@@ -33,6 +33,9 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 
 func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection, view connectionView) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
+
+	options = databaseConnection.RedactSSHSecrets(options)
+
 	if uri := gjson.Get(options, "uri").String(); uri != "" {
 		if cleaned, _, stripErr := databaseConnection.StripURIPassword(uri); stripErr == nil && cleaned != uri {
 			options, _ = sjson.Set(options, "uri", cleaned)

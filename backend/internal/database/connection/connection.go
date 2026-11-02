@@ -27,6 +27,7 @@ type IConnectionManager interface {
 
 type conn struct {
 	DB       *gorm.DB
+	Tunnel   *sshTunnel
 	LastUsed time.Time
 }
 
@@ -140,27 +141,37 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	var dialect gorm.Dialector
 
+	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
 	switch {
 	case databaseContract.IsMysqlFamily(connection.ConnectionType):
-		dialect = OpenMysqlConnection(connection)
+		dialect = OpenMysqlConnection(dialTarget)
 	case databaseContract.IsPostgresFamily(connection.ConnectionType):
-		dialect = OpenPostgresqlConnection(connection)
+		dialect = OpenPostgresqlConnection(dialTarget)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		dialect = OpenSQLiteConnection(connection)
 	case connection.ConnectionType == "sqlserver":
 		dialect = sqlserver.Open(connection.Name)
 	default:
+		_ = tunnel.Close()
+
 		cm.logger.Error(fmt.Errorf("unsupported database type: %s", connection.ConnectionType))
+
 		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)
 	}
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
+		_ = tunnel.Close()
+
 		return nil, apperror.DriverError(err)
 	}
 
 	if err := configureConnPool(db); err != nil {
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return nil, apperror.DriverError(err)
 	}
@@ -172,13 +183,14 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	// entry and discard ours.
 	if existing, ok := cm.connections[key]; ok {
 		cm.mu.Unlock()
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return existing.DB, nil
 	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
+		Tunnel:   tunnel,
 		LastUsed: time.Now(),
 	}
 	cm.mu.Unlock()
@@ -230,18 +242,27 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		}
 	}
 
-	dialect := OpenPostgresqlConnectionForDatabase(connection, databaseName)
+	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	dialect := OpenPostgresqlConnectionForDatabase(dialTarget, databaseName)
 	if dialect == nil {
+		_ = tunnel.Close()
+
 		return nil, fmt.Errorf("failed to open postgresql connection for database %q", databaseName)
 	}
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
+		_ = tunnel.Close()
+
 		return nil, apperror.DriverError(err)
 	}
 
 	if err := configureConnPool(db); err != nil {
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return nil, apperror.DriverError(err)
 	}
@@ -251,13 +272,14 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 	cm.mu.Lock()
 	if existing, ok := cm.connections[key]; ok {
 		cm.mu.Unlock()
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return existing.DB, nil
 	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
+		Tunnel:   tunnel,
 		LastUsed: time.Now(),
 	}
 	cm.mu.Unlock()
@@ -428,12 +450,31 @@ func (cm *ConnectionManager) closeConn(c *conn) error {
 		return nil
 	}
 
+	defer func() { _ = c.Tunnel.Close() }()
+
 	db, err := c.DB.DB()
 	if err != nil {
 		return err
 	}
 
 	return db.Close()
+}
+
+// openTunnelIfNeeded returns the connection to dial (rewritten to a local
+// tunnel port when SSH is enabled) and the tunnel owning that port, or the
+// original connection and a nil tunnel.
+func (cm *ConnectionManager) openTunnelIfNeeded(ctx context.Context, connection *model.Connection) (*model.Connection, *sshTunnel, error) {
+	cfg := SSHOptions(connection)
+	if cfg == nil {
+		return connection, nil, nil
+	}
+
+	tunnel, dialConn, err := openSSHTunnel(ctx, connection, cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return dialConn, tunnel, nil
 }
 
 func RegisterHistoryHooks(db *gorm.DB, historyRepo HistoryWriter, connectionID uint) {

@@ -2,6 +2,7 @@ export { BasePage } from "./BasePage";
 export {
   ConnectionPage,
   type ConnectionConfig,
+  type ConnectionSshConfig,
   type ConnectionSslConfig,
 } from "./ConnectionPage";
 export { SqlEditorPage } from "./SqlEditorPage";

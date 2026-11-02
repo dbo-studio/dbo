@@ -25,6 +25,10 @@ export const formatPingSuccessMessage = (diagnostics: PingConnectionResponseType
     details.push(`SSL mode ${diagnostics.sslMode}`);
   }
 
+  if (diagnostics.sshTunnel) {
+    details.push('SSH tunnel ok');
+  }
+
   return details.join(' | ');
 };
 

@@ -24,6 +24,7 @@ export type PingConnectionResponseType = {
   serverVersion?: string;
   sslNegotiated?: boolean;
   sslMode?: string;
+  sshTunnel?: boolean;
 };
 
 export type UpdateConnectionRequestType = {
@@ -51,6 +52,18 @@ export type ConnectionSSLOptionsType = {
   clientKey?: string;
 };
 
+export type ConnectionSSHOptionsType = {
+  enabled: boolean;
+  host?: string;
+  port?: number;
+  username?: string;
+  authMethod?: string;
+  password?: string;
+  privateKey?: string;
+  passphrase?: string;
+  jump?: ConnectionSSHOptionsType;
+};
+
 export type PostgresqlOptionsType = {
   host?: string;
   port?: number;
@@ -59,6 +72,7 @@ export type PostgresqlOptionsType = {
   database?: string;
   uri?: string;
   ssl?: ConnectionSSLOptionsType;
+  ssh?: ConnectionSSHOptionsType;
 };
 
 export type MysqlOptionsType = {
@@ -69,6 +83,7 @@ export type MysqlOptionsType = {
   database?: string;
   uri?: string;
   ssl?: ConnectionSSLOptionsType;
+  ssh?: ConnectionSSHOptionsType;
 };
 
 export type SQLiteOptionsType = {

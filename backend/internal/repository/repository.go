@@ -150,7 +150,7 @@ type Repository struct {
 func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 	return &Repository{
 		ConfigRepo:                 NewConfigRepo(db),
-		ConnectionRepo:             NewConnectionRepo(db),
+		ConnectionRepo:             NewConnectionRepo(db, aiCipherKey),
 		ConnectionShareRepo:        NewConnectionShareRepo(db),
 		ConnectionSharedSecretRepo: NewConnectionSharedSecretRepo(db),
 		WebSessionRepo:             NewWebSessionRepo(db),

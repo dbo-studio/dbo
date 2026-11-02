@@ -8,6 +8,7 @@ type MysqlCreateConnectionParams struct {
 	Password *string              `json:"password"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 type MysqlUpdateConnectionParams struct {
@@ -18,6 +19,7 @@ type MysqlUpdateConnectionParams struct {
 	Database *string              `json:"database"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 // MysqlTableParams is the general-tab payload for MySQL table create/edit.
