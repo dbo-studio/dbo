@@ -136,7 +136,7 @@ func (r *SQLiteRepository) getTableKeys(ctx context.Context, nodeID string) (*co
 }
 
 func (r *SQLiteRepository) getTableIndexes(ctx context.Context, nodeID string) (*contract.FormResponse, error) {
-	indexes, err := r.tableIndexes(ctx, nodeID)
+	indexes, err := r.editableIndexes(ctx, nodeID)
 	if err != nil {
 		return nil, err
 	}

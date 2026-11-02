@@ -15,9 +15,9 @@ type tableIndex struct {
 	Order   string
 }
 
-// tableIndexes lists user-created (origin 'c') indexes of a table. Indexes
+// editableIndexes lists user-created (origin 'c') indexes of a table. Indexes
 // backing PRIMARY KEY or UNIQUE constraints belong to the Keys tab.
-func (r *SQLiteRepository) tableIndexes(ctx context.Context, table string) ([]tableIndex, error) {
+func (r *SQLiteRepository) editableIndexes(ctx context.Context, table string) ([]tableIndex, error) {
 	type indexRow struct {
 		Name    string `gorm:"column:name"`
 		Unique  int    `gorm:"column:unique"`

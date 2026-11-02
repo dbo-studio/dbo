@@ -65,7 +65,7 @@ func (r *SQLiteRepository) preserveIndexes(ctx context.Context, params *dto.SQLi
 		params = &dto.SQLiteIndexParams{}
 	}
 
-	existing, err := r.tableIndexes(ctx, table)
+	existing, err := r.editableIndexes(ctx, table)
 	if err != nil {
 		return params
 	}
