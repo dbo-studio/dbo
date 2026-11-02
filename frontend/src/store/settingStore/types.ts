@@ -69,6 +69,21 @@ export type GeneralSettings = {
   logsPath: string;
   version: string;
   release: CheckUpdateResponseType | undefined;
+  /** Seconds a query holds its request before it moves to the background; 0 keeps it in the request. */
+  backgroundAfterSeconds: number;
+  /** Desktop: closing the window hides DBO in the tray instead of quitting. */
+  keepRunningInBackground: boolean;
+  notifications: NotificationSettings;
+};
+
+export type NotificationSettings = {
+  enabled: boolean;
+  /** Tell the system (OS or browser) only while DBO is not in front; in front, a toast does it. */
+  onlyWhenUnfocused: boolean;
+  sound: boolean;
+  query: boolean;
+  import: boolean;
+  export: boolean;
 };
 
 export type SetupSettings = {

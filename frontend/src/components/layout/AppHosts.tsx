@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
+import JobResultHost from '../common/JobProgressModal/JobResultHost';
 import DashboardNameDialog from '../common/DashboardNameDialog/DashboardNameDialog';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
@@ -10,6 +11,7 @@ export default function AppHosts(): JSX.Element {
     <>
       <ConfirmModal />
       <DashboardNameDialog />
+      <JobResultHost />
       <SafeModePasswordHost />
       <UpdateDialog />
     </>

@@ -13,6 +13,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
+	"github.com/goccy/go-json"
 )
 
 type IJobService interface {
@@ -40,14 +41,26 @@ func (i IJobServiceImpl) Detail(ctx context.Context, req *dto.JobDetailRequest) 
 	}
 
 	return &dto.JobDetailResponse{
-		ID:       job.ID,
-		Type:     string(job.Type),
-		Status:   string(job.Status),
-		Result:   job.Result,
-		Progress: job.Progress,
-		Message:  job.Message,
-		Error:    job.Error,
+		ID:          job.ID,
+		Type:        string(job.Type),
+		Status:      string(job.Status),
+		Result:      job.Result,
+		Progress:    job.Progress,
+		Message:     job.Message,
+		Error:       job.Error,
+		Data:        rawJSON(job.Data),
+		StartedAt:   job.StartedAt,
+		CompletedAt: job.CompletedAt,
 	}, nil
+}
+
+// rawJSON passes stored JSON through as it is, and leaves out what is not JSON.
+func rawJSON(data string) json.RawMessage {
+	if !json.Valid([]byte(data)) {
+		return nil
+	}
+
+	return json.RawMessage(data)
 }
 
 func (i IJobServiceImpl) Cancel(ctx context.Context, req *dto.JobDetailRequest) error {

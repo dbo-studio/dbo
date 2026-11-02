@@ -6,6 +6,7 @@ import SplashScreen from '@/components/base/SplashScreen/SplashScreen';
 import Layout from '@/components/layout/Layout.tsx';
 import MobileShell from '@/components/layout/MobileShell/MobileShell';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useEventStream } from '@/hooks/useEventStream';
 import { useStartup } from '@/hooks/useStartup';
 import locales from '@/locales';
 import { withMobileDensity } from '@/core/theme/mobileDensity';
@@ -27,6 +28,9 @@ export default function Home(): JSX.Element | null {
   const gate = useAuthStore((s) => s.gate);
   // Phones get the dedicated mobile shell; tablets keep the desktop layout with overlay sidebars.
   const { isMobile, isTablet, isTouch } = useLayoutMode();
+
+  // The live stream needs the signed-in session, so it opens once the app is past its gates.
+  useEventStream(ready && gate === 'ready');
 
   useEffect(() => {
     if (gate !== 'loading' || ready) {

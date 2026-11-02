@@ -11,6 +11,7 @@ import * as histories from './history';
 import * as importExport from './importExport';
 import * as job from './job';
 import * as mcp from './mcp';
+import * as notification from './notification';
 import * as query from './query';
 import * as question from './question';
 import * as safeMode from './safeMode';
@@ -36,6 +37,7 @@ const api = {
   aiAudit,
   aiChat,
   mcp,
+  notification,
   schema,
   safeMode
 };

@@ -110,9 +110,12 @@ export const IconTypes = {
   sparkles: 'Sparkles',
   calendar: 'Calendar',
   clock: 'Clock',
+  share: 'Share2',
+  link: 'Link',
   bookmark: 'Bookmark',
   layoutList: 'LayoutList',
   compare: 'GitCompare',
   thumbUp: 'ThumbsUp',
-  thumbDown: 'ThumbsDown'
+  thumbDown: 'ThumbsDown',
+  bell: 'Bell'
 };

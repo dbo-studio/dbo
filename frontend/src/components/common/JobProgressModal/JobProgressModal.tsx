@@ -1,7 +1,7 @@
 import api from '@/api';
 import Modal from '@/components/base/Modal/Modal';
 import { tools } from '@/core/utils/tools';
-import { useJobPolling } from '@/hooks/useJobPolling';
+import { useJob } from '@/hooks/useJob';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
 import { Box, Button, LinearProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
@@ -9,6 +9,9 @@ import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { JobProgressModalProps } from './types';
+
+const formatBytes = (bytes: number): string =>
+  bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 export function JobProgressModal({ open, jobId, onClose, title }: JobProgressModalProps) {
   const [isTauri, setIsTauri] = useState(false);
@@ -24,7 +27,7 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
     })();
   }, []);
 
-  const { job, error: pollingError, cancelJob } = useJobPolling(jobId);
+  const { job, cancelJob } = useJob(jobId === null || jobId === undefined || jobId === '' ? null : Number(jobId));
 
   const handleDownload = async () => {
     if (!jobId) return;
@@ -60,42 +63,65 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
     }
   };
 
-  return (
-    <Modal open={open} onClose={onClose} title={title} padding='24px'>
-      <Box sx={{ width: 'min(500px, calc(100vw - 64px))' }}>
-        {pollingError && (
-          <Typography variant='body2' gutterBottom color='error.main'>
-            {locales.error}: {pollingError}
-          </Typography>
-        )}
+  const finished = job?.status === 'completed' || job?.status === 'failed' || job?.status === 'canceled';
+  const canDownload = job?.status === 'completed' && job.type === 'export' && !isTauri;
 
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      padding='24px'
+      footer={
+        (job?.status === 'running' || finished) && (
+          <>
+            {job?.status === 'running' && (
+              <Button size='small' variant='outlined' onClick={() => void cancelJob()}>
+                {locales.cancel_job}
+              </Button>
+            )}
+            {finished && (
+              <Button size='small' onClick={onClose}>
+                {locales.close}
+              </Button>
+            )}
+            {canDownload && (
+              <Button size='small' variant='contained' onClick={() => void handleDownload()}>
+                {locales.download_file}
+              </Button>
+            )}
+          </>
+        )
+      }
+    >
+      <Box sx={{ width: 'min(500px, calc(100vw - 64px))' }}>
         {job && (
           <>
             <Typography variant='body2' gutterBottom color='textSubdued'>
               {getStatusMessage()}
             </Typography>
 
+            {job.status === 'completed' && job.type === 'export' && job.result && (
+              <Typography variant='body2' gutterBottom data-testid='export-result'>
+                {[
+                  job.result.fileName,
+                  job.result.format?.toUpperCase(),
+                  job.result.rows === undefined ? undefined : `${job.result.rows} ${locales.ai_unit_rows}`,
+                  job.result.size === undefined ? undefined : formatBytes(job.result.size),
+                  job.startedAt && job.completedAt
+                    ? `${Math.max(1, Math.round((Date.parse(job.completedAt) - Date.parse(job.startedAt)) / 1000))} s`
+                    : undefined
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Typography>
+            )}
+
             <LinearProgress variant='determinate' value={job.progress} sx={{ mb: 2 }} />
 
             <Typography variant='body2' color='textSubdued'>
               {locales.progress}: {job.progress}%
             </Typography>
-
-            {job.status === 'running' && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='outlined' onClick={() => void cancelJob()} fullWidth>
-                  {locales.cancel_job}
-                </Button>
-              </Box>
-            )}
-
-            {job.status === 'completed' && job.type === 'export' && !isTauri && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='contained' onClick={() => void handleDownload()} fullWidth>
-                  {locales.download_file}
-                </Button>
-              </Box>
-            )}
 
             {job.status === 'completed' &&
               job.type === 'import' &&
@@ -125,14 +151,6 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
                   </List>
                 </Box>
               )}
-
-            {(job.status === 'completed' || job.status === 'failed' || job.status === 'canceled') && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='outlined' onClick={onClose} fullWidth>
-                  {locales.close}
-                </Button>
-              </Box>
-            )}
           </>
         )}
       </Box>

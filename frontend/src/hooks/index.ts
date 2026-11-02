@@ -3,7 +3,6 @@ export * from './useContextMenu';
 export * from './useCurrentConnection';
 export * from './useDesktopMenu';
 export * from './useEditorSessionContext';
-export * from './useJobPolling';
 export * from './useLayoutMode';
 export * from './useResponsiveSidebar';
 export * from './useScopedSelectAll';
