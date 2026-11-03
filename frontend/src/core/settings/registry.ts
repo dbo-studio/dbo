@@ -65,17 +65,17 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     group: 'prefs'
   },
   {
-    id: 5,
-    name: locales.about,
-    icon: 'about',
-    keywords: ['about', 'version', 'license', 'docs'],
-    group: 'prefs'
-  },
-  {
     id: 7,
     name: locales.notifications,
     icon: 'bell',
     keywords: ['notifications', 'alerts', 'background', 'tray', 'sound', 'query', 'export', 'import'],
+    group: 'prefs'
+  },
+  {
+    id: 5,
+    name: locales.about,
+    icon: 'about',
+    keywords: ['about', 'version', 'license', 'docs'],
     group: 'prefs'
   },
   {
