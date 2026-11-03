@@ -77,7 +77,9 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
         // What the test found comes in the result; the job's own message is generic once it completes.
         if (job.type === 'restore_drill') {
           const found = (job.result as { data?: { status?: string; message?: string } } | undefined)?.data;
-          return found?.message ? `${found.status === 'skipped' ? locales.backup_drill_skipped : locales.backup_drill_passed}: ${found.message}` : locales.backup_drill_passed;
+          return found?.message
+            ? `${found.status === 'skipped' ? locales.backup_drill_skipped : locales.backup_drill_passed}: ${found.message}`
+            : locales.backup_drill_passed;
         }
         return locales.export_completed_successfully;
       case 'failed':

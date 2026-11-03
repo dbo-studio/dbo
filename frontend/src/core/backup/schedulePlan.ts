@@ -44,7 +44,11 @@ const formatterFor = (timezone: string): Intl.DateTimeFormat => {
 
 /** The wall clock in `timezone` at an instant. Throws RangeError for an unknown zone. */
 const localParts = (ms: number, timezone: string): LocalParts => {
-  const p = Object.fromEntries(formatterFor(timezone).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  const p = Object.fromEntries(
+    formatterFor(timezone)
+      .formatToParts(new Date(ms))
+      .map((x) => [x.type, x.value])
+  );
   return {
     year: Number(p.year),
     month: Number(p.month),

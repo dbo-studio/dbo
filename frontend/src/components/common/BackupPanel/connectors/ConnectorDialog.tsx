@@ -65,63 +65,61 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
     setConfig((prev) => ({ ...prev, [key]: value }));
 
   const renderField = (field) => {
-          if (field.input === 'bool') {
-            return (
-              <FormControlLabel
-                key={field.key}
-                label={field.label}
-                control={
-                  <Checkbox
-                    checked={config[field.key] === true}
-                    onChange={(e) => setConfigValue(field.key, e.target.checked)}
-                  />
-                }
-              />
-            );
-          }
-          if (field.input === 'select') {
-            return (
-              <SelectInput
-                key={field.key}
-                emptylabel=''
-                label={field.label}
-                value={String(config[field.key] ?? field.options?.[0]?.value ?? '')}
-                onChange={(e) => setConfigValue(field.key, (e as SelectInputOption).value as string)}
-                options={field.options ?? []}
-              />
-            );
-          }
-          if (field.secret) {
-            return (
-              <FieldInput
-                margin='none'
-                key={field.key}
-                name={`connector-${field.key}`}
-                type={field.input === 'textarea' ? 'text' : 'password'}
-                multiline={field.input === 'textarea'}
-                minRows={field.input === 'textarea' ? 3 : undefined}
-                label={field.label}
-                value={secrets[field.key] ?? ''}
-                placeholder={connector?.secretsSet[field.key] ? locales.connector_secret_saved : undefined}
-                onChange={(e) => setSecrets((prev) => ({ ...prev, [field.key]: e.target.value }))}
-              />
-            );
-          }
-          return (
-            <FieldInput
-              margin='none'
-              key={field.key}
-              name={`connector-${field.key}`}
-              type={field.input === 'number' ? 'number' : 'text'}
-              label={field.label}
-              placeholder={field.placeholder}
-              value={String(config[field.key] ?? '')}
-              onChange={(e) =>
-                setConfigValue(field.key, field.input === 'number' ? Number(e.target.value) : e.target.value)
-              }
+    if (field.input === 'bool') {
+      return (
+        <FormControlLabel
+          key={field.key}
+          label={field.label}
+          control={
+            <Checkbox
+              checked={config[field.key] === true}
+              onChange={(e) => setConfigValue(field.key, e.target.checked)}
             />
-          );
-        };
+          }
+        />
+      );
+    }
+    if (field.input === 'select') {
+      return (
+        <SelectInput
+          key={field.key}
+          emptylabel=''
+          label={field.label}
+          value={String(config[field.key] ?? field.options?.[0]?.value ?? '')}
+          onChange={(e) => setConfigValue(field.key, (e as SelectInputOption).value as string)}
+          options={field.options ?? []}
+        />
+      );
+    }
+    if (field.secret) {
+      return (
+        <FieldInput
+          margin='none'
+          key={field.key}
+          name={`connector-${field.key}`}
+          type={field.input === 'textarea' ? 'text' : 'password'}
+          multiline={field.input === 'textarea'}
+          minRows={field.input === 'textarea' ? 3 : undefined}
+          label={field.label}
+          value={secrets[field.key] ?? ''}
+          placeholder={connector?.secretsSet[field.key] ? locales.connector_secret_saved : undefined}
+          onChange={(e) => setSecrets((prev) => ({ ...prev, [field.key]: e.target.value }))}
+        />
+      );
+    }
+    return (
+      <FieldInput
+        margin='none'
+        key={field.key}
+        name={`connector-${field.key}`}
+        type={field.input === 'number' ? 'number' : 'text'}
+        label={field.label}
+        placeholder={field.placeholder}
+        value={String(config[field.key] ?? '')}
+        onChange={(e) => setConfigValue(field.key, field.input === 'number' ? Number(e.target.value) : e.target.value)}
+      />
+    );
+  };
 
   return (
     <Modal
@@ -199,7 +197,12 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
         {spec.fields.filter((f) => !f.advanced).map(renderField)}
         {spec.fields.some((f) => f.advanced) && (
           <>
-            <Button size='small' sx={{ alignSelf: 'flex-start' }} onClick={() => setShowAdvanced((v) => !v)} data-testid='connector-advanced'>
+            <Button
+              size='small'
+              sx={{ alignSelf: 'flex-start' }}
+              onClick={() => setShowAdvanced((v) => !v)}
+              data-testid='connector-advanced'
+            >
               {locales.connector_advanced}
             </Button>
             <Collapse in={showAdvanced || needsOwnApp} unmountOnExit>

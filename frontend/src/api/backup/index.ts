@@ -152,13 +152,18 @@ export const testConnector = async (kind: ConnectorKind, id: number): Promise<vo
 };
 
 /** Checks a connector as typed in the form without saving it. id 0 means one not saved yet. */
-export const testConnectorDraft = async (kind: ConnectorKind, id: number, request: ConnectorRequestType): Promise<void> => {
+export const testConnectorDraft = async (
+  kind: ConnectorKind,
+  id: number,
+  request: ConnectorRequestType
+): Promise<void> => {
   await api.post(`${connectorBase(kind)}/${id}/test`, request);
 };
 
 /** Which sign-in types work with one click here, with no OAuth app of the user's own. */
 export const oauthProviders = async (): Promise<Record<string, boolean>> => {
-  return (await api.get<{ data: Record<string, boolean> }>(`${connectorBase('destination')}/oauth/providers`)).data.data;
+  return (await api.get<{ data: Record<string, boolean> }>(`${connectorBase('destination')}/oauth/providers`)).data
+    .data;
 };
 
 export const oauthUrl = async (id: number): Promise<string> => {

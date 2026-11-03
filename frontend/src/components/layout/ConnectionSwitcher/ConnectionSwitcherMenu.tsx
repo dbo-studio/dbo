@@ -73,7 +73,9 @@ export default function ConnectionSwitcherMenu({
         <SwitcherListStyled role='listbox'>
           {shown.length === 0 && (
             <Typography variant='body2' color='textSubdued' sx={{ p: 1.5 }}>
-              {connections.length === 0 ? locales.connection_switcher_no_connections : locales.connection_switcher_empty}
+              {connections.length === 0
+                ? locales.connection_switcher_no_connections
+                : locales.connection_switcher_empty}
             </Typography>
           )}
           <SortableList

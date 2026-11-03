@@ -10,7 +10,8 @@ export type Retention = { keepSmart: boolean; keepLast: number; keepDays: number
 
 type Mode = 'smart' | 'last' | 'days' | 'all';
 
-const modeOf = (r: Retention): Mode => (r.keepSmart ? 'smart' : r.keepLast > 0 ? 'last' : r.keepDays > 0 ? 'days' : 'all');
+const modeOf = (r: Retention): Mode =>
+  r.keepSmart ? 'smart' : r.keepLast > 0 ? 'last' : r.keepDays > 0 ? 'days' : 'all';
 
 const STRIP_DAYS = 60;
 
@@ -116,7 +117,9 @@ export default function RetentionPicker({
         {mode === 'all'
           ? locales.backup_keep_result_all
           : locales.backup_keep_result_n.replace('{n}', String(kept)) +
-            (lastSize > 0 ? ` · ${locales.backup_keep_result_size.replace('{size}', formatSize(kept * lastSize))}` : '')}
+            (lastSize > 0
+              ? ` · ${locales.backup_keep_result_size.replace('{size}', formatSize(kept * lastSize))}`
+              : '')}
       </Typography>
       {mode !== 'all' && (
         <Typography variant='caption' color='textSubdued' sx={{ mt: -1 }}>

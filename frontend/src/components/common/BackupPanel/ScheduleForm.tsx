@@ -185,8 +185,13 @@ export default function ScheduleForm({
     {
       label: locales.backup_plan_protection,
       value:
-        [compress ? locales.backup_compress : '', encrypt ? locales.backup_encrypted : '', verifyRestore ? locales.backup_plan_drill : ''].filter(Boolean).join(' · ') ||
-        locales.backup_plan_none
+        [
+          compress ? locales.backup_compress : '',
+          encrypt ? locales.backup_encrypted : '',
+          verifyRestore ? locales.backup_plan_drill : ''
+        ]
+          .filter(Boolean)
+          .join(' · ') || locales.backup_plan_none
     },
     {
       label: locales.backup_plan_alerts,

@@ -43,7 +43,11 @@ export default function ProtectPicker({
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Switch checked={verifyRestore} onChange={(e) => onVerifyRestore(e.target.checked)} data-testid='protect-drill' />
+        <Switch
+          checked={verifyRestore}
+          onChange={(e) => onVerifyRestore(e.target.checked)}
+          data-testid='protect-drill'
+        />
         <Box>
           <Typography variant='body2'>{locales.backup_protect_drill}</Typography>
           <Typography variant='caption' color='textSubdued'>

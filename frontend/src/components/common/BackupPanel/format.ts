@@ -24,7 +24,8 @@ export const describeCadence = (
     return `${locales.backup_schedule_weekly}, ${locales[`weekday_${s.weekday}` as keyof typeof locales]} ${time}`;
   }
 
-  if (s.cadence === 'monthly') return `${locales.backup_schedule_monthly}, ${locales.backup_schedule_month_day} ${s.monthDay ?? 1} ${time}`;
+  if (s.cadence === 'monthly')
+    return `${locales.backup_schedule_monthly}, ${locales.backup_schedule_month_day} ${s.monthDay ?? 1} ${time}`;
 
   return `${locales.backup_schedule_daily} ${time}`;
 };

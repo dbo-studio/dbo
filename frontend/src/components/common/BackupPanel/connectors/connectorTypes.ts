@@ -70,7 +70,12 @@ export const CONNECTOR_TYPES: ConnectorTypeSpec[] = [
     description: locales.connector_webdav_hint,
     icon: 'cloud',
     fields: [
-      { key: 'url', label: locales.connector_url, placeholder: 'https://cloud.example.com/remote.php/dav/files/me', required: true },
+      {
+        key: 'url',
+        label: locales.connector_url,
+        placeholder: 'https://cloud.example.com/remote.php/dav/files/me',
+        required: true
+      },
       { key: 'username', label: locales.connector_username },
       { key: 'password', label: locales.connector_password, secret: true },
       { key: 'path', label: locales.connector_remote_path, placeholder: 'backups' }
