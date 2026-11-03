@@ -12,6 +12,8 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
   display: 'flex',
   alignItems: 'center',
   padding: `0 ${theme.spacing(2)}`,
+  boxSizing: 'border-box',
+  border: `1px solid ${theme.palette.divider}`,
   justifyContent: 'space-between',
   overflow: 'hidden',
   background:

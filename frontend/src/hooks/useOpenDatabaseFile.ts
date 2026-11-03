@@ -33,7 +33,7 @@ export const useOpenDatabaseFile = (): UseOpenDatabaseFileReturn => {
   const openDatabaseFile = useCallback(
     async (path: string): Promise<void> => {
       try {
-        const isSaved = (c: ConnectionType): boolean => c.type === 'sqlite' && c.options.path === path;
+        const isSaved = (c: ConnectionType): boolean => c.type === 'sqlite' && 'path' in c.options && c.options.path === path;
         let connection = useConnectionStore.getState().connections?.find(isSaved);
         if (!connection) {
           await api.connection.createConnection({ name: baseName(path), type: 'sqlite', options: { path } });

@@ -45,7 +45,9 @@ export default function ConnectionBox(): JSX.Element {
     <ConnectionBoxStyled status={status}>
       <ConnectionBoxContentStyled>
         <Stack direction='row' spacing={1} sx={{ minWidth: 0, width: '100%', alignItems: 'center' }}>
-          {currentConnection && loading === 'finished' && <CustomIcon type={engineIconOf(currentConnection)} size='s' />}
+          {currentConnection && loading === 'finished' && (
+            <CustomIcon type={engineIconOf(currentConnection)} size='s' />
+          )}
           <Typography variant='body2' component='h6' noWrap sx={{ flex: 1, minWidth: 0 }}>
             {loading === 'loading' && locales.connecting}
             {loading === 'finished' && info}

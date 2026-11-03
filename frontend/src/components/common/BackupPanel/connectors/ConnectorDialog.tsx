@@ -9,7 +9,7 @@ import { Box, Button, Checkbox, Collapse, FormControlLabel, Typography } from '@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
-import { CONNECTOR_TYPES, type ConnectorTypeSpec, specOf } from './connectorTypes';
+import { CONNECTOR_TYPES, type ConnectorTypeSpec, type FieldSpec, specOf } from './connectorTypes';
 
 const FORM_ID = 'connector-form';
 
@@ -64,7 +64,7 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
   const setConfigValue = (key: string, value: string | number | boolean): void =>
     setConfig((prev) => ({ ...prev, [key]: value }));
 
-  const renderField = (field) => {
+  const renderField = (field: FieldSpec): JSX.Element => {
     if (field.input === 'bool') {
       return (
         <FormControlLabel
