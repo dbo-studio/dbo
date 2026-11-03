@@ -21,6 +21,7 @@ const endpoint = {
   history: (): string => '/backups/history',
   download: (id: number): string => `/backups/${id}/download`,
   verify: (id: number): string => `/backups/${id}/verify`,
+  drill: (id: number): string => `/backups/${id}/drill`,
   tools: (): string => '/backups/tools',
   toolDownloads: (): string => '/backups/tools/downloads',
   installTool: (): string => '/backups/tools/install',
@@ -104,6 +105,11 @@ export const runSchedule = async (id: number): Promise<BackupJobResponseType> =>
 
 export const verify = async (id: number, passphrase?: string): Promise<BackupVerifyResultType> => {
   return (await api.post<{ data: BackupVerifyResultType }>(endpoint.verify(id), { passphrase })).data.data;
+};
+
+/** Restores a backup into a scratch database that is dropped afterwards. Returns the job to follow. */
+export const drillBackup = async (id: number, passphrase?: string): Promise<{ jobId: number }> => {
+  return (await api.post<{ data: { jobId: number } }>(endpoint.drill(id), { passphrase })).data.data;
 };
 
 export const setToolPath = async (name: string, path: string): Promise<BackupToolType> => {

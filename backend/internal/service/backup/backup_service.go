@@ -34,6 +34,8 @@ type IBackupService interface {
 	History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error)
 	Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error)
 	Verify(ctx context.Context, req *dto.BackupVerifyRequest) (*dto.BackupVerifyResponse, error)
+	// Drill queues a restore test: the backup is restored into a scratch database that is dropped afterwards.
+	Drill(ctx context.Context, req *dto.BackupDrillRequest) (*dto.BackupDrillResponse, error)
 	Tools(ctx context.Context) []dto.BackupTool
 	ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error)
 	InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error)
@@ -461,6 +463,9 @@ func artifactResponse(a model.BackupArtifact) dto.BackupArtifactResponse {
 		DestinationID: a.DestinationID,
 		RemoteStatus:  a.RemoteStatus,
 		RemoteError:   a.RemoteError,
+		DrillStatus:   a.DrillStatus,
+		DrillMessage:  a.DrillMessage,
+		DrilledAt:     a.DrilledAt,
 	}
 }
 
@@ -481,6 +486,41 @@ func withoutPassphrase(req dto.RestoreRequest) dto.RestoreRequest {
 	req.Passphrase = ""
 
 	return req
+}
+
+// Drill queues a restore test of one backup. It creates and drops a scratch database on the
+// connection's server, so it needs the same right as a restore.
+func (s IBackupServiceImpl) Drill(ctx context.Context, req *dto.BackupDrillRequest) (*dto.BackupDrillResponse, error) {
+	ownerID := helper.CtxOwnerID(ctx)
+
+	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ID, ownerID)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrBackupNotFound)
+	}
+
+	if artifact.Status != model.BackupStatusCompleted {
+		return nil, apperror.BadRequest(apperror.ErrBackupNotCompleted)
+	}
+
+	connection, err := s.connectionRepo.Find(ctx, int32(artifact.ConnectionID))
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	if !s.canWrite(ctx, connection, ownerID) {
+		return nil, apperror.Forbidden(apperror.ErrConnectionEditForbidden)
+	}
+
+	job, err := s.jobManager.CreateJob(model.JobTypeRestoreDrill, ownerID, helper.StructToJSON(dto.RestoreDrillJob{OwnerID: ownerID, ArtifactID: artifact.ID}))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	if req.Passphrase != "" {
+		StashPassphrase(job.ID, req.Passphrase)
+	}
+
+	return &dto.BackupDrillResponse{JobID: int32(job.ID)}, nil
 }
 
 // Verify checks that a backup file is intact: its checksum matches the one

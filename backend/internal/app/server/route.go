@@ -206,6 +206,7 @@ func (r *Server) routing() {
 	backup.Delete("/tools/:driver/:version", r.handlers.Backup.RemoveTool)
 	backup.Get("/history", r.handlers.Backup.History)
 	backup.Post("/:id/verify", r.handlers.Backup.Verify)
+	backup.Post("/:id/drill", r.handlers.Backup.Drill)
 	backup.Get("/:id/download", r.handlers.Backup.Download)
 
 	schedules := api.Group("backup-schedules")

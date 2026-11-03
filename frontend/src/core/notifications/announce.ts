@@ -24,7 +24,7 @@ const claim = (id: number): boolean => {
 };
 
 const settingKey = (jobType: Exclude<NotificationType['jobType'], 'subscription'>): keyof NotificationSettings =>
-  jobType === 'restore' || jobType === 'tool_install' ? 'backup' : jobType;
+  jobType === 'restore' || jobType === 'restore_drill' || jobType === 'tool_install' ? 'backup' : jobType;
 
 /** How long after a desktop notification a window focus counts as the click on it. */
 const CLICK_WINDOW_MS = 30_000;

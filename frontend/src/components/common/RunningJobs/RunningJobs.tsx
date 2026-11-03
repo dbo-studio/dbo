@@ -10,6 +10,7 @@ import { RunningJobRowStyled } from './RunningJobs.styled';
 const TYPE_LABEL: Record<string, string> = {
   backup: locales.job_type_backup,
   restore: locales.job_type_restore,
+  restore_drill: locales.job_type_restore_drill,
   export: locales.job_type_export,
   import: locales.job_type_import,
   query: locales.job_type_query,

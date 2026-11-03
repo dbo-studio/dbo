@@ -109,19 +109,90 @@ func PlanNativeDump(ctx context.Context, connection *model.Connection, password,
 	return dump, nil
 }
 
+// nativeClient finds the psql or mysql that talks to a connection's server, and where that server is.
+func nativeClient(ctx context.Context, connection *model.Connection, password string) (*NativeCommand, dumpTarget, error) {
+	target, err := resolveDumpTarget(connection)
+	if err != nil {
+		return nil, dumpTarget{}, err
+	}
+
+	if target.needsCertFiles {
+		return nil, dumpTarget{}, fmt.Errorf("%w: certificate files are not supported yet", ErrNativeUnavailable)
+	}
+
+	name := "mysql"
+	if databaseContract.IsPostgresFamily(connection.ConnectionType) {
+		name = "psql"
+	}
+
+	tool, ok := bestTool(DetectTools(ctx), name)
+	if !ok {
+		return nil, dumpTarget{}, fmt.Errorf("%w: %s not found", ErrNativeUnavailable, name)
+	}
+
+	return &NativeCommand{Tool: name, Version: tool.Version, Path: tool.Path, secret: password}, target, nil
+}
+
+// PlanNativeQuery builds the psql or mysql command that runs one statement against database (the
+// connection's own when empty) and prints bare values, so the caller can read a number back.
+func PlanNativeQuery(ctx context.Context, connection *model.Connection, password, database, statement string) (*NativeCommand, error) {
+	cmd, target, err := nativeClient(ctx, connection, password)
+	if err != nil {
+		return nil, err
+	}
+
+	database = lo.CoalesceOrEmpty(database, target.database)
+
+	if cmd.Tool == "psql" {
+		cmd.Args = []string{
+			"--host", target.host, "--port", strconv.Itoa(int(target.port)), "--username", target.user,
+			"--dbname", database, "--no-password", "--quiet", "--tuples-only", "--no-align", "--command", statement,
+		}
+		cmd.Env = []string{"PGPASSWORD=" + password, "PGSSLMODE=" + pgSSLMode(target.sslMode)}
+
+		return cmd, nil
+	}
+
+	cmd.Args = []string{
+		"--host", target.host, "--port", strconv.Itoa(int(target.port)), "--user", target.user, "--protocol=tcp",
+		"--batch", "--skip-column-names", "--execute", statement, database,
+	}
+	if mode := mysqlSSLMode(target.sslMode); mode != "" {
+		cmd.Args = append([]string{"--ssl-mode=" + mode}, cmd.Args...)
+	}
+
+	cmd.Env = []string{"MYSQL_PWD=" + password}
+
+	return cmd, nil
+}
+
 // Run executes the command and returns its redacted stderr. The job context
 // cancels the process.
 func (d *NativeCommand) Run(ctx context.Context) (string, error) {
-	var stderr bytes.Buffer
+	_, stderr, err := d.exec(ctx)
+
+	return stderr, err
+}
+
+// Output runs the command and returns its standard output, for a statement that answers with a value.
+func (d *NativeCommand) Output(ctx context.Context) (string, error) {
+	stdout, _, err := d.exec(ctx)
+
+	return strings.TrimSpace(stdout), err
+}
+
+func (d *NativeCommand) exec(ctx context.Context) (string, string, error) {
+	var stdout, stderr bytes.Buffer
 
 	cmd := exec.CommandContext(ctx, d.Path, d.Args...) //nolint:gosec // path comes from tool detection, args are built here
 	cmd.Env = append(cmd.Environ(), d.Env...)
+	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if d.StdinPath != "" {
 		in, err := os.Open(d.StdinPath)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		defer func() { _ = in.Close() }()
@@ -131,13 +202,13 @@ func (d *NativeCommand) Run(ctx context.Context) (string, error) {
 
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() != nil {
-			return "", ctx.Err()
+			return "", "", ctx.Err()
 		}
 
-		return "", fmt.Errorf("%s failed: %s", d.Tool, d.redact(stderr.String()))
+		return "", "", fmt.Errorf("%s failed: %s", d.Tool, d.redact(stderr.String()))
 	}
 
-	return d.redactAll(stderr.String()), nil
+	return stdout.String(), d.redactAll(stderr.String()), nil
 }
 
 func (d *NativeCommand) redactAll(output string) string {
@@ -305,28 +376,12 @@ func majorOf(version string) string {
 // PlanNativeRestore builds the psql or mysql command that replays a plain SQL
 // artifact into database. Missing tools report ErrNativeUnavailable.
 func PlanNativeRestore(ctx context.Context, connection *model.Connection, password, database, filePath string) (*NativeCommand, error) {
-	target, err := resolveDumpTarget(connection)
+	cmd, target, err := nativeClient(ctx, connection, password)
 	if err != nil {
 		return nil, err
 	}
 
-	if target.needsCertFiles {
-		return nil, fmt.Errorf("%w: certificate files are not supported yet", ErrNativeUnavailable)
-	}
-
-	name := "mysql"
-	if databaseContract.IsPostgresFamily(connection.ConnectionType) {
-		name = "psql"
-	}
-
-	tool, ok := bestTool(DetectTools(ctx), name)
-	if !ok {
-		return nil, fmt.Errorf("%w: %s not found", ErrNativeUnavailable, name)
-	}
-
-	cmd := &NativeCommand{Tool: name, Version: tool.Version, Path: tool.Path, secret: password}
-
-	if name == "psql" {
+	if cmd.Tool == "psql" {
 		// Errors do not stop the replay: pg_dump output can contain statements
 		// that are harmless on an existing database. The processor judges them.
 		cmd.Args = []string{

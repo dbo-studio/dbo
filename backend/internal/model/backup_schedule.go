@@ -50,10 +50,12 @@ type BackupSchedule struct {
 	// four weeks, per month for a year.
 	KeepSmart bool `gorm:"not null;default:false"`
 	// RetryMax is how many times a failed run is tried again; RetryCount is the tries used so far.
-	RetryMax   int `gorm:"not null;default:0"`
-	RetryCount int `gorm:"not null;default:0"`
-	NextRunAt  *time.Time
-	LastRunAt  *time.Time
+	RetryMax int `gorm:"not null;default:0"`
+	// VerifyRestore tests a restore into a scratch database after every good run.
+	VerifyRestore bool `gorm:"not null;default:false"`
+	RetryCount    int  `gorm:"not null;default:0"`
+	NextRunAt     *time.Time
+	LastRunAt     *time.Time
 	// LastSuccessAt and LastSize describe the newest completed run.
 	LastSuccessAt *time.Time
 	LastSize      int64      `gorm:"not null;default:0"`

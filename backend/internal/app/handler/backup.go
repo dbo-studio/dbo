@@ -210,6 +210,21 @@ func (h BackupHandler) Upload(c fiber.Ctx) error {
 	return response.SuccessBuilder().WithData(result).Send(c)
 }
 
+// Drill queues a restore test of a backup. The body is optional: it only carries a passphrase.
+func (h BackupHandler) Drill(c fiber.Ctx) error {
+	req := new(dto.BackupDrillRequest)
+	_ = c.Bind().Body(req)
+	req.ID = fiber.Params[uint](c, "id")
+
+	result, err := h.service.Drill(c, req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
 func (h BackupHandler) Verify(c fiber.Ctx) error {
 	req := new(dto.BackupVerifyRequest)
 	// The body is optional: it only carries a passphrase.

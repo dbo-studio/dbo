@@ -9,21 +9,22 @@ import (
 
 type (
 	BackupScheduleRequest struct {
-		ConnectionID int32  `json:"connectionId"`
-		Name         string `json:"name"`
-		Database     string `json:"database"`
-		Schema       string `json:"schema"`
-		Cadence      string `json:"cadence"`
-		Hour         int    `json:"hour"`
-		Minute       int    `json:"minute"`
-		Weekday      int    `json:"weekday"`
-		MonthDay     int    `json:"monthDay"`
-		Timezone     string `json:"timezone"`
-		KeepLast     int    `json:"keepLast"`
-		KeepDays     int    `json:"keepDays"`
-		KeepSmart    bool   `json:"keepSmart"`
-		RetryMax     int    `json:"retryMax"`
-		Compress     bool   `json:"compress"`
+		ConnectionID  int32  `json:"connectionId"`
+		Name          string `json:"name"`
+		Database      string `json:"database"`
+		Schema        string `json:"schema"`
+		Cadence       string `json:"cadence"`
+		Hour          int    `json:"hour"`
+		Minute        int    `json:"minute"`
+		Weekday       int    `json:"weekday"`
+		MonthDay      int    `json:"monthDay"`
+		Timezone      string `json:"timezone"`
+		KeepLast      int    `json:"keepLast"`
+		KeepDays      int    `json:"keepDays"`
+		KeepSmart     bool   `json:"keepSmart"`
+		RetryMax      int    `json:"retryMax"`
+		VerifyRestore bool   `json:"verifyRestore"`
+		Compress      bool   `json:"compress"`
 		// DestinationID also copies each backup to a destination; ChannelIDs and NotifyOn
 		// ("failure", "always" or "never") say who hears about each run.
 		DestinationID uint   `json:"destinationId"`
@@ -50,6 +51,7 @@ type (
 		KeepDays      *int    `json:"keepDays"`
 		KeepSmart     *bool   `json:"keepSmart"`
 		RetryMax      *int    `json:"retryMax"`
+		VerifyRestore *bool   `json:"verifyRestore"`
 		Compress      *bool   `json:"compress"`
 		DestinationID *uint   `json:"destinationId"`
 		ChannelIDs    *[]uint `json:"channelIds"`
@@ -75,6 +77,7 @@ type (
 		KeepDays      int        `json:"keepDays"`
 		KeepSmart     bool       `json:"keepSmart"`
 		RetryMax      int        `json:"retryMax"`
+		VerifyRestore bool       `json:"verifyRestore"`
 		Compress      bool       `json:"compress"`
 		Encrypted     bool       `json:"encrypted"`
 		DestinationID uint       `json:"destinationId"`

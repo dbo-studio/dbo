@@ -175,7 +175,7 @@ func (jm *IJobManagerImpl) announceRunning(job *model.Job) {
 }
 
 func isBackupFamily(jobType model.JobType) bool {
-	return jobType == model.JobTypeBackup || jobType == model.JobTypeRestore || jobType == model.JobTypeToolInstall
+	return jobType == model.JobTypeBackup || jobType == model.JobTypeRestore || jobType == model.JobTypeToolInstall || jobType == model.JobTypeRestoreDrill
 }
 
 func jobLabel(jobType model.JobType) string {
@@ -190,6 +190,8 @@ func jobLabel(jobType model.JobType) string {
 		return "Restore"
 	case model.JobTypeToolInstall:
 		return "Tool install"
+	case model.JobTypeRestoreDrill:
+		return "Restore test"
 	default:
 		return "Query"
 	}

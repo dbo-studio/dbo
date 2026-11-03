@@ -47,6 +47,11 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
           : { kind: 'dashboard' };
   const open = (scheduleId?: number | 'new'): void => openBackup({ section: 'schedules', scheduleId });
   const [jobId, setJobId] = useState<string | null>(null);
+  const [jobTitle, setJobTitle] = useState(locales.backup_in_progress);
+  const follow = (id: number, title: string): void => {
+    setJobTitle(title);
+    setJobId(String(id));
+  };
   const [restoreRun, setRestoreRun] = useState<BackupArtifactType | null>(null);
 
   const { data: jobs = [] } = useQuery({
@@ -69,7 +74,7 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
 
   const run = async (job: BackupScheduleType): Promise<void> => {
     try {
-      setJobId(String((await api.backup.runSchedule(job.id)).jobId));
+      follow((await api.backup.runSchedule(job.id)).jobId, locales.backup_in_progress);
     } catch {
       /* the api layer already toasted */
     }
@@ -159,6 +164,12 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
             onToggle={() => void toggle(selected)}
             onDelete={() => remove(selected)}
             onRestore={setRestoreRun}
+            onDrill={(run, passphrase) =>
+              void api.backup
+                .drillBackup(run.id, passphrase)
+                .then((r) => follow(r.jobId, locales.backup_drill_running))
+                .catch(() => undefined)
+            }
           />
         )}
       </Box>
@@ -172,7 +183,7 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
           onCancel={() => setRestoreRun(null)}
           onStarted={(id) => {
             setRestoreRun(null);
-            setJobId(String(id));
+            follow(id, locales.backup_in_progress);
           }}
         />
       )}
@@ -180,7 +191,7 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
       <JobProgressModal
         open={jobId !== null}
         jobId={jobId}
-        title={locales.backup_in_progress}
+        title={jobTitle}
         onClose={() => {
           setJobId(null);
           refresh();
@@ -259,7 +270,8 @@ function JobDetail({
   onEdit,
   onToggle,
   onDelete,
-  onRestore
+  onRestore,
+  onDrill
 }: {
   job: BackupScheduleType;
   connection: string;
@@ -269,6 +281,8 @@ function JobDetail({
   onToggle: () => void;
   onDelete: () => void;
   onRestore: (run: BackupArtifactType) => void;
+  /** Restores the run into a scratch database to prove it works; the passphrase is for an encrypted run. */
+  onDrill: (run: BackupArtifactType, passphrase?: string) => void;
 }): JSX.Element {
   const { data: runs = [] } = useQuery({
     queryKey: ['backup-runs', job.id, job.connectionId],
@@ -400,8 +414,30 @@ function JobDetail({
                 {locales.backup_explain_ai}
               </Button>
             )}
+            {run.drillStatus && (
+              <Chip
+                size='small'
+                data-testid={`backup-run-drill-${run.id}`}
+                title={run.drillMessage}
+                color={run.drillStatus === 'passed' ? 'success' : run.drillStatus === 'failed' ? 'error' : 'default'}
+                label={
+                  run.drillStatus === 'passed'
+                    ? locales.backup_drill_passed
+                    : run.drillStatus === 'failed'
+                      ? locales.backup_drill_failed
+                      : locales.backup_drill_skipped
+                }
+              />
+            )}
             {run.status === 'completed' && (
               <>
+                <Button
+                  size='small'
+                  data-testid={`backup-run-drill-run-${run.id}`}
+                  onClick={() => onDrill(run, run.encrypted ? passphrase || undefined : undefined)}
+                >
+                  {locales.backup_drill}
+                </Button>
                 <Button size='small' onClick={() => void verify(run)}>
                   {locales.backup_verify}
                 </Button>

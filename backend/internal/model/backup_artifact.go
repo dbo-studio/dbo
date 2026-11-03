@@ -50,17 +50,22 @@ type BackupArtifact struct {
 	SealWrappedKey []byte `gorm:"-"`
 	// DestinationID, RemotePath and RemoteStatus ("uploaded" or "failed") describe the copy
 	// sent to a remote destination; the local file stays either way.
-	DestinationID uint      `gorm:"not null;default:0"`
-	RemotePath    string    `gorm:"not null;default:''"`
-	RemoteStatus  string    `gorm:"not null;default:''"`
-	RemoteError   string    `gorm:"not null;default:''"`
-	Compressed    bool      `gorm:"not null;default:false"`
-	Encrypted     bool      `gorm:"not null;default:false"`
-	Checksum      string    `gorm:"not null;default:''"`
-	Error         string    `gorm:"not null;default:''"`
-	StartedAt     time.Time `gorm:"not null"`
-	CompletedAt   *time.Time
-	CreatedAt     *time.Time `gorm:"autoCreateTime"`
+	DestinationID uint   `gorm:"not null;default:0"`
+	RemotePath    string `gorm:"not null;default:''"`
+	RemoteStatus  string `gorm:"not null;default:''"`
+	RemoteError   string `gorm:"not null;default:''"`
+	Compressed    bool   `gorm:"not null;default:false"`
+	Encrypted     bool   `gorm:"not null;default:false"`
+	Checksum      string `gorm:"not null;default:''"`
+	Error         string `gorm:"not null;default:''"`
+	// DrillStatus is the outcome of the last restore test: "passed", "failed" or "skipped" (it could
+	// not be tried here, say for lack of rights). Empty means never tested.
+	DrillStatus  string `gorm:"not null;default:''"`
+	DrillMessage string `gorm:"not null;default:''"`
+	DrilledAt    *time.Time
+	StartedAt    time.Time `gorm:"not null"`
+	CompletedAt  *time.Time
+	CreatedAt    *time.Time `gorm:"autoCreateTime"`
 }
 
 func (BackupArtifact) TableName() string { return "backup_artifacts" }

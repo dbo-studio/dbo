@@ -28,6 +28,8 @@ const (
 	JobTypeRestore JobType = "restore"
 	// JobTypeToolInstall downloads a native backup tool on the user's request.
 	JobTypeToolInstall JobType = "tool_install"
+	// JobTypeRestoreDrill restores a backup into a throwaway database to prove it works.
+	JobTypeRestoreDrill JobType = "restore_drill"
 )
 
 type Job struct {

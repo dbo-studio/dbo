@@ -86,6 +86,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	jobManager.RegisterProcessor(processors.NewExportProcessor(jobManager, cm, repo.ConnectionRepo, ss, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewBackupProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, connectorService, deps.Cache))
 	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss, connectorService))
+	jobManager.RegisterProcessor(processors.NewRestoreDrillProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, connectorService))
 	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)

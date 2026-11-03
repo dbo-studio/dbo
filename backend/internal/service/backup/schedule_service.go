@@ -83,6 +83,7 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 		KeepDays:      req.KeepDays,
 		KeepSmart:     req.KeepSmart,
 		RetryMax:      req.RetryMax,
+		VerifyRestore: req.VerifyRestore,
 		Compress:      req.Compress,
 		DestinationID: req.DestinationID,
 		ChannelIDs:    channelIDsJSON(req.ChannelIDs),
@@ -145,7 +146,7 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 		"name": schedule.Name, "database": schedule.Database, "schema": schedule.Schema,
 		"cadence": schedule.Cadence, "hour": schedule.Hour, "minute": schedule.Minute,
 		"weekday": schedule.Weekday, "month_day": schedule.MonthDay, "timezone": schedule.Timezone, "enabled": schedule.Enabled,
-		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "keep_smart": schedule.KeepSmart, "retry_max": schedule.RetryMax, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
+		"keep_last": schedule.KeepLast, "keep_days": schedule.KeepDays, "keep_smart": schedule.KeepSmart, "retry_max": schedule.RetryMax, "verify_restore": schedule.VerifyRestore, "compress": schedule.Compress, "public_key": schedule.PublicKey, "wrapped_key": schedule.WrappedKey,
 		"destination_id": schedule.DestinationID, "channel_ids": schedule.ChannelIDs, "notify_on": schedule.NotifyOn,
 	}
 
@@ -242,6 +243,7 @@ func applyScheduleUpdate(s *model.BackupSchedule, req *dto.BackupScheduleUpdateR
 	s.KeepDays = lo.FromPtrOr(req.KeepDays, s.KeepDays)
 	s.KeepSmart = lo.FromPtrOr(req.KeepSmart, s.KeepSmart)
 	s.RetryMax = lo.FromPtrOr(req.RetryMax, s.RetryMax)
+	s.VerifyRestore = lo.FromPtrOr(req.VerifyRestore, s.VerifyRestore)
 	s.Compress = lo.FromPtrOr(req.Compress, s.Compress)
 	s.DestinationID = lo.FromPtrOr(req.DestinationID, s.DestinationID)
 	s.NotifyOn = lo.FromPtrOr(req.NotifyOn, s.NotifyOn)
@@ -309,7 +311,7 @@ func scheduleResponse(s model.BackupSchedule) dto.BackupScheduleResponse {
 	return dto.BackupScheduleResponse{
 		ID: s.ID, ConnectionID: s.ConnectionID, Name: s.Name, Database: s.Database, Schema: s.Schema,
 		Cadence: s.Cadence, Hour: s.Hour, Minute: s.Minute, Weekday: s.Weekday, MonthDay: s.MonthDay, Timezone: s.Timezone,
-		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, KeepSmart: s.KeepSmart, RetryMax: s.RetryMax, Compress: s.Compress, Encrypted: s.PublicKey != "",
+		Enabled: s.Enabled, KeepLast: s.KeepLast, KeepDays: s.KeepDays, KeepSmart: s.KeepSmart, RetryMax: s.RetryMax, VerifyRestore: s.VerifyRestore, Compress: s.Compress, Encrypted: s.PublicKey != "",
 		DestinationID: s.DestinationID, ChannelIDs: s.Channels(), NotifyOn: s.NotifyOn,
 		NextRunAt: s.NextRunAt, LastRunAt: s.LastRunAt, LastSuccessAt: s.LastSuccessAt, LastSize: s.LastSize, LastStatus: s.LastStatus, LastError: s.LastError,
 	}
@@ -328,11 +330,12 @@ func queueScheduledBackup(ctx context.Context, jobs serviceJob.IJobManager, repo
 			Compress:      s.Compress,
 			DestinationID: s.DestinationID,
 		},
-		ChannelIDs: s.Channels(),
-		NotifyOn:   s.NotifyOn,
-		ScheduleID: s.ID,
-		PublicKey:  s.PublicKey,
-		WrappedKey: s.WrappedKey,
+		ChannelIDs:    s.Channels(),
+		NotifyOn:      s.NotifyOn,
+		ScheduleID:    s.ID,
+		PublicKey:     s.PublicKey,
+		WrappedKey:    s.WrappedKey,
+		VerifyRestore: s.VerifyRestore,
 	}))
 	if err != nil {
 		return nil, err

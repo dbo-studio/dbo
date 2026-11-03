@@ -51,6 +51,10 @@ export type BackupArtifactType = {
   destinationId: number;
   remoteStatus: '' | 'uploaded' | 'failed';
   remoteError: string;
+  /** Outcome of the last restore test: never tested (empty), passed, failed, or skipped (could not be tried here). */
+  drillStatus: '' | 'passed' | 'failed' | 'skipped';
+  drillMessage: string;
+  drilledAt?: string;
 };
 
 export type BackupToolType = {
@@ -94,6 +98,8 @@ export type BackupScheduleRequestType = {
   keepSmart?: boolean;
   /** Times a failed run is tried again (5, 10, 20 min...), 0 to 5. */
   retryMax?: number;
+  /** Test a restore into a scratch database after every good run. */
+  verifyRestore?: boolean;
   compress?: boolean;
   /** 0 = keep backups on this machine only. */
   destinationId?: number;

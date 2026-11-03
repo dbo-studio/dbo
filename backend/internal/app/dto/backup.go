@@ -39,6 +39,8 @@ type (
 		// PublicKey and WrappedKey are hex; together they encrypt the backup.
 		PublicKey  string `json:"publicKey"`
 		WrappedKey string `json:"wrappedKey"`
+		// VerifyRestore queues a restore test once the run has finished well.
+		VerifyRestore bool `json:"verifyRestore"`
 	}
 
 	RestoreRequest struct {
@@ -69,6 +71,22 @@ type (
 		RestoreRequest
 		// SafetyJobID is the backup job that must have completed first.
 		SafetyJobID uint `json:"safetyJobId"`
+	}
+
+	// BackupDrillRequest asks for a restore test of one backup. The passphrase is only for an
+	// encrypted backup, and is never stored.
+	BackupDrillRequest struct {
+		ID         uint   `json:"-"`
+		Passphrase string `json:"passphrase"`
+	}
+
+	BackupDrillResponse struct {
+		JobID int32 `json:"jobId"`
+	}
+
+	RestoreDrillJob struct {
+		OwnerID    string `json:"ownerId"`
+		ArtifactID uint   `json:"artifactId"`
 	}
 
 	BackupUploadRequest struct {
@@ -108,6 +126,10 @@ type (
 		DestinationID uint   `json:"destinationId"`
 		RemoteStatus  string `json:"remoteStatus"`
 		RemoteError   string `json:"remoteError"`
+		// DrillStatus is "", "passed", "failed" or "skipped"; see the model.
+		DrillStatus  string     `json:"drillStatus"`
+		DrillMessage string     `json:"drillMessage"`
+		DrilledAt    *time.Time `json:"drilledAt"`
 	}
 
 	// BackupTool is one native tool as detected on this host. Found false means

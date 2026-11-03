@@ -12,7 +12,9 @@ export default function ProtectPicker({
   encrypt,
   onEncrypt,
   passphrase,
-  onPassphrase
+  onPassphrase,
+  verifyRestore,
+  onVerifyRestore
 }: {
   compress: boolean;
   onCompress: (on: boolean) => void;
@@ -22,6 +24,8 @@ export default function ProtectPicker({
   onEncrypt: (on: boolean) => void;
   passphrase: string;
   onPassphrase: (value: string) => void;
+  verifyRestore: boolean;
+  onVerifyRestore: (on: boolean) => void;
 }): JSX.Element {
   const [rekey, setRekey] = useState(false);
   const askForPassphrase = encrypt && (!alreadyEncrypted || rekey);
@@ -34,6 +38,16 @@ export default function ProtectPicker({
           <Typography variant='body2'>{locales.backup_compress}</Typography>
           <Typography variant='caption' color='textSubdued'>
             {locales.backup_protect_compress_hint}
+          </Typography>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Switch checked={verifyRestore} onChange={(e) => onVerifyRestore(e.target.checked)} data-testid='protect-drill' />
+        <Box>
+          <Typography variant='body2'>{locales.backup_protect_drill}</Typography>
+          <Typography variant='caption' color='textSubdued'>
+            {locales.backup_protect_drill_hint}
           </Typography>
         </Box>
       </Box>

@@ -151,6 +151,11 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		p.notify(ctx, &jobData, connection, artifact, "")
 	}
 
+	// The backup itself is good either way; the test only says whether it can be restored.
+	if jobData.VerifyRestore {
+		p.queueDrill(ctx, &jobData, artifact)
+	}
+
 	job.Result = model.JobResult{
 		FileName:   artifact.FileName,
 		FilePath:   artifact.FilePath,
@@ -426,6 +431,13 @@ func (p *BackupProcessor) planRetry(ctx context.Context, jobData *dto.BackupJob)
 	}
 
 	return p.scheduleRepo.UpdateFields(ctx, schedule.ID, map[string]any{"next_run_at": at, "retry_count": schedule.RetryCount + 1}) == nil
+}
+
+// queueDrill asks for a restore test of the backup just made. A failure to queue it must not fail the backup.
+func (p *BackupProcessor) queueDrill(ctx context.Context, jobData *dto.BackupJob, artifact *model.BackupArtifact) {
+	_, _ = p.jobManager.CreateJob(model.JobTypeRestoreDrill, jobData.OwnerID, helper.StructToJSON(dto.RestoreDrillJob{
+		OwnerID: jobData.OwnerID, ArtifactID: artifact.ID,
+	}))
 }
 
 // minFreeBytes is the least free space a backup needs when no earlier backup

@@ -70,6 +70,11 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
         if (job.type === 'backup') return locales.backup_completed_successfully;
         if (job.type === 'restore') return locales.restore_completed_successfully;
         if (job.type === 'tool_install') return locales.backup_tool_install_completed;
+        // What the test found comes in the result; the job's own message is generic once it completes.
+        if (job.type === 'restore_drill') {
+          const found = (job.result as { data?: { status?: string; message?: string } } | undefined)?.data;
+          return found?.message ? `${found.status === 'skipped' ? locales.backup_drill_skipped : locales.backup_drill_passed}: ${found.message}` : locales.backup_drill_passed;
+        }
         return locales.export_completed_successfully;
       case 'failed':
         return `${locales.job_failed}: ${job.error}`;

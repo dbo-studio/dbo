@@ -75,6 +75,7 @@ export default function ScheduleForm({
   });
   const [compress, setCompress] = useState(job?.compress ?? true);
   const [encrypt, setEncrypt] = useState(job?.encrypted ?? false);
+  const [verifyRestore, setVerifyRestore] = useState(job?.verifyRestore ?? false);
   const [passphrase, setPassphrase] = useState('');
   const [destinationId, setDestinationId] = useState(job?.destinationId ?? 0);
   const [channelIds, setChannelIds] = useState<number[]>(job?.channelIds ?? []);
@@ -119,6 +120,7 @@ export default function ScheduleForm({
       ...retention,
       retryMax,
       compress,
+      verifyRestore,
       destinationId,
       channelIds,
       notifyOn,
@@ -183,7 +185,7 @@ export default function ScheduleForm({
     {
       label: locales.backup_plan_protection,
       value:
-        [compress ? locales.backup_compress : '', encrypt ? locales.backup_encrypted : ''].filter(Boolean).join(' · ') ||
+        [compress ? locales.backup_compress : '', encrypt ? locales.backup_encrypted : '', verifyRestore ? locales.backup_plan_drill : ''].filter(Boolean).join(' · ') ||
         locales.backup_plan_none
     },
     {
@@ -262,6 +264,8 @@ export default function ScheduleForm({
             onEncrypt={setEncrypt}
             passphrase={passphrase}
             onPassphrase={setPassphrase}
+            verifyRestore={verifyRestore}
+            onVerifyRestore={setVerifyRestore}
           />
         </FormSection>
 
