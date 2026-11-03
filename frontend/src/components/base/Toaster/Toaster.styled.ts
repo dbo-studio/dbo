@@ -31,6 +31,8 @@ export const ToasterRootStyled = styled('div')(({ theme }) => {
     '[data-sonner-toast][data-type="error"]': tone(theme.palette.error.main),
     '[data-sonner-toast][data-type="warning"]': tone(theme.palette.warning.main),
     '[data-sonner-toast][data-type="info"]': tone(theme.palette.primary.main),
+    // Unstyled sonner keeps older toasts' text visible in the collapsed stack; hide it behind the front toast.
+    '[data-sonner-toast][data-expanded="false"][data-front="false"] > *': { opacity: 0 },
     '[data-sonner-toast] [data-icon]': { display: 'flex', flexShrink: 0, margin: 0 },
     '[data-sonner-toast] [data-content]': { display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 },
     '[data-sonner-toast] [data-title]': { color: theme.palette.textTitle, fontWeight: 500 },

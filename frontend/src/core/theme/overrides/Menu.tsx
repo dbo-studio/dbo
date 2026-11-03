@@ -20,6 +20,16 @@ export default function Menu(theme: Theme): Components {
         }
       }
     },
+    // Popovers (connection switcher, activity) match menus: hairline border, soft shadow.
+    MuiPopover: {
+      styleOverrides: {
+        paper: {
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: `0 4px 6px -1px ${alpha(theme.palette.common.black, 0.1)},0 2px 4px -2px ${alpha(theme.palette.common.black, 0.1)}`,
+          borderRadius: variables.radius.medium
+        }
+      }
+    },
     MuiMenuItem: {
       styleOverrides: {
         root: {

@@ -14,7 +14,7 @@ import { useConnectionLock } from '@/components/common/Connections/useUnlockConn
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useFocusedDataStore } from '@/store/dataStore/data.store';
 import { useNotificationPanelStore } from '@/store/notificationPanel/notificationPanel.store';
-import { Popover, Typography } from '@mui/material';
+import { Popover, Tooltip, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import {
@@ -158,14 +158,24 @@ export default function StatusBar(): JSX.Element {
       </StatusItemStyled>
 
       {canManageMcp && (
-        <StatusItemStyled
-          onClick={() => openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' })}
-          data-testid='status-mcp'
-          aria-label='mcp-status'
+        <Tooltip
+          title={
+            mcpTone(mcp) === 'success'
+              ? locales.status_mcp_on
+              : mcpTone(mcp) === 'warning'
+                ? locales.status_mcp_unhealthy
+                : locales.status_mcp_off
+          }
         >
-          <StatusDotStyled tone={mcpTone(mcp)} />
-          <span>MCP</span>
-        </StatusItemStyled>
+          <StatusItemStyled
+            onClick={() => openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' })}
+            data-testid='status-mcp'
+            aria-label='mcp-status'
+          >
+            <StatusDotStyled tone={mcpTone(mcp)} />
+            <span>MCP</span>
+          </StatusItemStyled>
+        </Tooltip>
       )}
 
       {unread > 0 && (

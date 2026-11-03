@@ -1,5 +1,7 @@
 import Loading from '@/components/layout/AppHeader/ConnectionInfo/ConnectionBox/Loading/Loading.tsx';
 import type { ConnectionBoxStatus } from '@/components/layout/AppHeader/ConnectionInfo/types.ts';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { engineIconOf } from '@/components/layout/ConnectionSwitcher/ConnectionRow';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store.ts';
@@ -43,6 +45,7 @@ export default function ConnectionBox(): JSX.Element {
     <ConnectionBoxStyled status={status}>
       <ConnectionBoxContentStyled>
         <Stack direction='row' spacing={1} sx={{ minWidth: 0, width: '100%', alignItems: 'center' }}>
+          {currentConnection && loading === 'finished' && <CustomIcon type={engineIconOf(currentConnection)} size='s' />}
           <Typography variant='body2' component='h6' noWrap sx={{ flex: 1, minWidth: 0 }}>
             {loading === 'loading' && locales.connecting}
             {loading === 'finished' && info}

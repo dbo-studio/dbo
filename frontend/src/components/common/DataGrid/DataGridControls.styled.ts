@@ -113,6 +113,8 @@ export const GridCheckboxRoot = styled('label')(({ theme }) => ({
 /** Native input painted with MUI Material checkbox glyphs. */
 export const GridCheckboxInput = styled('input')(({ theme }) => {
   const color = theme.palette.primary.main;
+  // Unchecked boxes are neutral so a column of them does not outshine the data.
+  const idleColor = theme.palette.action.active;
   return {
     appearance: 'none',
     WebkitAppearance: 'none',
@@ -126,7 +128,7 @@ export const GridCheckboxInput = styled('input')(({ theme }) => {
     cursor: 'inherit',
     border: 0,
     backgroundColor: 'transparent',
-    backgroundImage: muiUncheckedCheckboxUrl(color),
+    backgroundImage: muiUncheckedCheckboxUrl(idleColor),
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     backgroundSize: 'contain',

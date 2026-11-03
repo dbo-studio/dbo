@@ -32,7 +32,7 @@ export const ActivityItemStyled = styled(ButtonBase, {
   '&::before': {
     content: '""',
     position: 'absolute',
-    left: -6,
+    left: -4,
     top: 8,
     bottom: 8,
     width: 3,

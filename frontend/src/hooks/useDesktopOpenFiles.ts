@@ -1,10 +1,11 @@
 import { commands, streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
+import { isDatabasePath, useOpenDatabaseFile } from '@/hooks/useOpenDatabaseFile';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { open } from '@tauri-apps/plugin-dialog';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 const isSqlPath = (path: string): boolean => path.toLowerCase().endsWith('.sql');
@@ -51,6 +52,11 @@ export const pickAndOpenSqlFile = async (): Promise<void> => {
  * and those picked via File > Open SQL File. Mount inside Layout after boot.
  */
 export const useDesktopOpenFiles = (): void => {
+  const { openDatabaseFile } = useOpenDatabaseFile();
+  // The listener is registered once; the ref keeps it calling the latest handler.
+  const openDatabaseRef = useRef(openDatabaseFile);
+  openDatabaseRef.current = openDatabaseFile;
+
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let disposed = false;
@@ -81,7 +87,10 @@ export const useDesktopOpenFiles = (): void => {
       if (!(await tools.isTauri())) {
         return;
       }
-      const stop = await streams.files.onDrop((paths) => void openSqlPaths(paths.filter(isSqlPath)));
+      const stop = await streams.files.onDrop((paths) => {
+        void openSqlPaths(paths.filter(isSqlPath));
+        paths.filter(isDatabasePath).forEach((path) => void openDatabaseRef.current(path));
+      });
       if (disposed) {
         stop();
         return;

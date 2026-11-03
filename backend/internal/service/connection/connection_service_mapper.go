@@ -102,7 +102,7 @@ func connectionInfo(connection *model.Connection) string {
 			version = *connection.Version
 		}
 
-		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, version)
+		return fmt.Sprintf("%s | %s %s", connection.Name, connection.ConnectionType, version)
 	default:
 		return "unknown"
 	}
