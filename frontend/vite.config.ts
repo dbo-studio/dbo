@@ -13,6 +13,7 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(({ mode }) => {
   // Config file does not auto-load .env into process.env; loadEnv does.
   const env = loadEnv(mode, process.cwd(), '');
+  const apiProxyTarget = env.API_PROXY_TARGET || process.env.API_PROXY_TARGET;
   const port = Number(env.VITE_PORT || process.env.VITE_PORT || 3000);
 
   return {
@@ -104,12 +105,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       host: host !== undefined ? host : true,
       port,
-      proxy: {
-        '/api': {
-          target: process.env.API_PROXY_TARGET ?? 'http://localhost:8080',
-          changeOrigin: true
-        }
-      }
+      proxy: apiProxyTarget ? { '/api': { target: apiProxyTarget, changeOrigin: true } } : undefined
     },
     build: {
       target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',

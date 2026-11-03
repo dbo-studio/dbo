@@ -2,7 +2,7 @@
   "name": "dbo",
   "version": "1.2.0",
   "scripts": {
-    "dev": "NODE_ENV=development VITE_PUBLIC_SERVER_URL=http://localhost:8080/api vite",
+    "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
