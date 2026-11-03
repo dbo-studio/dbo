@@ -36,14 +36,24 @@ type Config struct {
 
 var config *Config
 
-const websiteAPIURL = "https://dbo-studio.com/api"
+const (
+	websiteHost    = "https://dbo-studio.com"
+	devWebsiteHost = "https://dev.dbo-studio.com"
+)
 
 func New() *Config {
+	env := Environment(os.Getenv("APP_ENV"))
+
+	host := websiteHost
+	if env == EnvironmentLocal {
+		host = devWebsiteHost
+	}
+
 	config = &Config{
 		App: App{
 			Name:           "dbo",
 			Port:           os.Getenv("APP_PORT"),
-			Env:            Environment(os.Getenv("APP_ENV")),
+			Env:            env,
 			Client:         Client(os.Getenv("APP_CLIENT")),
 			PublicURL:      os.Getenv("APP_PUBLIC_URL"),
 			MCPURLOverride: os.Getenv("APP_MCP_PUBLIC_URL"),
@@ -56,8 +66,8 @@ func New() *Config {
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
 			Version:        "v1.2.0",
 			DatabaseName:   "dbo.db",
-			ReleaseURL:     "https://dbo-studio.com/releases",
-			WebsiteAPIURL:  websiteAPIURL,
+			ReleaseURL:     host + "/releases",
+			WebsiteAPIURL:  host + "/api",
 		},
 	}
 
