@@ -1,9 +1,8 @@
-import Modal from '@/components/base/Modal/Modal';
-import AccountStep from '@/components/common/Account/AccountStep/AccountStep';
+import AccountModal from '@/components/common/Account/AccountModal';
 import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import locales from '@/locales';
 import { useAccountStore } from '@/store/accountStore/account.store';
-import { Box, Button } from '@mui/material';
+import { Button } from '@mui/material';
 import { type JSX, useState } from 'react';
 
 /** The DBO account in one row: who is signed in and a sign-out, or a sign-in. */
@@ -35,11 +34,7 @@ export function AccountSettings(): JSX.Element {
           )
         }
       />
-      <Modal open={open} title={locales.account_row_title} onClose={(): void => setOpen(false)}>
-        <Box sx={{ width: 'min(400px, calc(100vw - 96px))', pt: 1 }}>
-          <AccountStep onDone={(): void => setOpen(false)} />
-        </Box>
-      </Modal>
+      <AccountModal open={open} onClose={(): void => setOpen(false)} />
     </>
   );
 }

@@ -1,94 +1,38 @@
-import api from '@/api';
 import type { AccountConnectStart, AccountSession } from '@/api/account/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
 import { Box, Button, Link, Typography } from '@mui/material';
-import { type JSX, useEffect, useRef, useState } from 'react';
+import type { JSX } from 'react';
 import { openExternal } from './openExternal';
+import { useConnectWait } from './useConnectWait';
 
-const POLL_MS = 2000;
-// The website forgets an unfinished sign-in after 10 minutes.
-const GIVE_UP_MS = 10 * 60 * 1000;
-
-export type ConnectWaitProps = {
+export type ConnectWaitBodyProps = {
   start: AccountConnectStart;
-  onSession: (session: AccountSession) => void;
-  onCancel: () => void;
+  manual: string;
+  onManualChange: (value: string) => void;
+  error: string | null;
+  /** Title is skipped inside a modal, where the modal title already says it. */
+  showTitle?: boolean;
+  children?: React.ReactNode;
 };
 
-/** Waits for the browser sign-in to finish: polls by itself, or takes the code the browser page shows. */
-export default function ConnectWait({ start, onSession, onCancel }: ConnectWaitProps): JSX.Element {
-  const [manual, setManual] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  // The parent re-renders with a new callback; polling must not restart for that.
-  const onSessionRef = useRef(onSession);
-  useEffect(() => {
-    onSessionRef.current = onSession;
-  }, [onSession]);
-
-  useEffect(() => {
-    const startedAt = Date.now();
-    let busy = false;
-    let stopped = false;
-
-    const timer = window.setInterval(() => {
-      if (busy || stopped) {
-        return;
-      }
-      if (Date.now() - startedAt > GIVE_UP_MS) {
-        stopped = true;
-        window.clearInterval(timer);
-        setError(locales.account_connect_expired);
-        return;
-      }
-      busy = true;
-      api.account
-        .connectPoll(start.code)
-        .then((result) => {
-          if (result.session && !stopped) {
-            stopped = true;
-            window.clearInterval(timer);
-            onSessionRef.current(result.session);
-          }
-        })
-        .catch(() => {
-          if (!stopped) {
-            stopped = true;
-            window.clearInterval(timer);
-            setError(locales.account_connect_expired);
-          }
-        })
-        .finally(() => {
-          busy = false;
-        });
-    }, POLL_MS);
-
-    return (): void => {
-      stopped = true;
-      window.clearInterval(timer);
-    };
-  }, [start.code]);
-
-  const submitManual = async (): Promise<void> => {
-    setError(null);
-    try {
-      const result = await api.account.connectPoll(manual.trim());
-      if (result.session) {
-        onSession(result.session);
-      } else {
-        setError(locales.account_connect_expired);
-      }
-    } catch {
-      setError(locales.account_connect_expired);
-    }
-  };
-
+/** The wait screen's content: hint, link back to the browser, and the code field. No actions. */
+export function ConnectWaitBody({
+  start,
+  manual,
+  onManualChange,
+  error,
+  showTitle = true,
+  children
+}: ConnectWaitBodyProps): JSX.Element {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }} data-testid='account-connect-wait'>
-      <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-        {locales.account_connect_title}
-      </Typography>
+      {showTitle ? (
+        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+          {locales.account_connect_title}
+        </Typography>
+      ) : null}
       <Typography variant='body2' color='text.secondary'>
         {locales.account_connect_hint}
       </Typography>
@@ -112,10 +56,31 @@ export default function ConnectWait({ start, onSession, onCancel }: ConnectWaitP
             label={locales.account_connect_code}
             value={manual}
             fullWidth
-            onChange={(e): void => setManual(e.target.value)}
+            onChange={(e): void => onManualChange(e.target.value)}
             inputProps={{ 'data-testid': 'account-connect-code' }}
           />
         </Box>
+        {children}
+      </Box>
+
+      {error ? <FormError mb={0} errors={[error]} /> : null}
+    </Box>
+  );
+}
+
+export type ConnectWaitProps = {
+  start: AccountConnectStart;
+  onSession: (session: AccountSession) => void;
+  onCancel: () => void;
+};
+
+/** Inline wait screen (onboarding): polls by itself, or takes the code the browser page shows. */
+export default function ConnectWait({ start, onSession, onCancel }: ConnectWaitProps): JSX.Element {
+  const { manual, setManual, error, submitManual } = useConnectWait(start, onSession);
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+      <ConnectWaitBody start={start} manual={manual} onManualChange={setManual} error={error}>
         <Button
           variant='outlined'
           sx={{ mt: 2.5 }}
@@ -125,10 +90,7 @@ export default function ConnectWait({ start, onSession, onCancel }: ConnectWaitP
         >
           {locales.account_connect_submit}
         </Button>
-      </Box>
-
-      {error ? <FormError mb={0} errors={[error]} /> : null}
-
+      </ConnectWaitBody>
       <Button size='small' onClick={onCancel} sx={{ alignSelf: 'flex-start' }} data-testid='account-connect-cancel'>
         {locales.account_connect_cancel}
       </Button>
