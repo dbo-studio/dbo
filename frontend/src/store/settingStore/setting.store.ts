@@ -56,7 +56,15 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           release: undefined,
           backgroundAfterSeconds: 10,
           keepRunningInBackground: true,
-          notifications: { enabled: true, onlyWhenUnfocused: true, sound: false, query: true, import: true, export: true, backup: true }
+          notifications: {
+            enabled: true,
+            onlyWhenUnfocused: true,
+            sound: false,
+            query: true,
+            import: true,
+            export: true,
+            backup: true
+          }
         },
         setup: {
           hasCompletedSetup: false

@@ -312,18 +312,20 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
                 maxBarSize={32}
                 animationDuration={600}
               />,
-              ...spec.y.slice(1).map((key, index) => (
-                <Line
-                  key={key}
-                  type='monotone'
-                  dataKey={key}
-                  stroke={palette[(index + 1) % palette.length]}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, strokeWidth: 0 }}
-                  animationDuration={600}
-                />
-              ))
+              ...spec.y
+                .slice(1)
+                .map((key, index) => (
+                  <Line
+                    key={key}
+                    type='monotone'
+                    dataKey={key}
+                    stroke={palette[(index + 1) % palette.length]}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 0 }}
+                    animationDuration={600}
+                  />
+                ))
             ])}
             {tooltip(true)}
             {legend}
@@ -333,7 +335,14 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
         return (
           <ScatterChart>
             <CartesianGrid {...grid} />
-            <XAxis type='number' dataKey={spec.x} name={spec.x} tick={axis} {...bare} tickFormatter={formatAxisNumber} />
+            <XAxis
+              type='number'
+              dataKey={spec.x}
+              name={spec.x}
+              tick={axis}
+              {...bare}
+              tickFormatter={formatAxisNumber}
+            />
             <YAxis
               type='number'
               dataKey={spec.y[0]}
@@ -376,7 +385,12 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
             endAngle={-30}
           >
             <PolarAngleAxis type='number' domain={[0, goal]} tick={false} />
-            <RadialBar dataKey='value' cornerRadius={8} fill={palette[0]} background={{ fill: alpha(palette[0], 0.15) }} />
+            <RadialBar
+              dataKey='value'
+              cornerRadius={8}
+              fill={palette[0]}
+              background={{ fill: alpha(palette[0], 0.15) }}
+            />
             <text
               x='50%'
               y='50%'

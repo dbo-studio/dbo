@@ -18,8 +18,7 @@ export default function AppHeader(): JSX.Element {
       container
       spacing={0}
       style={{
-        paddingLeft: titleBar?.paddingLeft,
-        paddingTop: titleBar?.paddingTop
+        paddingLeft: titleBar?.paddingLeft
       }}
       // Tauri drag script: drag/zoom from any non-interactive descendant
       data-tauri-drag-region={titleBar?.draggable ? 'deep' : undefined}

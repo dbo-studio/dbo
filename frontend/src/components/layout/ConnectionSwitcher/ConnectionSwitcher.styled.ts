@@ -6,7 +6,10 @@ export const SwitcherTriggerStyled = styled(ButtonBase)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(1.25),
   width: '100%',
-  padding: theme.spacing(1, 1.5),
+  // One 35px row, the same height as the tab strips beside it, so the dividers line up.
+  height: 35,
+  flexShrink: 0,
+  padding: theme.spacing(0, 1.5),
   textAlign: 'left',
   borderBottom: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.subdued,
@@ -14,12 +17,13 @@ export const SwitcherTriggerStyled = styled(ButtonBase)(({ theme }) => ({
   '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 }
 }));
 
-export const SwitcherTextStyled = styled(Box)({
+export const SwitcherTextStyled = styled(Box)(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   display: 'flex',
-  flexDirection: 'column'
-});
+  alignItems: 'baseline',
+  gap: theme.spacing(1)
+}));
 
 export const SwitcherPanelStyled = styled(Box)({
   display: 'flex',

@@ -10,13 +10,24 @@ import { toast } from 'sonner';
 
 /** Puts a finished query's rows where its tab loads them from, the way a normal run leaves them. */
 export async function storeQueryResult(tabId: string, kind: 'run' | 'raw', res: RunQueryResponseType): Promise<void> {
-  const tab = useTabStore.getState().getTabs().find((item) => item.id === tabId) as DataTabType | undefined;
+  const tab = useTabStore
+    .getState()
+    .getTabs()
+    .find((item) => item.id === tabId) as DataTabType | undefined;
   const gridMeta: GridMetaType =
     kind === 'raw'
-      ? { gridEditable: !!res.editable, updatableNodeId: res.nodeId, editableReason: res.editableReason, drivingTable: res.drivingTable }
+      ? {
+          gridEditable: !!res.editable,
+          updatableNodeId: res.nodeId,
+          editableReason: res.editableReason,
+          drivingTable: res.drivingTable
+        }
       : { gridEditable: !!tab?.editable, updatableNodeId: tab?.nodeId };
 
-  await Promise.all([indexedDBService.saveRows(tabId, res.data), indexedDBService.saveColumns(tabId, res.columns, gridMeta)]);
+  await Promise.all([
+    indexedDBService.saveRows(tabId, res.data),
+    indexedDBService.saveColumns(tabId, res.columns, gridMeta)
+  ]);
   if (res.query) useTabStore.getState().updateQuery(res.query, tabId);
 }
 
@@ -27,7 +38,14 @@ export async function storeQueryResult(tabId: string, kind: 'run' | 'raw', res: 
 export async function reconcileBackgroundQuery(jobId: number): Promise<void> {
   try {
     const job = await api.job.detail(String(jobId));
-    await settleBackgroundQuery({ id: job.id, type: job.type, status: job.status, progress: job.progress, message: job.message, error: job.error });
+    await settleBackgroundQuery({
+      id: job.id,
+      type: job.type,
+      status: job.status,
+      progress: job.progress,
+      message: job.message,
+      error: job.error
+    });
   } catch {
     // Not found or unreachable: the next event or reconnect looks again.
   }

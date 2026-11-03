@@ -144,19 +144,17 @@ export default function ToolCallCard({
             </Typography>
           )}
           {/* Rows show once, below the steps (or on the canvas), so the step itself only says when there were none. */}
-          {sqlResult ? (
-            sqlResult.rows.length === 0 && (
-              <Typography variant='caption' color='textSubdued'>
-                {locales.ai_tool_no_rows}
-              </Typography>
-            )
-          ) : (
-            trace.result && (
-              <Box>
-                <RawTextStyled>{trace.result}</RawTextStyled>
-              </Box>
-            )
-          )}
+          {sqlResult
+            ? sqlResult.rows.length === 0 && (
+                <Typography variant='caption' color='textSubdued'>
+                  {locales.ai_tool_no_rows}
+                </Typography>
+              )
+            : trace.result && (
+                <Box>
+                  <RawTextStyled>{trace.result}</RawTextStyled>
+                </Box>
+              )}
         </AgentCardBodyStyled>
       </Collapse>
     </ToolRowStyled>

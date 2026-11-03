@@ -50,7 +50,11 @@ export const getShares = async (id: number): Promise<DashboardShareListType> =>
 export const createShare = async (id: number, data: CreateShareRequestType): Promise<DashboardShareType> =>
   (await api.post<{ data: DashboardShareType }>(`/dashboards/${id}/shares`, data)).data.data;
 
-export const updateShare = async (id: number, shareId: number, data: UpdateShareRequestType): Promise<DashboardShareType> =>
+export const updateShare = async (
+  id: number,
+  shareId: number,
+  data: UpdateShareRequestType
+): Promise<DashboardShareType> =>
   (await api.patch<{ data: DashboardShareType }>(`/dashboards/${id}/shares/${shareId}`, data)).data.data;
 
 export const getShareVisits = async (id: number, shareId: number): Promise<ShareVisitType[]> =>
@@ -65,7 +69,12 @@ export const viewSharedDashboard = async (
   password?: string,
   params?: Record<string, string>
 ): Promise<PublicDashboardType> =>
-  (await api.post<{ data: PublicDashboardType }>(`/public/dashboards/${encodeURIComponent(token)}`, { password, params })).data.data;
+  (
+    await api.post<{ data: PublicDashboardType }>(`/public/dashboards/${encodeURIComponent(token)}`, {
+      password,
+      params
+    })
+  ).data.data;
 
 export const getSubscriptions = async (id: number): Promise<SubscriptionListType> =>
   (await api.get<{ data: SubscriptionListType }>(`/dashboards/${id}/subscriptions`)).data.data;
@@ -73,7 +82,11 @@ export const getSubscriptions = async (id: number): Promise<SubscriptionListType
 export const createSubscription = async (id: number, data: SubscriptionRequestType): Promise<SubscriptionType> =>
   (await api.post<{ data: SubscriptionType }>(`/dashboards/${id}/subscriptions`, data)).data.data;
 
-export const updateSubscription = async (id: number, subId: number, data: SubscriptionRequestType): Promise<SubscriptionType> =>
+export const updateSubscription = async (
+  id: number,
+  subId: number,
+  data: SubscriptionRequestType
+): Promise<SubscriptionType> =>
   (await api.patch<{ data: SubscriptionType }>(`/dashboards/${id}/subscriptions/${subId}`, data)).data.data;
 
 export const deleteSubscription = async (id: number, subId: number): Promise<void> => {

@@ -20,7 +20,7 @@ const TITLE_BAR_CONFIG = {
     paddingTop: 8
   },
   fullScreen: {
-    paddingLeft: 16,
+    paddingLeft: 10, // centers the sidebar toggle over the 48px activity bar
     paddingTop: 8
   }
 } as const;

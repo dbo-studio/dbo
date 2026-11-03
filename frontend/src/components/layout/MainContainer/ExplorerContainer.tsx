@@ -7,7 +7,6 @@ import { getSidebarMaxWidth, useLayoutMode, useWindowSize } from '@/hooks';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import BackupSidebar from '@/components/common/BackupSidebar/BackupSidebar';
-import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useExplorerAreaStore } from '@/store/explorerArea/explorerArea.store';
 import { Typography } from '@mui/material';
@@ -15,6 +14,8 @@ import React, { type JSX, useMemo, useState } from 'react';
 import ResizableXBox from '../../base/ResizableBox/ResizableXBox';
 import Histories from '../../common/Histories/Histories';
 import SavedQueries from '../../common/SavedQueries/SavedQueries';
+import UnlockPanel from '@/components/common/Connections/UnlockPanel/UnlockPanel';
+import { useConnectionLock } from '@/components/common/Connections/useUnlockConnection';
 import ConnectionSwitcher from '../ConnectionSwitcher/ConnectionSwitcher';
 import { ExplorerContainerStyled, SidebarAreaTitleStyled } from './Container.styled';
 import type { ExplorerContainerProps } from './types';
@@ -43,6 +44,7 @@ export default React.memo(function ExplorerContainer({
   const [selectedTabId, setSelectedTabId] = useState(0);
   const area = useExplorerAreaStore((state) => state.area);
   const currentConnection = useCurrentConnection();
+  const { locked } = useConnectionLock();
   const views = useMemo(
     () => (showConnectionsRail ? explorerViews : [...explorerViews, boardsTab]),
     [showConnectionsRail]
@@ -93,7 +95,11 @@ export default React.memo(function ExplorerContainer({
       <>
         {showConnectionsRail && <ConnectionSwitcher />}
         {showConnectionsRail && !currentConnection ? (
-          <EmptyState icon='connection' title={locales.explorer_pick_connection} />
+          <Typography variant='caption' color='textSubdued' sx={{ p: 2 }}>
+            {locales.explorer_pick_connection}
+          </Typography>
+        ) : showConnectionsRail && locked ? (
+          <UnlockPanel />
         ) : (
           <>
             <SidebarSectionTabs value={selectedTabId} onChange={setSelectedTabId} tabs={views} />

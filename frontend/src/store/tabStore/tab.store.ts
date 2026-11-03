@@ -208,5 +208,4 @@ export const selectPaneSelectedTab = <T extends TabType>(pane: PaneId | 'scoped'
   ) as T | undefined;
 };
 
-export const selectPaneSelectedTabId = (pane: PaneId | 'scoped'): string | undefined =>
-  selectPaneSelectedTab(pane)?.id;
+export const selectPaneSelectedTabId = (pane: PaneId | 'scoped'): string | undefined => selectPaneSelectedTab(pane)?.id;

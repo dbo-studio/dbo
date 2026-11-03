@@ -19,7 +19,9 @@ type BackgroundQueryStore = {
 export const useBackgroundQueryStore = create<BackgroundQueryStore>((set) => ({
   byTab: {},
   delivered: {},
-  deliver: (tabId) => set((state) => ({ delivered: { ...state.delivered, [tabId]: (state.delivered[tabId] ?? 0) + 1 } })),
+  deliver: (tabId) =>
+    set((state) => ({ delivered: { ...state.delivered, [tabId]: (state.delivered[tabId] ?? 0) + 1 } })),
   start: (tabId, query) => set((state) => ({ byTab: { ...state.byTab, [tabId]: query } })),
-  clear: (tabId) => set((state) => ({ byTab: Object.fromEntries(Object.entries(state.byTab).filter(([id]) => id !== tabId)) }))
+  clear: (tabId) =>
+    set((state) => ({ byTab: Object.fromEntries(Object.entries(state.byTab).filter(([id]) => id !== tabId)) }))
 }));

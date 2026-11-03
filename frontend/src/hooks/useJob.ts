@@ -8,7 +8,9 @@ import { useCallback, useEffect } from 'react';
  * A job as the screen shows it: the saved state, kept current by the live stream. Progress comes from
  * events; when one reports an end, the job is read again for its result.
  */
-export const useJob = (jobId: number | null): { job: JobDetailResponseType | undefined; cancelJob: () => Promise<void> } => {
+export const useJob = (
+  jobId: number | null
+): { job: JobDetailResponseType | undefined; cancelJob: () => Promise<void> } => {
   const queryClient = useQueryClient();
   const event = useJobEventsStore((state) => (jobId === null ? undefined : state.jobs[jobId]));
   const { data } = useQuery({

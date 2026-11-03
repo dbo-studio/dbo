@@ -9,6 +9,7 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button, Popover, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import { type JSX, useMemo, useState } from 'react';
+import { useConnectionLock } from '@/components/common/Connections/useUnlockConnection';
 import SortableList from '@/components/base/SortableList/SortableList';
 import ConnectionRow from './ConnectionRow';
 import {
@@ -28,6 +29,7 @@ export default function ConnectionSwitcherMenu({
 }): JSX.Element {
   const connections = useConnectionStore((s) => s.connections) ?? [];
   const current = useCurrentConnection();
+  const { locked } = useConnectionLock();
   const { switchConnection, isSwitching, switchingId } = useSwitchConnection();
   const updateUI = useSettingStore((s) => s.updateUI);
   const mode = useAuthStore((s) => s.mode);
@@ -71,7 +73,7 @@ export default function ConnectionSwitcherMenu({
         <SwitcherListStyled role='listbox'>
           {shown.length === 0 && (
             <Typography variant='body2' color='textSubdued' sx={{ p: 1.5 }}>
-              {locales.connection_switcher_empty}
+              {connections.length === 0 ? locales.connection_switcher_no_connections : locales.connection_switcher_empty}
             </Typography>
           )}
           <SortableList
@@ -87,6 +89,7 @@ export default function ConnectionSwitcherMenu({
                 selected={c.id === current?.id}
                 loading={isSwitching && switchingId === c.id}
                 overlay={meta.overlay}
+                locked={locked && c.id === current?.id}
                 onMenuClosed={close}
                 onPick={() => {
                   close();

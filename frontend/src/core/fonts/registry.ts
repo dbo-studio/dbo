@@ -98,11 +98,11 @@ export const EDITOR_FONTS: FontEntry[] = [
   editorFont('commit-mono', 'Commit Mono', 'Commit Mono', 'static')
 ];
 
-export const DEFAULT_APP_FONT_ID = 'system-ui';
+export const DEFAULT_APP_FONT_ID = 'inter';
 export const DEFAULT_EDITOR_FONT_ID = 'jetbrains-mono';
 
 /** Font folders that should be precached for offline defaults (system-ui has no bundled faces). */
-export const PRECACHE_FONT_IDS = [DEFAULT_EDITOR_FONT_ID, ARABIC_FALLBACK_FONT.id] as const;
+export const PRECACHE_FONT_IDS = [DEFAULT_APP_FONT_ID, DEFAULT_EDITOR_FONT_ID, ARABIC_FALLBACK_FONT.id] as const;
 
 const allById = new Map<string, FontEntry>(
   [...APP_FONTS, ...EDITOR_FONTS, ARABIC_FALLBACK_FONT].map((font) => [font.id, font])

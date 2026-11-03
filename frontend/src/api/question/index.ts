@@ -1,5 +1,12 @@
 import { api } from '@/core/api';
-import type { FieldValuesRequestType, PreviewQuestionRequestType, QuestionParams, QuestionResultType, QuestionType, SaveQuestionRequestType } from './types';
+import type {
+  FieldValuesRequestType,
+  PreviewQuestionRequestType,
+  QuestionParams,
+  QuestionResultType,
+  QuestionType,
+  SaveQuestionRequestType
+} from './types';
 
 export const getQuestions = async (connectionId: number): Promise<QuestionType[]> =>
   (await api.get<{ data: QuestionType[] }>('/questions', { params: { connectionId } })).data.data;
@@ -19,7 +26,10 @@ export const runQuestion = async (id: number, params?: QuestionParams): Promise<
   (await api.post<{ data: QuestionResultType }>(`/questions/${id}/run`, { params })).data.data;
 
 /** Runs unsaved SQL from the editor the way a saved report runs. */
-export const previewQuestion = async (data: PreviewQuestionRequestType, signal?: AbortSignal): Promise<QuestionResultType> =>
+export const previewQuestion = async (
+  data: PreviewQuestionRequestType,
+  signal?: AbortSignal
+): Promise<QuestionResultType> =>
   (await api.post<{ data: QuestionResultType }>('/questions/preview', data, { signal })).data.data;
 
 /** Distinct values of a field filter's column, for its dropdown. */

@@ -21,7 +21,12 @@ export const useTraySync = (enabled: boolean): void => {
   const running = useJobEventsStore(
     (state) => Object.values(state.jobs).filter((job) => job.status === 'running' || job.status === 'pending').length
   );
-  const { data: mcp } = useQuery({ queryKey: ['mcp-status'], queryFn: api.mcp.getStatus, enabled, refetchInterval: 30_000 });
+  const { data: mcp } = useQuery({
+    queryKey: ['mcp-status'],
+    queryFn: api.mcp.getStatus,
+    enabled,
+    refetchInterval: 30_000
+  });
 
   const mcpLabel = !mcp?.enabled ? 'off' : mcp.healthy ? 'running' : 'unhealthy';
 
@@ -32,7 +37,9 @@ export const useTraySync = (enabled: boolean): void => {
 
   useEffect(() => {
     if (!enabled) return;
-    void tools.isTauri().then((desktop) => desktop && invoke('update_tray_status', { runningJobs: running, mcp: mcpLabel }));
+    void tools
+      .isTauri()
+      .then((desktop) => desktop && invoke('update_tray_status', { runningJobs: running, mcp: mcpLabel }));
   }, [enabled, running, mcpLabel]);
 
   useEffect(() => {

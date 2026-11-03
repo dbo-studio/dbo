@@ -124,7 +124,8 @@ export const clearToolPath = async (name: string): Promise<void> => {
   await api.delete(endpoint.toolPath(name));
 };
 
-const connectorBase = (kind: ConnectorKind): string => (kind === 'destination' ? '/backup-destinations' : '/notification-channels');
+const connectorBase = (kind: ConnectorKind): string =>
+  kind === 'destination' ? '/backup-destinations' : '/notification-channels';
 
 export const connectors = async (kind: ConnectorKind): Promise<ConnectorType[]> => {
   return (await api.get<{ data: ConnectorType[] }>(connectorBase(kind))).data.data;

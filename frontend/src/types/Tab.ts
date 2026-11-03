@@ -18,7 +18,15 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | DashboardTabType | QuestionTabType | SettingsTabType | BackupTabType;
+export type TabType =
+  | DataTabType
+  | EditorTabType
+  | ObjectTabType
+  | DiagramTabType
+  | DashboardTabType
+  | QuestionTabType
+  | SettingsTabType
+  | BackupTabType;
 
 type BaseTab = {
   id: string;

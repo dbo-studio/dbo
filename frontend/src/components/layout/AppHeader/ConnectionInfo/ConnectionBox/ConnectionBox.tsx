@@ -33,7 +33,7 @@ export default function ConnectionBox(): JSX.Element {
     }
 
     if (!currentConnection) {
-      return locales.no_active_connection;
+      return locales.not_connected;
     }
 
     return currentConnection.info;

@@ -1,6 +1,11 @@
 import { TabMode } from '@/core/enums';
 import { runQueryInBackground, runRawQueryInBackground } from '@/api/query';
-import { isBackgroundQuery, type BackgroundQueryType, type GridMetaType, type RunQueryResponseType } from '@/api/query/types';
+import {
+  isBackgroundQuery,
+  type BackgroundQueryType,
+  type GridMetaType,
+  type RunQueryResponseType
+} from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
 import { reconcileBackgroundQuery } from '@/core/events/backgroundQueries';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
@@ -261,7 +266,9 @@ export const createDataQuerySlice: StateCreator<
         }
 
         if (isBackgroundQuery(answer)) {
-          useBackgroundQueryStore.getState().start(selectedTabId, { jobId: answer.jobId, kind: 'raw', startedAt: Date.now() });
+          useBackgroundQueryStore
+            .getState()
+            .start(selectedTabId, { jobId: answer.jobId, kind: 'raw', startedAt: Date.now() });
           void reconcileBackgroundQuery(answer.jobId);
 
           return;

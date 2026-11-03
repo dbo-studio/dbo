@@ -25,7 +25,8 @@ export default function NotificationsPanel(): JSX.Element {
     });
   }, []);
 
-  const set = (patch: Partial<NotificationSettings>): void => updateGeneral({ notifications: { ...settings, ...patch } });
+  const set = (patch: Partial<NotificationSettings>): void =>
+    updateGeneral({ notifications: { ...settings, ...patch } });
 
   return (
     <Box data-settings-id='notifications.panel'>
@@ -37,7 +38,12 @@ export default function NotificationsPanel(): JSX.Element {
           control={
             <Switch
               checked={settings.enabled}
-              slotProps={{ input: { 'aria-label': locales.notification_settings_enabled, 'data-testid': 'notifications-enabled' } as React.InputHTMLAttributes<HTMLInputElement> }}
+              slotProps={{
+                input: {
+                  'aria-label': locales.notification_settings_enabled,
+                  'data-testid': 'notifications-enabled'
+                } as React.InputHTMLAttributes<HTMLInputElement>
+              }}
               onChange={(event): void => {
                 set({ enabled: event.target.checked });
                 // The system asks once, on this click.
@@ -55,7 +61,12 @@ export default function NotificationsPanel(): JSX.Element {
               <Switch
                 checked={settings[kind]}
                 disabled={!settings.enabled}
-                slotProps={{ input: { 'aria-label': locales[`notification_settings_${kind}`], 'data-testid': `notifications-${kind}` } as React.InputHTMLAttributes<HTMLInputElement> }}
+                slotProps={{
+                  input: {
+                    'aria-label': locales[`notification_settings_${kind}`],
+                    'data-testid': `notifications-${kind}`
+                  } as React.InputHTMLAttributes<HTMLInputElement>
+                }}
                 onChange={(event): void => set({ [kind]: event.target.checked })}
               />
             }
@@ -80,7 +91,12 @@ export default function NotificationsPanel(): JSX.Element {
             <Switch
               checked={settings.sound}
               disabled={!settings.enabled}
-              slotProps={{ input: { 'aria-label': locales.notification_settings_sound, 'data-testid': 'notifications-sound' } as React.InputHTMLAttributes<HTMLInputElement> }}
+              slotProps={{
+                input: {
+                  'aria-label': locales.notification_settings_sound,
+                  'data-testid': 'notifications-sound'
+                } as React.InputHTMLAttributes<HTMLInputElement>
+              }}
               onChange={(event): void => set({ sound: event.target.checked })}
             />
           }
@@ -90,7 +106,12 @@ export default function NotificationsPanel(): JSX.Element {
           label={locales.notification_settings_test}
           description={locales.notification_settings_test_hint}
           control={
-            <Button size='small' variant='outlined' onClick={() => void sendTestNotification()} data-testid='notifications-test'>
+            <Button
+              size='small'
+              variant='outlined'
+              onClick={() => void sendTestNotification()}
+              data-testid='notifications-test'
+            >
               {locales.notification_settings_test_action}
             </Button>
           }
@@ -104,8 +125,17 @@ export default function NotificationsPanel(): JSX.Element {
               size='small'
               type='number'
               value={general.backgroundAfterSeconds}
-              onChange={(event) => updateGeneral({ backgroundAfterSeconds: Math.min(3600, Math.max(0, Math.floor(Number(event.target.value) || 0))) })}
-              inputProps={{ 'aria-label': locales.notification_settings_background, 'data-testid': 'notifications-background-seconds', min: 0, max: 3600 }}
+              onChange={(event) =>
+                updateGeneral({
+                  backgroundAfterSeconds: Math.min(3600, Math.max(0, Math.floor(Number(event.target.value) || 0)))
+                })
+              }
+              inputProps={{
+                'aria-label': locales.notification_settings_background,
+                'data-testid': 'notifications-background-seconds',
+                min: 0,
+                max: 3600
+              }}
               mb={0}
               sx={{ width: 90 }}
             />
@@ -119,10 +149,17 @@ export default function NotificationsPanel(): JSX.Element {
             control={
               <Switch
                 checked={autostart}
-                slotProps={{ input: { 'aria-label': locales.notification_settings_autostart, 'data-testid': 'notifications-autostart' } as React.InputHTMLAttributes<HTMLInputElement> }}
+                slotProps={{
+                  input: {
+                    'aria-label': locales.notification_settings_autostart,
+                    'data-testid': 'notifications-autostart'
+                  } as React.InputHTMLAttributes<HTMLInputElement>
+                }}
                 onChange={(event): void => {
                   setAutostart(event.target.checked);
-                  void invoke(`plugin:autostart|${event.target.checked ? 'enable' : 'disable'}`).catch(() => setAutostart(!event.target.checked));
+                  void invoke(`plugin:autostart|${event.target.checked ? 'enable' : 'disable'}`).catch(() =>
+                    setAutostart(!event.target.checked)
+                  );
                 }}
               />
             }
@@ -136,7 +173,12 @@ export default function NotificationsPanel(): JSX.Element {
             control={
               <Switch
                 checked={general.keepRunningInBackground}
-                slotProps={{ input: { 'aria-label': locales.notification_settings_keep_running, 'data-testid': 'notifications-keep-running' } as React.InputHTMLAttributes<HTMLInputElement> }}
+                slotProps={{
+                  input: {
+                    'aria-label': locales.notification_settings_keep_running,
+                    'data-testid': 'notifications-keep-running'
+                  } as React.InputHTMLAttributes<HTMLInputElement>
+                }}
                 onChange={(event): void => updateGeneral({ keepRunningInBackground: event.target.checked })}
               />
             }

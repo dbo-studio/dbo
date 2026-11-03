@@ -10,6 +10,7 @@ import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
+import { useConnectionLock } from '@/components/common/Connections/useUnlockConnection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useFocusedDataStore } from '@/store/dataStore/data.store';
 import { useNotificationPanelStore } from '@/store/notificationPanel/notificationPanel.store';
@@ -94,19 +95,29 @@ export default function StatusBar(): JSX.Element {
   const failing = schedules.filter((s) => s.enabled && s.lastStatus === 'failed').length;
   const unread = inbox?.unread ?? 0;
   const first = running[0];
-  const connectionTone =
-    loading === 'loading' ? 'busy' : loading === 'error' ? 'error' : connection ? 'success' : 'idle';
+  const { locked } = useConnectionLock();
+  const connectionTone = locked
+    ? 'warning'
+    : loading === 'loading'
+      ? 'busy'
+      : loading === 'error'
+        ? 'error'
+        : connection
+          ? 'success'
+          : 'idle';
 
   return (
     <StatusBarStyled data-testid='status-bar'>
       <StatusTextStyled data-testid='status-connection'>
         <StatusDotStyled tone={connectionTone} />
         <span>
-          {loading === 'error'
-            ? locales.connection_error
-            : connection
-              ? `${connection.name} · ${connection.info}`
-              : locales.no_active_connection}
+          {locked
+            ? `${connection?.name ?? ''} · ${locales.status_locked}`
+            : loading === 'error'
+              ? locales.connection_error
+              : connection
+                ? connection.info
+                : locales.not_connected}
         </span>
       </StatusTextStyled>
 

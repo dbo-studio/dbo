@@ -9,5 +9,13 @@ export default function JobResultHost(): JSX.Element {
   const close = useJobResultModalStore((state) => state.close);
   const open = useJobResultModalStore((state) => state.open);
 
-  return <JobProgressModal open={jobId !== null} jobId={jobId === null ? null : String(jobId)} title={title} onClose={close} onRetry={(id) => open(id, title)} />;
+  return (
+    <JobProgressModal
+      open={jobId !== null}
+      jobId={jobId === null ? null : String(jobId)}
+      title={title}
+      onClose={close}
+      onRetry={(id) => open(id, title)}
+    />
+  );
 }

@@ -125,8 +125,7 @@ export const formatAxisNumber = (value: unknown): string =>
   isNumeric(value) ? compact.format(Number(value)) : asText(value);
 export const formatNumber = (value: unknown): string => (isNumeric(value) ? full.format(Number(value)) : asText(value));
 
-const PARAM =
-  /\{\{\s*([A-Za-z_]\w*)\s*(?::\s*([a-z]+)\s*(?:=\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)\s*)?)?\}\}/g;
+const PARAM = /\{\{\s*([A-Za-z_]\w*)\s*(?::\s*([a-z]+)\s*(?:=\s*([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)\s*)?)?\}\}/g;
 
 /** A {{filter}} in a report's SQL: {{name}}, {{name:type}} or {{name:field=table.column}}. */
 export type QuestionParam = {

@@ -12,7 +12,17 @@ import { CHART_TYPES, numericColumns, questionParams, type ChartType } from '@/c
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Box, Button, CircularProgress, FormControlLabel, Stack, Switch, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography
+} from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRef, useState, type JSX } from 'react';
 
@@ -74,7 +84,8 @@ export default function ReportEditor({
   const measures = numericColumns(edited.rows, edited.columns);
   const option = (value: string): SelectInputOption => ({ value, label: value });
 
-  const patchSpec = (next: Partial<typeof edited.spec>): void => setEdited({ ...edited, spec: { ...edited.spec, ...next } });
+  const patchSpec = (next: Partial<typeof edited.spec>): void =>
+    setEdited({ ...edited, spec: { ...edited.spec, ...next } });
   const picked = (value: unknown): string => (value as SelectInputOption).value as string;
   // The chart types with more than an x and one measure ask for the rest here.
   const extras = (
@@ -155,7 +166,9 @@ export default function ReportEditor({
               size='small'
               checked={!!edited.spec.stacked}
               onChange={(event) => setEdited({ ...edited, spec: { ...edited.spec, stacked: event.target.checked } })}
-              slotProps={{ input: { 'data-testid': 'ai-report-stacked' } as React.InputHTMLAttributes<HTMLInputElement> }}
+              slotProps={{
+                input: { 'data-testid': 'ai-report-stacked' } as React.InputHTMLAttributes<HTMLInputElement>
+              }}
             />
           }
         />

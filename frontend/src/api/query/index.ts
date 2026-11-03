@@ -21,7 +21,11 @@ const endpoint = {
 // query move to the background.
 export const runQuery = async (data: RunQueryRequestType, signal?: AbortSignal): Promise<RunQueryResponseType> => {
   return (
-    await api.post<{ data: RunQueryResponseType }>(endpoint.runQuery(), { ...data, backgroundAfterSeconds: 0 }, { signal })
+    await api.post<{ data: RunQueryResponseType }>(
+      endpoint.runQuery(),
+      { ...data, backgroundAfterSeconds: 0 },
+      { signal }
+    )
   ).data.data;
 };
 
@@ -30,7 +34,11 @@ export const runRawQuery = async (
   signal?: AbortSignal
 ): Promise<RunQueryResponseType> => {
   return (
-    await api.post<{ data: RunQueryResponseType }>(endpoint.runRawQuery(), { ...data, backgroundAfterSeconds: 0 }, { signal })
+    await api.post<{ data: RunQueryResponseType }>(
+      endpoint.runRawQuery(),
+      { ...data, backgroundAfterSeconds: 0 },
+      { signal }
+    )
   ).data.data;
 };
 
@@ -38,16 +46,17 @@ export const runQueryInBackground = async (
   data: RunQueryRequestType,
   signal?: AbortSignal
 ): Promise<RunQueryResponseType | BackgroundQueryType> => {
-  return (await api.post<{ data: RunQueryResponseType | BackgroundQueryType }>(endpoint.runQuery(), data, { signal })).data
-    .data;
+  return (await api.post<{ data: RunQueryResponseType | BackgroundQueryType }>(endpoint.runQuery(), data, { signal }))
+    .data.data;
 };
 
 export const runRawQueryInBackground = async (
   data: RunRawQueryRequestType,
   signal?: AbortSignal
 ): Promise<RunQueryResponseType | BackgroundQueryType> => {
-  return (await api.post<{ data: RunQueryResponseType | BackgroundQueryType }>(endpoint.runRawQuery(), data, { signal }))
-    .data.data;
+  return (
+    await api.post<{ data: RunQueryResponseType | BackgroundQueryType }>(endpoint.runRawQuery(), data, { signal })
+  ).data.data;
 };
 
 export const autoComplete = async (data: AutoCompleteRequestType): Promise<AutoCompleteType> => {

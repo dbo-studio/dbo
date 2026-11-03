@@ -48,7 +48,13 @@ export default function BackgroundQueryNotice({ tabId }: { tabId: string }): JSX
         <Typography variant='body2' color='textSubdued' sx={{ mt: 0.5 }}>
           {locales.background_query_hint}
         </Typography>
-        <Typography variant='caption' color='textSubdued' component='div' sx={{ mt: 1 }} data-testid='background-query-elapsed'>
+        <Typography
+          variant='caption'
+          color='textSubdued'
+          component='div'
+          sx={{ mt: 1 }}
+          data-testid='background-query-elapsed'
+        >
           {formatElapsed(now - query.startedAt)}
         </Typography>
         <Button size='small' sx={{ mt: 1 }} onClick={cancel} data-testid='background-query-cancel'>

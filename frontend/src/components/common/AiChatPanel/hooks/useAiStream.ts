@@ -28,7 +28,15 @@ type UseAiStreamReturn = {
 };
 
 /** Streams chat turns; each chat has its own stream, state and abort handle. */
-const REPORT_TOOLS = new Set(['save_report', 'pin_report', 'update_report', 'delete_report', 'rename_board', 'delete_board', 'unpin_report']);
+const REPORT_TOOLS = new Set([
+  'save_report',
+  'pin_report',
+  'update_report',
+  'delete_report',
+  'rename_board',
+  'delete_board',
+  'unpin_report'
+]);
 
 export const useAiStream = (): UseAiStreamReturn => {
   const controllersRef = useRef(new Map<number, AbortController>());

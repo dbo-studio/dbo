@@ -22,14 +22,22 @@ export default function ConnectionSwitcher(): JSX.Element {
         data-testid='connection-switcher'
         aria-haspopup='listbox'
       >
-        <CustomIcon type={current ? engineIconOf(current) : 'connection'} size='m' />
+        <CustomIcon type={current ? engineIconOf(current) : 'connection'} size='s' />
         <SwitcherTextStyled>
-          <Typography variant='subtitle2' color='textTitle' noWrap>
-            {current?.name ?? locales.connection_switcher_none}
-          </Typography>
-          <Typography variant='caption' color='textSecondary' noWrap>
-            {current?.type ?? locales.connection_switcher_pick}
-          </Typography>
+          {current ? (
+            <>
+              <Typography variant='subtitle2' color='textTitle' noWrap>
+                {current.name}
+              </Typography>
+              <Typography variant='caption' color='textSecondary' noWrap>
+                {current.type}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant='subtitle2' color='textSubdued' noWrap>
+              {locales.connection_switcher_pick}
+            </Typography>
+          )}
         </SwitcherTextStyled>
         <CustomIcon type='chevronDown' size='s' />
       </SwitcherTriggerStyled>

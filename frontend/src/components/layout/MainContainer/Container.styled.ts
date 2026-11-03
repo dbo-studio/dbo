@@ -1,4 +1,4 @@
-import { Box, styled } from '@mui/material';
+import { alpha, Box, styled } from '@mui/material';
 
 const containerBaseStyles = {
   height: '100%',
@@ -77,4 +77,16 @@ export const SidebarAreaTitleStyled = styled(Box)(({ theme }) => ({
   flexShrink: 0,
   background: theme.palette.background.default,
   borderBottom: `1px solid ${theme.palette.divider}`
+}));
+
+export const LockedBannerStyled = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  minHeight: 32,
+  padding: theme.spacing(0, 1.5),
+  flexShrink: 0,
+  background: alpha(theme.palette.warning.main, 0.12),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  svg: { color: theme.palette.warning.main }
 }));

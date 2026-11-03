@@ -412,21 +412,19 @@ export class ConnectionPage extends BasePage {
     });
   }
 
+  /** A locked connection asks for its password inline in the explorer, not in a dialog. */
   async handlePasswordPrompt(password: string): Promise<void> {
-    const heading = this.page.getByRole("heading", {
-      name: "Password",
-      exact: true,
-    });
-    if (!(await heading.isVisible({ timeout: 5000 }).catch(() => false))) {
+    const panel = this.page.getByTestId("connection-unlock-panel");
+    if (!(await panel.isVisible({ timeout: 5000 }).catch(() => false))) {
       return;
     }
 
-    await this.passwordInput.fill(password);
+    await panel.locator('input[name="password"]').fill(password);
 
     await waitForResponseDuring(this.page, apiRoute.connectionCredentials, () =>
-      this.page.getByRole("button", { name: "Save" }).click(),
+      panel.getByTestId("connection-unlock-submit").click(),
     );
-    await expect(heading).toBeHidden({ timeout: 10_000 });
+    await expect(panel).toBeHidden({ timeout: 10_000 });
   }
 
   async activateConnection(name: string, password = "secret"): Promise<void> {

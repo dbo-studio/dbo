@@ -17,6 +17,8 @@ type Props = {
   loading: boolean;
   /** Drag preview: no handlers, no menu. */
   overlay?: boolean;
+  /** The connection is waiting for its password. */
+  locked?: boolean;
   onPick: () => void;
   onMenuClosed: () => void;
 };
@@ -27,6 +29,7 @@ export default function ConnectionRow({
   selected,
   loading,
   overlay = false,
+  locked = false,
   onPick,
   onMenuClosed
 }: Props): JSX.Element {
@@ -55,7 +58,13 @@ export default function ConnectionRow({
             {connection.type}
           </Typography>
         </SwitcherTextStyled>
-        {loading ? <CircularProgress size={14} /> : selected && <CustomIcon type='check' size='s' />}
+        {loading ? (
+          <CircularProgress size={14} />
+        ) : locked ? (
+          <CustomIcon type='lock' size='s' />
+        ) : (
+          selected && <CustomIcon type='check' size='s' />
+        )}
       </SwitcherRowStyled>
       <ConnectionItemContextMenu
         connection={connection}
