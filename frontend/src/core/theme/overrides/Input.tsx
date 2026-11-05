@@ -64,6 +64,45 @@ export default function Input(theme: Theme): Components {
         }
       }
     },
+    // TextField/Select render OutlinedInput: drop its notched fieldset and padding so it matches FieldInput.
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          // OutlinedInput's own radius and padding come later in the cascade than the InputBase ones; restate them.
+          borderRadius: variables.radius.medium,
+          padding: '0 8px',
+          fontSize: 'inherit',
+          fontFamily: 'inherit',
+          '&.MuiInputBase-sizeSmall': { padding: '0 8px', fontSize: theme.typography.caption.fontSize },
+          '&.Mui-error': { border: `1px solid ${theme.palette.error.main}` },
+          '& .MuiOutlinedInput-notchedOutline': { display: 'none' },
+          '& .MuiOutlinedInput-input': { padding: 0, height: '100%' },
+          '&.MuiInputBase-multiline .MuiOutlinedInput-input': { height: 'auto' }
+        }
+      }
+    },
+    // TextField labels sit above the input like FieldInput's label row, not floating inside the border.
+    MuiTextField: { defaultProps: { slotProps: { inputLabel: { shrink: true } } } },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          '&.MuiInputLabel-formControl': {
+            position: 'static',
+            transform: 'none',
+            maxWidth: '100%',
+            marginBottom: 4,
+            fontSize: theme.typography.caption.fontSize,
+            lineHeight: theme.typography.caption.lineHeight,
+            color: theme.palette.text.text,
+            '&.Mui-focused': { color: theme.palette.text.text },
+            '&.Mui-error': { color: theme.palette.text.text }
+          }
+        }
+      }
+    },
+    MuiFormHelperText: {
+      styleOverrides: { root: { marginLeft: 0, marginRight: 0, fontSize: theme.typography.caption.fontSize } }
+    },
     MuiFormControlLabel: {
       styleOverrides: {
         root: {

@@ -24,6 +24,8 @@ export default function Menu(theme: Theme): Components {
     MuiPopover: {
       styleOverrides: {
         paper: {
+          backgroundImage: 'none',
+          background: theme.palette.background.default,
           border: `1px solid ${theme.palette.divider}`,
           boxShadow: `0 4px 6px -1px ${alpha(theme.palette.common.black, 0.1)},0 2px 4px -2px ${alpha(theme.palette.common.black, 0.1)}`,
           borderRadius: variables.radius.medium
