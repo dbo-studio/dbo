@@ -398,5 +398,9 @@ func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
 		CreateConnection: flags.CreateConnection,
 		AiSettings:       flags.AiSettings,
 		McpSettings:      flags.McpSettings,
+		Cli:              flags.Cli,
+		Import:           flags.Import,
+		Export:           flags.Export,
+		AiUse:            flags.AiUse,
 	}
 }

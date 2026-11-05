@@ -25,6 +25,7 @@ var (
 	ErrAiMissingModel                 = errors.New("ai model is required")
 	ErrPasswordRequired               = errors.New("password_required")
 	ErrSafeModeBlocked                = errors.New("safe_mode_blocked")
+	ErrSafeModeProdLocked             = errors.New("safe_mode_prod_locked")
 	ErrSafeModeConfirmRequired        = errors.New("safe_mode_confirm_required")
 	ErrSafeModePasswordRequired       = errors.New("safe_mode_password_required")
 	ErrSafeModePasswordInvalid        = errors.New("safe_mode_password_invalid")
@@ -204,6 +205,15 @@ func SafeModeBlocked(data map[string]any) error {
 		Code:    http.StatusForbidden,
 		Message: "safe_mode_blocked",
 		Err:     ErrSafeModeBlocked,
+		Data:    data,
+	}
+}
+
+func SafeModeProdLocked(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_prod_locked",
+		Err:     ErrSafeModeProdLocked,
 		Data:    data,
 	}
 }

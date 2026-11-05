@@ -48,6 +48,12 @@ const engineProjects = [
     use: chromeUse,
     testMatch: ["**/sqlite/**/*.spec.ts"],
   },
+  {
+    // NoSQL engine against the in-memory fixture driver (DBO_ENABLE_NOSQL_FIXTURE=1); no sample DB needed.
+    name: "nosql",
+    use: chromeUse,
+    testMatch: ["**/nosql/**/*.spec.ts"],
+  },
 ];
 
 export default defineConfig({

@@ -4,6 +4,7 @@ export {
   connectionDriver,
   getConnectionAlias,
   isMysqlDriver,
+  isRedisDriver,
   isPostgresDriver,
   type ConnectionAliasDef,
   type ConnectionDriver,

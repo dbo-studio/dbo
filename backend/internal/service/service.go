@@ -12,6 +12,7 @@ import (
 	serviceAiProvider "github.com/dbo-studio/dbo/internal/service/ai_provider"
 	serviceAuth "github.com/dbo-studio/dbo/internal/service/auth"
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
+	serviceCLI "github.com/dbo-studio/dbo/internal/service/cli"
 	serviceConfig "github.com/dbo-studio/dbo/internal/service/config"
 	serviceConnection "github.com/dbo-studio/dbo/internal/service/connection"
 	serviceConnector "github.com/dbo-studio/dbo/internal/service/connector"
@@ -23,6 +24,7 @@ import (
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	serviceMCP "github.com/dbo-studio/dbo/internal/service/mcp"
+	serviceNoSQL "github.com/dbo-studio/dbo/internal/service/nosql"
 	serviceNotification "github.com/dbo-studio/dbo/internal/service/notification"
 	serviceQuery "github.com/dbo-studio/dbo/internal/service/query"
 	serviceQuestion "github.com/dbo-studio/dbo/internal/service/question"
@@ -46,6 +48,8 @@ type Service struct {
 	NotificationService          serviceNotification.INotificationService
 	DashboardSubscriptionService serviceDashboard.ISubscriptionService
 	TreeService                  serviceTree.ITreeService
+	NoSQLService                 serviceNoSQL.INoSQLService
+	CLIService                   serviceCLI.ICLIService
 	QueryService                 serviceQuery.IQueryService
 	ImportExportService          serviceImportExport.IImportExport
 	JobService                   serviceJob.IJobService
@@ -88,6 +92,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	jobManager.RegisterProcessor(processors.NewRestoreProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, ss, connectorService))
 	jobManager.RegisterProcessor(processors.NewRestoreDrillProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, connectorService))
 	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
+	jobManager.RegisterProcessor(processors.NewNoSQLBulkDeleteProcessor(jobManager, cm, repo.ConnectionRepo))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
@@ -109,6 +114,9 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiAuditRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService, deps.Logger)
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
+	nosqlService := serviceNoSQL.NewService(repo.ConnectionRepo, cm, deps.Cache, jobManager, repo.NoSQLRecycleRepo)
+	queryService := serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache, jobManager)
+
 	return &Service{
 		ConnectionService:            serviceConnection.NewConnectionService(repo.ConnectionRepo, repo.ConnectionShareRepo, repo.UserRepo, cm, ss, safeModePasswordService, deps.Cache, deps.Logger),
 		HistoryService:               serviceHistory.NewHistoryService(repo.HistoryRepo, repo.ConnectionRepo),
@@ -120,7 +128,9 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		NotificationService:          notificationService,
 		DashboardSubscriptionService: dashboardSubscriptionService,
 		TreeService:                  serviceTree.NewTreeService(repo.ConnectionRepo, cm, deps.Cache),
-		QueryService:                 serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache, jobManager),
+		NoSQLService:                 nosqlService,
+		CLIService:                   serviceCLI.NewService(repo.ConnectionRepo, queryService, nosqlService, deps.Logger),
+		QueryService:                 queryService,
 		ImportExportService:          serviceImportExport.NewImportExportService(jobManager, deps.Config, deps.Logger),
 		JobService:                   serviceJob.NewJobService(repo.JobRepo, jobManager),
 		JobManager:                   jobManager,

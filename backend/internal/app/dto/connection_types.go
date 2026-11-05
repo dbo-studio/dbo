@@ -5,9 +5,13 @@ import (
 )
 
 func connectionTypeValues() []any {
-	out := make([]any, len(databaseContract.ValidConnectionTypes))
-	for i, t := range databaseContract.ValidConnectionTypes {
-		out[i] = t
+	out := make([]any, 0, len(databaseContract.ValidConnectionTypes)+1)
+	for _, t := range databaseContract.ValidConnectionTypes {
+		out = append(out, t)
+	}
+
+	if databaseContract.NoSQLFixtureEnabled() {
+		out = append(out, databaseContract.NoSQLFixture)
 	}
 
 	return out

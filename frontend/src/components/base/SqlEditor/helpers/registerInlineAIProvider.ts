@@ -1,3 +1,5 @@
+import { canUseAi } from '@/core/auth/permissions';
+import { useAuthStore } from '@/store/authStore/auth.store';
 import api from '@/api';
 import type { AICompleteRequest } from '@/api/ai/types';
 import { getAiStatus } from '@/core/ai/aiStatus';
@@ -69,7 +71,13 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
       _context: Monaco.languages.InlineCompletionContext,
       token: Monaco.CancellationToken
     ) => {
-      if (!useSettingStore.getState().editor.enableEditorAi || !getAiStatus(useAiStore.getState().providers).ready) {
+      const { mode, user } = useAuthStore.getState();
+
+      if (
+        !canUseAi(mode, user) ||
+        !useSettingStore.getState().editor.enableEditorAi ||
+        !getAiStatus(useAiStore.getState().providers).ready
+      ) {
         return emptyResult;
       }
 

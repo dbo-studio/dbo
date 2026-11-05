@@ -7,8 +7,10 @@ import (
 
 type (
 	SafeModeUnlockRequest struct {
-		Password   string `json:"password"`
-		TTLMinutes *int   `json:"ttlMinutes"`
+		Password string `json:"password"`
+		// ConfirmName unlocks a prod connection by typing its name, instead of the Safe Mode password.
+		ConfirmName string `json:"confirmName"`
+		TTLMinutes  *int   `json:"ttlMinutes"`
 	}
 
 	SafeModeUnlockResponse struct {
@@ -38,7 +40,8 @@ type (
 
 func (r SafeModeUnlockRequest) Validate() error {
 	err := validation.ValidateStruct(&r,
-		validation.Field(&r.Password, validation.Required, validation.Length(1, 2000)),
+		validation.Field(&r.Password, validation.When(r.ConfirmName == "", validation.Required), validation.Length(0, 2000)),
+		validation.Field(&r.ConfirmName, validation.Length(0, 200)),
 	)
 	if err != nil {
 		return err

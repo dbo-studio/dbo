@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
+import { openBottomPanel } from '@/core/bottomPanel';
 import { openBackup } from '@/core/backup/openBackup';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
@@ -55,6 +56,13 @@ export function useCommands(query: string): Command[] {
         label: locales.command_open_settings,
         icon: 'settings',
         run: () => openSettings()
+      },
+      {
+        id: 'bottom-panel',
+        group: locales.command_group_actions,
+        label: locales.toggle_bottom_panel,
+        icon: 'sql',
+        run: () => openBottomPanel()
       },
       {
         id: 'left',

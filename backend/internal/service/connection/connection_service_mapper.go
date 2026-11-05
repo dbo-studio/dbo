@@ -81,6 +81,7 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		Type:                connection.ConnectionType,
 		Info:                connectionInfo(connection),
 		Options:             j,
+		Env:                 connection.Env,
 		SafeMode:            string(policy.Mode),
 		SafeModeUnlocked:    policy.Unlocked,
 		SafeModeUnlockUntil: unlockUntil,
@@ -95,6 +96,7 @@ func connectionInfo(connection *model.Connection) string {
 	switch {
 	case databaseContract.IsPostgresFamily(connection.ConnectionType),
 		databaseContract.IsMysqlFamily(connection.ConnectionType),
+		databaseContract.IsRedisFamily(connection.ConnectionType),
 		connection.ConnectionType == "sqlite",
 		connection.ConnectionType == "sqlserver":
 		version := ""

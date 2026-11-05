@@ -1,4 +1,5 @@
 import api from '@/api';
+import { openBottomPanel } from '@/core/bottomPanel';
 import { useCloseOverlaySidebar } from '@/components/common/Boards/useDashboardCommands';
 import { TabMode } from '@/core/enums';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
@@ -25,6 +26,8 @@ export const useActionDetection = (
 
   const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
+  const addBrowseTab = useTabStore((state) => state.addBrowseTab);
+  const addToolTab = useTabStore((state) => state.addToolTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const setFocusedNodeId = useTreeStore((state) => state.setFocusedNodeId);
 
@@ -91,6 +94,19 @@ export const useActionDetection = (
               addObjectTab(node.action.title, node.id, node.action.name, TabMode.ObjectDetail);
               break;
             }
+            case 'tool': {
+              // The CLI is the bottom-panel terminal, not a tab; other tools (Pub/Sub) are tabs.
+              if (node.action.params.tool === 'cli') {
+                openBottomPanel('terminal');
+              } else {
+                addToolTab(node.action.params.tool as string, node.action.title);
+              }
+              break;
+            }
+            case 'browse': {
+              addBrowseTab(node.name, node.id);
+              break;
+            }
             case 'data': {
               addDataTab(node.action.params.table as string, node.id, node.action.params.editable as boolean);
               break;
@@ -138,6 +154,8 @@ export const useActionDetection = (
     [
       expandNode,
       addObjectTab,
+      addBrowseTab,
+      addToolTab,
       addDataTab,
       closeLeftSidebar,
       currentConnection,

@@ -4,20 +4,33 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { DataTabType, FilterType } from '@/types/Tab';
+import type { ColumnType } from '@/types/Data';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddFilterButton from './FilterItem/AddFilterButton/AddFilterButton.tsx';
 import FilterItem from './FilterItem/FilterItem.tsx';
 import { FiltersApplyBoxStyled } from './Filters.styled';
 
-export default function Filters(): JSX.Element {
+type FiltersProps = {
+  /** Browse tabs pass their own columns and apply handler; Data tabs use the data store. */
+  columns?: ColumnType[];
+  onApply?: () => void;
+};
+
+export default function Filters({ columns: columnsProp, onApply }: FiltersProps = {}): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
-  const columns = useDataStore((state) => state.columns);
+  const storeColumns = useDataStore((state) => state.columns);
+  const columns = columnsProp ?? storeColumns;
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const handleApplyFilters = (): void => {
+    if (onApply) {
+      onApply();
+      return;
+    }
+
     // Read fresh tab — removeFilter runs before apply(); a render closure would restore stale filters.
     const tab = useTabStore.getState().selectedTab<DataTabType>();
     if (tab && (tab.pagination?.page ?? 0) > 1) {

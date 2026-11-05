@@ -47,6 +47,7 @@ npm test                          # all projects (postgres + mysql + sqlite)
 npm run test:pg                   # tests/shared + tests/pg
 npm run test:mysql                # tests/mysql
 npm run test:sqlite               # tests/sqlite
+npm run test:nosql                # tests/nosql — NoSQL engine on the in-memory fixture driver (no sample DB)
 npm run test:ui                   # Playwright UI — all engines (pg + mysql + sqlite + shared)
 npm run test:ui:mysql             # UI filtered to MySQL only (also :pg / :sqlite)
 npm test -- tests/sqlite/object-form-sqlite-edit-table.spec.ts

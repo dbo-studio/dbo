@@ -31,7 +31,9 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             paddingLeft: 16,
             paddingTop: 8,
             draggable: false
-          }
+          },
+          bottomPanel: { open: false, tab: 'terminal', height: 280 },
+          browseListWidth: 320
         },
         theme: {
           isDark: false,
@@ -124,7 +126,9 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           setup: state.setup,
           editorContextByConnection: state.editorContextByConnection,
           ui: {
-            sidebar: state.ui.sidebar
+            sidebar: state.ui.sidebar,
+            bottomPanel: state.ui.bottomPanel,
+            browseListWidth: state.ui.browseListWidth
           }
         }),
         merge: (persistedState, currentState) => {
@@ -143,7 +147,12 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
               sidebar: {
                 ...currentState.ui.sidebar,
                 ...persisted?.ui?.sidebar
-              }
+              },
+              bottomPanel: {
+                ...currentState.ui.bottomPanel,
+                ...persisted?.ui?.bottomPanel
+              },
+              browseListWidth: persisted?.ui?.browseListWidth ?? currentState.ui.browseListWidth
             }
           };
         }

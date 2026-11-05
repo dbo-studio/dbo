@@ -1,17 +1,16 @@
 import { Box, Stack, styled } from '@mui/material';
 
 export const HistoriesContainerStyled = styled(Box)(({ theme }) => ({
-  marginTop: theme.spacing(1),
+  padding: theme.spacing(1, 1.5),
   display: 'flex',
   flexDirection: 'column',
-  flex: 1,
+  height: '100%',
   minHeight: 0
 }));
 
 export const HistoriesToolbarStyled = styled(Stack)(() => ({
-  alignContent: 'center',
-  justifyContent: 'center',
-  alignItems: 'center'
+  alignItems: 'center',
+  flexShrink: 0
 }));
 
 export const HistoriesListStyled = styled(Box)(({ theme }) => ({

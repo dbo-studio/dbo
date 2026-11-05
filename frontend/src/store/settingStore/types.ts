@@ -32,6 +32,16 @@ export type UISettings = {
   showConnectionPasswordPrompt: boolean;
   passwordPromptConnectionId?: number;
   titleBar: TitleBarType;
+  bottomPanel: BottomPanelType;
+  /** Width the user dragged the Browse key list to. */
+  browseListWidth: number;
+};
+
+/** VS Code-style panel under the editor tabs: terminal and query history. */
+export type BottomPanelType = {
+  open: boolean;
+  tab: 'terminal' | 'history';
+  height: number;
 };
 
 export type ThemeSettings = {

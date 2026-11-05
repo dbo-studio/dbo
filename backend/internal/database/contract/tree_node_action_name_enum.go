@@ -42,6 +42,8 @@ const (
 	DropSequenceAction         TreeNodeActionName = "dropSequence"
 	CopyNameAction             TreeNodeActionName = "copyName"
 	RefreshAction              TreeNodeActionName = "refresh"
+	BrowseContainerAction      TreeNodeActionName = "browseContainer"
+	OpenToolAction             TreeNodeActionName = "openTool"
 )
 
 func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {

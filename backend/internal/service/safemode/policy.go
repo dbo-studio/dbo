@@ -6,11 +6,18 @@ import (
 	"strings"
 	"time"
 
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 )
+
+// EnvProd is the Connection.Env value that turns on the write lock.
+const EnvProd = "prod"
+
+// ProdUnlockTTL is how long a typed-name unlock keeps a prod connection writable.
+const ProdUnlockTTL = 15 * time.Minute
 
 const (
 	DefaultUnlockTTL = 10 * time.Minute
@@ -20,9 +27,12 @@ const (
 )
 
 type Policy struct {
-	Mode          model.SafeMode
-	Unlocked      bool
-	UnlockedUntil *time.Time
+	Mode model.SafeMode
+	// ProdLocked: a prod connection rejects non-read operations until the user unlocks it by typing its name.
+	ProdLocked     bool
+	ConnectionName string
+	Unlocked       bool
+	UnlockedUntil  *time.Time
 }
 
 func FromConnection(c *model.Connection) Policy {
@@ -31,7 +41,9 @@ func FromConnection(c *model.Connection) Policy {
 	}
 
 	return Policy{
-		Mode: NormalizeMode(string(c.SafeMode)),
+		Mode:           NormalizeMode(string(c.SafeMode)),
+		ProdLocked:     c.Env == EnvProd,
+		ConnectionName: c.Name,
 	}
 }
 
@@ -60,6 +72,21 @@ func ApplyCreateDefaults(mode *string) model.SafeMode {
 	return model.SafeModeSilent
 }
 
+// ClassFromSafety maps a NoSQL driver's SafetyClass onto the class Enforce understands.
+// SafetyBlocked has no mapping: callers must reject it before calling Enforce.
+func ClassFromSafety(s contract.SafetyClass) sqlguard.Class {
+	switch s {
+	case contract.SafetyRead:
+		return sqlguard.ClassRead
+	case contract.SafetyWrite:
+		return sqlguard.ClassWriteDML
+	case contract.SafetyDestructive:
+		return sqlguard.ClassCatastrophicDDL
+	default:
+		return sqlguard.ClassUnknown
+	}
+}
+
 func IsReadClass(class sqlguard.Class) bool {
 	return class == sqlguard.ClassRead
 }
@@ -73,6 +100,13 @@ func Enforce(policy Policy, class sqlguard.Class, confirmed bool) error {
 
 	if policy.Unlocked {
 		return nil
+	}
+
+	if policy.ProdLocked && !IsReadClass(class) {
+		data["reason"] = "this is a production connection; unlock it to write"
+		data["connectionName"] = policy.ConnectionName
+
+		return apperror.SafeModeProdLocked(data)
 	}
 
 	switch policy.Mode {

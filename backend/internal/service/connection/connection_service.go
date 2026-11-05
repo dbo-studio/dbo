@@ -2,6 +2,7 @@ package serviceConnection
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -80,18 +81,29 @@ func (s IConnectionServiceImpl) UnlockSafeMode(ctx context.Context, connectionID
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	password := ""
-	if req != nil {
-		password = req.Password
-	}
-
-	if err := s.safeModePassword.Check(ctx, password); err != nil {
-		return nil, err
-	}
-
 	ttl := serviceSafemode.DefaultUnlockTTL
 	if req != nil && req.TTLMinutes != nil {
 		ttl = time.Duration(*req.TTLMinutes) * time.Minute
+	}
+
+	if req != nil && req.ConfirmName != "" {
+		// Typed-name unlock is the prod write lock; it is checked here, so an API client cannot skip it.
+		if connection.Env != serviceSafemode.EnvProd || req.ConfirmName != connection.Name {
+			return nil, apperror.BadRequest(errors.New("confirmation name does not match this production connection"))
+		}
+
+		if req.TTLMinutes == nil {
+			ttl = serviceSafemode.ProdUnlockTTL
+		}
+	} else {
+		password := ""
+		if req != nil {
+			password = req.Password
+		}
+
+		if err := s.safeModePassword.Check(ctx, password); err != nil {
+			return nil, err
+		}
 	}
 
 	until, err := s.unlockStore.Unlock(ctx, helper.CtxOwnerID(ctx), connection.ID, ttl)

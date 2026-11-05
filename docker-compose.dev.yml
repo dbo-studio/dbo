@@ -37,6 +37,12 @@ services:
       - sample-pgsql
       - sample-mysql
 
+  sample-redis:
+    container_name: dbo-studio-sample-redis
+    image: redis:7
+    ports:
+      - "${REDIS_TEST_PORT-6380}:6379"
+
   sample-pgsql:
     container_name: dbo-studio-sample-pgsql
     image: postgres:16.1

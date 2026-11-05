@@ -12,6 +12,7 @@ type (
 		Options          json.RawMessage `json:"options"`
 		RememberPassword *bool           `json:"rememberPassword"`
 		SafeMode         *string         `json:"safeMode"`
+		Env              *string         `json:"env"`
 	}
 )
 
@@ -19,6 +20,7 @@ func (ccr CreateConnectionRequest) Validate() error {
 	return validation.ValidateStruct(&ccr,
 		validation.Field(&ccr.Name, validation.Required, validation.Length(0, 50)),
 		validation.Field(&ccr.Type, validation.Required, validation.In(connectionTypeValues()...)),
+		validation.Field(&ccr.Env, validation.In("", "dev", "uat", "prod")),
 		validation.Field(&ccr.SafeMode, validation.In(
 			"silent", "alert", "alert_write", "safe", "safe_write",
 			"off", "full", "read_only", "disallow_drop", "",

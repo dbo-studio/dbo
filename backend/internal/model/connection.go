@@ -39,10 +39,12 @@ type Connection struct {
 	ConnectionType string
 	Options        string
 	IsActive       bool
-	SafeMode       SafeMode  `gorm:"column:safe_mode;not null;default:'silent'"`
-	AgentTier      AgentTier `gorm:"column:agent_tier;not null;default:'schema_change'"`
-	Version        *string
-	CreatedAt      *time.Time `gorm:"autoCreateTime"`
-	UpdatedAt      *time.Time `gorm:"autoUpdateTime"`
-	Histories      []History  `gorm:"foreignKey:ConnectionID;constraint:OnDelete:CASCADE"`
+	// Env is the deployment tag: "", dev, uat or prod. A prod connection is write-locked until unlocked.
+	Env       string    `gorm:"column:env;not null;default:''"`
+	SafeMode  SafeMode  `gorm:"column:safe_mode;not null;default:'silent'"`
+	AgentTier AgentTier `gorm:"column:agent_tier;not null;default:'schema_change'"`
+	Version   *string
+	CreatedAt *time.Time `gorm:"autoCreateTime"`
+	UpdatedAt *time.Time `gorm:"autoUpdateTime"`
+	Histories []History  `gorm:"foreignKey:ConnectionID;constraint:OnDelete:CASCADE"`
 }

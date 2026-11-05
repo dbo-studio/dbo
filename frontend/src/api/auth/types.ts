@@ -2,6 +2,11 @@ export type UserPermissions = {
   createConnection: boolean;
   aiSettings: boolean;
   mcpSettings: boolean;
+  /** Database terminal (SQL and NoSQL). Never granted by default. */
+  cli: boolean;
+  import: boolean;
+  export: boolean;
+  aiUse: boolean;
 };
 
 export type AuthUserIdentity = {

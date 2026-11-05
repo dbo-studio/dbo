@@ -23,9 +23,15 @@ import type { ExplorerContainerProps } from './types';
 /** Sidebar views: lists the user picks from. Full-page tools get a TabMode instead (see frontend/AGENTS.md). */
 const explorerViews: (SidebarSectionTab & { component: React.ComponentType })[] = [
   { id: 0, label: locales.items, component: ObjectTreeView },
-  { id: 1, label: locales.queries, component: SavedQueries },
-  { id: 2, label: locales.history, component: Histories }
+  { id: 1, label: locales.queries, component: SavedQueries }
 ];
+
+// On the desktop layout History lives in the bottom panel; overlay layouts (phone, tablet) have no such panel.
+const historyTab: SidebarSectionTab & { component: React.ComponentType } = {
+  id: 2,
+  label: locales.history,
+  component: Histories
+};
 
 // Without the rail (phone, tablet) there is nowhere else to reach Boards, so it stays a tab there.
 const boardsTab: SidebarSectionTab & { component: React.ComponentType } = {
@@ -46,8 +52,8 @@ export default React.memo(function ExplorerContainer({
   const currentConnection = useCurrentConnection();
   const { locked } = useConnectionLock();
   const views = useMemo(
-    () => (showConnectionsRail ? explorerViews : [...explorerViews, boardsTab]),
-    [showConnectionsRail]
+    () => [...explorerViews, ...(overlay ? [historyTab] : []), ...(showConnectionsRail ? [] : [boardsTab])],
+    [showConnectionsRail, overlay]
   );
   const sidebar = useSettingStore((state) => state.ui.sidebar);
   const updateUI = useSettingStore((state) => state.updateUI);

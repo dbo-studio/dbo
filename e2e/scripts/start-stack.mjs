@@ -133,6 +133,8 @@ export async function startStack() {
     APP_PORT: String(apiPort),
     APP_ENV: 'local',
     APP_CLIENT: 'web',
+    // Enables the in-memory NoSQL fixture connection type used by tests/nosql.
+    DBO_ENABLE_NOSQL_FIXTURE: '1',
     APP_DATABASE_PATH: dbPath,
     APP_SECRET_KEY_PATH: secretPath,
     APP_LOG_PATH: logPath,

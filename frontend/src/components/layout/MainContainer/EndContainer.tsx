@@ -1,3 +1,6 @@
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
+import { isNoSQLType } from '@/core/db/connectionAliases';
 import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSectionTabs';
 import { SidebarTabPanelStyled } from '@/components/base/SidebarSectionTabs/SidebarSectionTabs.styled';
 import AiChatPanel from '@/components/common/AiChatPanel/AiChatPanel';
@@ -21,6 +24,9 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
   const selectedTabId = sidebar.rightSidebarTab ?? 0;
   const isDiagram = selectedTab?.mode === TabMode.Diagram;
   const workspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
+  // AI chat and the SQL fields panel are SQL-only; NoSQL connections get an empty sidebar.
+  const noSql = isNoSQLType(useCurrentConnection()?.type);
+  const aiAllowed = useFeaturePermissions().ai;
 
   const sectionTabs = useMemo(
     () => [
@@ -31,13 +37,15 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
   );
 
   const selectedTabContent = useMemo(() => {
+    if (noSql || !aiAllowed) return null;
+
     if (Number(selectedTabId) === 0) {
       // The agent workspace drives the same chat while it is open.
       return workspaceOpen ? null : <AiChatPanel />;
     }
 
     return isDiagram ? <DiagramSource /> : <DBFields />;
-  }, [selectedTabId, isDiagram, workspaceOpen]);
+  }, [selectedTabId, isDiagram, workspaceOpen, noSql, aiAllowed]);
 
   const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
 

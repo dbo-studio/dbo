@@ -33,6 +33,8 @@ type Handlers struct {
 	DashboardSubscription *handler.DashboardSubscriptionHandler
 	History               *handler.HistoryHandler
 	TreeHandler           *handler.TreeHandler
+	NoSQL                 *handler.NoSQLHandler
+	CLI                   *handler.CLIHandler
 	QueryHandler          *handler.QueryHandler
 	ImportExport          *handler.ImportExportHandler
 	Backup                *handler.BackupHandler

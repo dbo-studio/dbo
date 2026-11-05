@@ -1,3 +1,4 @@
+import { openBottomPanel } from '@/core/bottomPanel';
 import { TabMode } from '@/core/enums';
 import { openSettings } from '@/core/settings/openSettings';
 import { shortcuts } from '@/core/utils';
@@ -72,6 +73,10 @@ export default function Layout(): JSX.Element {
     if (canOpenWorkspace) {
       updateUI({ agentWorkspaceOpen: !useSettingStore.getState().ui.agentWorkspaceOpen });
     }
+  });
+
+  useShortcut(shortcuts.toggleBottomPanel, () => {
+    if (!useSidebarOverlay) openBottomPanel();
   });
 
   useShortcut(shortcuts.commandPalette, () => {

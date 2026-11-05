@@ -15,6 +15,13 @@ export default function ResizableYBox({
   const [isResizing, setIsResizing] = useState(false);
   const [initialY, setInitialY] = useState(0);
   const currentHeightRef = useRef(boxHeight);
+  const [prevHeight, setPrevHeight] = useState(height);
+
+  // Follow the prop (maximize, restore) unless the user is dragging.
+  if (prevHeight !== height) {
+    setPrevHeight(height);
+    if (!isResizing) setBoxHeight(height);
+  }
 
   currentHeightRef.current = boxHeight;
 

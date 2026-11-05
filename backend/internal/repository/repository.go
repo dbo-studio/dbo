@@ -148,6 +148,14 @@ type IWebConnectionSecretRepo interface {
 	UpdateExpiry(ctx context.Context, sessionID string, connectionID uint, expiresAt *time.Time, updatedAt time.Time) error
 }
 
+type INoSQLRecycleRepo interface {
+	Create(ctx context.Context, e *model.NoSQLRecycleEntry) error
+	List(ctx context.Context, ownerID string, connectionID int32) ([]model.NoSQLRecycleEntry, error)
+	Find(ctx context.Context, ownerID string, id uint) (*model.NoSQLRecycleEntry, error)
+	Delete(ctx context.Context, ownerID string, id uint) error
+	Prune(ctx context.Context, ownerID string, maxEntries, maxBytes int) error
+}
+
 type ISafeModePasswordRepo interface {
 	FindByOwner(ctx context.Context, ownerID string) (*model.SafeModePassword, error)
 	Upsert(ctx context.Context, item *model.SafeModePassword) error
@@ -260,6 +268,7 @@ type Repository struct {
 	AiProviderRepo             IAiProviderRepo
 	McpSettingsRepo            IMcpSettingsRepo
 	SafeModePasswordRepo       ISafeModePasswordRepo
+	NoSQLRecycleRepo           INoSQLRecycleRepo
 	TotpLoginChallengeRepo     ITotpLoginChallengeRepo
 }
 
@@ -289,6 +298,7 @@ func NewRepository(db *gorm.DB, aiCipherKey []byte) *Repository {
 		AiProviderRepo:             NewAiProviderRepo(db, aiCipherKey),
 		McpSettingsRepo:            NewMcpSettingsRepo(db),
 		SafeModePasswordRepo:       NewSafeModePasswordRepo(db),
+		NoSQLRecycleRepo:           NewNoSQLRecycleRepo(db),
 		TotpLoginChallengeRepo:     NewTotpLoginChallengeRepo(db),
 	}
 }

@@ -102,6 +102,13 @@ export const webShortcuts: { [key: string]: ShortcutType } = {
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
   },
+  toggleBottomPanel: {
+    id: 'toggleBottomPanel',
+    group: 'app',
+    label: locales.toggle_bottom_panel,
+    command: [altKey(), 'J'],
+    shortcut: (event: KeyboardEvent) => event.altKey && !event.shiftKey && !isMod(event) && event.code === 'KeyJ'
+  },
   toggleAgentWorkspace: {
     id: 'toggleAgentWorkspace',
     group: 'app',
@@ -252,6 +259,13 @@ export const desktopShortcuts: { [key: string]: ShortcutType } = {
     label: locales.focus_assistant,
     command: [modKey(), 'L'],
     shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyL'
+  },
+  toggleBottomPanel: {
+    id: 'toggleBottomPanel',
+    group: 'app',
+    label: locales.toggle_bottom_panel,
+    command: [modKey(), 'J'],
+    shortcut: (event: KeyboardEvent) => isMod(event) && !event.shiftKey && !event.altKey && event.code === 'KeyJ'
   },
   toggleAgentWorkspace: {
     id: 'toggleAgentWorkspace',

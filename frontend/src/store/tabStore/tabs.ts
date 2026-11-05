@@ -18,7 +18,9 @@ const knownModes = new Set<string>([
   TabMode.Dashboard,
   TabMode.Question,
   TabMode.Settings,
-  TabMode.Backup
+  TabMode.Backup,
+  TabMode.Browse,
+  TabMode.Tool
 ]);
 
 const EMPTY_TABS: TabType[] = [];

@@ -28,7 +28,11 @@ const PERMISSION_META: {
     column: locales.admin_perm_col_mcp,
     testIdSuffix: 'mcp-settings',
     title: locales.admin_perm_mcp_settings
-  }
+  },
+  { key: 'cli', column: locales.admin_perm_col_cli, testIdSuffix: 'cli', title: locales.admin_perm_cli },
+  { key: 'import', column: locales.admin_perm_col_import, testIdSuffix: 'import', title: locales.admin_perm_import },
+  { key: 'export', column: locales.admin_perm_col_export, testIdSuffix: 'export', title: locales.admin_perm_export },
+  { key: 'aiUse', column: locales.admin_perm_col_ai_use, testIdSuffix: 'ai-use', title: locales.admin_perm_ai_use }
 ];
 
 export type AdminUserPermissionCellsProps = {

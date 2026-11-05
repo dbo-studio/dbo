@@ -4,6 +4,7 @@ import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
 import { openBackup } from '@/core/backup/openBackup';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import { useTransferStore } from '@/store/transfer/transfer.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { TreeNodeType } from '@/types/Tree';
@@ -55,6 +56,7 @@ export function useTreeNodeMenuBuilder(
   const { prefillChat } = useAiBridge();
   const currentConnection = useCurrentConnection();
   const addDiagramTab = useTabStore((state) => state.addDiagramTab);
+  const perms = useFeaturePermissions();
   const openExport = useTransferStore((state) => state.openExport);
   const openImport = useTransferStore((state) => state.openImport);
 
@@ -83,7 +85,12 @@ export function useTreeNodeMenuBuilder(
 
     // Whole-object transfer: a table's rows, a schema's tables or a database. The grid's own
     // Export button only exports the rows it shows.
-    if (scope && currentConnection && (node.type === 'table' || node.type === 'schema' || node.type === 'database')) {
+    if (
+      perms.export &&
+      scope &&
+      currentConnection &&
+      (node.type === 'table' || node.type === 'schema' || node.type === 'database')
+    ) {
       menu.push({
         name: locales.export,
         action: () =>
@@ -97,7 +104,7 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
-    if (node.type === 'table' && scope?.focusTable && currentConnection) {
+    if (perms.import && node.type === 'table' && scope?.focusTable && currentConnection) {
       menu.push({
         name: locales.import,
         action: () => openImport(currentConnection.id, scope.focusTable as string),

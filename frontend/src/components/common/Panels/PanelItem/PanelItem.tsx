@@ -4,6 +4,7 @@ import ConnectionStarter from '@/components/common/Connections/ConnectionStarter
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import Backup from '@/routes/Backup/Backup';
 import Settings from '@/components/common/Settings/Settings';
+import { isNoSQLType } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
@@ -11,6 +12,8 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { Button } from '@mui/material';
 import Question from '@/routes/Question/Question';
 import Dashboard from '@/routes/Dashboard/Dashboard';
+import Browse from '@/routes/Browse/Browse';
+import Tool from '@/routes/Tool/Tool';
 import Data from '@/routes/Data/Data';
 import ObjectForm from '@/routes/ObjectForm/ObjectForm';
 import Query from '@/routes/Query/Query';
@@ -46,9 +49,11 @@ export default function PanelItem(): JSX.Element {
           title={locales.workspace_empty_title}
           description={locales.workspace_empty_description}
           action={
-            <Button variant='contained' onClick={(): void => void addEditorTab()}>
-              {locales.open_editor}
-            </Button>
+            isNoSQLType(connection?.type) ? undefined : (
+              <Button variant='contained' onClick={(): void => void addEditorTab()}>
+                {locales.open_editor}
+              </Button>
+            )
           }
         />
       </PanelItemStyled>
@@ -70,7 +75,9 @@ export default function PanelItem(): JSX.Element {
           (selectedTab.mode === TabMode.Dashboard && <Dashboard />) ||
           (selectedTab.mode === TabMode.Question && <Question />) ||
           (selectedTab.mode === TabMode.Settings && <Settings />) ||
-          (selectedTab.mode === TabMode.Backup && <Backup />)
+          (selectedTab.mode === TabMode.Backup && <Backup />) ||
+          (selectedTab.mode === TabMode.Browse && <Browse />) ||
+          (selectedTab.mode === TabMode.Tool && <Tool />)
         : null}
     </PanelItemStyled>
   );

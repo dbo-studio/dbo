@@ -6,6 +6,7 @@ import * as aiProvider from './aiProvider';
 import * as account from './account';
 import * as auth from './auth';
 import * as backup from './backup';
+import * as cli from './cli';
 import * as config from './config';
 import * as connection from './connection';
 import * as dashboard from './dashboard';
@@ -13,6 +14,7 @@ import * as histories from './history';
 import * as importExport from './importExport';
 import * as job from './job';
 import * as mcp from './mcp';
+import * as nosql from './nosql';
 import * as notification from './notification';
 import * as query from './query';
 import * as question from './question';
@@ -25,6 +27,7 @@ const api = {
   account,
   auth,
   backup,
+  cli,
   adminUsers,
   config,
   connection,
@@ -41,6 +44,7 @@ const api = {
   aiAudit,
   aiChat,
   mcp,
+  nosql,
   notification,
   schema,
   safeMode

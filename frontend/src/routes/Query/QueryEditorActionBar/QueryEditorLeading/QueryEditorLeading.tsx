@@ -6,6 +6,7 @@ import { getAiStatus } from '@/core/ai/aiStatus';
 import { getEngineCapabilities } from '@/core/db';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -24,7 +25,8 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
   const enableEditorAi = useSettingStore((state) => state.editor.enableEditorAi);
   const updateEditor = useSettingStore((state) => state.updateEditor);
   const providers = useAiStore((state) => state.providers);
-  const aiReady = getAiStatus(providers).ready;
+  const aiAllowed = useFeaturePermissions().ai;
+  const aiReady = aiAllowed && getAiStatus(providers).ready;
   const aiEnabled = enableEditorAi && aiReady;
 
   const [setupAnchor, setSetupAnchor] = useState<HTMLElement | null>(null);

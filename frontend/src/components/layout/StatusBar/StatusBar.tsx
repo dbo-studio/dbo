@@ -1,4 +1,5 @@
 import api from '@/api';
+import { openBottomPanel } from '@/core/bottomPanel';
 import type { McpStatus } from '@/api/mcp';
 import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
 import RunningJobs, { useRunningJobs } from '@/components/common/RunningJobs/RunningJobs';
@@ -124,6 +125,14 @@ export default function StatusBar(): JSX.Element {
       <StatusSpacerStyled />
       <TabInfo />
       <StatusSpacerStyled />
+
+      <StatusItemStyled
+        onClick={() => openBottomPanel()}
+        data-testid='status-panel'
+        aria-label={locales.toggle_bottom_panel}
+      >
+        <span>{locales.bottom_panel}</span>
+      </StatusItemStyled>
 
       <StatusItemStyled
         onClick={(event) => running.length > 0 && setAnchor(event.currentTarget)}

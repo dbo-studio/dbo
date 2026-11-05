@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
+import Redis from './Redis/Redis';
 import SQLite from './SQLite/SQLite';
 import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
 import type { ConnectionSettingsProps, SelectionConnectionType } from './types';
@@ -20,6 +21,11 @@ import type { IconTypes } from '@/components/base/CustomIcon/types';
 function formForAlias(alias: ConnectionAliasDef): ComponentType<ConnectionSettingsProps> {
   if (alias.driver === 'sqlite') {
     return SQLite;
+  }
+  if (alias.driver === 'redis') {
+    const Form = (props: ConnectionSettingsProps): JSX.Element => <Redis {...props} engine={alias.type} />;
+    Form.displayName = `RedisAlias(${alias.type})`;
+    return Form;
   }
   if (alias.driver === 'mysql') {
     const Form = (props: ConnectionSettingsProps): JSX.Element => <Mysql {...props} engine={alias.type} />;

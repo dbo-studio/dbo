@@ -3,6 +3,8 @@ import type { PaneId, SelectedByPane } from './tabs';
 import type {
   BackupSection,
   BackupTabType,
+  BrowseTabType,
+  ToolTabType,
   QuestionTabType,
   DashboardTabType,
   DiagramTabType,
@@ -57,6 +59,8 @@ export type AddBackupTabOptions = {
 export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
+  addBrowseTab: (name: string, containerId: string) => BrowseTabType;
+  addToolTab: (toolId: string, name: string) => ToolTabType;
   addEditorTab: (query?: string, options?: { forceNew?: boolean }) => TabType;
   addDiagramTab: (args: { database: string; schema: string; focusTable?: string }) => DiagramTabType;
   addDashboardTab: (dashboard: { id: number; name: string }) => DashboardTabType;

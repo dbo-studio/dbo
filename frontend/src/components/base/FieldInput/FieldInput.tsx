@@ -44,7 +44,8 @@ export default function FieldInput({
   };
 
   const handleOnBlur = (e: EventFor<'input', 'onBlur'>): void => {
-    setValue(e.target.value);
+    // MUI calls onBlur() with no event when a focused input becomes disabled.
+    if (e) setValue(e.target.value);
     onBlur?.(e);
   };
 

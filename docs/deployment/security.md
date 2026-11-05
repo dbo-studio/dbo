@@ -45,6 +45,14 @@ When auth mode is `local`:
 - `admin` \| `member` roles. Administration → Users is admin-only.
 - Per-user permissions (toggle in Administration): **Create connection**, **AI settings**, **MCP settings**. Admins implicitly have all permissions.
 - AI provider configuration is **per user** (`owner_id` on `ai_providers`). MCP settings are also stored per user (`mcp_settings.owner_id`).
+- Feature flags (Administration → Users): **Terminal (CLI)**, **Import**, **Export**, **AI use**. Terminal is off for members by default; the other
+  three stay on for existing users. The API enforces them (`/api/cli/run`, `/nosql/tools/cli/run`, import/export jobs, AI chat/complete), not just the UI.
+- The terminal adds no database capability: lines run through the same Safe Mode and history paths as the editors. It also refuses SQL that reaches
+  the database host (`COPY … PROGRAM`, `pg_read_file`, `INTO OUTFILE`, `LOAD DATA`, `ATTACH`, …), times out after 30 s, allows one statement in flight per
+  user, and writes an audit line per statement (NoSQL input is redacted because lines like `AUTH` carry secrets; SQL is truncated). Terminal output is
+  sanitized so data cannot move the cursor or restyle the screen.
+- **Production tag**: a connection with environment `prod` rejects every non-read operation (SQL and NoSQL) with `safe_mode_prod_locked` until the user
+  types the connection name (15 min window, per user and connection, in memory only). Lifting the tag needs the same unlock.
 - SQL ACL is **not** in DBO (DB GRANT + Safe Mode).
 
 ### Two-factor authentication (TOTP)

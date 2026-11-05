@@ -50,7 +50,8 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		return apperror.InternalServerError(err)
 	}
 
-	if password != "" {
+	// Redis is commonly passwordless; an empty stored secret keeps hydration from asking for one.
+	if password != "" || databaseContract.IsRedisFamily(req.Type) {
 		ownerID := helper.CtxOwnerID(ctx)
 
 		remember := lo.FromPtrOr(req.RememberPassword, false)
@@ -59,7 +60,7 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		}
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
+	repo, err := database.NewTreeRepository(ctx, connection, s.cm)
 	if err != nil {
 		return err
 	}
@@ -89,6 +90,8 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
 	case databaseContract.IsMysqlFamily(req.Type):
 		options, err = databaseConnection.CreateMysqlConnection(req.Options)
+	case databaseContract.IsRedisFamily(req.Type):
+		options, err = databaseConnection.CreateRedisConnection(req.Options)
 	}
 
 	if err != nil {

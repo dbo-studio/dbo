@@ -3,6 +3,7 @@ import CommandPalette from '../common/CommandPalette/CommandPalette';
 import ConfirmModal from '../base/Modal/ConfirmModal/ConfirmModal.tsx';
 import JobResultHost from '../common/JobProgressModal/JobResultHost';
 import DashboardNameDialog from '../common/DashboardNameDialog/DashboardNameDialog';
+import ProdUnlockDialog from '../common/ProdUnlockDialog/ProdUnlockDialog';
 import SafeModePasswordHost from '../common/SafeModePasswordPrompt/SafeModePasswordHost';
 import TransferHost from '../common/TransferHost/TransferHost';
 import UpdateDialog from '../common/UpdateDialog/UpdateDialog';
@@ -15,6 +16,7 @@ export default function AppHosts(): JSX.Element {
       <DashboardNameDialog />
       <JobResultHost />
       <SafeModePasswordHost />
+      <ProdUnlockDialog />
       <CommandPalette />
       <TransferHost />
       <UpdateDialog />

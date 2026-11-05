@@ -2,7 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
-import { useCurrentConnection, useShortcut } from '@/hooks';
+import { useCurrentConnection, useFeaturePermissions, useShortcut } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -19,6 +19,7 @@ export default function QueryEditorActions({
   loading
 }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
+  const perms = useFeaturePermissions();
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -98,11 +99,13 @@ export default function QueryEditorActions({
           <CustomIcon type='save' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={locales.export}>
-        <IconButton aria-label={locales.export} color='default' onClick={handleExport}>
-          <CustomIcon type='export' />
-        </IconButton>
-      </Tooltip>
+      {perms.export && (
+        <Tooltip title={locales.export}>
+          <IconButton aria-label={locales.export} color='default' onClick={handleExport}>
+            <CustomIcon type='export' />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title={locales.minify}>
         <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
           <CustomIcon type='pickaxe' />

@@ -3,12 +3,15 @@ package database
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	databaseMysql "github.com/dbo-studio/dbo/internal/database/mysql"
+	databaseNoSQLFixture "github.com/dbo-studio/dbo/internal/database/nosqlfixture"
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
+	databaseRedis "github.com/dbo-studio/dbo/internal/database/redis"
 	databaseSqlite "github.com/dbo-studio/dbo/internal/database/sqlite"
 	"github.com/dbo-studio/dbo/internal/model"
 )
@@ -33,5 +36,42 @@ func NewAIContextRepository(ctx context.Context, connection *model.Connection, c
 }
 
 func NewDBToolsRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.DBToolsRepository, error) {
+	return NewDatabaseRepository(ctx, connection, cm)
+}
+
+var (
+	fixtureOnce sync.Once
+	redisOnce   sync.Once
+	fixtureRepo *databaseNoSQLFixture.Repository
+)
+
+// NewNoSQLRepository returns the driver for a NoSQL connection type. NewDatabaseRepository
+// keeps rejecting these types, so SQL code paths never see a NoSQL connection.
+func NewNoSQLRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.NoSQLRepository, error) {
+	switch {
+	case connection.ConnectionType == databaseContract.NoSQLFixture:
+		if !databaseContract.NoSQLFixtureEnabled() {
+			return nil, fmt.Errorf("unsupported nosql type: %s", connection.ConnectionType)
+		}
+
+		// The fixture is in-memory, so every request must share one instance to see its own writes.
+		fixtureOnce.Do(func() { fixtureRepo = databaseNoSQLFixture.New() })
+
+		return fixtureRepo, nil
+	case databaseContract.IsRedisFamily(connection.ConnectionType):
+		redisOnce.Do(func() { databaseRedis.Register(cm) })
+
+		return databaseRedis.New(ctx, connection, cm)
+	default:
+		return nil, fmt.Errorf("unsupported nosql type: %s", connection.ConnectionType)
+	}
+}
+
+// NewTreeRepository returns the SQL or NoSQL driver for a connection, for callers that only need Version and Tree.
+func NewTreeRepository(ctx context.Context, connection *model.Connection, cm *databaseConnection.ConnectionManager) (databaseContract.TreeRepository, error) {
+	if databaseContract.IsNoSQL(connection.ConnectionType) {
+		return NewNoSQLRepository(ctx, connection, cm)
+	}
+
 	return NewDatabaseRepository(ctx, connection, cm)
 }

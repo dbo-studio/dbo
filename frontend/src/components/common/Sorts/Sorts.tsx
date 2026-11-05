@@ -4,19 +4,32 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store.ts';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { DataTabType, SortType } from '@/types';
+import type { ColumnType } from '@/types/Data';
 import { Box, Button } from '@mui/material';
 import type { JSX } from 'react';
 import AddSortButton from './SortItem/AddSortButton/AddSortButton.tsx';
 import SortItem from './SortItem/SortItem.tsx';
 import { SortsApplyBoxStyled } from './Sorts.styled';
 
-export default function Sorts(): JSX.Element {
+type SortsProps = {
+  /** Browse tabs pass their own columns and apply handler; Data tabs use the data store. */
+  columns?: ColumnType[];
+  onApply?: () => void;
+};
+
+export default function Sorts({ columns: columnsProp, onApply }: SortsProps = {}): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
-  const columns = useDataStore((state) => state.columns);
+  const storeColumns = useDataStore((state) => state.columns);
+  const columns = columnsProp ?? storeColumns;
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
 
   const handleApplySorts = (): void => {
+    if (onApply) {
+      onApply();
+      return;
+    }
+
     const tab = useTabStore.getState().selectedTab<DataTabType>();
     if (tab && (tab.pagination?.page ?? 0) > 1) {
       updateSelectedTab({

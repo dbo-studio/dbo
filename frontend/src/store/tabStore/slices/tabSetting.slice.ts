@@ -25,6 +25,8 @@ import type {
   ObjectTabType,
   SettingsTabType,
   BackupTabType,
+  BrowseTabType,
+  ToolTabType,
   TabType
 } from '@/types/Tab';
 import type { StateCreator } from 'zustand';
@@ -279,6 +281,63 @@ export const createTabSettingSlice: StateCreator<
     };
 
     return get().handleAddNewTab(tabs, newTab) as ObjectTabType;
+  },
+  addBrowseTab: (name: string, containerId: string): BrowseTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const tabs = selectTabs(get());
+    const findTab = tabs.find(
+      (tab): tab is BrowseTabType =>
+        tab.mode === TabMode.Browse &&
+        tab.nodeId === containerId &&
+        matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: BrowseTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      name,
+      nodeId: containerId,
+      mode: TabMode.Browse
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as BrowseTabType;
+  },
+  addToolTab: (toolId: string, name: string): ToolTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const tabs = selectTabs(get());
+    const findTab = tabs.find(
+      (tab): tab is ToolTabType =>
+        tab.mode === TabMode.Tool && tab.toolId === toolId && matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: ToolTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      name,
+      nodeId: `tool:${toolId}`,
+      mode: TabMode.Tool,
+      toolId
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as ToolTabType;
   },
   addSettingsTab: (options?: AddSettingsTabOptions): SettingsTabType => {
     const tabs = selectTabs(get());

@@ -237,6 +237,10 @@ func setUser(c fiber.Ctx, user *model.User) {
 		CreateConnection: flags.CreateConnection,
 		AiSettings:       flags.AiSettings,
 		McpSettings:      flags.McpSettings,
+		Cli:              flags.Cli,
+		Import:           flags.Import,
+		Export:           flags.Export,
+		AiUse:            flags.AiUse,
 	}
 	// Fiber Ctx.Value reads Locals (UserValue), not SetContext — put auth
 	// fields on Locals so services that receive fiber.Ctx see them.

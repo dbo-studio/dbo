@@ -24,3 +24,4 @@ export * from './usePullToRefresh';
 export * from './useTreeLevel';
 export * from './useEscapeFullscreenGuard';
 export * from './useAnalyticsSetting';
+export * from './useFeaturePermissions';

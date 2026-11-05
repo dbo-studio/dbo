@@ -90,6 +90,10 @@ func (s *IAdminUsersServiceImpl) Create(ctx context.Context, req *dto.AdminCreat
 		PermCreateConnection: perms.CreateConnection,
 		PermAiSettings:       perms.AiSettings,
 		PermMcpSettings:      perms.McpSettings,
+		PermCli:              perms.Cli,
+		PermImport:           perms.Import,
+		PermExport:           perms.Export,
+		PermAiUse:            perms.AiUse,
 		MustChangePassword:   true,
 		CreatedAt:            now,
 		UpdatedAt:            now,
@@ -223,6 +227,10 @@ func permissionFlagsFromDTO(perms dto.UserPermissions) model.UserPermissionFlags
 		CreateConnection: perms.CreateConnection,
 		AiSettings:       perms.AiSettings,
 		McpSettings:      perms.McpSettings,
+		Cli:              perms.Cli,
+		Import:           perms.Import,
+		Export:           perms.Export,
+		AiUse:            perms.AiUse,
 	}
 }
 
@@ -231,6 +239,10 @@ func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
 		CreateConnection: flags.CreateConnection,
 		AiSettings:       flags.AiSettings,
 		McpSettings:      flags.McpSettings,
+		Cli:              flags.Cli,
+		Import:           flags.Import,
+		Export:           flags.Export,
+		AiUse:            flags.AiUse,
 	}
 }
 

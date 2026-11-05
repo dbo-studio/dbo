@@ -1,11 +1,22 @@
 package databaseContract
 
+import (
+	"os"
+	"slices"
+)
+
 const (
 	Postgresql = "postgresql"
 	Mysql      = "mysql"
 	Mariadb    = "mariadb"
 	Sqlite     = "sqlite"
 	SQLServer  = "sqlserver"
+
+	// Redis and its wire-compatible variants share one driver.
+	Redis     = "redis"
+	Valkey    = "valkey"
+	KeyDB     = "keydb"
+	Dragonfly = "dragonfly"
 
 	// PostgreSQL-protocol branding aliases (same dialer/repo as Postgresql).
 	Supabase           = "supabase"
@@ -51,8 +62,29 @@ var MysqlFamily = []string{
 	HeatWave,
 }
 
+// RedisFamily lists the connection types served by the Redis driver.
+var RedisFamily = []string{Redis, Valkey, KeyDB, Dragonfly}
+
 // ValidConnectionTypes is every type Create/Ping may accept.
-var ValidConnectionTypes = append(append(append([]string{}, PostgresFamily...), MysqlFamily...), Sqlite, SQLServer)
+var ValidConnectionTypes = append(append(append(append([]string{}, PostgresFamily...), MysqlFamily...), RedisFamily...), Sqlite, SQLServer)
+
+// NoSQLFixture is the in-memory test driver. It is deliberately absent from
+// ValidConnectionTypes, so it can never be created as a user connection.
+const NoSQLFixture = "nosql_fixture"
+
+// NoSQLFixtureEnabled gates the fixture type; it is on only for e2e runs.
+func NoSQLFixtureEnabled() bool { return os.Getenv("DBO_ENABLE_NOSQL_FIXTURE") == "1" }
+
+// NoSQLTypes lists connection types served by NoSQLRepository instead of DatabaseRepository.
+var NoSQLTypes = append([]string{NoSQLFixture}, RedisFamily...)
+
+// IsRedisFamily reports whether connectionType uses the Redis driver.
+func IsRedisFamily(connectionType string) bool { return slices.Contains(RedisFamily, connectionType) }
+
+// IsNoSQL reports whether connectionType is served by NoSQLRepository.
+func IsNoSQL(connectionType string) bool {
+	return slices.Contains(NoSQLTypes, connectionType)
+}
 
 // IsPostgresFamily reports whether connectionType uses the PostgreSQL wire stack.
 func IsPostgresFamily(connectionType string) bool {

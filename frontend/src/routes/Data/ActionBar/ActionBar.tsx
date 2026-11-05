@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { GridItem } from '@/components/base/Grid/Grid';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
-import { useSelectedTab } from '@/hooks';
+import { useSelectedTab, useFeaturePermissions } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -31,6 +31,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
   const showSorts = selectedTab?.showSorts ?? false;
   const showQuery = selectedTab?.showQuery ?? false;
 
+  const perms = useFeaturePermissions();
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -148,17 +149,21 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={locales.export}>
-            <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
-              <CustomIcon type='export' size='s' />
-            </IconButton>
-          </Tooltip>
+          {perms.export && (
+            <Tooltip title={locales.export}>
+              <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
+                <CustomIcon type='export' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
 
-          <Tooltip title={locales.import}>
-            <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
-              <CustomIcon type='import' size='s' />
-            </IconButton>
-          </Tooltip>
+          {perms.import && (
+            <Tooltip title={locales.import}>
+              <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
+                <CustomIcon type='import' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Tooltip title={locales.query_preview}>
             <IconButton

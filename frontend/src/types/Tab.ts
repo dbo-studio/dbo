@@ -26,7 +26,9 @@ export type TabType =
   | DashboardTabType
   | QuestionTabType
   | SettingsTabType
-  | BackupTabType;
+  | BackupTabType
+  | BrowseTabType
+  | ToolTabType;
 
 type BaseTab = {
   id: string;
@@ -107,6 +109,21 @@ export type BackupTabType = BaseTab & {
   database?: string;
   /** Schedules section: the schedule shown, or 'new' for the create form. */
   scheduleId?: number | 'new';
+};
+
+/** NoSQL container browser; `nodeId` is the container id. Filters/sorts reuse the Data tab shapes. */
+export type BrowseTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Browse;
+  filters?: FilterType[];
+  sorts?: SortType[];
+};
+
+/** NoSQL tool (pubsub, cli, ...) opened from a Browse tab or the tree. */
+export type ToolTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Tool;
+  toolId: string;
 };
 
 export type EditedRow = {

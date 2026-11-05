@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -13,6 +14,10 @@ import (
 )
 
 func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+		return nil, err
+	}
+
 	provider, dbProvider, err := s.createProvider(ctx, req)
 	if err != nil {
 		return nil, err

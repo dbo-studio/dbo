@@ -7,5 +7,7 @@ export enum TabMode {
   Dashboard = 'dashboard',
   Question = 'question',
   Settings = 'settings',
-  Backup = 'backup'
+  Backup = 'backup',
+  Browse = 'browse',
+  Tool = 'tool'
 }

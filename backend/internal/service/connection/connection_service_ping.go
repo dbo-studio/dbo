@@ -43,6 +43,10 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		Options:        string(req.Options),
 	}
 
+	if databaseContract.IsNoSQL(req.Type) {
+		return s.pingNoSQL(ctx, connection)
+	}
+
 	sshCfg := databaseConnection.SSHOptions(connection)
 
 	start := time.Now()
@@ -212,4 +216,21 @@ func classifyConnectionFailure(err error) (string, string) {
 	default:
 		return "unknown", "Verify connection details and retry."
 	}
+}
+
+// pingNoSQL checks a NoSQL connection through its driver; there is no SQL dial to diagnose.
+func (s IConnectionServiceImpl) pingNoSQL(ctx context.Context, connection *model.Connection) (*dto.PingConnectionResponse, error) {
+	start := time.Now()
+
+	repo, err := database.NewNoSQLRepository(ctx, connection, s.cm)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	version, err := repo.Version(ctx)
+	if err != nil {
+		return nil, apperror.DriverError(fmt.Errorf("version check failed: %w", err))
+	}
+
+	return &dto.PingConnectionResponse{LatencyMs: time.Since(start).Milliseconds(), ServerVersion: version}, nil
 }

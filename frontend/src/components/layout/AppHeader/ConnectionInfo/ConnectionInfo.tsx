@@ -1,5 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { canCreateConnection } from '@/core/auth/permissions';
+import { canCreateConnection, canUseCli } from '@/core/auth/permissions';
+import { openBottomPanel } from '@/core/bottomPanel';
+import { isNoSQLType } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
@@ -27,6 +29,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const canAddConnection = canCreateConnection(mode, user);
+  const cliAllowed = canUseCli(mode, user);
 
   const toggleReRunQuery = useDataStore((state) => state.toggleReRunQuery);
   const runRawQuery = useDataStore((state) => state.runRawQuery);
@@ -129,9 +132,26 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
                 </IconButton>
               </span>
             </Tooltip>
+            {cliAllowed && (
+              <Tooltip title={locales.bottom_panel_terminal}>
+                <span>
+                  <IconButton
+                    aria-label='terminal'
+                    disabled={!currentConnection}
+                    onClick={(): void => openBottomPanel('terminal')}
+                  >
+                    <CustomIcon type={'terminal'} size={'m'} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
             <Tooltip title={locales.open_editor}>
               <span>
-                <IconButton aria-label={'sql'} disabled={!currentConnection} onClick={handleAddEditorTab}>
+                <IconButton
+                  aria-label={'sql'}
+                  disabled={!currentConnection || isNoSQLType(currentConnection.type)}
+                  onClick={handleAddEditorTab}
+                >
                   <CustomIcon type={'sql'} size={'m'} />
                 </IconButton>
               </span>

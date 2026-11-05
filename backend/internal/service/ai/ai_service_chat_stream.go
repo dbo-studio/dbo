@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -15,6 +16,10 @@ import (
 )
 
 func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, emit func([]byte) error) error {
+	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+		return err
+	}
+
 	emitEvent := func(event aiProvider.StreamEvent) error {
 		data, err := json.Marshal(event)
 		if err != nil {

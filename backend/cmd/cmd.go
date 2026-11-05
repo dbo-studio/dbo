@@ -106,6 +106,8 @@ func Execute() {
 		DashboardSubscription: handler.NewDashboardSubscriptionHandler(appLogger, ss.DashboardSubscriptionService),
 		History:               handler.NewHistoryHandler(appLogger, ss.HistoryService),
 		TreeHandler:           handler.NewTreeHandler(appLogger, ss.TreeService),
+		NoSQL:                 handler.NewNoSQLHandler(appLogger, ss.NoSQLService),
+		CLI:                   handler.NewCLIHandler(appLogger, ss.CLIService),
 		QueryHandler:          handler.NewQueryHandler(appLogger, ss.QueryService),
 		ImportExport:          handler.NewImportExportHandler(appLogger, ss.ImportExportService),
 		Backup:                handler.NewBackupHandler(appLogger, ss.BackupService),

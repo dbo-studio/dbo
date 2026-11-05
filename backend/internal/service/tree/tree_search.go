@@ -43,7 +43,7 @@ func (i ITreeServiceImpl) Search(ctx context.Context, req *dto.TreeSearchRequest
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := database.NewTreeRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
 	}

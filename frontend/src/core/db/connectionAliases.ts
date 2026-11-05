@@ -3,7 +3,7 @@
  * Stored `type` stays the brand id; dialer/repo follow `driver`.
  */
 
-export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite';
+export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis';
 
 export type ConnectionEngine =
   | 'postgresql'
@@ -23,6 +23,10 @@ export type ConnectionEngine =
   | 'azure_mysql'
   | 'percona'
   | 'heatwave'
+  | 'redis'
+  | 'valkey'
+  | 'keydb'
+  | 'dragonfly'
   | 'sqlite';
 
 export type ConnectionAliasDef = {
@@ -52,7 +56,12 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'Neon', logo: 'neon', type: 'neon', driver: 'postgresql' },
   { name: 'Percona', logo: 'percona', type: 'percona', driver: 'mysql' },
   { name: 'Supabase', logo: 'supabase', type: 'supabase', driver: 'postgresql' },
-  { name: 'TimescaleDB', logo: 'timescaledb', type: 'timescaledb', driver: 'postgresql' }
+  { name: 'TimescaleDB', logo: 'timescaledb', type: 'timescaledb', driver: 'postgresql' },
+
+  { name: 'Redis', logo: 'redis', type: 'redis', driver: 'redis' },
+  { name: 'Valkey', logo: 'valkey', type: 'valkey', driver: 'redis' },
+  { name: 'KeyDB', logo: 'keydb', type: 'keydb', driver: 'redis' },
+  { name: 'Dragonfly', logo: 'dragonfly', type: 'dragonfly', driver: 'redis' }
 ];
 
 const aliasByType = Object.fromEntries(CONNECTION_ALIASES.map((a) => [a.type, a])) as Record<
@@ -76,3 +85,9 @@ export function isMysqlDriver(type: string | undefined): boolean {
 export function connectionDriver(type: string | undefined): ConnectionDriver | undefined {
   return getConnectionAlias(type)?.driver;
 }
+
+/** Connection types served by the NoSQL engine (Browse tab) instead of the SQL data/query tabs. */
+export const isNoSQLType = (type: string | undefined): boolean =>
+  type === 'nosql_fixture' || getConnectionAlias(type)?.driver === 'redis';
+
+export const isRedisDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'redis';

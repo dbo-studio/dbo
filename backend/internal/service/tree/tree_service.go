@@ -77,7 +77,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.InternalServerError(err)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := database.NewTreeRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
 	}

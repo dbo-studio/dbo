@@ -117,6 +117,7 @@ func (c IConnectionRepoImpl) Create(ctx context.Context, dto *dto.CreateConnecti
 		Options:        string(dto.Options),
 		IsActive:       true,
 		SafeMode:       model.SafeMode(lo.FromPtr(dto.SafeMode)),
+		Env:            lo.FromPtr(dto.Env),
 		CreatedAt:      nil,
 		UpdatedAt:      nil,
 	}
@@ -136,6 +137,10 @@ func (c IConnectionRepoImpl) Update(ctx context.Context, connection *model.Conne
 	connection.Options = string(req.Options)
 	if req.AgentTier != nil {
 		connection.AgentTier = model.AgentTier(*req.AgentTier)
+	}
+
+	if req.Env != nil {
+		connection.Env = *req.Env
 	}
 
 	if req.SafeMode != nil {

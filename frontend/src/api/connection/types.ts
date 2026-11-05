@@ -1,4 +1,4 @@
-import type { ConnectionSafeMode } from '@/types';
+import type { ConnectionEnv, ConnectionSafeMode } from '@/types';
 import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionDetailRequestType = {
@@ -8,15 +8,16 @@ export type ConnectionDetailRequestType = {
 export type CreateConnectionRequestType = {
   name: string;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
   rememberPassword?: boolean;
   safeMode?: ConnectionSafeMode;
+  env?: ConnectionEnv;
 };
 
 export type PingConnectionRequestType = {
   id?: number;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
 };
 
 export type PingConnectionResponseType = {
@@ -34,9 +35,10 @@ export type UpdateConnectionRequestType = {
   isActive?: boolean;
   isClose?: boolean;
   rememberPassword?: boolean;
-  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
   safeMode?: ConnectionSafeMode;
   safeModePassword?: string;
+  env?: ConnectionEnv;
   agentTier?: 'read_only' | 'data_write' | 'schema_change';
 };
 
@@ -89,6 +91,17 @@ export type MysqlOptionsType = {
   uri?: string;
   ssl?: ConnectionSSLOptionsType;
   ssh?: ConnectionSSHOptionsType;
+};
+
+export type RedisOptionsType = {
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: number;
+  tls?: boolean;
+  tlsInsecure?: boolean;
+  isPing?: boolean;
 };
 
 export type SQLiteOptionsType = {

@@ -37,6 +37,10 @@ func NewImportExportService(jobManager serviceJob.IJobManager, cfg *config.Confi
 }
 
 func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
+		return nil, err
+	}
+
 	file, err := req.Data.Open()
 	if err != nil {
 		return nil, apperror.BadRequest(err)
@@ -82,6 +86,10 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 }
 
 func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermExport); err != nil {
+		return nil, err
+	}
+
 	if req.ChunkSize <= 0 {
 		req.ChunkSize = 1000
 	}

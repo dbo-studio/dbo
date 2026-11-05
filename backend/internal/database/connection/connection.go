@@ -3,6 +3,7 @@ package databaseConnection
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -56,6 +57,7 @@ type ConnectionManager struct {
 	historyRepo HistoryWriter
 	secrets     PasswordHydrator
 	safetyTTL   time.Duration
+	onClose     []func(ownerID string, connectionID uint)
 }
 
 func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, appLogger logger.Logger, appCache cache.Cache) *ConnectionManager {
@@ -307,8 +309,27 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 	return true
 }
 
+// OnClose registers a hook run when a connection is closed. NoSQL drivers keep their own
+// clients and use it to release them together with the SQL pool entry.
+func (cm *ConnectionManager) OnClose(fn func(ownerID string, connectionID uint)) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	cm.onClose = append(cm.onClose, fn)
+}
+
+// HydratePassword fills connection.Options with the stored password (see hydrateConnectionPassword).
+func (cm *ConnectionManager) HydratePassword(ctx context.Context, connection *model.Connection) error {
+	if cm.secrets == nil {
+		return nil
+	}
+
+	return hydrateConnectionPassword(ctx, cm.secrets, helper.CtxOwnerID(ctx), connection)
+}
+
 func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connectionID uint) error {
 	cm.mu.Lock()
+	hooks := slices.Clone(cm.onClose)
 
 	toClose := make([]*conn, 0)
 
@@ -324,6 +345,10 @@ func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connection
 
 	for _, c := range toClose {
 		_ = cm.closeConn(c)
+	}
+
+	for _, fn := range hooks {
+		fn(ownerID, connectionID)
 	}
 
 	return nil
