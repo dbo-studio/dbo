@@ -212,6 +212,7 @@ function AddCard({ board }: { board: DashboardType }): JSX.Element {
       <SelectInput
         size='small'
         testId='dashboard-add-card'
+        label={locales.dashboard_add_card}
         // Shown only when the list is empty, where the select is disabled.
         emptylabel={locales.dashboard_add_card_none}
         value=''
@@ -341,9 +342,12 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
           </Stack>
         )}
         {board.cards.length === 0 ? (
-          <Typography variant='body2' color='textSubdued'>
-            {locales.ai_boards_empty}
-          </Typography>
+          <Stack spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <Typography variant='body2' color='textSubdued'>
+              {locales.ai_boards_empty}
+            </Typography>
+            <AddCard board={board} />
+          </Stack>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
