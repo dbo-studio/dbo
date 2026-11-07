@@ -362,8 +362,13 @@ export default function SafeModeMenu(): JSX.Element {
             onClick={() => void handleEnv(value)}
             sx={{ py: 0.75, px: 2 }}
           >
-            <ListItemIcon sx={{ minWidth: 28 }}>{value === env ? <CustomIcon type='check' size='s' /> : null}</ListItemIcon>
-            <ListItemText primary={locales[`connection_env_${value || 'none'}`]} slotProps={{ primary: { variant: 'body2' } }} />
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              {value === env ? <CustomIcon type='check' size='s' /> : null}
+            </ListItemIcon>
+            <ListItemText
+              primary={locales[`connection_env_${value || 'none'}`]}
+              slotProps={{ primary: { variant: 'body2' } }}
+            />
           </MenuItem>
         ))}
       </Menu>

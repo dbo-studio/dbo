@@ -31,10 +31,13 @@ export default function HistoryItem({ history, selected, onClick, context }: His
   const verb = statementVerb(history.query);
   const color = useKindColor(statementKind(verb));
 
-  const open = useCallback((e?: MouseEvent): void => {
-    e?.stopPropagation();
-    addEditorTab(history.query);
-  }, [addEditorTab, history.query]);
+  const open = useCallback(
+    (e?: MouseEvent): void => {
+      e?.stopPropagation();
+      addEditorTab(history.query);
+    },
+    [addEditorTab, history.query]
+  );
 
   const handleCopy = (e: MouseEvent): void => {
     e.stopPropagation();
@@ -53,7 +56,11 @@ export default function HistoryItem({ history, selected, onClick, context }: His
         context(e);
       }}
     >
-      <Typography variant='caption' color='textSubdued' sx={{ width: 76, flexShrink: 0, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+      <Typography
+        variant='caption'
+        color='textSubdued'
+        sx={{ width: 76, flexShrink: 0, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+      >
         {timeLabel(history.createdAt)}
       </Typography>
       <Box
@@ -72,7 +79,11 @@ export default function HistoryItem({ history, selected, onClick, context }: His
       >
         {verb || '—'}
       </Box>
-      <Tooltip title={<code style={{ whiteSpace: 'pre-wrap' }}>{history.query.slice(0, 1200)}</code>} enterDelay={600} placement='top-start'>
+      <Tooltip
+        title={<code style={{ whiteSpace: 'pre-wrap' }}>{history.query.slice(0, 1200)}</code>}
+        enterDelay={600}
+        placement='top-start'
+      >
         <Typography
           noWrap
           variant='body2'

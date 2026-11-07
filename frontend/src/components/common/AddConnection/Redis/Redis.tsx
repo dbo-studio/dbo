@@ -173,7 +173,11 @@ export default function Redis({
                 testId='connection-env-select'
                 value={field.state.value || 'none'}
                 options={ENV_OPTIONS}
-                onChange={(o): void => field.handleChange((String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv)}
+                onChange={(o): void =>
+                  field.handleChange(
+                    (String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv
+                  )
+                }
                 helpertext={field.state.value === 'prod' ? locales.connection_env_prod_hint : undefined}
               />
             )}
@@ -193,7 +197,9 @@ export default function Redis({
             <Box sx={{ flex: 1, minWidth: 0 }}>{text('username', locales.username)}</Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>{text('password', locales.password, { type: 'password' })}</Box>
           </Stack>
-          <ConnectionFormCheckboxRowStyled>{check('rememberPassword', locales.remember_password)}</ConnectionFormCheckboxRowStyled>
+          <ConnectionFormCheckboxRowStyled>
+            {check('rememberPassword', locales.remember_password)}
+          </ConnectionFormCheckboxRowStyled>
         </Section>
 
         <Section title={locales.connection_section_security}>

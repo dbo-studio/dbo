@@ -23,17 +23,7 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { BrowseTabType, FilterType } from '@/types/Tab';
 import type { ColumnType } from '@/types/Data';
-import {
-  Box,
-  Button,
-  IconButton,
-  Menu,
-  MenuItem,
-  Popover,
-  TextField,
-  Tooltip,
-  Typography
-} from '@mui/material';
+import { Box, Button, IconButton, Menu, MenuItem, Popover, TextField, Tooltip, Typography } from '@mui/material';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useMemo, useState } from 'react';
@@ -211,7 +201,8 @@ export default function Browse(): JSX.Element {
   };
 
   // A document store generates the id when none is typed.
-  const idOptional = (spec?.createKinds ?? []).find((k) => k.id === (newKind || spec?.createKinds?.[0]?.id))?.view === 'document';
+  const idOptional =
+    (spec?.createKinds ?? []).find((k) => k.id === (newKind || spec?.createKinds?.[0]?.id))?.view === 'document';
 
   const columns = useMemo(
     () => (spec?.fields ?? []).map((f) => ({ name: f.name, type: f.types.join(' | ') }) as ColumnType),
@@ -332,7 +323,10 @@ export default function Browse(): JSX.Element {
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          <Box sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }} data-testid='create-popover'>
+          <Box
+            sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }}
+            data-testid='create-popover'
+          >
             <Typography variant='subtitle2' color='textTitle'>
               {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
             </Typography>
@@ -374,7 +368,9 @@ export default function Browse(): JSX.Element {
         </Popover>
       </Box>
 
-      {statsOpen && <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />}
+      {statsOpen && (
+        <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />
+      )}
       {recycleOpen && (
         <RecycleDialog
           connectionId={connectionId}

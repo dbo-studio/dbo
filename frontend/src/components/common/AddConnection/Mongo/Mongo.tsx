@@ -90,7 +90,12 @@ export default function Mongo({
   const form = useForm({
     validators: { onSubmit: formSchema },
     onSubmit: ({ value }): void => {
-      const common = { password: value.password, database: value.database, tls: value.tls, tlsInsecure: value.tls && value.tlsInsecure };
+      const common = {
+        password: value.password,
+        database: value.database,
+        tls: value.tls,
+        tlsInsecure: value.tls && value.tlsInsecure
+      };
       const data = {
         name: value.name,
         type: connectionType,
@@ -121,7 +126,7 @@ export default function Mongo({
       rememberPassword: false,
       name: connection?.name ?? '',
       env: connection?.env ?? '',
-      mode: (options?.uri ? 'uri' : 'host'),
+      mode: options?.uri ? 'uri' : 'host',
       uri: options?.uri ?? '',
       host: options?.host ?? '',
       port: options?.port?.toString() ?? '27017',
@@ -194,7 +199,11 @@ export default function Mongo({
                 testId='connection-env-select'
                 value={field.state.value || 'none'}
                 options={ENV_OPTIONS}
-                onChange={(o): void => field.handleChange((String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv)}
+                onChange={(o): void =>
+                  field.handleChange(
+                    (String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv
+                  )
+                }
                 helpertext={field.state.value === 'prod' ? locales.connection_env_prod_hint : undefined}
               />
             )}
@@ -224,7 +233,9 @@ export default function Mongo({
                 <>
                   <Stack direction='row' spacing={2}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>{text('host', locales.host, { placeholder: 'localhost' })}</Box>
-                    <Box sx={{ width: 120 }}>{text('port', locales.port, { placeholder: '27017', type: 'number' })}</Box>
+                    <Box sx={{ width: 120 }}>
+                      {text('port', locales.port, { placeholder: '27017', type: 'number' })}
+                    </Box>
                   </Stack>
                 </>
               )
@@ -247,7 +258,9 @@ export default function Mongo({
               mode === 'host' ? text('authSource', locales.mongo_auth_source, { placeholder: 'admin' }) : null
             }
           </form.Subscribe>
-          <ConnectionFormCheckboxRowStyled>{check('rememberPassword', locales.remember_password)}</ConnectionFormCheckboxRowStyled>
+          <ConnectionFormCheckboxRowStyled>
+            {check('rememberPassword', locales.remember_password)}
+          </ConnectionFormCheckboxRowStyled>
         </Section>
 
         <Section title={locales.connection_section_security}>

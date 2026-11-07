@@ -16,7 +16,10 @@ import {
 import DataGridResizer from '@/components/common/DataGrid/DataGridResizer/DataGridResizer';
 import { useColumnResize } from '@/components/common/DataGrid/hooks/useColumnResize';
 import GridCheckbox from '@/components/common/DataGrid/GridCheckbox';
-import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from '@/components/common/DataGrid/DataGridTableHeaderRow/DataGridTableHeaderRow.styled';
+import {
+  HeaderColumnContentStyled,
+  HeaderColumnTypeStyled
+} from '@/components/common/DataGrid/DataGridTableHeaderRow/DataGridTableHeaderRow.styled';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal';
@@ -45,7 +48,15 @@ const chordLabel = (label: string, command: string[]): string => `${label} (${co
 
 type Props = { item: NoSQLItem; connectionId: number; containerId: string; editable: boolean };
 
-type Layout = { type: string; scored: boolean; hasValue: boolean; keyLabel: string; keyType: string; valueLabel: string; valueType: string };
+type Layout = {
+  type: string;
+  scored: boolean;
+  hasValue: boolean;
+  keyLabel: string;
+  keyType: string;
+  valueLabel: string;
+  valueType: string;
+};
 
 function layoutOf(item: NoSQLItem): Layout {
   const type = typeof item.meta?.type === 'string' ? item.meta.type : '';
@@ -79,7 +90,10 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   const [renames, setRenames] = useState<Record<string, string>>({});
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const anchor = useRef<string | null>(null);
-  const { columnSizes, startResize, resizingColumnId } = useColumnResize({ columns: GRID_COLUMNS, defaultColumnWidth: 300 });
+  const { columnSizes, startResize, resizingColumnId } = useColumnResize({
+    columns: GRID_COLUMNS,
+    defaultColumnWidth: 300
+  });
   const [added, setAdded] = useState<{ id: number; key: string; value: string }[]>([]);
   const [menu, setMenu] = useState<{ x: number; y: number; member?: NoSQLMember; header?: boolean } | null>(null);
   const [quick, setQuick] = useState<NoSQLMember | null>(null);
@@ -121,7 +135,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   };
 
   const setOp = (key: string, value: string): NoSQLMemberOp =>
-    l.scored ? { op: 'set', key, value: '', score: Number(value) } : { op: l.type === 'list' && !key ? 'append' : 'set', key, value };
+    l.scored
+      ? { op: 'set', key, value: '', score: Number(value) }
+      : { op: l.type === 'list' && !key ? 'append' : 'set', key, value };
 
   const stageEdit = (m: NoSQLMember, value: string): void => {
     const next = { ...edits };
@@ -146,7 +162,8 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
     setRemoved(new Set([...removed, ...members.filter((m) => selected.has(m.key)).map((m) => m.key)]));
   };
 
-  const pending = Object.keys(edits).length + Object.keys(renames).length + removed.size + added.filter(addedReady).length;
+  const pending =
+    Object.keys(edits).length + Object.keys(renames).length + removed.size + added.filter(addedReady).length;
 
   const discard = (): void => {
     setEdits({});
@@ -168,7 +185,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
       { op: 'remove' as const, key: from, value: byKey.get(from)?.value ?? '' }
     ]);
     const ops: NoSQLMemberOp[] = [
-      ...Object.entries(edits).filter(([k]) => !removed.has(k) && !(k in renames)).map(([k, v]) => setOp(k, v)),
+      ...Object.entries(edits)
+        .filter(([k]) => !removed.has(k) && !(k in renames))
+        .map(([k, v]) => setOp(k, v)),
       ...renameOps,
       // List indexes shift after every removal, so remove from the end.
       ...[...removed]
@@ -207,7 +226,10 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   };
 
   const duplicate = (m: NoSQLMember): void =>
-    setAdded([{ id: Date.now(), key: l.type === 'list' ? '' : `${m.key}_copy`, value: edits[m.key] ?? shown(m) }, ...added]);
+    setAdded([
+      { id: Date.now(), key: l.type === 'list' ? '' : `${m.key}_copy`, value: edits[m.key] ?? shown(m) },
+      ...added
+    ]);
 
   const selectOnly = (key: string): void => setSelected(new Set([key]));
 
@@ -253,14 +275,24 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   };
 
   const shared: MenuType[] = [
-    { name: locales.add_row, closeBeforeAction: true, disabled: !editable, disabledReason: locales.grid_menu_read_only, action: addRow },
+    {
+      name: locales.add_row,
+      closeBeforeAction: true,
+      disabled: !editable,
+      disabledReason: locales.grid_menu_read_only,
+      action: addRow
+    },
     { name: locales.refresh, closeBeforeAction: true, action: refresh }
   ];
 
   const menuItems = (): MenuType[] => {
     if (!menu) return [];
     if (menu.header) {
-      return [{ name: locales.copy_column_name, closeAfterAction: true, action: (): void => copyText(l.keyLabel) }, { name: 'separator', separator: true }, ...shared];
+      return [
+        { name: locales.copy_column_name, closeAfterAction: true, action: (): void => copyText(l.keyLabel) },
+        { name: 'separator', separator: true },
+        ...shared
+      ];
     }
     const m = menu.member;
     if (!m) return shared;
@@ -286,8 +318,16 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
       {
         name: locales.copy,
         children: [
-          { name: locales.copy_cell, closeAfterAction: true, action: (): void => copyText(l.hasValue ? shown(m) : m.key) },
-          { name: locales.copy_row_tsv, closeAfterAction: true, action: (): void => copyText(l.hasValue ? `${m.key}\t${shown(m)}` : m.key) },
+          {
+            name: locales.copy_cell,
+            closeAfterAction: true,
+            action: (): void => copyText(l.hasValue ? shown(m) : m.key)
+          },
+          {
+            name: locales.copy_row_tsv,
+            closeAfterAction: true,
+            action: (): void => copyText(l.hasValue ? `${m.key}\t${shown(m)}` : m.key)
+          },
           { name: locales.copy_column_name, closeAfterAction: true, action: (): void => copyText(l.keyLabel) }
         ]
       },
@@ -311,7 +351,11 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} data-testid='member-window'>
-      <ContextMenu menu={menuItems()} contextMenu={menu ? { mouseX: menu.x, mouseY: menu.y } : null} onClose={(): void => setMenu(null)} />
+      <ContextMenu
+        menu={menuItems()}
+        contextMenu={menu ? { mouseX: menu.x, mouseY: menu.y } : null}
+        onClose={(): void => setMenu(null)}
+      />
       <ResizableModal
         open={!!quick}
         onClose={(): void => setQuick(null)}
@@ -335,7 +379,11 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
           </Box>
         )}
       </ResizableModal>
-      <TableContainer sx={{ flex: 1, minHeight: 0 }} onContextMenu={(e): void => openMenu(e)} data-testid='member-window-scroll'>
+      <TableContainer
+        sx={{ flex: 1, minHeight: 0 }}
+        onContextMenu={(e): void => openMenu(e)}
+        data-testid='member-window-scroll'
+      >
         <StyledTable width={(editable ? SELECT_WIDTH : 0) + columnSizes.key + (l.hasValue ? columnSizes.value : 0)}>
           <colgroup>
             {editable && <StyledCol width={SELECT_WIDTH} />}
@@ -366,7 +414,11 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                     {l.valueLabel}
                     <HeaderColumnTypeStyled>{l.valueType}</HeaderColumnTypeStyled>
                   </HeaderColumnContentStyled>
-                  <DataGridResizer columnId='value' isResizing={resizingColumnId === 'value'} onResizeStart={startResize} />
+                  <DataGridResizer
+                    columnId='value'
+                    isResizing={resizingColumnId === 'value'}
+                    onResizeStart={startResize}
+                  />
                 </TableHeader>
               )}
             </StyledTableRow>
@@ -385,7 +437,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                       autoFocus
                       aria-label='member-key'
                       value={r.key}
-                      onChange={(e): void => setAdded(added.map((x) => (x.id === r.id ? { ...x, key: e.target.value } : x)))}
+                      onChange={(e): void =>
+                        setAdded(added.map((x) => (x.id === r.id ? { ...x, key: e.target.value } : x)))
+                      }
                       onKeyDown={(e): void => {
                         if (e.key === 'Escape') setAdded(added.filter((x) => x.id !== r.id));
                       }}
@@ -399,7 +453,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                       aria-label='member-value'
                       type={l.scored ? 'number' : 'text'}
                       value={r.value}
-                      onChange={(e): void => setAdded(added.map((x) => (x.id === r.id ? { ...x, value: e.target.value } : x)))}
+                      onChange={(e): void =>
+                        setAdded(added.map((x) => (x.id === r.id ? { ...x, value: e.target.value } : x)))
+                      }
                       onKeyDown={(e): void => {
                         if (e.key === 'Escape') setAdded(added.filter((x) => x.id !== r.id));
                       }}
@@ -413,10 +469,20 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
               const cellId = `${m.key}`;
 
               return (
-                <StyledTableRow key={m.key} onClick={(): void => selectOnly(m.key)} onContextMenu={(e): void => openMenu(e, m)} className={`${removed.has(m.key) ? 'removed-highlight' : edits[m.key] !== undefined || renames[m.key] !== undefined ? 'edit-highlight' : isSelected ? 'selected-highlight' : ''} ${i % 2 ? 'is-striped' : ''}`} data-testid='member-row'>
+                <StyledTableRow
+                  key={m.key}
+                  onClick={(): void => selectOnly(m.key)}
+                  onContextMenu={(e): void => openMenu(e, m)}
+                  className={`${removed.has(m.key) ? 'removed-highlight' : edits[m.key] !== undefined || renames[m.key] !== undefined ? 'edit-highlight' : isSelected ? 'selected-highlight' : ''} ${i % 2 ? 'is-striped' : ''}`}
+                  data-testid='member-row'
+                >
                   {editable && (
                     <SelectTableCell>
-                      <GridCheckbox aria-label={locales.nosql_select_row} checked={isSelected} onChange={(e): void => toggle(m.key, (e.nativeEvent as MouseEvent).shiftKey)} />
+                      <GridCheckbox
+                        aria-label={locales.nosql_select_row}
+                        checked={isSelected}
+                        onChange={(e): void => toggle(m.key, (e.nativeEvent as MouseEvent).shiftKey)}
+                      />
                     </SelectTableCell>
                   )}
                   <TableCell
@@ -457,7 +523,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                           }}
                         />
                       ) : (
-                        <Box sx={{ px: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{edits[m.key] ?? shown(m)}</Box>
+                        <Box sx={{ px: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {edits[m.key] ?? shown(m)}
+                        </Box>
                       )}
                     </TableCell>
                   )}
@@ -486,14 +554,23 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
               </Tooltip>
               <Tooltip title={chordLabel(locales.save, shortcuts.saveGrid.command)}>
                 <span>
-                  <IconButton aria-label={locales.save} data-testid='member-save' disabled={pending === 0} onClick={save}>
+                  <IconButton
+                    aria-label={locales.save}
+                    data-testid='member-save'
+                    disabled={pending === 0}
+                    onClick={save}
+                  >
                     <CustomIcon type='check' size='s' />
                   </IconButton>
                 </span>
               </Tooltip>
               <Tooltip title={chordLabel(locales.discard_changes, shortcuts.discardChanges.command)}>
                 <span>
-                  <IconButton aria-label={locales.discard_changes} disabled={pending === 0 && removed.size === 0} onClick={discard}>
+                  <IconButton
+                    aria-label={locales.discard_changes}
+                    disabled={pending === 0 && removed.size === 0}
+                    onClick={discard}
+                  >
                     <CustomIcon type='close' size='s' />
                   </IconButton>
                 </span>

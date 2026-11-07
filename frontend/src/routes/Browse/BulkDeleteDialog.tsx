@@ -51,17 +51,17 @@ export default function BulkDeleteDialog({
   const countText = preview.isPending
     ? locales.nosql_bulk_delete_counting
     : count === 0
-      ? (docs ? locales.nosql_bulk_delete_none_docs : locales.nosql_bulk_delete_none)
+      ? docs
+        ? locales.nosql_bulk_delete_none_docs
+        : locales.nosql_bulk_delete_none
       : (preview.data?.capped
           ? docs
             ? locales.nosql_bulk_delete_count_capped_docs
             : locales.nosql_bulk_delete_count_capped
           : docs
             ? locales.nosql_bulk_delete_count_docs
-            : locales.nosql_bulk_delete_count).replace(
-          '{count}',
-          count.toLocaleString()
-        );
+            : locales.nosql_bulk_delete_count
+        ).replace('{count}', count.toLocaleString());
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth='xs' data-testid='bulk-delete-dialog'>
@@ -95,7 +95,10 @@ export default function BulkDeleteDialog({
           disabled={count === 0 || typed !== name || start.isPending}
           onClick={(): void => start.mutate()}
         >
-          {(docs ? locales.nosql_bulk_delete_action_docs : locales.nosql_bulk_delete_action).replace('{count}', count.toLocaleString())}
+          {(docs ? locales.nosql_bulk_delete_action_docs : locales.nosql_bulk_delete_action).replace(
+            '{count}',
+            count.toLocaleString()
+          )}
         </Button>
       </DialogActions>
     </Dialog>

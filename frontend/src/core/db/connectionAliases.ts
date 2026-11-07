@@ -90,7 +90,9 @@ export function connectionDriver(type: string | undefined): ConnectionDriver | u
 
 /** Connection types served by the NoSQL engine (Browse tab) instead of the SQL data/query tabs. */
 export const isNoSQLType = (type: string | undefined): boolean =>
-  type === 'nosql_fixture' || getConnectionAlias(type)?.driver === 'redis' || getConnectionAlias(type)?.driver === 'mongodb';
+  type === 'nosql_fixture' ||
+  getConnectionAlias(type)?.driver === 'redis' ||
+  getConnectionAlias(type)?.driver === 'mongodb';
 
 export const isRedisDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'redis';
 

@@ -1,7 +1,17 @@
 export type NoSQLViewKind = 'text' | 'document' | 'fields' | 'list' | 'set' | 'table';
 export type NoSQLFilterKind = 'pattern' | 'fields' | 'query';
 export type NoSQLListStyle = 'flat' | 'tree';
-export type NoSQLCapability = 'insert' | 'edit' | 'delete' | 'bulk-delete' | 'bulk-delete-pattern' | 'ttl' | 'rename' | 'recycle' | 'window' | 'stats';
+export type NoSQLCapability =
+  | 'insert'
+  | 'edit'
+  | 'delete'
+  | 'bulk-delete'
+  | 'bulk-delete-pattern'
+  | 'ttl'
+  | 'rename'
+  | 'recycle'
+  | 'window'
+  | 'stats';
 
 export type NoSQLFieldInfo = { name: string; types: string[] };
 

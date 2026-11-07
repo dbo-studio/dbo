@@ -95,7 +95,11 @@ export default function PanelTabItem({ tab, overlay = false }: { tab: TabType; o
       >
         <PanelTabContentStyled>
           <PanelTabIconStyled data-testid={`workspace-tab-icon-${tab.mode}`}>
-            <CustomIcon type={(tab.mode === TabMode.Tool && 'toolId' in tab && TOOL_ICON[tab.toolId]) || TAB_MODE_ICON[tab.mode]} size='xs' color='currentColor' />
+            <CustomIcon
+              type={(tab.mode === TabMode.Tool && 'toolId' in tab && TOOL_ICON[tab.toolId]) || TAB_MODE_ICON[tab.mode]}
+              size='xs'
+              color='currentColor'
+            />
           </PanelTabIconStyled>
           <Tooltip title={tab.name} placement={'bottom'}>
             <PanelTabNameStyled component={'span'} variant='subtitle2'>
