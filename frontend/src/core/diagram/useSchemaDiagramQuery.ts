@@ -6,20 +6,20 @@ type Args = {
   connectionId: string | number | undefined;
   database: string;
   schema: string;
-  focusTable?: string;
+  focusTables?: string[];
   enabled: boolean;
 };
 
-export function useSchemaDiagramQuery({ connectionId, database, schema, focusTable, enabled }: Args) {
+export function useSchemaDiagramQuery({ connectionId, database, schema, focusTables, enabled }: Args) {
   return useQuery({
-    queryKey: schemaDiagramQueryKey(connectionId, database, schema, focusTable),
+    queryKey: schemaDiagramQueryKey(connectionId, database, schema, focusTables),
     queryFn: ({ signal }) =>
       api.schema.getDiagram(
         {
           connectionId: connectionId ?? 0,
           database: database || undefined,
           schema: schema || undefined,
-          tables: focusTable ? [focusTable] : undefined
+          tables: focusTables?.length ? focusTables : undefined
         },
         signal
       ),

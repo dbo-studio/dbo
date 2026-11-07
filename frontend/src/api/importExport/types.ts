@@ -3,6 +3,9 @@ export type ImportRequestType = {
   table: string;
   data: File;
   format: string;
+  delimiter?: string;
+  /** File column -> table column; a file column left out is not imported. */
+  mapping?: Record<string, string>;
   continueOnError: boolean;
   skipErrors: boolean;
   maxErrors: number;
@@ -28,4 +31,10 @@ export type ExportRequestType = {
 
 export type JobResponseType = {
   jobId: string;
+};
+
+export type ImportPreviewType = {
+  columns: string[];
+  rows: string[][];
+  totalRows: number;
 };

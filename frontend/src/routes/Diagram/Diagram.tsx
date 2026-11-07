@@ -47,13 +47,13 @@ function DiagramCanvas(): JSX.Element {
   const connectionId = currentConnection?.id;
   const database = selectedTab?.database ?? '';
   const schema = selectedTab?.schema ?? '';
-  const focusTable = selectedTab?.focusTable;
+  const focusTables = selectedTab?.focusTables;
 
   const { viewGraph, isLoading, activeNodeId, highlightedIds, shownNodeIds, changeset } = useDiagramGraph({
     connectionId,
     database,
     schema,
-    focusTable,
+    focusTables,
     enabled: Boolean(connectionId && selectedTab),
     selectedNodeId
   });

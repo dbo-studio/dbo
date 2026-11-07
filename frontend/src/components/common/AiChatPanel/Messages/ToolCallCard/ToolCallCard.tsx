@@ -68,7 +68,7 @@ export default function ToolCallCard({
       useAiStore.getState().context,
       useConnectionStore.getState().currentConnection()
     );
-    useTabStore.getState().addDiagramTab({ database: database ?? '', schema: schema ?? '', focusTable: table });
+    useTabStore.getState().addDiagramTab({ database: database ?? '', schema: schema ?? '', focusTables: [table] });
   };
 
   return (

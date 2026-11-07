@@ -100,7 +100,7 @@ func ClassifyAction(action string) Class {
 		"createIndex", "editIndex", "createSequence", "editSequence",
 		"createType", "editType", "createFunction", "editFunction",
 		"createProcedure", "editProcedure", "createEvent", "editEvent",
-		"refreshMaterializedView", "refreshMaterializedViewNoData":
+		"refreshMaterializedView", "refreshMaterializedViewNoData", "rename":
 		return ClassDDL
 	default:
 		return ClassUnknown

@@ -72,7 +72,7 @@ export type DiagramTabType = BaseTab & {
   name: string;
   database: string;
   schema: string;
-  focusTable?: string;
+  focusTables?: string[];
 };
 
 export type DashboardTabType = BaseTab & {

@@ -245,7 +245,7 @@ func (p *BackupProcessor) run(ctx context.Context, job *model.Job, connection *m
 		return artifact.FilePath, err
 	}
 
-	_, _, err = writeExport(ctx, repo, connection.ConnectionType, &export, targets, dump, artifact.FilePath, false, func(i int, name string) {
+	_, _, _, err = writeExport(ctx, repo, connection.ConnectionType, &export, targets, dump, artifact.FilePath, false, func(i int, name string) {
 		_ = p.jobManager.UpdateJobProgress(ctx, job, 20+70*i/len(targets), "Backing up "+name)
 	})
 	if err != nil {

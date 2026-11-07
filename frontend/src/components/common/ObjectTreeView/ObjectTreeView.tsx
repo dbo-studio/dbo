@@ -1,4 +1,6 @@
 import api from '@/api';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import Search from '@/components/base/Search/Search';
@@ -14,7 +16,14 @@ import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, 
 import { flattenTree } from './flattenTree';
 import { mergeSearchResults } from './mergeSearchResults';
 import {
+  TREE_CHAR_WIDTH,
+  TREE_INDENT,
   TREE_ROW_HEIGHT,
+  NodeLabel,
+  NodeName,
+  NodeRowContent,
+  PinnedSectionStyled,
+  PinnedTitleStyled,
   TreeEmptyStyled,
   TreeSearchStatusStyled,
   TreeViewContainerStyled,
@@ -28,7 +37,9 @@ import { useTreeSearch } from './useTreeSearch';
 
 const EMPTY_IDS: string[] = [];
 const EMPTY_SET: ReadonlySet<string> = new Set();
+const EMPTY_NODES: TreeNodeType[] = [];
 const REVEAL_MS = 500;
+const LOADING_DELAY_MS = 200;
 const FLASH_MS = 900;
 const prefersReducedMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // The shared action hook only needs stopPropagation from the event.
@@ -80,12 +91,20 @@ export default function ObjectTreeView(): JSX.Element {
     ids: new Set()
   }));
   const collapsedDuringSearch = searchCollapsed.term === searchTerm ? searchCollapsed.ids : EMPTY_SET;
+  // Delayed: a load that finishes quickly never flashes a placeholder row.
   const [loadingIds, setLoadingIds] = useState<ReadonlySet<string>>(() => new Set());
+  const loadingTimersRef = useRef(new Map<string, number>());
+  const [emptyIds, setEmptyIds] = useState<ReadonlySet<string>>(() => new Set());
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
   const [hasFocus, setHasFocus] = useState(false);
   const [revealParentId, setRevealParentId] = useState<string | undefined>(undefined);
   const [menu, setMenu] = useState<MenuType[]>([]);
   const [menuFromKeyboard, setMenuFromKeyboard] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | undefined>(undefined);
+  // Cmd/Ctrl+click and Shift+click build this set; the anchor is where a Shift range starts.
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(EMPTY_SET);
+  const [anchorId, setAnchorId] = useState<string | undefined>(undefined);
+  const pinned = useTreeStore((state) => (connectionId ? state.pinnedNodes[connectionId] : undefined)) ?? EMPTY_NODES;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -110,8 +129,8 @@ export default function ObjectTreeView(): JSX.Element {
 
   const expandedIds = useMemo(() => new Set(expandedList ?? EMPTY_IDS), [expandedList]);
   const rows = useMemo(
-    () => flattenTree(displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch),
-    [displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch]
+    () => flattenTree(displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch, emptyIds),
+    [displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch, emptyIds]
   );
 
   const { virtualItems, totalSize, virtualizer } = useVirtualList({
@@ -120,6 +139,17 @@ export default function ObjectTreeView(): JSX.Element {
     overscan: 12,
     scrollElementRef: scrollContainerRef
   });
+
+  // Widest row decides the horizontal scroll extent (rows are virtualized, so measure from data, not DOM).
+  const contentWidth = useMemo(
+    () =>
+      rows.reduce(
+        (max, r) =>
+          Math.max(max, r.level * TREE_INDENT + 64 + (r.kind === 'node' ? r.node.name.length * TREE_CHAR_WIDTH : 0)),
+        0
+      ),
+    [rows]
+  );
 
   const rowIndex = useCallback((id: string | undefined): number => rows.findIndex((r) => r.key === id), [rows]);
 
@@ -150,12 +180,31 @@ export default function ObjectTreeView(): JSX.Element {
   );
 
   const setLoading = (id: string, loading: boolean): void => {
-    setLoadingIds((prev) => {
+    const timers = loadingTimersRef.current;
+    window.clearTimeout(timers.get(id));
+    timers.delete(id);
+    const update = (isLoading: boolean): void =>
+      setLoadingIds((prev) => {
+        const next = new Set(prev);
+        if (isLoading) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+
+    if (!loading) {
+      update(false);
+      return;
+    }
+    setEmptyIds((prev) => {
+      if (!prev.has(id)) return prev;
       const next = new Set(prev);
-      if (loading) next.add(id);
-      else next.delete(id);
+      next.delete(id);
       return next;
     });
+    timers.set(
+      id,
+      window.setTimeout(() => update(true), LOADING_DELAY_MS)
+    );
   };
 
   const revealChildrenOf = (id: string): void => {
@@ -170,8 +219,10 @@ export default function ObjectTreeView(): JSX.Element {
       try {
         addLoadedParentId(node.id);
         const result = await getChildren({ parentId: node.id, connectionId, fromCache });
-        useTreeStore.getState().setNodeChildren(node.id, result?.children ?? []);
-        revealChildrenOf(node.id);
+        const children = result?.children ?? [];
+        useTreeStore.getState().setNodeChildren(node.id, children);
+        if (children.length === 0) setEmptyIds((prev) => new Set(prev).add(node.id));
+        else revealChildrenOf(node.id);
       } catch {
         useTreeStore.getState().setNodeChildren(node.id, []);
       } finally {
@@ -233,8 +284,19 @@ export default function ObjectTreeView(): JSX.Element {
     [expandedIds, toggle]
   );
 
-  const { actionDetection } = useActionDetection(noExpand);
-  const buildMenu = useTreeNodeMenuBuilder(actionDetection);
+  const { actionDetection, renameNode, dropNodes } = useActionDetection(noExpand);
+  const buildMenu = useTreeNodeMenuBuilder(actionDetection, {
+    onRename: (node) => setRenamingId(node.id),
+    onDropMany: (nodes) => {
+      setSelectedIds(EMPTY_SET);
+      dropNodes(nodes);
+    }
+  });
+
+  const selectedNodes = useMemo(
+    () => rows.flatMap((row) => (row.kind === 'node' && selectedIds.has(row.key) ? [row.node] : [])),
+    [rows, selectedIds]
+  );
 
   /** Expands the real (loaded) tree down to a node found by search, loading each folder on the way. */
   const revealInTree = useCallback(
@@ -286,6 +348,11 @@ export default function ObjectTreeView(): JSX.Element {
 
   const edit = useCallback(
     (node: TreeNodeType): void => {
+      // F2 renames what can be renamed; otherwise it opens the object's editor.
+      if (node.contextMenu?.some((a) => a.name === 'rename')) {
+        setRenamingId(node.id);
+        return;
+      }
       const action = node.contextMenu?.find((a) => a.name.startsWith('edit'));
       if (action) void actionDetection(syntheticEvent, { ...node, action });
     },
@@ -300,10 +367,13 @@ export default function ObjectTreeView(): JSX.Element {
     ): void => {
       setActiveId(node.id);
       setMenuFromKeyboard(fromKeyboard);
-      setMenu(buildMenu(node));
+      // Right-clicking outside the multi-selection acts on that one row only.
+      const inSelection = selectedIds.has(node.id);
+      if (!inSelection) setSelectedIds(EMPTY_SET);
+      setMenu(buildMenu(node, inSelection ? selectedNodes : [node]));
       handleContextMenu(event as React.MouseEvent);
     },
-    [buildMenu, handleContextMenu]
+    [buildMenu, handleContextMenu, selectedIds, selectedNodes]
   );
 
   const openMenuFromKeyboard = useCallback(
@@ -388,13 +458,50 @@ export default function ObjectTreeView(): JSX.Element {
   }, []);
 
   const handleRowClick = useCallback(
-    (_event: React.MouseEvent, node: TreeNodeType): void => {
+    (event: React.MouseEvent, node: TreeNodeType): void => {
       setActiveId(node.id);
+      if (event.metaKey || event.ctrlKey) {
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          // The row that was active joins the selection the first time a modifier click starts one.
+          if (prev.size === 0 && anchorId) next.add(anchorId);
+          if (next.has(node.id)) next.delete(node.id);
+          else next.add(node.id);
+          return next;
+        });
+        setAnchorId(node.id);
+        return;
+      }
+      if (event.shiftKey && anchorId) {
+        const from = rowIndex(anchorId);
+        const to = rowIndex(node.id);
+        if (from >= 0 && to >= 0) {
+          const [start, end] = from < to ? [from, to] : [to, from];
+          setSelectedIds(new Set(rows.slice(start, end + 1).flatMap((row) => (row.kind === 'node' ? [row.key] : []))));
+          return;
+        }
+      }
+      setSelectedIds(EMPTY_SET);
+      setAnchorId(node.id);
       setFocusedNodeId(node.id);
       if (preferSingleClick) open(node);
       else toggle(node);
     },
-    [open, preferSingleClick, setFocusedNodeId, toggle]
+    [anchorId, open, preferSingleClick, rowIndex, rows, setFocusedNodeId, toggle]
+  );
+
+  const cancelRename = useCallback((): void => {
+    const id = renamingId;
+    setRenamingId(undefined);
+    if (id) refocusIfLost(rowElementsRef.current.get(id));
+  }, [renamingId]);
+
+  const commitRename = useCallback(
+    (node: TreeNodeType, name: string): void => {
+      cancelRename();
+      if (name && name !== node.name) void renameNode(node, name);
+    },
+    [cancelRename, renameNode]
   );
 
   const handleRowDoubleClick = useCallback(
@@ -424,6 +531,7 @@ export default function ObjectTreeView(): JSX.Element {
   };
 
   const handleContainerKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && selectedIds.size > 0 && !renamingId) setSelectedIds(EMPTY_SET);
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
       event.preventDefault();
       focusSearch();
@@ -467,6 +575,34 @@ export default function ObjectTreeView(): JSX.Element {
       >
         {loadingIds.size > 0 ? locales.tree_loading : ''}
       </Box>
+      {pinned.length > 0 && (
+        <PinnedSectionStyled data-testid='tree-pinned'>
+          <PinnedTitleStyled>{locales.tree_pinned}</PinnedTitleStyled>
+          {pinned.map((pin) => {
+            // Prefer the live node (fresh action/menu); the snapshot covers folders not loaded yet.
+            const node = findNode(tree, pin.id) ?? pin;
+            return (
+              <NodeLabel
+                key={pin.id}
+                level={0}
+                isSelected={pin.id === selectedNodeId}
+                tabIndex={0}
+                data-testid={`tree-pinned-${pin.name.toLowerCase().replace(/\s+/g, '-')}`}
+                onClick={(): void => open(node)}
+                onContextMenu={(event): void => handleRowContextMenu(event, node)}
+                onKeyDown={(event): void => {
+                  if (event.key === 'Enter') open(node);
+                }}
+              >
+                <NodeRowContent>
+                  {node.icon && <CustomIcon type={node.icon as keyof typeof IconTypes} size='s' />}
+                  <NodeName>{pin.name}</NodeName>
+                </NodeRowContent>
+              </NodeLabel>
+            );
+          })}
+        </PinnedSectionStyled>
+      )}
       <TreeViewContentStyled
         ref={scrollContainerRef}
         role='tree'
@@ -487,11 +623,12 @@ export default function ObjectTreeView(): JSX.Element {
         {searchTerm && rows.length === 0 && !search.isSearching && (
           <TreeEmptyStyled>{locales.tree_no_matches}</TreeEmptyStyled>
         )}
-        <Box sx={{ height: totalSize, position: 'relative', width: '100%' }}>
+        <Box sx={{ height: totalSize, position: 'relative', minWidth: '100%', width: contentWidth }}>
           {virtualItems.map((item) => {
             const row = rows[item.index];
             if (!row) return null;
-            if (row.kind === 'loading') return <TreeLoadingRow key={row.key} level={row.level} top={item.start} />;
+            if (row.kind === 'loading')
+              return <TreeLoadingRow key={row.key} level={row.level} top={item.start} empty={row.empty} />;
 
             return (
               <TreeRow
@@ -502,10 +639,11 @@ export default function ObjectTreeView(): JSX.Element {
                 setSize={row.setSize}
                 top={item.start}
                 isExpanded={row.isExpanded}
-                isSelected={row.key === selectedNodeId}
+                isSelected={row.key === selectedNodeId || selectedIds.has(row.key)}
                 isActive={row.key === currentId}
                 isTabStop={row.key === tabStopId}
                 isFocused={hasFocus}
+                isRenaming={row.key === renamingId}
                 reveal={row.parentId !== null && row.parentId === revealParentId}
                 searchTerm={searchTerm}
                 rowRef={setRowElement}
@@ -513,6 +651,8 @@ export default function ObjectTreeView(): JSX.Element {
                 onDoubleClick={handleRowDoubleClick}
                 onContextMenu={handleRowContextMenu}
                 onToggle={toggle}
+                onRenameCommit={commitRename}
+                onRenameCancel={cancelRename}
               />
             );
           })}

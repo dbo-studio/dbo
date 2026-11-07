@@ -9,12 +9,12 @@ type Args = {
   connectionId: string | number | undefined;
   database: string;
   schema: string;
-  focusTable?: string;
+  focusTables?: string[];
   enabled: boolean;
   selectedNodeId: string | null | undefined;
 };
 
-export function useDiagramGraph({ connectionId, database, schema, focusTable, enabled, selectedNodeId }: Args): {
+export function useDiagramGraph({ connectionId, database, schema, focusTables, enabled, selectedNodeId }: Args): {
   viewGraph: ViewGraph;
   isLoading: boolean;
   activeNodeId: string | null;
@@ -26,7 +26,7 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
     connectionId,
     database,
     schema,
-    focusTable,
+    focusTables,
     enabled
   });
 
@@ -44,10 +44,10 @@ export function useDiagramGraph({ connectionId, database, schema, focusTable, en
     [changeset, data]
   );
 
-  // Backend expands focusTable by one FK hop; show everything returned.
+  // Backend expands focusTables by one FK hop; show everything returned.
   const shownNodeIds = useMemo(() => new Set(viewGraph.nodes.map((node) => node.id)), [viewGraph.nodes]);
 
-  const focusedId = viewGraph.nodes.find((node) => node.name === focusTable)?.id ?? null;
+  const focusedId = viewGraph.nodes.find((node) => focusTables?.includes(node.name))?.id ?? null;
   const activeNodeId = selectedNodeId === undefined ? focusedId : selectedNodeId;
 
   const highlightedIds = useMemo(() => {

@@ -17,6 +17,8 @@ export const useActionDetection = (
   expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>
 ): {
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>;
+  renameNode: (node: TreeNodeType, newName: string) => Promise<boolean>;
+  dropNodes: (nodes: TreeNodeType[]) => void;
 } => {
   const queryClient = useQueryClient();
   const confirmDanger = useConfirmModalStore((state) => state.danger);
@@ -33,6 +35,74 @@ export const useActionDetection = (
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
     mutationFn: api.tree.executeAction
   });
+
+  const dropActionOf = (node: TreeNodeType): string | undefined =>
+    node.contextMenu?.find((a) => a.name.startsWith('drop'))?.name;
+
+  const renameNode = useCallback(
+    async (node: TreeNodeType, newName: string): Promise<boolean> => {
+      if (!currentConnection) return false;
+      try {
+        const result = await withSafeModeRetry((confirmed) =>
+          executeActionMutation({
+            nodeId: node.id,
+            action: 'rename',
+            connectionId: currentConnection.id,
+            confirmed,
+            data: { name: newName }
+          })
+        );
+        if (result === undefined) return false;
+        useTreeStore.getState().renamePinned(node.id, node.name, newName);
+        await reloadTree(false);
+        toast.success(locales.action_executed_successfully);
+        return true;
+      } catch {
+        toast.error(locales.action_failed);
+        return false;
+      }
+    },
+    [currentConnection, executeActionMutation, reloadTree]
+  );
+
+  const dropNodes = useCallback(
+    (nodes: TreeNodeType[]): void => {
+      if (!currentConnection) return;
+      confirmDanger(
+        locales.tree_drop_selected.replace('{n}', String(nodes.length)),
+        locales.tree_drop_selected_confirm.replace('{n}', String(nodes.length)),
+        () => {
+          void (async (): Promise<void> => {
+            let failed = false;
+            for (const node of nodes) {
+              const action = dropActionOf(node);
+              if (!action) continue;
+              try {
+                const result = await withSafeModeRetry((confirmed) =>
+                  executeActionMutation({
+                    nodeId: node.id,
+                    action,
+                    connectionId: currentConnection.id,
+                    confirmed,
+                    data: { general: {} }
+                  })
+                );
+                // Declined safe-mode prompt: stop instead of asking once per object.
+                if (result === undefined) break;
+                useTreeStore.getState().unpinNodes([node.id]);
+              } catch {
+                failed = true;
+              }
+            }
+            await reloadTree(false);
+            if (failed) toast.error(locales.action_failed);
+            else toast.success(locales.action_executed_successfully);
+          })();
+        }
+      );
+    },
+    [confirmDanger, currentConnection, executeActionMutation, reloadTree]
+  );
 
   const runTreeAction = useCallback(
     async (node: TreeNodeType): Promise<void> => {
@@ -149,5 +219,5 @@ export const useActionDetection = (
     ]
   );
 
-  return { actionDetection };
+  return { actionDetection, renameNode, dropNodes };
 };

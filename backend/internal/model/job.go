@@ -48,6 +48,12 @@ type Job struct {
 	UpdatedAt   *time.Time `gorm:"autoUpdateTime"`
 }
 
+// JobTableResult is what one table of a multi-table run produced.
+type JobTableResult struct {
+	Name string `json:"name"`
+	Rows int    `json:"rows"`
+}
+
 type JobResult struct {
 	TotalRows   int                            `json:"totalRows"`
 	SuccessRows int                            `json:"successRows"`
@@ -65,4 +71,5 @@ type JobResult struct {
 	ChunkSize   int                            `json:"chunkSize"`
 	Query       string                         `json:"query"`
 	ArtifactID  uint                           `json:"artifactId"`
+	Tables      []JobTableResult               `json:"tables,omitempty"`
 }

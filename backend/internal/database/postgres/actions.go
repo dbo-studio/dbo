@@ -182,6 +182,11 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 				Name:  contract.DropTableAction,
 				Type:  contract.TreeNodeActionTypeAction,
 			},
+			contract.TreeNodeAction{
+				Title: "Rename",
+				Name:  contract.RenameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
+			},
 		)
 	case contract.ViewNodeType:
 		actions = append(actions,
@@ -197,6 +202,11 @@ func (r *PostgresRepository) ContextMenu(nodeType contract.TreeNodeType) []contr
 				Title: "Drop view",
 				Name:  contract.DropViewAction,
 				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
+				Title: "Rename",
+				Name:  contract.RenameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
 			},
 		)
 	case contract.MaterializedViewNodeType:
