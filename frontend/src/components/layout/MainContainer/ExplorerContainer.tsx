@@ -78,6 +78,7 @@ export default React.memo(function ExplorerContainer({
     if (showConnectionsRail && area === 'boards') {
       return (
         <>
+          <ConnectionSwitcher />
           {title(locales.explorer_boards_title)}
           <SidebarTabPanelStyled role='tabpanel'>
             <Boards />
@@ -89,6 +90,7 @@ export default React.memo(function ExplorerContainer({
     if (showConnectionsRail && area === 'backup') {
       return (
         <>
+          <ConnectionSwitcher />
           {title(locales.rail_backup)}
           <SidebarTabPanelStyled role='tabpanel'>
             <BackupSidebar />

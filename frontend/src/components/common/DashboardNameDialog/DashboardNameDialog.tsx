@@ -4,7 +4,10 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDashboardDialogStore } from '@/store/dashboardDialog/dashboardDialog.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, Button, InputBase } from '@mui/material';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { Box, Button, Typography } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,6 +19,7 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
   const connectionId = Number(useConnectionStore((state) => state.currentConnectionId));
   const addDashboardTab = useTabStore((state) => state.addDashboardTab);
   const queryClient = useQueryClient();
+  const connection = useCurrentConnection();
   const [name, setName] = useState(target?.mode === 'rename' ? target.name : '');
 
   const { mutate, isPending } = useMutation({
@@ -37,6 +41,7 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
   return (
     <Modal
       open
+      compact
       onClose={onDone}
       title={target.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_new}
       footer={
@@ -60,21 +65,33 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
       <Box
         component='form'
         id={FORM_ID}
-        sx={{ minWidth: 320 }}
+        sx={{ width: 420, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1 }}
         onSubmit={(event) => {
           event.preventDefault();
           if (name.trim()) mutate(name.trim());
         }}
       >
-        <InputBase
+        <Typography variant='body2' color='textSubdued'>
+          {target.mode === 'rename' ? locales.dashboard_rename_hint : locales.dashboard_new_hint}
+        </Typography>
+        <FieldInput
           autoFocus
-          size='small'
+          fullWidth
           margin='none'
-          placeholder={locales.dashboard_name}
+          label={locales.dashboard_name}
+          placeholder={locales.dashboard_name_placeholder}
           value={name}
           onChange={(event) => setName(event.target.value)}
           inputProps={{ 'data-testid': 'dashboard-name-input', maxLength: 255 }}
         />
+        {connection && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+            <CustomIcon type={connection.type} size='s' />
+            <Typography variant='caption' noWrap>
+              {locales.dashboard_for_connection.replace('{name}', connection.name)}
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Modal>
   );

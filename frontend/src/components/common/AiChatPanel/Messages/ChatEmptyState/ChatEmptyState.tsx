@@ -24,13 +24,14 @@ import { KbdStyled, StarterCardStyled, StarterGridStyled } from './ChatEmptyStat
 import EmptyIllustration from './EmptyIllustration';
 import { variables } from '@/core/theme/variables';
 
-function EmptyLayout({ children }: { children: ReactNode }): JSX.Element {
+function EmptyLayout({ children, centered = false }: { children: ReactNode; centered?: boolean }): JSX.Element {
   return (
     <Stack
       spacing={2.5}
       data-testid='ai-chat-empty'
-      // Sits just above the composer, where the eye already is, like Cursor's empty chat.
-      sx={{ flex: 1, py: 3, px: 1, alignItems: 'center', justifyContent: 'flex-end', minHeight: 200 }}
+      // Sits just above the composer, where the eye already is, like Cursor's empty chat. Without a composer
+      // (no provider yet) it is centered in the panel instead.
+      sx={{ flex: 1, py: 3, px: 1, alignItems: 'center', justifyContent: centered ? 'center' : 'flex-end', minHeight: 200 }}
     >
       {children}
     </Stack>
@@ -71,7 +72,7 @@ function NoProviderState(): JSX.Element {
   const [setupAnchor, setSetupAnchor] = useState<HTMLElement | null>(null);
 
   return (
-    <EmptyLayout>
+    <EmptyLayout centered>
       <Heading
         icon={<EmptyIllustration variant='provider' />}
         title={locales.ai_no_provider_title}

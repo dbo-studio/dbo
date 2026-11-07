@@ -11,8 +11,11 @@ export const ModalBodyStyled = styled(Box)(() => ({
   flexDirection: 'column'
 }));
 
-export const ModalWrapperStyled = styled(Box)<{ padding?: string }>(({ theme, padding }) => ({
-  minHeight: 'min(400px, 90dvh)',
+export const ModalWrapperStyled = styled(Box, { shouldForwardProp: (prop) => prop !== 'compact' })<{
+  padding?: string;
+  compact?: boolean;
+}>(({ theme, padding, compact }) => ({
+  minHeight: compact ? undefined : 'min(400px, 90dvh)',
   minWidth: 'min(400px, calc(100vw - 32px))',
   maxWidth: 'calc(100vw - 32px)',
   maxHeight: '90dvh',

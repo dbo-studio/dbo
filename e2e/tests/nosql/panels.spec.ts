@@ -129,3 +129,18 @@ test.describe("Browse list divider", () => {
     await expect.poll(async () => Math.abs((await width()) - start)).toBeLessThan(8);
   });
 });
+
+test.describe("connection box in every sidebar area", () => {
+  test("Items, Boards and Backup all show the connection switcher", async ({ page }, testInfo) => {
+    const name = `box-${uniqueTestSuffix(testInfo)}`;
+    await open(page, name, "sqlite");
+    const box = page.getByTestId("connection-switcher");
+    await expect(box).toContainText(name);
+
+    for (const rail of ["sidebar-tab-boards", "activity-backup"]) {
+      await page.getByTestId(rail).click();
+      await expect(box).toBeVisible();
+      await expect(box).toContainText(name);
+    }
+  });
+});

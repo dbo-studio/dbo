@@ -227,6 +227,11 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	// A NoSQL connection has no SQL schema to complete from; answer with nothing instead of failing the editor.
+	if databaseContract.IsNoSQL(connection.ConnectionType) {
+		return &dto.AutoCompleteResponse{Databases: []string{}, Schemas: []string{}, Tables: []string{}, Views: []string{}, Columns: map[string][]string{}}, nil
+	}
+
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err

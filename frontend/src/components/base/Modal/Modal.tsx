@@ -11,6 +11,7 @@ export default function Modal({
   children,
   footer,
   padding,
+  compact,
   onClose,
   disableEnforceFocus,
   zIndex
@@ -26,7 +27,7 @@ export default function Modal({
       disableEnforceFocus={disableEnforceFocus}
       sx={zIndex ? { zIndex } : undefined}
     >
-      <ModalWrapperStyled ref={containerRef} padding={padding}>
+      <ModalWrapperStyled ref={containerRef} padding={padding} compact={compact}>
         {title && (
           <Box
             data-select-all-skip

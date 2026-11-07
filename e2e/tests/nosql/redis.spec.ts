@@ -656,4 +656,9 @@ test.describe("Redis driver", () => {
     // Lift the tag again (the unlock is still active) so cleanup can delete.
     await page.request.patch(`${apiUrl()}/connections/${connectionId}`, { data: { env: "dev" }, headers });
   });
+  test("SQL autocomplete on a NoSQL connection answers empty instead of failing", async ({ page }) => {
+    const res = await page.request.get(`${apiUrl()}/query/autocomplete`, { params: { connectionId }, headers });
+    expect(res.ok(), await res.text()).toBeTruthy();
+    expect((await res.json()).data.tables).toEqual([]);
+  });
 });
