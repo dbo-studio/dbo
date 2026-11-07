@@ -29,7 +29,6 @@ export default function BottomPanel(): JSX.Element | null {
 
   if (!panel.open) return null;
 
-
   // Without the terminal permission the History tab is all there is.
   const tab: BottomPanelType['tab'] = cliAllowed ? panel.tab : 'history';
   const maxHeight = Math.round(window.innerHeight * 0.8);

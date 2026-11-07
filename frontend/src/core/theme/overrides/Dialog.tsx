@@ -30,7 +30,14 @@ export default function Dialog(theme: Theme): Components {
     },
     MuiDialogContent: { styleOverrides: { root: { padding: 0 } } },
     MuiDialogActions: {
-      styleOverrides: { root: { padding: 0, marginTop: theme.spacing(2), gap: theme.spacing(1), '& > :not(style) ~ :not(style)': { marginLeft: 0 } } }
+      styleOverrides: {
+        root: {
+          padding: 0,
+          marginTop: theme.spacing(2),
+          gap: theme.spacing(1),
+          '& > :not(style) ~ :not(style)': { marginLeft: 0 }
+        }
+      }
     }
   };
 }

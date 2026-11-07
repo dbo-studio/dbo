@@ -33,7 +33,16 @@ function StatusPill({ running, paused }: { running: boolean; paused: boolean }):
   return (
     <Box
       data-testid='pubsub-status'
-      sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, height: 32, borderRadius: 4, bgcolor: alpha(color, 0.12), color }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.75,
+        px: 1.25,
+        height: 32,
+        borderRadius: 4,
+        bgcolor: alpha(color, 0.12),
+        color
+      }}
     >
       <Box
         sx={{
@@ -89,7 +98,15 @@ function MessageRow({ m }: { m: Received }): JSX.Element {
       </Box>
       <Box
         component='pre'
-        sx={{ m: 0, fontFamily: MONO, typography: 'body2', whiteSpace: 'pre-wrap', wordBreak: 'break-all', maxHeight: open || !long ? 'none' : 120, overflow: 'hidden' }}
+        sx={{
+          m: 0,
+          fontFamily: MONO,
+          typography: 'body2',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
+          maxHeight: open || !long ? 'none' : 120,
+          overflow: 'hidden'
+        }}
       >
         {text}
       </Box>
@@ -207,7 +224,17 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         <StatusPill running={running} paused={paused} />
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.75, borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: 1.5,
+          py: 0.75,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}
+      >
         <Box sx={{ width: 260 }}>
           <Search onChange={setFilter} placeholder={locales.nosql_pubsub_filter} />
         </Box>
@@ -216,7 +243,12 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         </Typography>
         <Tooltip title={paused ? locales.nosql_pubsub_resume : locales.nosql_pubsub_pause}>
           <span>
-            <IconButton size='small' disabled={!running} onClick={togglePause} aria-label={paused ? locales.nosql_pubsub_resume : locales.nosql_pubsub_pause}>
+            <IconButton
+              size='small'
+              disabled={!running}
+              onClick={togglePause}
+              aria-label={paused ? locales.nosql_pubsub_resume : locales.nosql_pubsub_pause}
+            >
               <CustomIcon type={paused ? 'play' : 'pause'} size='s' />
             </IconButton>
           </span>
@@ -228,11 +260,22 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         </Tooltip>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', position: 'relative' }} ref={listRef} onScroll={onScroll} data-testid='pubsub-messages'>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'auto', position: 'relative' }}
+        ref={listRef}
+        onScroll={onScroll}
+        data-testid='pubsub-messages'
+      >
         {shown.length === 0 ? (
           <EmptyState
             icon='network'
-            title={messages.length > 0 ? locales.nosql_pubsub_no_match : running ? locales.nosql_pubsub_waiting : locales.nosql_no_messages}
+            title={
+              messages.length > 0
+                ? locales.nosql_pubsub_no_match
+                : running
+                  ? locales.nosql_pubsub_waiting
+                  : locales.nosql_no_messages
+            }
             description={running || messages.length > 0 ? undefined : locales.nosql_pubsub_hint}
           />
         ) : (
@@ -276,7 +319,12 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
             inputProps={{ 'aria-label': 'pubsub-publish-message' }}
           />
         </Box>
-        <Button variant='contained' sx={{ height: 32 }} disabled={!pubChannel.trim()} onClick={(): void => void publish()}>
+        <Button
+          variant='contained'
+          sx={{ height: 32 }}
+          disabled={!pubChannel.trim()}
+          onClick={(): void => void publish()}
+        >
           {locales.nosql_pubsub_publish}
         </Button>
       </Box>

@@ -119,7 +119,9 @@ export const pubsubStream = async (
   }
 };
 
-export const memberWindow = async (params: NoSQLItemRef & { cursor?: string; limit?: number }): Promise<NoSQLMemberWindow> =>
+export const memberWindow = async (
+  params: NoSQLItemRef & { cursor?: string; limit?: number }
+): Promise<NoSQLMemberWindow> =>
   (await api.get<{ data: NoSQLMemberWindow }>('/nosql/item/window', { params })).data.data;
 
 export const applyMember = async (req: NoSQLItemRef & { op: NoSQLMemberOp; confirmed?: boolean }): Promise<void> => {

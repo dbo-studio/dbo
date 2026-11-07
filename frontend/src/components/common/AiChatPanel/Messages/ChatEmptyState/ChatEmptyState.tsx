@@ -31,7 +31,14 @@ function EmptyLayout({ children, centered = false }: { children: ReactNode; cent
       data-testid='ai-chat-empty'
       // Sits just above the composer, where the eye already is, like Cursor's empty chat. Without a composer
       // (no provider yet) it is centered in the panel instead.
-      sx={{ flex: 1, py: 3, px: 1, alignItems: 'center', justifyContent: centered ? 'center' : 'flex-end', minHeight: 200 }}
+      sx={{
+        flex: 1,
+        py: 3,
+        px: 1,
+        alignItems: 'center',
+        justifyContent: centered ? 'center' : 'flex-end',
+        minHeight: 200
+      }}
     >
       {children}
     </Stack>

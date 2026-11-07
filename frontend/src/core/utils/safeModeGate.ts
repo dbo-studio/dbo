@@ -59,7 +59,9 @@ export async function resolveSafeModeGate(error: unknown, connectionId?: number)
 
     try {
       const result = await api.connection.unlockProd(targetId, name);
-      useConnectionStore.getState().patchConnectionSafeModeUnlock(targetId, { unlocked: true, until: result.unlockedUntil });
+      useConnectionStore
+        .getState()
+        .patchConnectionSafeModeUnlock(targetId, { unlocked: true, until: result.unlockedUntil });
       return true;
     } catch {
       toast.error(locales.safe_mode_blocked_generic);

@@ -17,9 +17,13 @@ const TYPE_LABEL: Record<string, string> = {
 function TypeBadge({ type }: { type: string }): JSX.Element {
   const { palette } = useTheme();
   const color =
-    { string: palette.info.main, hash: palette.success.main, list: palette.warning.main, set: palette.secondary.main, zset: palette.error.main }[
-      type
-    ] ?? palette.text.secondary;
+    {
+      string: palette.info.main,
+      hash: palette.success.main,
+      list: palette.warning.main,
+      set: palette.secondary.main,
+      zset: palette.error.main
+    }[type] ?? palette.text.secondary;
 
   return (
     <Box
@@ -88,7 +92,12 @@ export default function KeyList({ rows, expanded, selectedId, loading, onSelect,
                 borderRadius: 1,
                 bgcolor: selected ? 'action.selected' : undefined,
                 '&:hover': { bgcolor: selected ? 'action.selected' : 'action.hover' },
-                '&:focus-visible': { outline: 2, outlineStyle: 'solid', outlineColor: 'primary.main', outlineOffset: -2 }
+                '&:focus-visible': {
+                  outline: 2,
+                  outlineStyle: 'solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2
+                }
               }}
             >
               {row.folder ? (

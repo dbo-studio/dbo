@@ -42,10 +42,22 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
   const { palette } = useTheme();
   // ANSI colors come from the app palette so the terminal follows the theme; bright variants use the .light shade.
   const ansi = [
-    palette.background.default, palette.error.main, palette.success.main, palette.warning.main,
-    palette.info.main, palette.secondary.main, palette.primary.main, palette.text.primary,
-    palette.text.secondary, palette.error.light, palette.success.light, palette.warning.light,
-    palette.info.light, palette.secondary.light, palette.primary.light, palette.text.primary
+    palette.background.default,
+    palette.error.main,
+    palette.success.main,
+    palette.warning.main,
+    palette.info.main,
+    palette.secondary.main,
+    palette.primary.main,
+    palette.text.primary,
+    palette.text.secondary,
+    palette.error.light,
+    palette.success.light,
+    palette.warning.light,
+    palette.info.light,
+    palette.secondary.light,
+    palette.primary.light,
+    palette.text.primary
   ];
 
   const { ref, write, focus } = useTerminal();
@@ -231,7 +243,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
           '--term-font-size': '13px',
           '--term-line-height': '1.35',
           '--term-row-height': '18px',
-          ...Object.fromEntries(ansi.map((c, i) => [`--term-color-${i}`, c])),
+          ...Object.fromEntries(ansi.map((c, i) => [`--term-color-${i}`, c]))
         } as React.CSSProperties
       }
       data-testid='db-terminal'

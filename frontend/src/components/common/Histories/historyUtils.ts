@@ -2,7 +2,8 @@ import type { HistoryType } from '@/types/History';
 
 export type StatementKind = 'read' | 'write' | 'danger' | 'ddl' | 'other';
 
-export type HistoryRow = { kind: 'day'; key: string; label: string; count: number } | { kind: 'item'; key: string; history: HistoryType };
+export type HistoryRow =
+  { kind: 'day'; key: string; label: string; count: number } | { kind: 'item'; key: string; history: HistoryType };
 
 /** First keyword of a statement, ignoring leading comments and parentheses. */
 export function statementVerb(query: string): string {
@@ -50,7 +51,12 @@ export function dayLabel(value: string, now = new Date()): string {
   const diff = Math.round((start(now) - start(d)) / 86_400_000);
   if (diff === 0) return 'Today';
   if (diff === 1) return 'Yesterday';
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric'
+  });
 }
 
 export function timeLabel(value: string): string {

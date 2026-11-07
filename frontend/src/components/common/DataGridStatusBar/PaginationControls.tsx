@@ -24,7 +24,15 @@ type Props = {
 };
 
 /** Page size (gear), previous / next and the page number: the right side of every grid status bar. */
-export default function PaginationControls({ page, limit, disabled, canNext, onPrev, onNext, onLimit }: Props): JSX.Element {
+export default function PaginationControls({
+  page,
+  limit,
+  disabled,
+  canNext,
+  onPrev,
+  onNext,
+  onLimit
+}: Props): JSX.Element {
   const { isMobile } = useLayoutMode();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [draft, setDraft] = useState(limit);
@@ -46,7 +54,15 @@ export default function PaginationControls({ page, limit, disabled, canNext, onP
   };
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, justifyContent: 'flex-end', width: isMobile ? 'auto' : 208 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        justifyContent: 'flex-end',
+        width: isMobile ? 'auto' : 208
+      }}
+    >
       <IconButton
         aria-label={locales.limit}
         data-testid='pagination-settings'
@@ -91,7 +107,10 @@ export default function PaginationControls({ page, limit, disabled, canNext, onP
           </IconButton>
         </span>
       </Tooltip>
-      <Typography color='textText' sx={{ fontWeight: 'bold', textAlign: 'center', minWidth: isMobile ? 28 : 54, lineHeight: 1 }}>
+      <Typography
+        color='textText'
+        sx={{ fontWeight: 'bold', textAlign: 'center', minWidth: isMobile ? 28 : 54, lineHeight: 1 }}
+      >
         {page}
       </Typography>
       <Tooltip title={locales.next_page}>

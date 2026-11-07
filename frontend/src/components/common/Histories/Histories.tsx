@@ -6,7 +6,17 @@ import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
 import VirtualList from '@/components/base/VirtualList/VirtualList';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  ClickAwayListener,
+  IconButton,
+  LinearProgress,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography
+} from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
