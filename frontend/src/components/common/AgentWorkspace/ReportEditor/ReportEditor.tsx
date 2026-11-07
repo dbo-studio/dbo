@@ -1,5 +1,4 @@
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
@@ -17,6 +16,7 @@ import {
   Button,
   CircularProgress,
   FormControlLabel,
+  InputBase,
   Stack,
   Switch,
   ToggleButton,
@@ -124,14 +124,13 @@ export default function ReportEditor({
         </Box>
       )}
       {edited.spec.type === 'gauge' && (
-        <FieldInput
+        <InputBase
           size='small'
           type='number'
           placeholder={locales.ai_report_goal}
           value={edited.spec.goal ?? ''}
           onChange={(event) => patchSpec({ goal: Number(event.target.value) || undefined })}
           inputProps={{ 'aria-label': locales.ai_report_goal, 'data-testid': 'ai-report-goal' }}
-          mb={0}
         />
       )}
     </Stack>
@@ -139,11 +138,10 @@ export default function ReportEditor({
 
   return (
     <Stack spacing={1.5} data-testid='ai-report-editor'>
-      <FieldInput
+      <InputBase
         value={edited.title}
         onChange={(event) => setEdited({ ...edited, title: event.target.value })}
         inputProps={{ 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' }}
-        mb={0}
       />
       <ToggleButtonGroup
         exclusive

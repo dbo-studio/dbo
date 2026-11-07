@@ -17,6 +17,7 @@ require (
 	github.com/pkg/sftp v1.13.12
 	github.com/pquerna/otp v1.5.0
 	github.com/pressly/goose/v3 v3.28.0
+	github.com/redis/go-redis/v9 v9.22.0
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cobra v1.10.2
 	github.com/tidwall/gjson v1.19.0
@@ -66,7 +67,6 @@ require (
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/molecule-man/go-brrr v1.1.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
-	github.com/redis/go-redis/v9 v9.22.0
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect

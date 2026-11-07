@@ -427,7 +427,7 @@ export default function Browse(): JSX.Element {
                 onDelete={remove}
               />
               <Box sx={{ flex: 1, minHeight: 0 }}>
-                {item.meta?.truncated && has(spec, 'window') ? (
+                {has(spec, 'window') && ['hash', 'list', 'set', 'zset'].includes(String(item.meta?.type)) ? (
                   <MemberWindowView
                     key={item.id}
                     item={item}

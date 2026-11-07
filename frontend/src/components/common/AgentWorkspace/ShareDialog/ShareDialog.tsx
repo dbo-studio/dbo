@@ -10,6 +10,7 @@ import {
   Chip,
   CircularProgress,
   IconButton,
+  InputBase,
   Stack,
   Switch,
   ToggleButton,
@@ -217,13 +218,12 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
             />
           </Field>
           <Field label={locales.share_expiry}>
-            <FieldInput
+            <InputBase
               size='small'
               type='date'
               value={date}
               onChange={(event) => setDate(event.target.value)}
               inputProps={{ 'aria-label': locales.share_expiry, 'data-testid': 'share-edit-date', min: inDays(0) }}
-              mb={0}
             />
           </Field>
           <Field label={locales.share_password}>
@@ -363,13 +363,12 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
             </Field>
             {days === CUSTOM && (
               <Field label=''>
-                <FieldInput
+                <InputBase
                   size='small'
                   type='date'
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
                   inputProps={{ 'aria-label': locales.share_expiry_date, 'data-testid': 'share-date', min: inDays(1) }}
-                  mb={0}
                 />
               </Field>
             )}
@@ -410,12 +409,11 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
               <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
                 <CustomIcon type='link' size='s' />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <FieldInput
+                  <InputBase
                     size='small'
                     value={created}
                     readOnly
                     inputProps={{ 'aria-label': locales.share_link, 'data-testid': 'share-link' }}
-                    mb={0}
                   />
                 </Box>
                 <Button

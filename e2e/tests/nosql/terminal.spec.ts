@@ -77,7 +77,6 @@ test.describe("DB terminal (SQL) and bottom panel", () => {
       await expect(terminal).toContainText("answer", { timeout: 15000 });
       await expect(terminal).toContainText("42");
       await expect(terminal).toContainText("(1 row)");
-      await page.getByTestId("bottom-panel").screenshot({ path: "/private/tmp/claude-501/ux5-term.png" });
     });
 
     await test.step("History is a tab of the bottom panel and lists the statement", async () => {

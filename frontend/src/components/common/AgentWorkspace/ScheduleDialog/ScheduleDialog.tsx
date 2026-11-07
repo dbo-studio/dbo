@@ -11,7 +11,7 @@ import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
-import { Box, Button, Chip, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Button, Chip, InputBase, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -256,13 +256,12 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
                 {locales.schedule_webhook}
               </ToggleButton>
             </ToggleButtonGroup>
-            <FieldInput
+            <InputBase
               size='small'
               placeholder={kind === 'email' ? locales.schedule_target_email : locales.schedule_target_webhook}
               value={target}
               onChange={(event) => setTarget(event.target.value)}
               inputProps={{ 'aria-label': locales.schedule_target, 'data-testid': 'schedule-target' }}
-              mb={0}
             />
             {kind === 'webhook' && (
               <FieldInput
@@ -299,7 +298,7 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
                 </Box>
               )}
               {frequency === 'hourly' ? (
-                <FieldInput
+                <InputBase
                   size='small'
                   type='number'
                   value={minute}
@@ -310,17 +309,15 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
                     min: 0,
                     max: 59
                   }}
-                  mb={0}
                   sx={{ width: 90 }}
                 />
               ) : (
-                <FieldInput
+                <InputBase
                   size='small'
                   type='time'
                   value={time}
                   onChange={(event) => setTime(event.target.value)}
                   inputProps={{ 'aria-label': locales.schedule_time, 'data-testid': 'schedule-time' }}
-                  mb={0}
                 />
               )}
               <Typography variant='caption' color='textSubdued'>

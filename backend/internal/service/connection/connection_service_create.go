@@ -54,7 +54,8 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 	if password != "" || databaseContract.IsRedisFamily(req.Type) {
 		ownerID := helper.CtxOwnerID(ctx)
 
-		remember := lo.FromPtrOr(req.RememberPassword, false)
+		// An empty Redis password is no secret: keep it so a restart or timeout never asks for one.
+		remember := lo.FromPtrOr(req.RememberPassword, false) || password == ""
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return apperror.InternalServerError(err)
 		}

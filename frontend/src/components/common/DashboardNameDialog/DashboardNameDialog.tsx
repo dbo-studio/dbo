@@ -1,11 +1,10 @@
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDashboardDialogStore } from '@/store/dashboardDialog/dashboardDialog.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, Button } from '@mui/material';
+import { Box, Button, InputBase } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -67,7 +66,7 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
           if (name.trim()) mutate(name.trim());
         }}
       >
-        <FieldInput
+        <InputBase
           autoFocus
           size='small'
           margin='none'

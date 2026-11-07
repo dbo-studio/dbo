@@ -1,7 +1,6 @@
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
 import { HORIZON_DAYS, keptAges, type PlanCadence } from '@/core/backup/schedulePlan';
-import { Box, Typography } from '@mui/material';
+import { Box, InputBase, Typography } from '@mui/material';
 import { type JSX, useMemo } from 'react';
 import { formatSize } from './format';
 import Segmented from './Segmented';
@@ -71,7 +70,7 @@ export default function RetentionPicker({
 
   const number = (key: 'keepLast' | 'keepDays', max: number): JSX.Element => (
     <Box sx={{ width: 120 }}>
-      <FieldInput
+      <InputBase
         name={`job-${key}`}
         type='number'
         value={String(value[key])}

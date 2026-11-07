@@ -1,6 +1,7 @@
 import api from '@/api';
 import { formatPingFailureMessage, formatPingSuccessMessage } from '@/components/common/AddConnection/pingDiagnostics';
 import locales from '@/locales';
+import { isRedisDriver } from '@/core/db/connectionAliases';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,17 +33,20 @@ export function useUnlockConnection(onUnlocked?: () => void | Promise<void>) {
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
 
-  const errors = useMemo(() => {
-    const result = v.safeParse(formSchema, { password, rememberPassword });
-    return result.success ? [] : result.issues.map((i) => i.message);
-  }, [password, rememberPassword]);
-
   const { mutateAsync: saveCredentials, isPending: saving } = useMutation({
     mutationFn: api.connection.setConnectionCredentials
   });
   const { mutateAsync: ping, isPending: testing } = useMutation({ mutationFn: api.connection.pingConnection });
 
   const connection = connections?.find((c) => c.id === connectionId);
+
+  // Redis is often passwordless, so an empty password must be allowed to unlock it.
+  const passwordOptional = isRedisDriver(connection?.type);
+  const errors = useMemo(() => {
+    if (passwordOptional) return [];
+    const result = v.safeParse(formSchema, { password, rememberPassword });
+    return result.success ? [] : result.issues.map((i) => i.message);
+  }, [password, rememberPassword, passwordOptional]);
 
   const pingWithPassword = async () => {
     if (!connection || !connectionId) return null;
@@ -65,7 +69,7 @@ export function useUnlockConnection(onUnlocked?: () => void | Promise<void>) {
 
     try {
       await pingWithPassword();
-      await saveCredentials({ id: connectionId, password, rememberPassword });
+      await saveCredentials({ id: connectionId, password, rememberPassword: rememberPassword || password === '' });
       reset();
       updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
       await onUnlocked?.();

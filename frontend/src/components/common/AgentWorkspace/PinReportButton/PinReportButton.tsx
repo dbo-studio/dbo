@@ -1,11 +1,10 @@
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Box, Button, Divider, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
+import { Box, Button, Divider, IconButton, InputBase, Menu, MenuItem, Tooltip } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -92,7 +91,7 @@ export default function PinReportButton({
           }}
           onKeyDown={(event) => event.stopPropagation()}
         >
-          <FieldInput
+          <InputBase
             size='small'
             margin='none'
             placeholder={locales.ai_board_name}

@@ -201,6 +201,8 @@ func keyCounts(ctx context.Context, c *redis.Client) map[int]int64 {
 	return out
 }
 
+var refreshAction = contract.TreeNodeAction{Title: "Refresh", Name: contract.RefreshAction, Type: contract.TreeNodeActionTypeCommand}
+
 // Tree lists the databases that hold keys, plus the default one. Browse shows every db when asked via parent "all".
 func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
 	if parentID != "" && parentID != "all" {
@@ -220,6 +222,7 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 		HasChildren: true,
 		Children:    make([]contract.TreeNode, 0, total),
 		ContextMenu: []contract.TreeNodeAction{
+			refreshAction,
 			{Title: "Pub/Sub", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolPubSub)}},
 			{Title: "CLI", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolCLI)}},
 		},
@@ -238,7 +241,8 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 			Action: &contract.TreeNodeAction{
 				Title: "Browse", Name: contract.BrowseContainerAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "browse"},
 			},
-			Metadata: map[string]any{"keys": counts[i]},
+			ContextMenu: []contract.TreeNodeAction{refreshAction},
+			Metadata:    map[string]any{"keys": counts[i]},
 		})
 	}
 

@@ -1,5 +1,5 @@
+import { InputBase } from '@mui/material';
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
@@ -79,7 +79,7 @@ export default function ScopePicker({ connections, value, onChange, connectionLo
               testId='scope-database'
             />
           ) : (
-            <FieldInput
+            <InputBase
               name='backup-database'
               value={value.database}
               onChange={(e) => onChange({ ...value, database: e.target.value })}
@@ -99,7 +99,7 @@ export default function ScopePicker({ connections, value, onChange, connectionLo
               testId='scope-schema'
             />
           ) : (
-            <FieldInput
+            <InputBase
               value={value.schema}
               onChange={(e) => onChange({ ...value, schema: e.target.value })}
               margin='none'

@@ -1,10 +1,9 @@
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import type { QuestionParam } from '@/core/charts/chartSpec';
 import locales from '@/locales';
-import { Box, Stack } from '@mui/material';
+import { Box, InputBase, Stack } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
 
@@ -60,7 +59,7 @@ export default function ParamInput({
     label: string;
     id: string;
   }): JSX.Element => (
-    <FieldInput
+    <InputBase
       size='small'
       type={props.type}
       placeholder={props.label}
@@ -69,7 +68,6 @@ export default function ParamInput({
       onBlur={() => onCommit(value)}
       onKeyDown={(event) => event.key === 'Enter' && onCommit(value)}
       inputProps={{ 'aria-label': props.label, 'data-testid': props.id }}
-      mb={0}
     />
   );
 
@@ -105,7 +103,7 @@ export default function ParamInput({
     case 'date': {
       // A date picks a whole value, so it applies like a pick.
       return (
-        <FieldInput
+        <InputBase
           size='small'
           type='date'
           value={value}
@@ -114,7 +112,6 @@ export default function ParamInput({
             onCommit(event.target.value);
           }}
           inputProps={{ 'aria-label': param.name, 'data-testid': testId }}
-          mb={0}
         />
       );
     }

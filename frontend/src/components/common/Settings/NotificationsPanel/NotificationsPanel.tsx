@@ -1,12 +1,11 @@
 import { SettingGroup, SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { requestNotificationPermission, sendTestNotification } from '@/core/notifications/announce';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { NotificationSettings } from '@/store/settingStore/types';
 import { invoke } from '@tauri-apps/api/core';
-import { Box, Button, Switch } from '@mui/material';
+import { Box, Button, InputBase, Switch } from '@mui/material';
 import { useEffect, useState, type JSX } from 'react';
 
 const KINDS = ['query', 'import', 'export', 'backup'] as const;
@@ -121,7 +120,7 @@ export default function NotificationsPanel(): JSX.Element {
           label={locales.notification_settings_background}
           description={locales.notification_settings_background_hint}
           control={
-            <FieldInput
+            <InputBase
               size='small'
               type='number'
               value={general.backgroundAfterSeconds}
@@ -136,7 +135,6 @@ export default function NotificationsPanel(): JSX.Element {
                 min: 0,
                 max: 3600
               }}
-              mb={0}
               sx={{ width: 90 }}
             />
           }

@@ -13,6 +13,7 @@ import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionLock } from '@/components/common/Connections/useUnlockConnection';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useBrowseStatusStore } from '@/store/browseStatus/browseStatus.store';
 import { useFocusedDataStore } from '@/store/dataStore/data.store';
 import { useNotificationPanelStore } from '@/store/notificationPanel/notificationPanel.store';
 import { Popover, Tooltip, Typography } from '@mui/material';
@@ -44,12 +45,21 @@ function TabInfo(): JSX.Element | null {
   const tab = useSelectedTab();
   const rows = useFocusedDataStore((s) => s.rows?.length);
   const selected = useFocusedDataStore((s) => s.selectedRows.length);
+  const browse = useBrowseStatusStore();
   const { data: schedules = [] } = useQuery({ queryKey: ['backup-schedules'], queryFn: api.backup.schedules });
 
   if (tab?.mode === TabMode.Data || tab?.mode === TabMode.Query) {
     if (rows === undefined) return null;
     const parts = [locales.status_rows.replace('{n}', rows.toLocaleString())];
     if (selected > 0) parts.push(locales.status_selected.replace('{n}', String(selected)));
+
+    return <StatusTextStyled data-testid='status-rows'>{parts.join(' · ')}</StatusTextStyled>;
+  }
+
+  if (tab?.mode === TabMode.Browse && browse.rows !== null) {
+    const parts = [locales.status_rows.replace('{n}', browse.rows.toLocaleString())];
+    if (browse.selected > 0) parts.push(locales.status_selected.replace('{n}', String(browse.selected)));
+    if (browse.pending > 0) parts.push(locales.nosql_pending_changes.replace('{count}', String(browse.pending)));
 
     return <StatusTextStyled data-testid='status-rows'>{parts.join(' · ')}</StatusTextStyled>;
   }

@@ -12,7 +12,11 @@ export type SettingRowProps = {
 
 export function SettingRow({ id, label, description, control, highlighted }: SettingRowProps): JSX.Element {
   return (
-    <SettingRowStyled data-settings-id={id} data-highlighted={highlighted ? 'true' : undefined}>
+    <SettingRowStyled
+      data-settings-id={id}
+      sx={description ? undefined : { alignItems: 'center' }}
+      data-highlighted={highlighted ? 'true' : undefined}
+    >
       <Box sx={{ minWidth: 0, pr: 2 }}>
         <Typography color='textTitle' variant='subtitle2'>
           {label}
@@ -27,7 +31,7 @@ export function SettingRow({ id, label, description, control, highlighted }: Set
           )
         ) : null}
       </Box>
-      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', pt: 0.25 }}>{control}</Box>
+      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', pt: description ? 0.25 : 0 }}>{control}</Box>
     </SettingRowStyled>
   );
 }

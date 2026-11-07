@@ -1,8 +1,7 @@
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, InputBase, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { type JSX, useCallback, useState } from 'react';
 import type { SavedQueryItemProps } from '../types';
@@ -81,7 +80,7 @@ export default function SavedQueryItem({
               minWidth: 0
             }}
           >
-            <FieldInput
+            <InputBase
               size='small'
               fullWidth={true}
               type='text'

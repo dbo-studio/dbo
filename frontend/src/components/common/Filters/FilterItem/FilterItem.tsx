@@ -1,10 +1,9 @@
 import { filterOperatorRequiresValue, PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { EventFor, FilterType } from '@/types';
-import { Box, Checkbox } from '@mui/material';
+import { Box, Checkbox, InputBase } from '@mui/material';
 import { type JSX, useCallback, useState } from 'react';
 
-import FieldInput from '@/components/base/FieldInput/FieldInput.tsx';
 import SelectInput from '@/components/base/SelectInput/SelectInput.tsx';
 import { SelectInputOption } from '@/components/base/SelectInput/types.ts';
 import locales from '@/locales';
@@ -135,7 +134,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           mr: 1
         }}
       >
-        <FieldInput
+        <InputBase
           margin='none'
           fullWidth
           size='small'

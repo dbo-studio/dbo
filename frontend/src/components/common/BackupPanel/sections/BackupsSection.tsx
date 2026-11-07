@@ -2,7 +2,6 @@ import api from '@/api';
 import type { BackupArtifactType } from '@/api/backup/types';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import PassphraseInput from '../PassphraseInput';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
@@ -10,7 +9,7 @@ import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { BackupTabType, ConnectionType } from '@/types';
-import { Box, Button, Switch, Chip, Typography } from '@mui/material';
+import { Box, Button, Chip, InputBase, Switch, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ChangeEvent, type JSX, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -151,7 +150,7 @@ function ConnectionBackups({
       <FormGroup>
         <ScopePicker connections={connections} value={scope} onChange={onScopeChange} />
         <FormRow label={locales.backup_note}>
-          <FieldInput name='backup-note' value={note} onChange={(e) => setNote(e.target.value)} margin='none' />
+          <InputBase name='backup-note' value={note} onChange={(e) => setNote(e.target.value)} margin='none' />
         </FormRow>
         <FormRow label={locales.backup_destination}>
           <SelectInput

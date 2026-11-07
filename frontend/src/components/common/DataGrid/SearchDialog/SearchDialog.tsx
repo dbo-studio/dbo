@@ -1,7 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, InputBase } from '@mui/material';
 import { Stack } from '@mui/system';
 import type { JSX } from 'react';
 import { useEffect, useRef } from 'react';
@@ -45,7 +44,7 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
           alignContent: 'center'
         }}
       >
-        <FieldInput
+        <InputBase
           margin='none'
           inputRef={inputRef}
           placeholder={locales.search}

@@ -3,6 +3,7 @@ import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
+import { isNoSQLType } from '@/core/db/connectionAliases';
 import { openBackup } from '@/core/backup/openBackup';
 import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import { useTransferStore } from '@/store/transfer/transfer.store';
@@ -72,6 +73,8 @@ export function useTreeNodeMenuBuilder(
         closeAfterAction: true
       })) || [];
 
+    // Redis has no row import/export; the SQL job path cannot run on it.
+    const isNoSQL = isNoSQLType(currentConnection?.type);
     const scope = diagramScopeFromTreeNode(node, currentConnection?.type);
     if (scope) {
       menu.push({
@@ -87,6 +90,7 @@ export function useTreeNodeMenuBuilder(
     // Export button only exports the rows it shows.
     if (
       perms.export &&
+      !isNoSQL &&
       scope &&
       currentConnection &&
       (node.type === 'table' || node.type === 'schema' || node.type === 'database')
@@ -104,7 +108,7 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
-    if (perms.import && node.type === 'table' && scope?.focusTable && currentConnection) {
+    if (perms.import && !isNoSQL && node.type === 'table' && scope?.focusTable && currentConnection) {
       menu.push({
         name: locales.import,
         action: () => openImport(currentConnection.id, scope.focusTable as string),

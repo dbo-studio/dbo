@@ -1,7 +1,6 @@
 import type { BackupCadenceType } from '@/api/backup/types';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Button, InputBase, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import type { JSX } from 'react';
 import Segmented from './Segmented';
 
@@ -94,7 +93,7 @@ export default function WhenPicker({
       ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Box sx={{ width: 120 }}>
-            <FieldInput
+            <InputBase
               name='job-time'
               type='time'
               value={time}

@@ -1,7 +1,7 @@
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Button, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Button, InputBase, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -57,14 +57,13 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
 
   const set = (patch: Partial<typeof form>): void => setDraft({ ...form, ...patch });
   const field = (key: 'host' | 'port' | 'username' | 'fromAddress', label: string, type = 'text'): JSX.Element => (
-    <FieldInput
+    <InputBase
       size='small'
       type={type}
       placeholder={label}
       value={form[key]}
       onChange={(event) => set({ [key]: event.target.value })}
       inputProps={{ 'aria-label': label, 'data-testid': `smtp-${key}` }}
-      mb={0}
       sx={{ flex: 1, minWidth: 140 }}
     />
   );

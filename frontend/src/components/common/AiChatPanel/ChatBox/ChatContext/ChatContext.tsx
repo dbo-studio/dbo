@@ -1,9 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, InputBase, Tooltip } from '@mui/material';
 import { useMemo, useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps } from '../../types';
@@ -133,7 +132,7 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           onHover={setActiveIndex}
           header={
             <Box sx={{ p: 0.5, pb: 0 }}>
-              <FieldInput
+              <InputBase
                 autoFocus
                 fullWidth
                 size='small'

@@ -114,13 +114,66 @@ test.describe("Redis driver", () => {
       await page.getByTestId("browse-item").first().click();
     };
 
-    await test.step("hash: edit a field and save", async () => {
+    await test.step("hash grid: changes are staged and highlighted until the check button applies them", async () => {
       await open(`${prefix}:session`);
-      await expect(page.getByTestId("browse-item-view")).toContainText("Field");
-      const ip = page.locator('input[value="1.2.3.4"]');
-      await ip.fill("9.9.9.9");
-      await page.getByRole("button", { name: "Save" }).click();
-      await expect(page.locator('input[value="9.9.9.9"]')).toBeVisible();
+      const view = page.getByTestId("browse-item-view");
+      const bar = page.getByTestId("status-rows"); // the app status bar line: "N rows · 1 pending"
+      const raw = (): Promise<{ data: { members: { key: string; value: string }[] } }> =>
+        page.request
+          .get(`${apiUrl()}/nosql/item/window`, { params: { connectionId, containerId: "db0", itemId: `${prefix}:session` }, headers })
+          .then((r) => r.json());
+      await expect(view).toContainText("Field");
+      await expect(bar).toContainText("2 rows");
+
+      // Like the SQL grid: a click only highlights the row, a double click edits the cell.
+      await view.getByText("1.2.3.4", { exact: true }).click();
+      await expect(page.getByLabel("member-value")).toHaveCount(0);
+      await expect(page.getByTestId("member-row").filter({ hasText: "1.2.3.4" }).getByRole("checkbox")).toBeChecked();
+      await view.getByText("1.2.3.4", { exact: true }).dblclick();
+      await page.getByLabel("member-value").fill("9.9.9.9");
+      await page.getByLabel("member-value").press("Enter");
+      await expect(view.getByText("9.9.9.9", { exact: true })).toBeVisible();
+      await expect(bar).toContainText("1 pending");
+      expect((await raw()).data.members.find((m) => m.key === "ip")?.value).toBe("1.2.3.4"); // nothing written yet
+
+      await test.step("context menu and quick look editor stage an edit", async () => {
+        await view.getByText("9.9.9.9", { exact: true }).click({ button: "right" });
+        await page.getByRole("menuitem", { name: /quick look/i }).click();
+        await expect(page.getByTestId("value-panel-body-text")).toBeVisible();
+        await page.getByTestId("value-panel-body-text").locator(".monaco-editor").first().click();
+        await page.keyboard.press("End");
+        await page.keyboard.insertText("-edited");
+        await page.getByTestId("value-panel-apply").click();
+        await expect(view.getByText("9.9.9.9-edited", { exact: true })).toBeVisible();
+      });
+
+      await page.getByRole("button", { name: "Add row" }).click();
+      await page.getByLabel("member-key").fill("region");
+      await page.getByLabel("member-value").fill("eu");
+      await expect(bar).toContainText("2 pending");
+
+      await page.getByTestId("member-row").filter({ hasText: "uid" }).click();
+      await page.getByRole("button", { name: "Remove row" }).click();
+      await expect(page.locator("tr.removed-highlight")).toHaveCount(1);
+      await expect(bar).toContainText("3 pending");
+
+      await page.getByTestId("member-save").click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click(); // removals ask first
+      await expect(bar).toContainText("2 rows");
+      await expect(bar).not.toContainText("pending");
+      const keys = Object.fromEntries((await raw()).data.members.map((m) => [m.key, m.value]));
+      expect(keys).toEqual({ ip: "9.9.9.9-edited", region: "eu" });
+    });
+
+    await test.step("discard drops staged changes", async () => {
+      const view = page.getByTestId("browse-item-view");
+      await view.getByText("eu", { exact: true }).dblclick();
+      await page.getByLabel("member-value").fill("us");
+      await page.getByLabel("member-value").press("Enter");
+      await expect(page.getByTestId("status-rows")).toContainText("1 pending");
+      await page.getByRole("button", { name: "Discard changes" }).click();
+      await expect(view.getByText("eu", { exact: true })).toBeVisible();
+      await expect(page.getByTestId("status-rows")).not.toContainText("pending");
     });
 
     await test.step("TTL set shows in the footer; rename moves the key", async () => {
@@ -470,5 +523,52 @@ test.describe("Redis driver", () => {
     // Lifting the tag needs the unlock too (still active here); afterwards cleanup can delete.
     const lift = await page.request.patch(`${apiUrl()}/connections/${connectionId}`, { data: { env: "dev" }, headers });
     expect(lift.ok(), await lift.text()).toBeTruthy();
+  });
+  test("list: a member is removed by index even when values repeat; a stale view is refused", async ({ page }) => {
+    const key = `${prefix}:dups`;
+    await insert(page, connectionId, key, "list", "list", ["a", "b", "a", "c"]);
+    const member = (k: string, value: string) =>
+      page.request.post(`${apiUrl()}/nosql/item/member`, {
+        data: { connectionId, containerId: "db0", itemId: key, op: { op: "remove", key: k, value }, confirmed: true },
+        headers,
+      });
+    const list = async (): Promise<string[]> =>
+      ((await (await page.request.get(`${apiUrl()}/nosql/item`, { params: { connectionId, containerId: "db0", itemId: key }, headers })).json()).data.value as string[]);
+
+    expect((await member("2", "b")).ok()).toBeFalsy(); // index 2 holds "a", the view was stale
+    expect(await list()).toEqual(["a", "b", "a", "c"]);
+    expect((await member("2", "a")).ok()).toBeTruthy(); // the second "a", not the first
+    expect(await list()).toEqual(["a", "b", "c"]);
+  });
+
+  test("grid pagination: page size from the gear, next and previous", async ({ page }) => {
+    const key = `${prefix}:paged`;
+    const fields: Record<string, string> = {};
+    for (let i = 0; i < 250; i++) fields[`f${String(i).padStart(3, "0")}`] = `v${i}`;
+    await insert(page, connectionId, key, "hash", "fields", fields);
+    await openDb0(page, name);
+    await page.getByLabel("browse-pattern").fill(key);
+    await page.getByLabel("browse-pattern").press("Enter");
+    await expect(page.getByTestId("browse-folder").first()).toBeVisible();
+    const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
+    for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();
+    await page.getByTestId("browse-item").first().click();
+
+    const rows = page.getByTestId("member-row");
+    await expect(page.getByTestId("status-rows")).toContainText("250 rows");
+    await expect(rows).toHaveCount(100);
+    await page.getByRole("button", { name: "Next page" }).click();
+    await expect(rows).toHaveCount(100);
+    await page.getByRole("button", { name: "Next page" }).click();
+    await expect(rows).toHaveCount(50);
+    await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
+    await page.getByRole("button", { name: "Previous page" }).click();
+    await expect(rows).toHaveCount(100);
+
+    await page.getByTestId("pagination-settings").click();
+    await page.getByPlaceholder("Limit").fill("300");
+    await page.getByPlaceholder("Limit").press("Enter");
+    await expect(rows).toHaveCount(250);
+    await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 });

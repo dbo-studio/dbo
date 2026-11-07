@@ -33,7 +33,7 @@ function StatusPill({ running, paused }: { running: boolean; paused: boolean }):
   return (
     <Box
       data-testid='pubsub-status'
-      sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1, py: 0.25, borderRadius: 4, bgcolor: alpha(color, 0.12), color }}
+      sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, height: 32, borderRadius: 4, bgcolor: alpha(color, 0.12), color }}
     >
       <Box
         sx={{
@@ -182,6 +182,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
       <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <FieldInput
+            margin='none'
             fullWidth
             label={locales.nosql_pubsub_subscribe_to}
             placeholder={locales.nosql_channels}
@@ -195,11 +196,11 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
           />
         </Box>
         {running ? (
-          <Button variant='outlined' color='error' onClick={stop}>
+          <Button variant='outlined' color='error' sx={{ height: 32 }} onClick={stop}>
             {locales.nosql_stop}
           </Button>
         ) : (
-          <Button variant='contained' disabled={!channel.trim()} onClick={start}>
+          <Button variant='contained' sx={{ height: 32 }} disabled={!channel.trim()} onClick={start}>
             {locales.nosql_subscribe}
           </Button>
         )}
@@ -254,6 +255,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
       <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, p: 1.5, borderTop: 1, borderColor: 'divider' }}>
         <Box sx={{ width: 220 }}>
           <FieldInput
+            margin='none'
             fullWidth
             label={locales.nosql_pubsub_channel}
             value={pubChannel}
@@ -263,6 +265,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <FieldInput
+            margin='none'
             fullWidth
             label={locales.nosql_pubsub_message}
             value={pubMessage}
@@ -273,7 +276,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
             inputProps={{ 'aria-label': 'pubsub-publish-message' }}
           />
         </Box>
-        <Button variant='contained' disabled={!pubChannel.trim()} onClick={(): void => void publish()}>
+        <Button variant='contained' sx={{ height: 32 }} disabled={!pubChannel.trim()} onClick={(): void => void publish()}>
           {locales.nosql_pubsub_publish}
         </Button>
       </Box>
