@@ -3,6 +3,7 @@ import locales from '@/locales';
 
 export const ESC = '\u001b[';
 export const red = (s: string): string => `${ESC}31m${s}${ESC}0m`;
+export const green = (s: string): string => `${ESC}32m${s}${ESC}0m`;
 export const cyan = (s: string): string => `${ESC}36m${s}${ESC}0m`;
 export const dim = (s: string): string => `${ESC}2m${s}${ESC}0m`;
 export const bold = (s: string): string => `${ESC}1m${s}${ESC}0m`;
@@ -58,6 +59,17 @@ export function formatResult(res: CliResult): string[] {
   if (res.kind === 'value') return formatValue(res.output).split('\n');
 
   if (!res.columns?.length) return [dim('OK')];
+
+  // Statements without a result set (DDL, INSERT, errors) come back as one Query | Message | Duration row.
+  const shape = res.columns.map((c) => c.toLowerCase()).join(',');
+  if (shape === 'query,message,duration' && res.rows?.length) {
+    return res.rows.map((r) => {
+      const message = sanitize(typeof r[1] === 'string' ? r[1] : '');
+      const seconds = Number(r[2]);
+      const took = Number.isFinite(seconds) ? ` ${dim(`(${(seconds * 1000).toFixed(1)} ms)`)}` : '';
+      return message.toLowerCase() === 'ok' ? `${green('OK')}${took}` : red(message);
+    });
+  }
 
   const lines = table(res.columns, res.rows ?? []);
   const footer = res.truncated

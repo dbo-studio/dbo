@@ -8,6 +8,7 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	databaseMongo "github.com/dbo-studio/dbo/internal/database/mongo"
 	databaseMysql "github.com/dbo-studio/dbo/internal/database/mysql"
 	databaseNoSQLFixture "github.com/dbo-studio/dbo/internal/database/nosqlfixture"
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
@@ -42,6 +43,7 @@ func NewDBToolsRepository(ctx context.Context, connection *model.Connection, cm 
 var (
 	fixtureOnce sync.Once
 	redisOnce   sync.Once
+	mongoOnce   sync.Once
 	fixtureRepo *databaseNoSQLFixture.Repository
 )
 
@@ -62,6 +64,10 @@ func NewNoSQLRepository(ctx context.Context, connection *model.Connection, cm *d
 		redisOnce.Do(func() { databaseRedis.Register(cm) })
 
 		return databaseRedis.New(ctx, connection, cm)
+	case databaseContract.IsMongo(connection.ConnectionType):
+		mongoOnce.Do(func() { databaseMongo.Register(cm) })
+
+		return databaseMongo.New(ctx, connection, cm)
 	default:
 		return nil, fmt.Errorf("unsupported nosql type: %s", connection.ConnectionType)
 	}

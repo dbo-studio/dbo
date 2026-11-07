@@ -3,7 +3,7 @@
  * Stored `type` stays the brand id; dialer/repo follow `driver`.
  */
 
-export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis';
+export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis' | 'mongodb';
 
 export type ConnectionEngine =
   | 'postgresql'
@@ -27,6 +27,7 @@ export type ConnectionEngine =
   | 'valkey'
   | 'keydb'
   | 'dragonfly'
+  | 'mongodb'
   | 'sqlite';
 
 export type ConnectionAliasDef = {
@@ -61,7 +62,8 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'Redis', logo: 'redis', type: 'redis', driver: 'redis' },
   { name: 'Valkey', logo: 'valkey', type: 'valkey', driver: 'redis' },
   { name: 'KeyDB', logo: 'keydb', type: 'keydb', driver: 'redis' },
-  { name: 'Dragonfly', logo: 'dragonfly', type: 'dragonfly', driver: 'redis' }
+  { name: 'Dragonfly', logo: 'dragonfly', type: 'dragonfly', driver: 'redis' },
+  { name: 'MongoDB', logo: 'mongodb', type: 'mongodb', driver: 'mongodb' }
 ];
 
 const aliasByType = Object.fromEntries(CONNECTION_ALIASES.map((a) => [a.type, a])) as Record<
@@ -88,6 +90,12 @@ export function connectionDriver(type: string | undefined): ConnectionDriver | u
 
 /** Connection types served by the NoSQL engine (Browse tab) instead of the SQL data/query tabs. */
 export const isNoSQLType = (type: string | undefined): boolean =>
-  type === 'nosql_fixture' || getConnectionAlias(type)?.driver === 'redis';
+  type === 'nosql_fixture' || getConnectionAlias(type)?.driver === 'redis' || getConnectionAlias(type)?.driver === 'mongodb';
 
 export const isRedisDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'redis';
+
+export const isMongoDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'mongodb';
+
+/** Redis and MongoDB are often run without a password, so an empty one must be allowed to unlock them. */
+export const isPasswordOptionalDriver = (type: string | undefined): boolean =>
+  isRedisDriver(type) || isMongoDriver(type);

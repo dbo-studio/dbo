@@ -43,6 +43,12 @@ services:
     ports:
       - "${REDIS_TEST_PORT-6380}:6379"
 
+  sample-mongo:
+    container_name: dbo-studio-sample-mongo
+    image: mongo:7
+    ports:
+      - "${MONGO_TEST_PORT-27018}:27017"
+
   sample-pgsql:
     container_name: dbo-studio-sample-pgsql
     image: postgres:16.1

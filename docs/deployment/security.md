@@ -51,6 +51,7 @@ When auth mode is `local`:
   the database host (`COPY … PROGRAM`, `pg_read_file`, `INTO OUTFILE`, `LOAD DATA`, `ATTACH`, …), times out after 30 s, allows one statement in flight per
   user, and writes an audit line per statement (NoSQL input is redacted because lines like `AUTH` carry secrets; SQL is truncated). Terminal output is
   sanitized so data cannot move the cursor or restyle the screen.
+- **MongoDB** filters and terminal commands refuse server-side JavaScript and writes outside the browsed collection (`$where`, `$function`, `$accumulator`, `$out`, `$merge`, `mapReduce`, `eval`, `drop`). The terminal is a JSON-argument parser, not a JavaScript engine.
 - **Production tag**: a connection with environment `prod` rejects every non-read operation (SQL and NoSQL) with `safe_mode_prod_locked` until the user
   types the connection name (15 min window, per user and connection, in memory only). Lifting the tag needs the same unlock.
 - SQL ACL is **not** in DBO (DB GRANT + Safe Mode).

@@ -50,8 +50,8 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		return apperror.InternalServerError(err)
 	}
 
-	// Redis is commonly passwordless; an empty stored secret keeps hydration from asking for one.
-	if password != "" || databaseContract.IsRedisFamily(req.Type) {
+	// Redis and MongoDB are commonly passwordless; an empty stored secret keeps hydration from asking for one.
+	if password != "" || databaseContract.IsRedisFamily(req.Type) || databaseContract.IsMongo(req.Type) {
 		ownerID := helper.CtxOwnerID(ctx)
 
 		// An empty Redis password is no secret: keep it so a restart or timeout never asks for one.
@@ -93,6 +93,8 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreateMysqlConnection(req.Options)
 	case databaseContract.IsRedisFamily(req.Type):
 		options, err = databaseConnection.CreateRedisConnection(req.Options)
+	case databaseContract.IsMongo(req.Type):
+		options, err = databaseConnection.CreateMongoConnection(req.Options)
 	}
 
 	if err != nil {

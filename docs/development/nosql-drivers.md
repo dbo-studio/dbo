@@ -65,3 +65,21 @@ v0. It is expected to change when the second real driver lands; update the fixtu
   (never overwrites, goes through Safe Mode). Bulk, folder and flush deletes are not recycled; keys over the cap are skipped.
 - Tools: CLI (`CommandRunner`) and Pub/Sub (`PubSubProvider`, dedicated connection per subscription).
 - E2E needs a Redis: `docker compose -f docker-compose.dev.yml up -d sample-redis` (`REDIS_TEST_PORT`, default 6380), then `cd e2e && npm run test:nosql`.
+
+## MongoDB driver
+
+`backend/internal/database/mongo/` serves `mongodb` (connection string including `mongodb+srv://`, or host/port with auth source and TLS).
+
+- Containers are `database/collection`; the tree lists databases, then a database's collections when it is expanded. System databases are hidden.
+  The tree lists databases once per connection (cached), so a database created later shows after a tree refresh.
+- Items are documents. Browse filters take a JSON filter (Extended JSON, `FilterQuery`) and page by `_id`; `_id` values of mixed BSON types page only
+  through the first type. Documents cross the API as **canonical Extended JSON**, so ObjectId, dates and int32/int64/double survive a save.
+  The id shown in the UI is the hex string for an ObjectId, the plain string for strings, and Extended JSON otherwise (always round-trips).
+- Capabilities: insert (id optional, generated when empty), edit (whole-document replace, `_id` cannot change), delete, bulk delete by filter
+  (`BulkDeleter`, same job and typed-name confirmation as Redis), recycle bin (`Recycler`: canonical JSON snapshot, restore never overwrites) and
+  collection stats (`StatsProvider`: size, average document, indexes).
+- Terminal: a mongosh-style **parser, not a JavaScript engine**: `db.<coll>.find|findOne|count|countDocuments|aggregate|distinct|getIndexes|insertOne|
+  insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|createIndex(...)` with JSON arguments and `.sort() .limit() .skip() .count()` chains, plus
+  `show dbs`, `show collections`, `use <db>`. `find` returns at most 200 rows and `aggregate` appends `$limit: 200`.
+- Blocked everywhere (filters and commands): `$where`, `$function`, `$accumulator`, `$out`, `$merge`, `mapReduce`, `eval`, `drop` and any method not listed.
+- E2E needs a MongoDB: `docker compose -f docker-compose.dev.yml up -d sample-mongo` (`MONGO_TEST_PORT`, default 27018), then `cd e2e && npm run test:nosql`.

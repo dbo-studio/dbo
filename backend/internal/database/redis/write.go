@@ -3,7 +3,6 @@ package databaseRedis
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"time"
 
@@ -29,7 +28,7 @@ func (r *Repository) Save(ctx context.Context, containerID, itemID string, chang
 	}
 
 	if t == "none" {
-		return fmt.Errorf("key %q does not exist", itemID)
+		return contract.Invalid("key %q does not exist", itemID)
 	}
 
 	if change.Value != nil {
@@ -57,7 +56,7 @@ func (r *Repository) Save(ctx context.Context, containerID, itemID string, chang
 		}
 
 		if !ok {
-			return fmt.Errorf("key %q already exists", change.NewID)
+			return contract.Invalid("key %q already exists", change.NewID)
 		}
 	}
 
@@ -84,7 +83,7 @@ func replaceValue(ctx context.Context, c *redis.Client, t, key string, value any
 	if n, err := collectionLen(ctx, c, t, key); err != nil {
 		return err
 	} else if n > maxMembers {
-		return fmt.Errorf("%s has %d members; edit members one at a time", key, n)
+		return contract.Invalid("%s has %d members; edit members one at a time", key, n)
 	}
 
 	_, err = c.TxPipelined(ctx, func(p redis.Pipeliner) error {
@@ -108,13 +107,13 @@ func replaceValue(ctx context.Context, c *redis.Client, t, key string, value any
 func stringValue(value any, meta map[string]any) (string, error) {
 	s, ok := value.(string)
 	if !ok {
-		return "", errors.New("string value must be text")
+		return "", contract.Invalid("string value must be text")
 	}
 
 	if meta["encoding"] == "base64" {
 		b, err := base64.StdEncoding.DecodeString(s)
 		if err != nil {
-			return "", fmt.Errorf("invalid base64 value: %w", err)
+			return "", contract.Invalid("invalid base64 value: %v", err)
 		}
 
 		return string(b), nil
@@ -129,7 +128,7 @@ func fill(ctx context.Context, p redis.Pipeliner, t, key string, value any) erro
 	case "hash":
 		m, ok := value.(map[string]any)
 		if !ok || len(m) == 0 {
-			return errors.New("hash needs at least one field")
+			return contract.Invalid("hash needs at least one field")
 		}
 
 		args := make([]any, 0, len(m)*2)
@@ -141,7 +140,7 @@ func fill(ctx context.Context, p redis.Pipeliner, t, key string, value any) erro
 	case "list", "set":
 		vals, ok := value.([]any)
 		if !ok || len(vals) == 0 {
-			return fmt.Errorf("%s needs at least one member", t)
+			return contract.Invalid("%s needs at least one member", t)
 		}
 
 		if t == "list" {
@@ -152,7 +151,7 @@ func fill(ctx context.Context, p redis.Pipeliner, t, key string, value any) erro
 	case "zset":
 		vals, ok := value.([]any)
 		if !ok || len(vals) == 0 {
-			return errors.New("sorted set needs at least one member")
+			return contract.Invalid("sorted set needs at least one member")
 		}
 
 		zs := make([]redis.Z, 0, len(vals))
@@ -160,12 +159,12 @@ func fill(ctx context.Context, p redis.Pipeliner, t, key string, value any) erro
 		for _, v := range vals {
 			m, ok := v.(map[string]any)
 			if !ok {
-				return errors.New("sorted set members need member and score")
+				return contract.Invalid("sorted set members need member and score")
 			}
 
 			score, ok := m["score"].(float64)
 			if !ok {
-				return errors.New("sorted set score must be a number")
+				return contract.Invalid("sorted set score must be a number")
 			}
 
 			zs = append(zs, redis.Z{Member: fmt.Sprint(m["member"]), Score: score})
@@ -173,7 +172,7 @@ func fill(ctx context.Context, p redis.Pipeliner, t, key string, value any) erro
 
 		p.ZAdd(ctx, key, zs...)
 	default:
-		return fmt.Errorf("type %q is read-only", t)
+		return contract.Invalid("type %q is read-only", t)
 	}
 
 	return nil
@@ -186,7 +185,7 @@ func (r *Repository) Insert(ctx context.Context, containerID string, in contract
 	}
 
 	if in.ID == "" {
-		return "", errors.New("key name is required")
+		return "", contract.Invalid("key name is required")
 	}
 
 	c := r.client(db)
@@ -198,7 +197,7 @@ func (r *Repository) Insert(ctx context.Context, containerID string, in contract
 	}
 
 	if exists > 0 {
-		return "", fmt.Errorf("key %q already exists", in.ID)
+		return "", contract.Invalid("key %q already exists", in.ID)
 	}
 
 	kind, _ := in.Meta["kind"].(string)
@@ -230,7 +229,7 @@ func (r *Repository) Delete(ctx context.Context, containerID string, itemIDs []s
 	}
 
 	if len(itemIDs) > maxDeleteBatch {
-		return fmt.Errorf("at most %d keys per delete", maxDeleteBatch)
+		return contract.Invalid("at most %d keys per delete", maxDeleteBatch)
 	}
 
 	c := r.client(db)

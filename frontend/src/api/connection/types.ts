@@ -8,7 +8,7 @@ export type ConnectionDetailRequestType = {
 export type CreateConnectionRequestType = {
   name: string;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
   rememberPassword?: boolean;
   safeMode?: ConnectionSafeMode;
   env?: ConnectionEnv;
@@ -17,7 +17,7 @@ export type CreateConnectionRequestType = {
 export type PingConnectionRequestType = {
   id?: number;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
 };
 
 export type PingConnectionResponseType = {
@@ -35,7 +35,7 @@ export type UpdateConnectionRequestType = {
   isActive?: boolean;
   isClose?: boolean;
   rememberPassword?: boolean;
-  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType;
+  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
   safeMode?: ConnectionSafeMode;
   safeModePassword?: string;
   env?: ConnectionEnv;
@@ -99,6 +99,19 @@ export type RedisOptionsType = {
   username?: string;
   password?: string;
   database?: number;
+  tls?: boolean;
+  tlsInsecure?: boolean;
+  isPing?: boolean;
+};
+
+export type MongoOptionsType = {
+  uri?: string;
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  authSource?: string;
+  database?: string;
   tls?: boolean;
   tlsInsecure?: boolean;
   isPing?: boolean;

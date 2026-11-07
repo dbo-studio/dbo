@@ -31,6 +31,7 @@ func closeCLI(owner string, connID uint) {
 			s.timer.Stop()
 
 			_ = s.client.Close()
+
 			delete(cliSessions, k)
 		}
 	}

@@ -1,4 +1,5 @@
 import api from '@/api';
+import { isMongoDriver } from '@/core/db/connectionAliases';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useJobResultModalStore } from '@/store/jobResultModal/jobResultModal.store';
@@ -44,20 +45,27 @@ export default function BulkDeleteDialog({
     onError: () => toast.error(locales.action_failed)
   });
 
+  const docs = isMongoDriver(connection?.type);
   const count = preview.data?.count ?? 0;
   const name = connection?.name ?? '';
   const countText = preview.isPending
     ? locales.nosql_bulk_delete_counting
     : count === 0
-      ? locales.nosql_bulk_delete_none
-      : (preview.data?.capped ? locales.nosql_bulk_delete_count_capped : locales.nosql_bulk_delete_count).replace(
+      ? (docs ? locales.nosql_bulk_delete_none_docs : locales.nosql_bulk_delete_none)
+      : (preview.data?.capped
+          ? docs
+            ? locales.nosql_bulk_delete_count_capped_docs
+            : locales.nosql_bulk_delete_count_capped
+          : docs
+            ? locales.nosql_bulk_delete_count_docs
+            : locales.nosql_bulk_delete_count).replace(
           '{count}',
           count.toLocaleString()
         );
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth='xs' data-testid='bulk-delete-dialog'>
-      <DialogTitle>{locales.nosql_bulk_delete_title}</DialogTitle>
+      <DialogTitle>{docs ? locales.nosql_bulk_delete_title_docs : locales.nosql_bulk_delete_title}</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Typography component='code' sx={{ fontFamily: 'monospace' }}>
           {pattern}
@@ -66,7 +74,7 @@ export default function BulkDeleteDialog({
           {countText}
         </Alert>
         <Typography variant='body2' color='text.secondary'>
-          {locales.nosql_bulk_delete_hint}
+          {docs ? locales.nosql_bulk_delete_hint_docs : locales.nosql_bulk_delete_hint}
         </Typography>
         <TextField
           size='small'
@@ -87,7 +95,7 @@ export default function BulkDeleteDialog({
           disabled={count === 0 || typed !== name || start.isPending}
           onClick={(): void => start.mutate()}
         >
-          {locales.nosql_bulk_delete_action.replace('{count}', count.toLocaleString())}
+          {(docs ? locales.nosql_bulk_delete_action_docs : locales.nosql_bulk_delete_action).replace('{count}', count.toLocaleString())}
         </Button>
       </DialogActions>
     </Dialog>

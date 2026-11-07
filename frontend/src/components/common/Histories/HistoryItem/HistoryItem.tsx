@@ -53,7 +53,7 @@ export default function HistoryItem({ history, selected, onClick, context }: His
         context(e);
       }}
     >
-      <Typography variant='caption' color='textSubdued' sx={{ width: 44, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+      <Typography variant='caption' color='textSubdued' sx={{ width: 76, flexShrink: 0, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
         {timeLabel(history.createdAt)}
       </Typography>
       <Box

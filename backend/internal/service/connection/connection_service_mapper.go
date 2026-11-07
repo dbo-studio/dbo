@@ -97,6 +97,7 @@ func connectionInfo(connection *model.Connection) string {
 	case databaseContract.IsPostgresFamily(connection.ConnectionType),
 		databaseContract.IsMysqlFamily(connection.ConnectionType),
 		databaseContract.IsRedisFamily(connection.ConnectionType),
+		databaseContract.IsMongo(connection.ConnectionType),
 		connection.ConnectionType == "sqlite",
 		connection.ConnectionType == "sqlserver":
 		version := ""

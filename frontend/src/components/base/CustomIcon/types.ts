@@ -89,6 +89,7 @@ export const IconTypes = {
   valkey: 'valkey',
   keydb: 'keydb',
   dragonfly: 'dragonfly',
+  mongodb: 'mongodb',
   rds_postgresql: 'amazon_rds',
   aurora_postgresql: 'amazon_aurora',
   cloudsql_postgresql: 'google_cloud_sql',

@@ -6,6 +6,8 @@ export interface ResizableBoxXProps {
   direction: 'rtl' | 'ltr';
   width: number;
   maxWidth?: number;
+  /** Double-clicking the handle restores this width. */
+  defaultWidth?: number;
   /** A CSS width that replaces the dragged one while set (e.g. an expanded panel); changes animate. */
   widthOverride?: string;
   sx?: SxProps<Theme>;
@@ -28,4 +30,5 @@ export type ResizableToggleStyledProps = {
 export type ResizableToggleProps = {
   direction: 'rtl' | 'ltr' | 'ttb' | 'btt';
   onMouseDown: MouseEventHandler | undefined;
+  onDoubleClick?: MouseEventHandler;
 };

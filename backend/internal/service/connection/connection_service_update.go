@@ -126,6 +126,8 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		options, err = databaseConnection.UpdateMysqlConnection(json.RawMessage(connection.Options), req.Options)
 	case databaseContract.IsRedisFamily(connection.ConnectionType):
 		options, err = databaseConnection.UpdateRedisConnection(json.RawMessage(connection.Options), req.Options)
+	case databaseContract.IsMongo(connection.ConnectionType):
+		options, err = databaseConnection.UpdateMongoConnection(json.RawMessage(connection.Options), req.Options)
 	}
 
 	if err != nil {

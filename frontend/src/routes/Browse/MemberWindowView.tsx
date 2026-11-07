@@ -13,6 +13,8 @@ import {
   TableContainer,
   TableHeader
 } from '@/components/common/DataGrid/DataGrid.styled';
+import DataGridResizer from '@/components/common/DataGrid/DataGridResizer/DataGridResizer';
+import { useColumnResize } from '@/components/common/DataGrid/hooks/useColumnResize';
 import GridCheckbox from '@/components/common/DataGrid/GridCheckbox';
 import { HeaderColumnContentStyled, HeaderColumnTypeStyled } from '@/components/common/DataGrid/DataGridTableHeaderRow/DataGridTableHeaderRow.styled';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
@@ -30,13 +32,14 @@ import { shortcuts } from '@/core/utils';
 import { useShortcut } from '@/hooks';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import type { ColumnType } from '@/types';
+import { type JSX, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 
 const PAGE = 100;
 const SELECT_WIDTH = 30;
-const KEY_WIDTH = 260;
+const GRID_COLUMNS = [{ name: 'key' }, { name: 'value' }] as ColumnType[];
 
 const chordLabel = (label: string, command: string[]): string => `${label} (${command.join('+')})`;
 
@@ -73,6 +76,10 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   // Like the SQL grid, changes are staged (highlighted) until the check button applies them.
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<Set<string>>(() => new Set());
+  const [renames, setRenames] = useState<Record<string, string>>({});
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const anchor = useRef<string | null>(null);
+  const { columnSizes, startResize, resizingColumnId } = useColumnResize({ columns: GRID_COLUMNS, defaultColumnWidth: 300 });
   const [added, setAdded] = useState<{ id: number; key: string; value: string }[]>([]);
   const [menu, setMenu] = useState<{ x: number; y: number; member?: NoSQLMember; header?: boolean } | null>(null);
   const [quick, setQuick] = useState<NoSQLMember | null>(null);
@@ -139,10 +146,12 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
     setRemoved(new Set([...removed, ...members.filter((m) => selected.has(m.key)).map((m) => m.key)]));
   };
 
-  const pending = Object.keys(edits).length + removed.size + added.filter(addedReady).length;
+  const pending = Object.keys(edits).length + Object.keys(renames).length + removed.size + added.filter(addedReady).length;
 
   const discard = (): void => {
     setEdits({});
+    setRenames({});
+    setEditingKey(null);
     setRemoved(new Set());
     setAdded([]);
     setSelected(new Set());
@@ -152,8 +161,15 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
   const save = (): void => {
     if (pending === 0) return;
     const byKey = new Map(members.map((m) => [m.key, m]));
+    // A rename is "write the new key with the value, then remove the old key".
+    const renamed = Object.entries(renames).filter(([k]) => !removed.has(k));
+    const renameOps = renamed.flatMap(([from, to]) => [
+      setOp(to, edits[from] ?? (byKey.get(from) ? shown(byKey.get(from) as NoSQLMember) : '')),
+      { op: 'remove', key: from, value: byKey.get(from)?.value ?? '' }
+    ]);
     const ops: NoSQLMemberOp[] = [
-      ...Object.entries(edits).filter(([k]) => !removed.has(k)).map(([k, v]) => setOp(k, v)),
+      ...Object.entries(edits).filter(([k]) => !removed.has(k) && !(k in renames)).map(([k, v]) => setOp(k, v)),
+      ...renameOps,
       // List indexes shift after every removal, so remove from the end.
       ...[...removed]
         .sort((a, b) => (l.type === 'list' ? Number(b) - Number(a) : 0))
@@ -179,9 +195,32 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
     void q.refetch();
   };
 
+  const commitKey = (m: NoSQLMember, to: string): void => {
+    setEditingKey(null);
+    const next = { ...renames };
+    if (to === '' || to === m.key) delete next[m.key];
+    else if (members.some((x) => x.key === to) || added.some((x) => x.key === to)) {
+      toast.error(locales.nosql_member_exists.replace('{key}', to));
+      return;
+    } else next[m.key] = to;
+    setRenames(next);
+  };
+
+  const duplicate = (m: NoSQLMember): void =>
+    setAdded([{ id: Date.now(), key: l.type === 'list' ? '' : `${m.key}_copy`, value: edits[m.key] ?? shown(m) }, ...added]);
+
   const selectOnly = (key: string): void => setSelected(new Set([key]));
 
-  const toggle = (key: string): void => {
+  // Shift extends from the last clicked row, like the SQL grid.
+  const toggle = (key: string, shift = false): void => {
+    const from = anchor.current ? members.findIndex((m) => m.key === anchor.current) : -1;
+    const to = members.findIndex((m) => m.key === key);
+    anchor.current = key;
+    if (shift && from >= 0 && to >= 0) {
+      const [a, b] = from < to ? [from, to] : [to, from];
+      setSelected(new Set([...selected, ...members.slice(a, b + 1).map((m) => m.key)]));
+      return;
+    }
     const next = new Set(selected);
     if (!next.delete(key)) next.add(key);
     setSelected(next);
@@ -228,6 +267,21 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
 
     return [
       { name: locales.quick_look_editor, closeBeforeAction: true, action: (): void => setQuick(m) },
+      { name: 'separator', separator: true },
+      {
+        name: locales.set_empty,
+        closeBeforeAction: true,
+        disabled: !editable || !l.hasValue || l.scored,
+        disabledReason: locales.grid_menu_read_only,
+        action: (): void => stageEdit(m, '')
+      },
+      {
+        name: locales.duplicate_row,
+        closeBeforeAction: true,
+        disabled: !editable,
+        disabledReason: locales.grid_menu_read_only,
+        action: (): void => duplicate(m)
+      },
       { name: 'separator', separator: true },
       {
         name: locales.copy,
@@ -282,11 +336,11 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
         )}
       </ResizableModal>
       <TableContainer sx={{ flex: 1, minHeight: 0 }} onContextMenu={(e): void => openMenu(e)} data-testid='member-window-scroll'>
-        <StyledTable width='100%'>
+        <StyledTable width={(editable ? SELECT_WIDTH : 0) + columnSizes.key + (l.hasValue ? columnSizes.value : 0)}>
           <colgroup>
             {editable && <StyledCol width={SELECT_WIDTH} />}
-            <StyledCol width={l.hasValue ? KEY_WIDTH : undefined} />
-            {l.hasValue && <StyledCol />}
+            <StyledCol width={columnSizes.key} />
+            {l.hasValue && <StyledCol width={columnSizes.value} />}
           </colgroup>
           <StyledTableHead>
             <StyledTableRow>
@@ -304,6 +358,7 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                   {l.keyLabel}
                   <HeaderColumnTypeStyled>{l.keyType}</HeaderColumnTypeStyled>
                 </HeaderColumnContentStyled>
+                <DataGridResizer columnId='key' isResizing={resizingColumnId === 'key'} onResizeStart={startResize} />
               </TableHeader>
               {l.hasValue && (
                 <TableHeader>
@@ -311,6 +366,7 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                     {l.valueLabel}
                     <HeaderColumnTypeStyled>{l.valueType}</HeaderColumnTypeStyled>
                   </HeaderColumnContentStyled>
+                  <DataGridResizer columnId='value' isResizing={resizingColumnId === 'value'} onResizeStart={startResize} />
                 </TableHeader>
               )}
             </StyledTableRow>
@@ -357,14 +413,30 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
               const cellId = `${m.key}`;
 
               return (
-                <StyledTableRow key={m.key} onClick={(): void => selectOnly(m.key)} onContextMenu={(e): void => openMenu(e, m)} className={`${removed.has(m.key) ? 'removed-highlight' : edits[m.key] !== undefined ? 'edit-highlight' : isSelected ? 'selected-highlight' : ''} ${i % 2 ? 'is-striped' : ''}`} data-testid='member-row'>
+                <StyledTableRow key={m.key} onClick={(): void => selectOnly(m.key)} onContextMenu={(e): void => openMenu(e, m)} className={`${removed.has(m.key) ? 'removed-highlight' : edits[m.key] !== undefined || renames[m.key] !== undefined ? 'edit-highlight' : isSelected ? 'selected-highlight' : ''} ${i % 2 ? 'is-striped' : ''}`} data-testid='member-row'>
                   {editable && (
                     <SelectTableCell>
-                      <GridCheckbox aria-label={locales.nosql_select_row} checked={isSelected} onChange={(): void => toggle(m.key)} />
+                      <GridCheckbox aria-label={locales.nosql_select_row} checked={isSelected} onChange={(e): void => toggle(m.key, (e.nativeEvent as MouseEvent).shiftKey)} />
                     </SelectTableCell>
                   )}
-                  <TableCell title={m.key}>
-                    <Box sx={{ px: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.key}</Box>
+                  <TableCell
+                    title={m.key}
+                    onDoubleClick={(): void => editable && l.type !== 'list' && setEditingKey(m.key)}
+                  >
+                    {editable && editingKey === m.key ? (
+                      <CellInput
+                        autoFocus
+                        aria-label='member-key'
+                        defaultValue={renames[m.key] ?? m.key}
+                        onBlur={(e): void => commitKey(m, e.target.value)}
+                        onKeyDown={(e): void => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                          if (e.key === 'Escape') setEditingKey(null);
+                        }}
+                      />
+                    ) : (
+                      <Box sx={{ px: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{renames[m.key] ?? m.key}</Box>
+                    )}
                   </TableCell>
                   {l.hasValue && (
                     <TableCell title={shown(m)} onDoubleClick={(): void => editable && setEditing(cellId)}>
@@ -430,6 +502,11 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
             </IconButton>
           </Tooltip>
         </StatusBarActionsStackStyled>
+        {pending > 0 && (
+          <Typography variant='caption' color='textSubdued' data-testid='member-pending'>
+            {locales.nosql_pending_changes.replace('{count}', String(pending))}
+          </Typography>
+        )}
         <PaginationControls
           page={pageIdx + 1}
           limit={limit}

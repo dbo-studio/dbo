@@ -374,3 +374,20 @@ func (h *NoSQLHandler) ApplyMember(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().Send(c)
 }
+
+func (h *NoSQLHandler) Stats(c fiber.Ctx) error {
+	req := &dto.NoSQLContainerRequest{
+		ConnectionID: fiber.Query[int32](c, "connectionId"),
+		ContainerID:  c.Query("containerId"),
+	}
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.service.Stats(c, req)
+	if err != nil {
+		return h.fail(c, err)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

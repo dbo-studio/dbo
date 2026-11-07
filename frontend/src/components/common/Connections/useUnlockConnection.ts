@@ -1,7 +1,7 @@
 import api from '@/api';
 import { formatPingFailureMessage, formatPingSuccessMessage } from '@/components/common/AddConnection/pingDiagnostics';
 import locales from '@/locales';
-import { isRedisDriver } from '@/core/db/connectionAliases';
+import { isPasswordOptionalDriver } from '@/core/db/connectionAliases';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -41,7 +41,7 @@ export function useUnlockConnection(onUnlocked?: () => void | Promise<void>) {
   const connection = connections?.find((c) => c.id === connectionId);
 
   // Redis is often passwordless, so an empty password must be allowed to unlock it.
-  const passwordOptional = isRedisDriver(connection?.type);
+  const passwordOptional = isPasswordOptionalDriver(connection?.type);
   const errors = useMemo(() => {
     if (passwordOptional) return [];
     const result = v.safeParse(formSchema, { password, rememberPassword });

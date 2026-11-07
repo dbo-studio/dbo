@@ -2,6 +2,7 @@ package databaseContract
 
 import (
 	"context"
+	"fmt"
 	"slices"
 )
 
@@ -83,6 +84,27 @@ type Recycler interface {
 	Restore(ctx context.Context, containerID, itemID string, payload []byte, ttlMs int64) error
 }
 
+// IndexInfo is one index of a collection-like container.
+type IndexInfo struct {
+	Name   string `json:"name"`
+	Keys   string `json:"keys"`
+	Unique bool   `json:"unique"`
+}
+
+// ContainerStats is what a driver knows about the size and indexes of one container.
+type ContainerStats struct {
+	Count       int64       `json:"count"`
+	Size        int64       `json:"size"`
+	AvgObjSize  int64       `json:"avgObjSize"`
+	StorageSize int64       `json:"storageSize"`
+	Indexes     []IndexInfo `json:"indexes"`
+}
+
+// StatsProvider is an optional interface for drivers that can report container size and indexes. Declared with CapStats.
+type StatsProvider interface {
+	Stats(ctx context.Context, containerID string) (*ContainerStats, error)
+}
+
 // CommandRunner is an optional interface; drivers that support it declare ToolCLI.
 type CommandRunner interface {
 	RunCommand(ctx context.Context, input string) (*CommandResult, error)
@@ -127,6 +149,8 @@ const (
 	CapBulkDeletePattern Capability = "bulk-delete-pattern"
 	// CapRecycle means the driver implements Recycler.
 	CapRecycle Capability = "recycle"
+	// CapStats means the driver implements StatsProvider.
+	CapStats Capability = "stats"
 	// CapWindow means the driver implements Windower.
 	CapWindow Capability = "window"
 )
@@ -253,3 +277,12 @@ type CommandResult struct {
 func HasCapability(spec *ContainerSpec, c Capability) bool {
 	return spec != nil && slices.Contains(spec.Capabilities, c)
 }
+
+// InvalidInput marks an error the caller caused (bad value, key exists, missing key). The service answers it
+// with 400; any other driver error is a 500.
+type InvalidInput struct{ Msg string }
+
+func (e InvalidInput) Error() string { return e.Msg }
+
+// Invalid builds an InvalidInput.
+func Invalid(format string, a ...any) error { return InvalidInput{Msg: fmt.Sprintf(format, a...)} }

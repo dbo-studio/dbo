@@ -1,7 +1,7 @@
 export type NoSQLViewKind = 'text' | 'document' | 'fields' | 'list' | 'set' | 'table';
 export type NoSQLFilterKind = 'pattern' | 'fields' | 'query';
 export type NoSQLListStyle = 'flat' | 'tree';
-export type NoSQLCapability = 'insert' | 'edit' | 'delete' | 'bulk-delete' | 'bulk-delete-pattern' | 'ttl' | 'rename' | 'recycle' | 'window';
+export type NoSQLCapability = 'insert' | 'edit' | 'delete' | 'bulk-delete' | 'bulk-delete-pattern' | 'ttl' | 'rename' | 'recycle' | 'window' | 'stats';
 
 export type NoSQLFieldInfo = { name: string; types: string[] };
 
@@ -77,3 +77,12 @@ export type NoSQLMemberWindow = { members: NoSQLMember[]; nextCursor: string; to
 export type NoSQLMemberOp = { op: 'set' | 'remove' | 'append'; key: string; value: string; score?: number };
 
 export type NoSQLRecycleItem = { id: number; containerId: string; itemId: string; size: number; deletedAt: string };
+
+export type NoSQLIndexInfo = { name: string; keys: string; unique: boolean };
+export type NoSQLContainerStats = {
+  count: number;
+  size: number;
+  avgObjSize: number;
+  storageSize: number;
+  indexes: NoSQLIndexInfo[];
+};

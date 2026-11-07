@@ -151,11 +151,11 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
   };
 
   const publish = async (): Promise<void> => {
-    const sent = await withSafeModeRetry(async (confirmed) => {
+    // No toast: a subscribed message appears in the list, which is the feedback.
+    await withSafeModeRetry(async (confirmed) => {
       await api.nosql.pubsubPublish(connectionId, pubChannel, pubMessage, confirmed);
       return true;
     });
-    if (sent) toast.success(locales.nosql_pubsub_published);
   };
 
   // Closing the tab aborts the request, which cancels the backend subscription.

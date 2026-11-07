@@ -62,6 +62,7 @@ func (r *Server) routing() {
 	nosql.Get("/item/window", r.handlers.NoSQL.Window)
 	nosql.Post("/item/member", clearBody, r.handlers.NoSQL.ApplyMember)
 	nosql.Post("/items/delete", clearBody, r.handlers.NoSQL.Delete)
+	nosql.Get("/stats", r.handlers.NoSQL.Stats)
 	nosql.Get("/recycle", r.handlers.NoSQL.RecycleList)
 	nosql.Post("/recycle/:id/restore", clearBody, r.handlers.NoSQL.RecycleRestore)
 	nosql.Get("/bulk-delete/preview", r.handlers.NoSQL.BulkDeletePreview)

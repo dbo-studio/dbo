@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -22,6 +23,16 @@ import (
 // MaxSubscriptionsPerUser caps concurrent streaming tools per owner; each holds a dedicated connection.
 const MaxSubscriptionsPerUser = 5
 
+// driverErr answers a caller mistake (contract.Invalid) with 400 and anything else with 500.
+func driverErr(err error) error {
+	var in contract.InvalidInput
+	if errors.As(err, &in) {
+		return apperror.BadRequest(err)
+	}
+
+	return apperror.InternalServerError(err)
+}
+
 var ErrToolNotSupported = errors.New("tool not supported by this connection")
 
 type INoSQLService interface {
@@ -33,6 +44,7 @@ type INoSQLService interface {
 	Delete(ctx context.Context, req *dto.NoSQLDeleteRequest) error
 	Window(ctx context.Context, req *dto.NoSQLWindowRequest) (*contract.MemberWindow, error)
 	ApplyMember(ctx context.Context, req *dto.NoSQLMemberRequest) error
+	Stats(ctx context.Context, req *dto.NoSQLContainerRequest) (*contract.ContainerStats, error)
 	RecycleList(ctx context.Context, connectionID int32) ([]dto.NoSQLRecycleItem, error)
 	RecycleRestore(ctx context.Context, req *dto.NoSQLRecycleRestoreRequest) error
 	// BulkDeletePreview counts matches (capped) so the UI can show what a bulk delete would remove.
@@ -60,6 +72,13 @@ type Service struct {
 }
 
 func NewService(cr repository.IConnectionRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache, jm serviceJob.IJobManager, rr repository.INoSQLRecycleRepo) *Service {
+	// Expired recycle entries also go on a timer, not only when someone lists or deletes.
+	go func() {
+		for range time.Tick(time.Hour) {
+			_ = rr.Prune(context.Background(), "", recycleMaxCount, recycleMaxTotal)
+		}
+	}()
+
 	return &Service{
 		connectionRepo: cr,
 		cm:             cm,
@@ -178,7 +197,7 @@ func (s *Service) Get(ctx context.Context, req *dto.NoSQLItemRequest) (*contract
 
 	item, err := repo.Get(ctx, req.ContainerID, req.ItemID)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, driverErr(err)
 	}
 
 	return item, nil
@@ -208,7 +227,7 @@ func (s *Service) Save(ctx context.Context, req *dto.NoSQLSaveRequest) error {
 	}
 
 	if err := repo.Save(ctx, req.ContainerID, req.ItemID, req.Change); err != nil {
-		return apperror.InternalServerError(err)
+		return driverErr(err)
 	}
 
 	return nil
@@ -230,7 +249,7 @@ func (s *Service) Insert(ctx context.Context, req *dto.NoSQLInsertRequest) (stri
 
 	id, err := repo.Insert(ctx, req.ContainerID, req.Item)
 	if err != nil {
-		return "", apperror.InternalServerError(err)
+		return "", driverErr(err)
 	}
 
 	return id, nil
@@ -258,7 +277,7 @@ func (s *Service) Delete(ctx context.Context, req *dto.NoSQLDeleteRequest) error
 	s.stash(ctx, repo, req.ConnectionID, req.ContainerID, req.ItemIDs)
 
 	if err := repo.Delete(ctx, req.ContainerID, req.ItemIDs); err != nil {
-		return apperror.InternalServerError(err)
+		return driverErr(err)
 	}
 
 	return nil

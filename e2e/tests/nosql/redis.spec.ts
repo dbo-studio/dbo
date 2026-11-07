@@ -485,7 +485,7 @@ test.describe("Redis driver", () => {
       data: { connectionId, containerId: "db0", itemId: key, change: { value: { only: "one" } }, confirmed: true },
       headers,
     });
-    expect(whole.ok()).toBeFalsy();
+    expect(whole.status()).toBe(400);
   });
   test("prod write-lock: writes are refused until the connection name is typed, reads keep working", async ({ page }) => {
     const key = `${prefix}:prod`;
@@ -570,5 +570,90 @@ test.describe("Redis driver", () => {
     await page.getByPlaceholder("Limit").press("Enter");
     await expect(rows).toHaveCount(250);
     await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
+  });
+  test("member grid parity: rename a field, duplicate a row, shift-select, resize a column", async ({ page }) => {
+    const key = `${prefix}:parity`;
+    await insert(page, connectionId, key, "hash", "fields", { a: "1", b: "2", c: "3" });
+    await openDb0(page, name);
+    await page.getByLabel("browse-pattern").fill(key);
+    await page.getByLabel("browse-pattern").press("Enter");
+    await expect(page.getByTestId("browse-folder").first()).toBeVisible();
+    const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
+    for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();
+    await page.getByTestId("browse-item").first().click();
+
+    const view = page.getByTestId("browse-item-view");
+    const rows = page.getByTestId("member-row");
+    await expect(rows).toHaveCount(3);
+
+    await test.step("shift-click extends the selection over a range", async () => {
+      await rows.nth(0).getByRole("checkbox").click();
+      await rows.nth(2).getByRole("checkbox").click({ modifiers: ["Shift"] });
+      await expect(page.getByTestId("status-rows")).toContainText("3 selected");
+      await rows.nth(0).click(); // back to a single highlighted row
+    });
+
+    await test.step("column resize drags the header edge", async () => {
+      const header = page.locator("th").filter({ hasText: "Field" });
+      const before = (await header.boundingBox())!.width;
+      const edge = header.locator("[data-resizer]");
+      const box = (await edge.boundingBox())!;
+      // The header clips the handle, so only its left edge is grabbable.
+      await page.mouse.move(box.x + 1, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + 80, box.y + box.height / 2, { steps: 5 });
+      await page.mouse.up();
+      expect((await header.boundingBox())!.width).toBeGreaterThan(before + 40);
+    });
+
+    await test.step("rename and duplicate are staged, then applied together", async () => {
+      await view.getByText("a", { exact: true }).dblclick();
+      await page.getByLabel("member-key").fill("alpha");
+      await page.getByLabel("member-key").press("Enter");
+      await view.getByText("b", { exact: true }).click({ button: "right" });
+      await page.getByRole("menuitem", { name: "Duplicate row" }).click();
+      await expect(page.getByTestId("status-rows")).toContainText("2 pending");
+      await page.getByTestId("member-save").click();
+      await expect(page.getByTestId("status-rows")).toContainText("4 rows");
+      const w = await page.request.get(`${apiUrl()}/nosql/item/window`, { params: { connectionId, containerId: "db0", itemId: key }, headers });
+      const got = Object.fromEntries(((await w.json()).data.members as { key: string; value: string }[]).map((m) => [m.key, m.value]));
+      expect(got).toEqual({ alpha: "1", b: "2", c: "3", b_copy: "2" });
+    });
+  });
+  test("prod lock in the UI: a write asks for the connection name, then goes through", async ({ page }) => {
+    const key = `${prefix}:produi`;
+    await insert(page, connectionId, key, "hash", "fields", { f: "1" });
+    const patch = await page.request.patch(`${apiUrl()}/connections/${connectionId}`, { data: { env: "prod" }, headers });
+    expect(patch.ok(), await patch.text()).toBeTruthy();
+    await page.reload();
+    await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
+    await openDb0(page, name);
+    await page.getByLabel("browse-pattern").fill(key);
+    await page.getByLabel("browse-pattern").press("Enter");
+    await expect(page.getByTestId("browse-folder").first()).toBeVisible();
+    const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
+    for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();
+    await page.getByTestId("browse-item").first().click();
+
+    await page.getByTestId("member-row").getByText("1", { exact: true }).dblclick();
+    await page.getByLabel("member-value").fill("2");
+    await page.getByLabel("member-value").press("Enter");
+    await page.getByTestId("member-save").click();
+
+    const dialog = page.getByTestId("prod-unlock-dialog");
+    await expect(dialog).toBeVisible();
+    const unlock = dialog.getByRole("button", { name: /unlock/i });
+    await expect(unlock).toBeDisabled();
+    await dialog.getByLabel("prod-unlock-confirm").fill("not-the-name");
+    await expect(unlock).toBeDisabled();
+    await dialog.getByLabel("prod-unlock-confirm").fill(name);
+    await unlock.click();
+
+    await expect(page.getByTestId("status-rows")).not.toContainText("pending");
+    const w = await page.request.get(`${apiUrl()}/nosql/item/window`, { params: { connectionId, containerId: "db0", itemId: key }, headers });
+    expect(((await w.json()).data.members as { key: string; value: string }[])[0].value).toBe("2");
+
+    // Lift the tag again (the unlock is still active) so cleanup can delete.
+    await page.request.patch(`${apiUrl()}/connections/${connectionId}`, { data: { env: "dev" }, headers });
   });
 });

@@ -1,6 +1,8 @@
 import api from '@/api';
 import ResizableXBox from '@/components/base/ResizableBox/ResizableXBox';
 import { useSettingStore } from '@/store/settingStore/setting.store';
+import { isMongoDriver } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks';
 import { canUseCli } from '@/core/auth/permissions';
 import { openBottomPanel } from '@/core/bottomPanel';
 import { useAuthStore } from '@/store/authStore/auth.store';
@@ -43,11 +45,13 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import KeyList from './KeyList';
 import { buildKeyRows } from './keyTree';
+import StatsDialog from './StatsDialog';
 import RecycleDialog from './RecycleDialog';
 import MemberWindowView from './MemberWindowView';
 import ItemView from './ItemView';
 
 const PAGE_SIZE = 100;
+const DEFAULT_LIST_WIDTH = 320;
 
 type Applied = { filter: string; filters: NoSQLBrowseFilter[]; sorts: NoSQLBrowseSort[] };
 const NO_FILTER: Applied = { filter: '', filters: [], sorts: [] };
@@ -101,6 +105,7 @@ export default function Browse(): JSX.Element {
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const cliAllowed = canUseCli(mode, user);
+  const isMongo = isMongoDriver(useCurrentConnection()?.type);
   const listWidth = useSettingStore((s) => s.ui.browseListWidth);
   const updateUI = useSettingStore((s) => s.updateUI);
 
@@ -116,6 +121,7 @@ export default function Browse(): JSX.Element {
   const [newKind, setNewKind] = useState('');
   const [bulkOpen, setBulkOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null);
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
 
@@ -204,6 +210,9 @@ export default function Browse(): JSX.Element {
     });
   };
 
+  // A document store generates the id when none is typed.
+  const idOptional = (spec?.createKinds ?? []).find((k) => k.id === (newKind || spec?.createKinds?.[0]?.id))?.view === 'document';
+
   const columns = useMemo(
     () => (spec?.fields ?? []).map((f) => ({ name: f.name, type: f.types.join(' | ') }) as ColumnType),
     [spec]
@@ -220,6 +229,9 @@ export default function Browse(): JSX.Element {
           else void addToolTab(toolId, TOOL_TITLES[toolId] ?? locales.nosql_tool_unknown);
         }
       })),
+    ...(has(spec, 'stats')
+      ? [{ id: 'stats', label: locales.nosql_stats_title, run: (): void => setStatsOpen(true) }]
+      : []),
     ...(has(spec, 'recycle')
       ? [{ id: 'recycle', label: locales.nosql_recycle_title, run: (): void => setRecycleOpen(true) }]
       : []),
@@ -285,7 +297,7 @@ export default function Browse(): JSX.Element {
             onClick={(e): void => setCreateAnchor(e.currentTarget)}
             data-testid='new-key-button'
           >
-            {locales.nosql_new_key}
+            {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
           </Button>
         )}
         {moreItems.length > 0 && (
@@ -322,7 +334,7 @@ export default function Browse(): JSX.Element {
         >
           <Box sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }} data-testid='create-popover'>
             <Typography variant='subtitle2' color='textTitle'>
-              {locales.nosql_new_key}
+              {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
             </Typography>
             {(spec?.createKinds?.length ?? 0) > 0 && (
               <SelectInput
@@ -341,7 +353,7 @@ export default function Browse(): JSX.Element {
               value={newId}
               onChange={(e): void => setNewId(e.target.value)}
               onKeyDown={(e): void => {
-                if (e.key === 'Enter' && newId) void insert().then(() => setCreateAnchor(null));
+                if (e.key === 'Enter' && (newId || idOptional)) void insert().then(() => setCreateAnchor(null));
               }}
               inputProps={{ 'aria-label': 'new-item-id' }}
             />
@@ -352,7 +364,7 @@ export default function Browse(): JSX.Element {
               <Button
                 size='small'
                 variant='contained'
-                disabled={!newId}
+                disabled={!newId && !idOptional}
                 onClick={(): void => void insert().then(() => setCreateAnchor(null))}
               >
                 {locales.nosql_create}
@@ -362,6 +374,7 @@ export default function Browse(): JSX.Element {
         </Popover>
       </Box>
 
+      {statsOpen && <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />}
       {recycleOpen && (
         <RecycleDialog
           connectionId={connectionId}
@@ -385,6 +398,7 @@ export default function Browse(): JSX.Element {
         <ResizableXBox
           direction='rtl'
           width={listWidth}
+          defaultWidth={DEFAULT_LIST_WIDTH}
           maxWidth={Math.round(window.innerWidth * 0.7)}
           sx={{ flexShrink: 0, borderRight: 1, borderColor: 'divider' }}
           onChange={(width): void => updateUI({ browseListWidth: Math.max(width, 160) })}

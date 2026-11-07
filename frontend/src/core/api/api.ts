@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import { useAuthStore } from '@/store/authStore/auth.store';
-import { isRedisDriver } from '@/core/db/connectionAliases';
+import { isPasswordOptionalDriver } from '@/core/db/connectionAliases';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 
@@ -66,7 +66,7 @@ const promptOrUnlockPasswordless = async (connectionId: number): Promise<void> =
       .updateUI({ showConnectionPasswordPrompt: true, passwordPromptConnectionId: connectionId });
   const connection = useConnectionStore.getState().connections?.find((c) => Number(c.id) === Number(connectionId));
 
-  if (!connection || !isRedisDriver(connection.type) || passwordlessTried.has(Number(connectionId)))
+  if (!connection || !isPasswordOptionalDriver(connection.type) || passwordlessTried.has(Number(connectionId)))
     return showPrompt();
   passwordlessTried.add(Number(connectionId));
 

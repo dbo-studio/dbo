@@ -1,7 +1,7 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import Modal from '@/components/base/Modal/Modal';
-import { isMysqlDriver, isPostgresDriver, isRedisDriver } from '@/core/db/connectionAliases';
+import { isMongoDriver, isMysqlDriver, isPostgresDriver, isRedisDriver } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -12,6 +12,7 @@ import { type JSX, useEffect } from 'react';
 import { toast } from 'sonner';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
+import Mongo from './Mongo/Mongo';
 import Redis from './Redis/Redis';
 import SQLite from './SQLite/SQLite';
 import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
@@ -116,6 +117,7 @@ export default function EditConnection(): JSX.Element {
       {formProps && isPostgresDriver(activeConnection?.type) && <PostgreSQL {...formProps} />}
       {formProps && isMysqlDriver(activeConnection?.type) && <Mysql {...formProps} />}
       {formProps && isRedisDriver(activeConnection?.type) && <Redis {...formProps} />}
+      {formProps && isMongoDriver(activeConnection?.type) && <Mongo {...formProps} />}
       {formProps && activeConnection?.type === 'sqlite' && <SQLite {...formProps} />}
     </Modal>
   );

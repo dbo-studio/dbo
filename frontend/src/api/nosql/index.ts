@@ -7,6 +7,7 @@ import type {
   NoSQLDeleteRequest,
   NoSQLInsertRequest,
   NoSQLItem,
+  NoSQLContainerStats,
   NoSQLItemRef,
   NoSQLMemberOp,
   NoSQLMemberWindow,
@@ -131,3 +132,6 @@ export const recycleList = async (connectionId: number): Promise<NoSQLRecycleIte
 export const recycleRestore = async (connectionId: number, id: number, confirmed?: boolean): Promise<void> => {
   await api.post(`/nosql/recycle/${id}/restore`, { confirmed }, { params: { connectionId } });
 };
+
+export const containerStats = async (connectionId: number, containerId: string): Promise<NoSQLContainerStats> =>
+  (await api.get<{ data: NoSQLContainerStats }>('/nosql/stats', { params: { connectionId, containerId } })).data.data;

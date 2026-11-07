@@ -18,6 +18,8 @@ const (
 	KeyDB     = "keydb"
 	Dragonfly = "dragonfly"
 
+	Mongo = "mongodb"
+
 	// PostgreSQL-protocol branding aliases (same dialer/repo as Postgresql).
 	Supabase           = "supabase"
 	Neon               = "neon"
@@ -66,7 +68,7 @@ var MysqlFamily = []string{
 var RedisFamily = []string{Redis, Valkey, KeyDB, Dragonfly}
 
 // ValidConnectionTypes is every type Create/Ping may accept.
-var ValidConnectionTypes = append(append(append(append([]string{}, PostgresFamily...), MysqlFamily...), RedisFamily...), Sqlite, SQLServer)
+var ValidConnectionTypes = append(append(append(append([]string{}, PostgresFamily...), MysqlFamily...), RedisFamily...), Sqlite, SQLServer, Mongo)
 
 // NoSQLFixture is the in-memory test driver. It is deliberately absent from
 // ValidConnectionTypes, so it can never be created as a user connection.
@@ -76,7 +78,10 @@ const NoSQLFixture = "nosql_fixture"
 func NoSQLFixtureEnabled() bool { return os.Getenv("DBO_ENABLE_NOSQL_FIXTURE") == "1" }
 
 // NoSQLTypes lists connection types served by NoSQLRepository instead of DatabaseRepository.
-var NoSQLTypes = append([]string{NoSQLFixture}, RedisFamily...)
+var NoSQLTypes = append(append([]string{NoSQLFixture}, RedisFamily...), Mongo)
+
+// IsMongo reports whether connectionType uses the MongoDB driver.
+func IsMongo(connectionType string) bool { return connectionType == Mongo }
 
 // IsRedisFamily reports whether connectionType uses the Redis driver.
 func IsRedisFamily(connectionType string) bool { return slices.Contains(RedisFamily, connectionType) }

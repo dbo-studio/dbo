@@ -132,7 +132,7 @@ func (r *Repository) Get(ctx context.Context, containerID, itemID string) (*cont
 	}
 
 	if t == "none" {
-		return nil, fmt.Errorf("key %q does not exist", itemID)
+		return nil, contract.Invalid("key %q does not exist", itemID)
 	}
 
 	item := &contract.Item{ID: itemID, View: viewFor(t), Meta: map[string]any{"type": t}}

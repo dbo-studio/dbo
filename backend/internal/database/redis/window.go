@@ -152,6 +152,7 @@ func scanItems(pos scanPos, limit, width int, scan func(uint64) ([]string, uint6
 			}
 
 			add(flat[i*width : (i+1)*width])
+
 			n++
 		}
 

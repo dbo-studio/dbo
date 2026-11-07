@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
+import Mongo from './Mongo/Mongo';
 import Redis from './Redis/Redis';
 import SQLite from './SQLite/SQLite';
 import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
@@ -26,6 +27,9 @@ function formForAlias(alias: ConnectionAliasDef): ComponentType<ConnectionSettin
     const Form = (props: ConnectionSettingsProps): JSX.Element => <Redis {...props} engine={alias.type} />;
     Form.displayName = `RedisAlias(${alias.type})`;
     return Form;
+  }
+  if (alias.driver === 'mongodb') {
+    return Mongo;
   }
   if (alias.driver === 'mysql') {
     const Form = (props: ConnectionSettingsProps): JSX.Element => <Mysql {...props} engine={alias.type} />;

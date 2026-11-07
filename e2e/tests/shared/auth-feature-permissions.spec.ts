@@ -1,4 +1,5 @@
 import { expect, request as pwRequest, test } from "@playwright/test";
+import fs from "node:fs";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { AuthPage } from "../../pages/AuthPage";
 
@@ -86,6 +87,82 @@ test.describe("Feature permissions (cli, import, export, aiUse)", () => {
       });
     } finally {
       await memberApi.dispose();
+    }
+  });
+
+  test("the UI hides the terminal tab until cli is granted", async ({ page, browser }, testInfo) => {
+    const api = process.env.PLAYWRIGHT_API_URL ?? "";
+    const headers = { "X-Client-Mode": "web" };
+    const suffix = uniqueTestSuffix(testInfo);
+    const memberEmail = `permui_${suffix}@example.com`;
+    const temp = "TempPass1!";
+    const final = "FinalPass1!";
+    const connectionName = `perm-ui-${suffix}`.slice(0, 40);
+    const file = `/tmp/dbo-e2e-perm-${suffix}.db`;
+    fs.writeFileSync(file, "");
+
+    await new AuthPage(page).loginAdmin();
+
+    const conn = await page.request.post(`${api}/connections`, {
+      data: { name: connectionName, type: "sqlite", options: { path: file } },
+      headers,
+    });
+    expect(conn.ok(), await conn.text()).toBeTruthy();
+    const listed = await page.request.get(`${api}/connections`, { headers });
+    const connectionId = ((await listed.json()) as { data: { id: number; name: string }[] }).data.find(
+      (c) => c.name === connectionName,
+    )!.id;
+
+    const created = await page.request.post(`${api}/admin/users`, {
+      data: { email: memberEmail, password: temp, role: "member" },
+      headers,
+    });
+    expect(created.ok(), await created.text()).toBeTruthy();
+    const member = (await created.json()).data as { id: string; permissions: Record<string, boolean> };
+    const share = await page.request.post(`${api}/connections/${connectionId}/shares`, {
+      data: { userId: member.id, role: "viewer", passwordShared: false },
+      headers,
+    });
+    expect(share.ok(), await share.text()).toBeTruthy();
+
+    const context = await browser.newContext();
+    const memberPage = await context.newPage();
+    try {
+      const auth = new AuthPage(memberPage);
+      await memberPage.goto("/");
+      await auth.login(memberEmail, temp);
+      await auth.expectChangePasswordVisible();
+      await auth.changePasswordForced(final);
+      await auth.expectAppReady();
+
+      await memberPage.getByTestId("connection-switcher").click();
+      await memberPage.getByTestId(`connection-item-${connectionName}`).click();
+      await expect(memberPage.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
+
+      await test.step("without cli the panel has History only", async () => {
+        await memberPage.getByTestId("status-panel").click();
+        await expect(memberPage.getByTestId("bottom-panel")).toBeVisible();
+        await expect(memberPage.getByTestId("bottom-tab-history")).toBeVisible();
+        await expect(memberPage.getByTestId("bottom-tab-terminal")).toHaveCount(0);
+        await expect(memberPage.getByTestId("db-terminal")).toHaveCount(0);
+      });
+
+      await test.step("after the admin grants cli, the terminal tab appears", async () => {
+        const grant = await page.request.patch(`${api}/admin/users/${member.id}`, {
+          data: { permissions: { ...member.permissions, cli: true } },
+          headers,
+        });
+        expect(grant.ok(), await grant.text()).toBeTruthy();
+        await memberPage.reload();
+        await expect(memberPage.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
+        // The open panel is remembered across the reload; only open it when it is not.
+        if (!(await memberPage.getByTestId("bottom-panel").isVisible().catch(() => false))) {
+          await memberPage.getByTestId("status-panel").click();
+        }
+        await expect(memberPage.getByTestId("bottom-tab-terminal")).toBeVisible();
+      });
+    } finally {
+      await context.close();
     }
   });
 });
