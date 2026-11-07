@@ -129,11 +129,15 @@ type (
 
 	// ImportJob is the background-job payload for a data import.
 	ImportJob struct {
-		OwnerID         string
-		ConnectionID    int32
-		Table           string
-		Data            []byte
-		Format          string
+		OwnerID      string
+		ConnectionID int32
+		Table        string
+		Data         []byte
+		Format       string
+		Delimiter    string
+		// Mapping sends a file column to a table column; a file column left out is not imported.
+		// Nil means every file column goes to the table column of the same name.
+		Mapping         map[string]string
 		ContinueOnError bool
 		SkipErrors      bool
 		MaxErrors       int

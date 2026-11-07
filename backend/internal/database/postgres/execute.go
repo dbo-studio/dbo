@@ -18,6 +18,15 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 		return databaseCore.SQLFromParams(params)
 	}
 
+	if action == contract.RenameAction {
+		newName, err := databaseCore.NewNameFromParams(params)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quote.PostgresQualifiedTable(node.Schema, node.Table), quote.PostgresIdent(newName))}, nil
+	}
+
 	type ExecuteParams map[contract.TreeTab]any
 
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)

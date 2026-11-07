@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/blastrain/vitess-sqlparser/sqlparser"
@@ -16,7 +17,6 @@ import (
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/cache"
-	"github.com/dbo-studio/dbo/pkg/csv"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
@@ -111,22 +111,12 @@ func (p *ImportProcessor) processLargeFile(ctx context.Context, job *model.Job, 
 		return err
 	}
 
-	var (
-		rows        [][]string
-		columnNames []string
-	)
-
-	switch data.Format {
-	case "csv":
-		rows, columnNames, err = csv.Reader(string(fileData))
-	case "json":
-		rows, columnNames, err = parseJSONFile(fileData)
-	case "sql":
-		rows, columnNames, err = parseSQLFile(fileData)
-	default:
-		return fmt.Errorf("unsupported file format: %s", data.Format)
+	rows, columnNames, err := ParseImportFile(data.Format, data.Delimiter, fileData)
+	if err != nil {
+		return err
 	}
 
+	rows, columnNames, err = ApplyImportMapping(rows, columnNames, data.Mapping)
 	if err != nil {
 		return err
 	}
@@ -271,16 +261,24 @@ func parseJSONFile(fileData []byte) ([][]string, []string, error) {
 		return nil, nil, fmt.Errorf("empty JSON file")
 	}
 
-	for key := range jsonData[0] {
-		columns = append(columns, key)
+	seen := map[string]bool{}
+
+	for _, row := range jsonData {
+		for key := range row {
+			if !seen[key] {
+				seen[key] = true
+				columns = append(columns, key)
+			}
+		}
 	}
+
+	sort.Strings(columns)
 
 	for _, row := range jsonData {
 		var rowData []string
 
 		for _, colName := range columns {
-			value := row[colName]
-			rowData = append(rowData, helper.FormatSQLValue(value))
+			rowData = append(rowData, helper.FormatSQLValue(row[colName]))
 		}
 
 		rows = append(rows, rowData)

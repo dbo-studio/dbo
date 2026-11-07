@@ -13,9 +13,23 @@ type (
 		Table           string                `form:"table"`
 		Data            *multipart.FileHeader `form:"data"`
 		Format          string                `form:"format"`
+		Delimiter       string                `form:"delimiter"`
+		Mapping         string                `form:"mapping"` // JSON object: file column -> table column
 		ContinueOnError bool                  `form:"continueOnError"`
 		SkipErrors      bool                  `form:"skipErrors"`
 		MaxErrors       int                   `form:"maxErrors"`
+	}
+
+	ImportPreviewRequest struct {
+		Data      *multipart.FileHeader `form:"data"`
+		Format    string                `form:"format"`
+		Delimiter string                `form:"delimiter"`
+	}
+
+	ImportPreviewResponse struct {
+		Columns   []string   `json:"columns"`
+		Rows      [][]string `json:"rows"`
+		TotalRows int        `json:"totalRows"`
 	}
 
 	ImportResponse struct {
@@ -33,6 +47,15 @@ func (req ImportRequest) Validate() error {
 		validation.Field(&req.Table, validation.Required),
 		validation.Field(&req.Data, validation.Required),
 		validation.Field(&req.Format, validation.Required, validation.In("sql", "json", "csv")),
+		validation.Field(&req.Delimiter, validation.Length(0, 1)),
 		validation.Field(&req.MaxErrors, validation.Min(0), validation.Max(100)),
+	)
+}
+
+func (req ImportPreviewRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.Data, validation.Required),
+		validation.Field(&req.Format, validation.Required, validation.In("sql", "json", "csv")),
+		validation.Field(&req.Delimiter, validation.Length(0, 1)),
 	)
 }

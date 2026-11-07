@@ -6,6 +6,7 @@ import (
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -14,6 +15,15 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 
 	if action == contract.ExecuteSQLAction {
 		return databaseCore.SQLFromParams(params)
+	}
+
+	if action == contract.RenameAction {
+		newName, err := databaseCore.NewNameFromParams(params)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{fmt.Sprintf("RENAME TABLE %s TO %s", quote.MysqlQualifiedTable(node.Database, node.Table), quote.MysqlQualifiedTable(node.Database, newName))}, nil
 	}
 
 	type ExecuteParams map[contract.TreeTab]any

@@ -210,6 +210,7 @@ func (r *Server) routing() {
 	history.Delete("/", r.handlers.History.Delete)
 
 	api.Post("/import", r.handlers.ImportExport.Start)
+	api.Post("/import/preview", r.handlers.ImportExport.Preview)
 	api.Post("/export", r.handlers.ImportExport.Export)
 
 	backup := api.Group("backups")

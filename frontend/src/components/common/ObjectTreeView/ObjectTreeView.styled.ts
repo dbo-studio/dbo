@@ -2,7 +2,9 @@ import { variables } from '@/core/theme/variables';
 import { alpha, Box, keyframes, styled, Typography } from '@mui/material';
 
 export const TREE_ROW_HEIGHT = 22;
-const TREE_INDENT = 16;
+export const TREE_INDENT = 16;
+/** Generous per-character estimate so long names are never clipped. */
+export const TREE_CHAR_WIDTH = 8;
 
 const reveal = keyframes`
   from { opacity: 0; transform: translateY(-4px); }
@@ -24,7 +26,8 @@ export const TreeViewContainerStyled = styled(Box)({
 });
 
 export const TreeViewContentStyled = styled(Box)(({ theme }) => ({
-  overflow: 'auto',
+  overflowX: 'auto',
+  overflowY: 'auto',
   flex: 1,
   minHeight: 0,
   padding: '4px 0',
@@ -143,6 +146,40 @@ export const LoadingRowStyled = styled(Box, {
   '@media (prefers-reduced-motion: reduce)': {
     '& span': { animation: 'none' }
   }
+}));
+
+export const NodeRenameInput = styled('input')(({ theme }) => ({
+  flex: 1,
+  minWidth: 0,
+  height: 18,
+  marginLeft: theme.spacing(0.5),
+  padding: '0 4px',
+  font: 'inherit',
+  fontSize: variables.fontSize.md,
+  color: theme.palette.text.text,
+  background: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.primary.main}`,
+  borderRadius: variables.radius.small,
+  outline: 'none'
+}));
+
+export const PinnedSectionStyled = styled(Box)(({ theme }) => ({
+  paddingBottom: theme.spacing(0.5),
+  marginBottom: theme.spacing(0.5),
+  borderBottom: `1px solid ${theme.palette.divider}`
+}));
+
+export const PinnedTitleStyled = styled(Typography)(({ theme }) => ({
+  padding: theme.spacing(0.5, 1),
+  color: theme.palette.text.subdued,
+  fontSize: variables.fontSize.xs,
+  textTransform: 'uppercase'
+}));
+
+export const EmptyNoteStyled = styled(Typography)(({ theme }) => ({
+  fontSize: variables.fontSize.xs,
+  color: theme.palette.text.subdued,
+  fontStyle: 'italic'
 }));
 
 export const NodeName = styled(Typography)(({ theme }) => ({

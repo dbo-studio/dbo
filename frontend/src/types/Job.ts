@@ -29,6 +29,7 @@ export type ImportResultType = {
 export type ExportResultType = {
   fileName: string;
   artifactId?: number;
+  tables?: { name: string; rows: number }[];
   successRows: number;
   failedRows: number;
   totalRows: number;

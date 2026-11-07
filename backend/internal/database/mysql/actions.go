@@ -97,6 +97,11 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 				Name:  contract.DropTableAction,
 				Type:  contract.TreeNodeActionTypeAction,
 			},
+			contract.TreeNodeAction{
+				Title: "Rename",
+				Name:  contract.RenameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
+			},
 		)
 	case contract.ViewNodeType:
 		actions = append(actions,
@@ -112,6 +117,11 @@ func (r *MySQLRepository) ContextMenu(nodeType contract.TreeNodeType) []contract
 				Title: "Drop view",
 				Name:  contract.DropViewAction,
 				Type:  contract.TreeNodeActionTypeAction,
+			},
+			contract.TreeNodeAction{
+				Title: "Rename",
+				Name:  contract.RenameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
 			},
 		)
 	}

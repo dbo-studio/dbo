@@ -20,8 +20,47 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         expandedNodes: {},
         loadedParentIds: {},
         focusedNodeId: {},
+        pinnedNodes: {},
         isLoading: false,
         treeError: undefined,
+
+        pinNodes: (nodes: TreeNodeType[]): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection) return;
+          set((state) => {
+            const current = state.pinnedNodes[connection] ?? [];
+            const added = nodes
+              .filter((node) => !current.some((p) => p.id === node.id))
+              .map((node) => ({ ...node, children: [] }));
+            return { pinnedNodes: { ...state.pinnedNodes, [connection]: [...current, ...added] } };
+          });
+        },
+
+        unpinNodes: (nodeIds: string[]): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection) return;
+          set((state) => ({
+            pinnedNodes: {
+              ...state.pinnedNodes,
+              [connection]: (state.pinnedNodes[connection] ?? []).filter((n) => !nodeIds.includes(n.id))
+            }
+          }));
+        },
+
+        // Node ids end with the object name, so a rename keeps the pin by rewriting that suffix.
+        renamePinned: (nodeId: string, oldName: string, newName: string): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection || !nodeId.endsWith(oldName)) return;
+          const newId = nodeId.slice(0, -oldName.length) + newName;
+          set((state) => ({
+            pinnedNodes: {
+              ...state.pinnedNodes,
+              [connection]: (state.pinnedNodes[connection] ?? []).map((n) =>
+                n.id === nodeId ? { ...n, id: newId, name: newName } : n
+              )
+            }
+          }));
+        },
 
         setTree: (tree: TreeNodeType | null): void => {
           const currentConnection = getCurrentConnectionId();
@@ -236,7 +275,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         partialize: (state) => ({
           expandedNodes: state.expandedNodes,
           loadedParentIds: state.loadedParentIds,
-          focusedNodeId: state.focusedNodeId
+          focusedNodeId: state.focusedNodeId,
+          pinnedNodes: state.pinnedNodes
         })
       }
     ),

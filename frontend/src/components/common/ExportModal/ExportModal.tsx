@@ -38,7 +38,11 @@ export function ExportModal({ show, connectionId, query, table, target, onClose 
 
   // A tree export covers a whole object; a grid export covers only the rows it shows.
   const multiTable = !!target;
-  const label = target ? (target.table ?? (target.schema || target.database)) : table;
+  const label = target
+    ? (target.tables?.length ?? 0) > 1
+      ? `${target.tables?.length} tables`
+      : (target.table ?? target.tables?.[0] ?? (target.schema || target.database))
+    : table;
   // Schema (DDL) only exists in sql files.
   const showContent = multiTable && format === 'sql';
   // Several tables as csv/json cannot share one file, so the backend zips them.
@@ -83,7 +87,8 @@ export function ExportModal({ show, connectionId, query, table, target, onClose 
         ...(target
           ? {
               scope: target.kind === 'table' ? 'tables' : target.kind === 'schema' ? 'schema' : 'database',
-              tables: target.kind === 'table' && target.table ? [target.table] : undefined,
+              tables:
+                target.kind === 'table' ? (target.tables ?? (target.table ? [target.table] : undefined)) : undefined,
               database: target.database || undefined,
               schema: target.schema || undefined,
               content: showContent ? content : undefined

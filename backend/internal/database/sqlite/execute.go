@@ -18,6 +18,17 @@ func (r *SQLiteRepository) buildExecuteQueries(ctx context.Context, nodeID strin
 		return queries, "", err
 	}
 
+	if action == contract.RenameAction {
+		newName, err := databaseCore.NewNameFromParams(params)
+		if err != nil {
+			return nil, "", err
+		}
+
+		node := r.base.ExtractNode(nodeID)
+
+		return []string{fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quote.SqliteIdent(node.Table), quote.SqliteIdent(newName))}, "", nil
+	}
+
 	type ExecuteParams map[contract.TreeTab]any
 
 	executeParams, err := helper.ConvertToDTO[ExecuteParams](params)

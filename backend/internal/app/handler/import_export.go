@@ -57,3 +57,21 @@ func (h ImportExportHandler) Export(c fiber.Ctx) error {
 
 	return response.SuccessBuilder().WithMessage("Export job started").WithData(result).Send(c)
 }
+
+func (h ImportExportHandler) Preview(c fiber.Ctx) error {
+	req := new(dto.ImportPreviewRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.importExportService.ImportPreview(c, req)
+	if err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

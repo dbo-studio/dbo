@@ -5,7 +5,7 @@ import type { TreeNodeType } from '@/types/Tree';
 export type DiagramScope = {
   database: string;
   schema: string;
-  focusTable?: string;
+  focusTables?: string[];
 };
 
 export const diagramScopeFromTreeNode = (node: TreeNodeType, engine: string | undefined): DiagramScope | null => {
@@ -14,7 +14,7 @@ export const diagramScopeFromTreeNode = (node: TreeNodeType, engine: string | un
     return {
       database: parsed.database ?? '',
       schema: parsed.schema ?? '',
-      focusTable: parsed.objectName ?? node.name
+      focusTables: [parsed.objectName ?? node.name]
     };
   }
 

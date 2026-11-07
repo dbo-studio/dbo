@@ -47,6 +47,11 @@ func (r *SQLiteRepository) ContextMenu(nodeType contract.TreeNodeType) []contrac
 				Name:  contract.DropTableAction,
 				Type:  contract.TreeNodeActionTypeAction,
 			},
+			contract.TreeNodeAction{
+				Title: "Rename",
+				Name:  contract.RenameAction,
+				Type:  contract.TreeNodeActionTypeCommand,
+			},
 		)
 
 	case contract.ViewContainerNodeType:

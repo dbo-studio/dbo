@@ -1,6 +1,9 @@
 package serviceImportExport
 
 import (
+	"encoding/json"
+
+	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	"github.com/dbo-studio/dbo/pkg/logger"
 
 	"context"
@@ -19,6 +22,7 @@ import (
 
 type IImportExport interface {
 	Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error)
+	ImportPreview(ctx context.Context, req *dto.ImportPreviewRequest) (*dto.ImportPreviewResponse, error)
 	Export(ctx context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error)
 }
 
@@ -36,12 +40,12 @@ func NewImportExportService(jobManager serviceJob.IJobManager, cfg *config.Confi
 	}
 }
 
-func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
-		return nil, err
-	}
+// Upper bound on accepted import files (32 MiB) so a huge upload cannot
+// exhaust memory before the job even starts.
+const maxImportSize = 32 << 20
 
-	file, err := req.Data.Open()
+func (s IImportExportImpl) readUpload(header *multipart.FileHeader) ([]byte, error) {
+	file, err := header.Open()
 	if err != nil {
 		return nil, apperror.BadRequest(err)
 	}
@@ -50,10 +54,6 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 			s.logger.Error(fmt.Errorf("failed to close upload: %w", err))
 		}
 	}(file)
-
-	// Upper bound on accepted import files (32 MiB) so a huge upload cannot
-	// exhaust memory before the job even starts.
-	const maxImportSize = 32 << 20
 
 	fileData, err := io.ReadAll(io.LimitReader(file, maxImportSize+1))
 	if err != nil {
@@ -64,12 +64,52 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 		return nil, apperror.BadRequest(apperror.ErrImportFileTooLarge)
 	}
 
+	return fileData, nil
+}
+
+func (s IImportExportImpl) ImportPreview(ctx context.Context, req *dto.ImportPreviewRequest) (*dto.ImportPreviewResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
+		return nil, err
+	}
+
+	fileData, err := s.readUpload(req.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, columns, err := processors.ParseImportFile(req.Format, req.Delimiter, fileData)
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	return &dto.ImportPreviewResponse{Columns: columns, Rows: rows[:min(len(rows), 5)], TotalRows: len(rows)}, nil
+}
+
+func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
+		return nil, err
+	}
+
+	fileData, err := s.readUpload(req.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	var mapping map[string]string
+	if req.Mapping != "" {
+		if err := json.Unmarshal([]byte(req.Mapping), &mapping); err != nil {
+			return nil, apperror.BadRequest(fmt.Errorf("invalid column mapping: %w", err))
+		}
+	}
+
 	jobData := helper.StructToJSON(dto.ImportJob{
 		OwnerID:         helper.CtxOwnerID(ctx),
 		ConnectionID:    req.ConnectionID,
 		Table:           req.Table,
 		Data:            fileData,
 		Format:          req.Format,
+		Delimiter:       req.Delimiter,
+		Mapping:         mapping,
 		ContinueOnError: req.ContinueOnError,
 		SkipErrors:      req.SkipErrors,
 		MaxErrors:       req.MaxErrors,

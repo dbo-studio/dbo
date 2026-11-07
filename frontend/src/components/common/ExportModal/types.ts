@@ -4,6 +4,8 @@ export type ExportTarget = {
   database: string;
   schema: string;
   table?: string;
+  /** Several tables picked in the tree (kind "table"); takes precedence over `table`. */
+  tables?: string[];
 };
 
 export type ExportModalProps = {

@@ -27,14 +27,14 @@ export default function DiagramSource(): JSX.Element {
   const connectionId = currentConnection?.id;
   const database = selectedTab?.database ?? '';
   const schema = selectedTab?.schema ?? '';
-  const focusTable = selectedTab?.focusTable;
+  const focusTables = selectedTab?.focusTables;
   const enabled = Boolean(connectionId && selectedTab?.mode === TabMode.Diagram);
 
   const { data, isLoading } = useSchemaDiagramQuery({
     connectionId,
     database,
     schema,
-    focusTable,
+    focusTables,
     enabled
   });
 

@@ -2,11 +2,11 @@ export const schemaDiagramQueryKey = (
   connectionId: string | number | undefined,
   database: string,
   schema: string,
-  focusTable?: string
+  focusTables?: string[]
 ): readonly [string, string | number | undefined, string, string, string[] | undefined] => [
   'schema-diagram',
   connectionId,
   database,
   schema,
-  focusTable ? [focusTable] : undefined
+  focusTables?.length ? focusTables : undefined
 ];

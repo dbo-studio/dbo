@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -115,8 +116,9 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		return err
 	}
 
-	totalRows, columns, err := writeExport(ctx, repo, connection.ConnectionType, &jobData, targets, dump, filePath, zipped, func(i int, name string) {
-		_ = p.jobManager.UpdateJobProgress(ctx, job, 20+70*i/len(targets), "Exporting "+name)
+	totalRows, columns, tables, err := writeExport(ctx, repo, connection.ConnectionType, &jobData, targets, dump, filePath, zipped, func(i int, name string) {
+		msg, _ := json.Marshal(map[string]any{"phase": "table", "done": i + 1, "total": len(targets), "name": name})
+		_ = p.jobManager.UpdateJobProgress(ctx, job, 20+70*i/len(targets), string(msg))
 	})
 	if err != nil {
 		_ = os.Remove(filePath)
@@ -143,6 +145,7 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 		TotalChunks: 1,
 		ChunkSize:   totalRows,
 		Query:       jobData.Query,
+		Tables:      tables,
 	}
 
 	return nil
@@ -244,10 +247,10 @@ func exportFilePath(req *dto.ExportJob, zipped bool) (filePath, fileName string,
 
 // writeExport streams every target into one sql/csv/json file, or into one zip
 // entry per target. Only one chunk of rows is held in memory at a time.
-func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, connectionType string, req *dto.ExportJob, targets []exportTarget, dump *databaseContract.SchemaDump, filePath string, zipped bool, onTarget func(i int, name string)) (totalRows, columnCount int, err error) {
+func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, connectionType string, req *dto.ExportJob, targets []exportTarget, dump *databaseContract.SchemaDump, filePath string, zipped bool, onTarget func(i int, name string)) (totalRows, columnCount int, tables []model.JobTableResult, err error) {
 	f, err := os.Create(filePath)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to create export file: %w", err)
+		return 0, 0, nil, fmt.Errorf("failed to create export file: %w", err)
 	}
 
 	defer func() {
@@ -267,18 +270,18 @@ func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, 
 		zw = zip.NewWriter(buffered)
 	} else if req.Format == "sql" {
 		if _, err := io.WriteString(buffered, sqlExportHeader()); err != nil {
-			return 0, 0, err
+			return 0, 0, nil, err
 		}
 
 		if dump != nil {
 			if err := writeStatements(buffered, dump.Preamble); err != nil {
-				return 0, 0, err
+				return 0, 0, nil, err
 			}
 
 			if req.WritesSchema() {
 				for _, t := range dump.Ordered() {
 					if _, err := io.WriteString(buffered, t.Create+"\n\n"); err != nil {
-						return 0, 0, err
+						return 0, 0, nil, err
 					}
 				}
 			}
@@ -295,7 +298,7 @@ func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, 
 		if zipped {
 			out, err = zw.Create(target.Name + "." + req.Format)
 			if err != nil {
-				return 0, 0, err
+				return 0, 0, nil, err
 			}
 		}
 
@@ -307,20 +310,21 @@ func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, 
 			Database:     lo.EmptyableToPtr(req.Database),
 		}, req.ChunkSize, tw.write)
 		if err != nil {
-			return 0, 0, fmt.Errorf("export %s: %w", target.Name, err)
+			return 0, 0, nil, fmt.Errorf("export %s: %w", target.Name, err)
 		}
 
 		if err := tw.finish(); err != nil {
-			return 0, 0, err
+			return 0, 0, nil, err
 		}
 
 		totalRows += tw.rows
+		tables = append(tables, model.JobTableResult{Name: target.Name, Rows: tw.rows})
 		columnCount = tw.columns
 	}
 
 	if zw != nil {
 		if err := zw.Close(); err != nil {
-			return 0, 0, err
+			return 0, 0, nil, err
 		}
 	}
 
@@ -328,21 +332,21 @@ func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, 
 		if req.WritesSchema() {
 			for _, t := range dump.Ordered() {
 				if err := writeStatements(buffered, t.Post); err != nil {
-					return 0, 0, err
+					return 0, 0, nil, err
 				}
 			}
 		}
 
 		if err := writeStatements(buffered, dump.Postamble); err != nil {
-			return 0, 0, err
+			return 0, 0, nil, err
 		}
 	}
 
 	if err := buffered.Flush(); err != nil {
-		return 0, 0, err
+		return 0, 0, nil, err
 	}
 
-	return totalRows, columnCount, nil
+	return totalRows, columnCount, tables, nil
 }
 
 func writeStatements(w io.Writer, statements []string) error {

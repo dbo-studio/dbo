@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
-func Reader(data string) (rows [][]string, headers []string, err error) {
+// Reader parses CSV with a header row. A zero delimiter means a comma.
+func Reader(data string, delimiter rune) (rows [][]string, headers []string, err error) {
 	reader := csv.NewReader(strings.NewReader(data))
+	if delimiter != 0 {
+		reader.Comma = delimiter
+	}
 
 	allRows, err := reader.ReadAll()
 	if err != nil {

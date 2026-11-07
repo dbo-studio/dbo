@@ -158,20 +158,20 @@ export const createTabSettingSlice: StateCreator<
     }
     return addedTab as EditorTabType;
   },
-  addDiagramTab: (args: { database: string; schema: string; focusTable?: string }): DiagramTabType => {
+  addDiagramTab: (args: { database: string; schema: string; focusTables?: string[] }): DiagramTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;
     if (!currentConnectionId) {
       throw new Error('No current connection id');
     }
 
-    const focusTable = args.focusTable;
+    const focusTables = args.focusTables?.length ? args.focusTables : undefined;
     const tabs = selectTabs(get()) as DiagramTabType[];
     const findTab = tabs.find(
       (tab) =>
         tab.mode === TabMode.Diagram &&
         tab.database === args.database &&
         tab.schema === args.schema &&
-        (tab.focusTable ?? '') === (focusTable ?? '') &&
+        (tab.focusTables ?? []).join(',') === (focusTables ?? []).join(',') &&
         matchConnectionId(tab.connectionId, currentConnectionId)
     );
 
@@ -184,11 +184,11 @@ export const createTabSettingSlice: StateCreator<
       id: tools.uuid(),
       connectionId: currentConnectionId,
       nodeId: '',
-      name: focusTable || args.schema || args.database || locales.diagram_tab,
+      name: focusTables?.join(', ') || args.schema || args.database || locales.diagram_tab,
       mode: TabMode.Diagram,
       database: args.database,
       schema: args.schema,
-      focusTable
+      focusTables
     };
 
     return get().handleAddNewTab(tabs, newTab) as DiagramTabType;

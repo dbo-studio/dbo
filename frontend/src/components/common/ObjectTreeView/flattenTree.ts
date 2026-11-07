@@ -11,7 +11,8 @@ export type FlatNodeRow = {
   isExpanded: boolean;
 };
 
-export type FlatLoadingRow = { kind: 'loading'; key: string; level: number };
+/** Placeholder under an open folder: shimmer while a slow load runs, or an "Empty" note once it came back with nothing. */
+export type FlatLoadingRow = { kind: 'loading'; key: string; level: number; empty?: boolean };
 
 export type FlatRow = FlatNodeRow | FlatLoadingRow;
 
@@ -30,7 +31,8 @@ export function flattenTree(
   expandedIds: ReadonlySet<string>,
   loadingIds: ReadonlySet<string>,
   searchTerm: string,
-  collapsedDuringSearch: ReadonlySet<string> = new Set()
+  collapsedDuringSearch: ReadonlySet<string> = new Set(),
+  emptyIds: ReadonlySet<string> = new Set()
 ): FlatRow[] {
   const term = searchTerm.trim().toLowerCase();
   const rows: FlatRow[] = [];
@@ -55,6 +57,11 @@ export function flattenTree(
 
     if (visibleChildren.length === 0 && loadingIds.has(node.id)) {
       rows.push({ kind: 'loading', key: `${node.id}:loading`, level: level + 1 });
+      return;
+    }
+
+    if (visibleChildren.length === 0 && !term && emptyIds.has(node.id)) {
+      rows.push({ kind: 'loading', key: `${node.id}:empty`, level: level + 1, empty: true });
       return;
     }
 

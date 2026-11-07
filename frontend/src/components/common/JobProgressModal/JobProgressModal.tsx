@@ -160,6 +160,19 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
               </Typography>
             )}
 
+            {job.status === 'completed' && job.type === 'export' && (job.result?.tables?.length ?? 0) > 1 && (
+              <Box sx={{ mb: 1 }} data-testid='export-tables'>
+                <Typography variant='subtitle2'>{locales.job_tables_result}</Typography>
+                <List dense sx={{ maxHeight: 160, overflow: 'auto' }}>
+                  {job.result?.tables?.map((t) => (
+                    <ListItem key={t.name} disableGutters>
+                      <ListItemText primary={t.name} secondary={`${t.rows} ${locales.ai_unit_rows}`} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            )}
+
             <ProgressBar
               testId='job-progress'
               value={job.status === 'pending' ? undefined : job.progress}
