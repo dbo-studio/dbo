@@ -175,7 +175,9 @@ export default function Redis({
                 options={ENV_OPTIONS}
                 onChange={(o): void =>
                   field.handleChange(
-                    (String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv
+                    (String((o as { value: unknown }).value) === 'none'
+                      ? ''
+                      : String((o as { value: unknown }).value)) as ConnectionEnv
                   )
                 }
                 helpertext={field.state.value === 'prod' ? locales.connection_env_prod_hint : undefined}

@@ -507,9 +507,12 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                     )}
                   </TableCell>
                   {l.hasValue && (
-                    <TableCell title={shown(m)} onDoubleClick={(): void => {
-                      if (editable) setEditing(cellId);
-                    }}>
+                    <TableCell
+                      title={shown(m)}
+                      onDoubleClick={(): void => {
+                        if (editable) setEditing(cellId);
+                      }}
+                    >
                       {editable && editing === cellId ? (
                         <CellInput
                           autoFocus
