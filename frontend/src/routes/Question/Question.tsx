@@ -50,7 +50,7 @@ export default function Question(): JSX.Element {
   };
 
   return (
-    <Box sx={{ height: '100%' }} data-testid='question-tab'>
+    <Box sx={{ height: '100%', overflow: 'auto', p: 2 }} data-testid='question-tab'>
       {/* Keyed so a different question starts from its own SQL and chart. */}
       <ReportEditor
         key={question.id}

@@ -139,12 +139,43 @@ export default function ReportEditor({
 
   return (
     <Stack spacing={1.5} data-testid='ai-report-editor'>
-      <FieldInput
-        value={edited.title}
-        onChange={(event) => setEdited({ ...edited, title: event.target.value })}
-        inputProps={{ 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' }}
-        mb={0}
-      />
+      <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <FieldInput
+            value={edited.title}
+            onChange={(event) => setEdited({ ...edited, title: event.target.value })}
+            inputProps={{ 'aria-label': locales.ai_report_name, 'data-testid': 'ai-report-title' }}
+            mb={0}
+          />
+        </Box>
+        <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
+          <Button
+            size='small'
+            variant='contained'
+            disabled={isPending || !sql.trim()}
+            onClick={() => run()}
+            startIcon={isPending ? <CircularProgress size={12} color='inherit' /> : undefined}
+            data-testid='ai-report-run'
+          >
+            {locales.ai_report_run}
+          </Button>
+          {isPending && (
+            <Button size='small' onClick={() => runControllerRef.current?.abort()} data-testid='ai-report-cancel'>
+              {locales.cancel}
+            </Button>
+          )}
+          <Button
+            size='small'
+            variant='outlined'
+            disabled={saving || !edited.title.trim()}
+            onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}
+            data-testid='ai-report-save-canvas'
+          >
+            {locales.ai_report_save}
+          </Button>
+          <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
+        </Stack>
+      </Stack>
       <ToggleButtonGroup
         exclusive
         size='small'
@@ -211,6 +242,11 @@ export default function ReportEditor({
           onRunQuery={() => run()}
         />
       </Box>
+      {error && (
+        <Typography variant='caption' color='error'>
+          {error.message}
+        </Typography>
+      )}
       {questionParams(sql).length > 0 && (
         <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }} data-testid='ai-report-params'>
           {questionParams(sql).map((param) => (
@@ -226,38 +262,6 @@ export default function ReportEditor({
           ))}
         </Stack>
       )}
-      <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <Button
-          size='small'
-          variant='contained'
-          disabled={isPending || !sql.trim()}
-          onClick={() => run()}
-          startIcon={isPending ? <CircularProgress size={12} color='inherit' /> : undefined}
-          data-testid='ai-report-run'
-        >
-          {locales.ai_report_run}
-        </Button>
-        {isPending && (
-          <Button size='small' onClick={() => runControllerRef.current?.abort()} data-testid='ai-report-cancel'>
-            {locales.cancel}
-          </Button>
-        )}
-        <Button
-          size='small'
-          variant='outlined'
-          disabled={saving || !edited.title.trim()}
-          onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}
-          data-testid='ai-report-save-canvas'
-        >
-          {locales.ai_report_save}
-        </Button>
-        <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
-        {error && (
-          <Typography variant='caption' color='error'>
-            {error.message}
-          </Typography>
-        )}
-      </Stack>
     </Stack>
   );
 }
