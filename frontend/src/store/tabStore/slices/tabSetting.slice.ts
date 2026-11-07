@@ -320,7 +320,7 @@ export const createTabSettingSlice: StateCreator<
     const tabs = selectTabs(get());
     const findTab = tabs.find(
       (tab): tab is ToolTabType =>
-        tab.mode === TabMode.Tool && tab.toolId === toolId && matchConnectionId(tab.connectionId, currentConnectionId)
+        tab.mode === TabMode.Tool && (tab as ToolTabType).toolId === toolId && matchConnectionId(tab.connectionId, currentConnectionId)
     );
 
     if (findTab) {

@@ -71,7 +71,10 @@ export default function KeyList({ rows, expanded, selectedId, loading, onSelect,
               tabIndex={0}
               data-testid={row.item && !row.folder ? 'browse-item' : 'browse-folder'}
               data-item-id={row.item?.id}
-              onClick={(): void => (row.item && !row.folder ? onSelect(row.item) : row.folder && onToggle(row.folder))}
+              onClick={(): void => {
+            if (row.item && !row.folder) onSelect(row.item);
+            else if (row.folder) onToggle(row.folder);
+          }}
               onKeyDown={(e): void => {
                 if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click();
               }}

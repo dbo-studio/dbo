@@ -14,6 +14,7 @@ import {
   ConnectionFormCheckboxRowStyled,
   ConnectionFormContainerStyled
 } from '../AddConnection.styled';
+import type { ConnectionEnv } from '@/types';
 import type { ConnectionSettingsProps } from '../types';
 
 const ENV_OPTIONS = [
@@ -47,7 +48,7 @@ const formSchema = v.object({
   isPing: v.boolean(),
   rememberPassword: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  env: v.string(),
+  env: v.picklist(['', 'dev', 'uat', 'prod']),
   host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
   port: number(1, 65535),
   username: v.string(),
@@ -172,7 +173,7 @@ export default function Redis({
                 testId='connection-env-select'
                 value={field.state.value || 'none'}
                 options={ENV_OPTIONS}
-                onChange={(o): void => field.handleChange(String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value))}
+                onChange={(o): void => field.handleChange((String((o as { value: unknown }).value) === 'none' ? '' : String((o as { value: unknown }).value)) as ConnectionEnv)}
                 helpertext={field.state.value === 'prod' ? locales.connection_env_prod_hint : undefined}
               />
             )}

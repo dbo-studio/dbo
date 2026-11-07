@@ -270,7 +270,8 @@ export default function ItemView(props: ItemViewProps): JSX.Element {
       );
     }
     case 'set':
-      if (item.meta?.scored) {
+    case 'list': {
+      if (item.view === 'set' && item.meta?.scored) {
         const rows = ((item.value ?? []) as { member: string; score: number }[]).map(
           (z) => [z.member, String(z.score)] as Row
         );
@@ -286,8 +287,6 @@ export default function ItemView(props: ItemViewProps): JSX.Element {
           />
         );
       }
-    // falls through: plain sets share the list renderer
-    case 'list': {
       const rows = ((item.value ?? []) as unknown[]).map((v) => [cellText(v), ''] as Row);
       return (
         <RowsView

@@ -165,7 +165,7 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
     const renamed = Object.entries(renames).filter(([k]) => !removed.has(k));
     const renameOps = renamed.flatMap(([from, to]) => [
       setOp(to, edits[from] ?? (byKey.get(from) ? shown(byKey.get(from) as NoSQLMember) : '')),
-      { op: 'remove', key: from, value: byKey.get(from)?.value ?? '' }
+      { op: 'remove' as const, key: from, value: byKey.get(from)?.value ?? '' }
     ]);
     const ops: NoSQLMemberOp[] = [
       ...Object.entries(edits).filter(([k]) => !removed.has(k) && !(k in renames)).map(([k, v]) => setOp(k, v)),
@@ -173,7 +173,7 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
       // List indexes shift after every removal, so remove from the end.
       ...[...removed]
         .sort((a, b) => (l.type === 'list' ? Number(b) - Number(a) : 0))
-        .map((k) => ({ op: 'remove', key: k, value: byKey.get(k)?.value ?? '' })),
+        .map((k) => ({ op: 'remove' as const, key: k, value: byKey.get(k)?.value ?? '' })),
       ...added.filter(addedReady).map((r) => setOp(l.type === 'list' ? '' : r.key, r.value))
     ];
     const run = (): void => void apply(ops).then((ok) => ok && discard());
@@ -421,7 +421,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                   )}
                   <TableCell
                     title={m.key}
-                    onDoubleClick={(): void => editable && l.type !== 'list' && setEditingKey(m.key)}
+                    onDoubleClick={(): void => {
+                      if (editable && l.type !== 'list') setEditingKey(m.key);
+                    }}
                   >
                     {editable && editingKey === m.key ? (
                       <CellInput
@@ -439,7 +441,9 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
                     )}
                   </TableCell>
                   {l.hasValue && (
-                    <TableCell title={shown(m)} onDoubleClick={(): void => editable && setEditing(cellId)}>
+                    <TableCell title={shown(m)} onDoubleClick={(): void => {
+                      if (editable) setEditing(cellId);
+                    }}>
                       {editable && editing === cellId ? (
                         <CellInput
                           autoFocus

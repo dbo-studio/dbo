@@ -105,7 +105,9 @@ export default function Histories(): JSX.Element {
             exclusive
             size='small'
             value={filter}
-            onChange={(_, value: HistoryFilter | null): void => value && setFilter(value)}
+            onChange={(_, value: HistoryFilter | null): void => {
+              if (value) setFilter(value);
+            }}
             aria-label={locales.history}
           >
             {FILTERS.map((f) => (

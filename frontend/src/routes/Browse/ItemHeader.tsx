@@ -73,7 +73,7 @@ export default function ItemHeader({
     <Box
       sx={{ display: 'flex', gap: 1, px: 1.5, py: 1, alignItems: 'center', borderBottom: 1, borderColor: 'divider' }}
     >
-      <Typography sx={{ minWidth: 0, flexShrink: 1 }} noWrap title={item.id} fontWeight={600}>
+      <Typography sx={{ minWidth: 0, flexShrink: 1, fontWeight: 600 }} noWrap title={item.id}>
         {item.id}
       </Typography>
       {type && <Chip size='small' label={type} variant='outlined' />}

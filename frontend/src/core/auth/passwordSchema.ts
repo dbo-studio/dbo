@@ -33,7 +33,11 @@ export const authChangePasswordSchema = v.pipe(
 const userPermissionsSchema = v.object({
   createConnection: v.boolean(),
   aiSettings: v.boolean(),
-  mcpSettings: v.boolean()
+  mcpSettings: v.boolean(),
+  cli: v.boolean(),
+  import: v.boolean(),
+  export: v.boolean(),
+  aiUse: v.boolean()
 });
 
 export const adminCreateUserSchema = v.object({
