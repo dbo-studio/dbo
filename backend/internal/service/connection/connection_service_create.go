@@ -89,7 +89,8 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
 	case req.Type == string(databaseContract.Sqlite):
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
-	case databaseContract.IsMysqlFamily(req.Type):
+	case databaseContract.IsMysqlFamily(req.Type), databaseContract.IsHostSQL(req.Type):
+		// SQL Server and ClickHouse take the same host/port/user/database/SSL/SSH fields as MySQL.
 		options, err = databaseConnection.CreateMysqlConnection(req.Options)
 	case databaseContract.IsRedisFamily(req.Type):
 		options, err = databaseConnection.CreateRedisConnection(req.Options)

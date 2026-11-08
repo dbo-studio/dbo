@@ -60,7 +60,7 @@ func newExecuteResult(nodeID string, action databaseContract.TreeNodeActionName)
 
 func parseNodeID(connectionType, nodeID string) databaseContract.DBNode {
 	switch {
-	case databaseContract.IsMysqlFamily(connectionType):
+	case databaseContract.IsMysqlFamily(connectionType), databaseContract.IsHostSQL(connectionType):
 		return (&BaseRepository{}).mysqlNode(nodeID)
 	case databaseContract.IsPostgresFamily(connectionType):
 		return (&BaseRepository{}).postgresqlNode(nodeID)

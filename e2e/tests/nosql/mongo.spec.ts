@@ -5,11 +5,11 @@ import { ConnectionPage } from "../../pages";
 
 /**
  * MongoDB driver on the NoSQL engine. Needs a MongoDB (docker compose -f docker-compose.dev.yml up -d sample-mongo,
- * MONGO_TEST_PORT, default 27018). The connection is created through the real New connection form.
+ * MONGO_TEST_PORT, default 47017). The connection is created through the real New connection form.
  */
 const apiUrl = (): string => process.env.PLAYWRIGHT_API_URL ?? "";
 const mongoHost = process.env.MONGO_TEST_HOST ?? "127.0.0.1";
-const mongoPort = process.env.MONGO_TEST_PORT ?? "27018";
+const mongoPort = process.env.MONGO_TEST_PORT ?? "47017";
 const mongoContainer = process.env.MONGO_TEST_CONTAINER ?? "dbo-studio-sample-mongo";
 const headers = { "X-Client-Mode": "web" };
 

@@ -24,6 +24,7 @@ const hasProjectFilter = process.argv.some(
  *   tests/pg/      — PostgreSQL DB-critical
  *   tests/mysql/   — MySQL DB-critical
  *   tests/sqlite/  — SQLite DB-critical
+ *   tests/mssql/, tests/clickhouse/ — host SQL engines on the generic driver
  *
  * `postgres` project runs shared + pg (shared chrome once).
  * Full `npm test` runs all three projects.
@@ -47,6 +48,17 @@ const engineProjects = [
     name: "sqlite",
     use: chromeUse,
     testMatch: ["**/sqlite/**/*.spec.ts"],
+  },
+  {
+    // SQL Server / ClickHouse: scripts/run-e2e.mjs starts them (random ports, seeded) for these projects.
+    name: "mssql",
+    use: chromeUse,
+    testMatch: ["**/mssql/**/*.spec.ts"],
+  },
+  {
+    name: "clickhouse",
+    use: chromeUse,
+    testMatch: ["**/clickhouse/**/*.spec.ts"],
   },
   {
     // NoSQL engine against the in-memory fixture driver (DBO_ENABLE_NOSQL_FIXTURE=1); no sample DB needed.

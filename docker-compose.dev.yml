@@ -40,23 +40,73 @@ services:
   sample-redis:
     container_name: dbo-studio-sample-redis
     image: redis:7
+    # Starts redis, then loads docker/redis/seed.sh (every key type, TTLs, >1000-member collections)
+    entrypoint: ["sh", "/entrypoint.sh"]
     ports:
-      - "${REDIS_TEST_PORT-6380}:6379"
+      - "${REDIS_TEST_PORT-46379}:6379"
+    volumes:
+      - "./docker/redis/entrypoint.sh:/entrypoint.sh:ro"
+      - "./docker/redis/seed.sh:/seed.sh:ro"
 
   sample-mongo:
     container_name: dbo-studio-sample-mongo
     image: mongo:7
     ports:
-      - "${MONGO_TEST_PORT-27018}:27017"
+      - "${MONGO_TEST_PORT-47017}:27017"
+    volumes:
+      # Runs once on first start (databases shop, analytics, blog); re-seed: rm -sfv sample-mongo, then up
+      - "./docker/mongo/seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
+
+  sample-mssql:
+    container_name: dbo-studio-sample-mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Starts SQL Server, then applies docs/sample_db/shop_mssql.sql (database `shop`); data is not persisted.
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    platform: "linux/amd64"
+    ports:
+      - "${MSSQL_TEST_PORT-41433}:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Secret_pass1"
+    volumes:
+      - "./docker/mssql/entrypoint.sh:/entrypoint.sh:ro"
+      - "./docs/sample_db/shop_mssql.sql:/seed.sql:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/seeded"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+      start_period: 20s
+
+  sample-clickhouse:
+    container_name: dbo-studio-sample-clickhouse
+    image: clickhouse/clickhouse-server:24.8
+    ports:
+      - "${CLICKHOUSE_TEST_PORT-49000}:9000"
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: secret
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      # Runs once on first start (database `shop`); re-seed: rm -sfv sample-clickhouse, then up
+      - "./docs/sample_db/shop_clickhouse.sql:/docker-entrypoint-initdb.d/shop.sql:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --password secret -q 'SELECT count() FROM shop.page_views' | grep -q 40000"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
 
   sample-pgsql:
     container_name: dbo-studio-sample-pgsql
     image: postgres:16.1
     ports:
-      - "${DB_TEST_PORT-5432}:5432"
+      - "${PGSQL_TEST_PORT-45432}:5432"
     volumes:
       - "./docker/data/pgsql:/var/lib/postgresql/data"
       - "./docs/sample_db/public.sql:/docker-entrypoint-initdb.d/public.sql"
+      - "./docs/sample_db/shop_pg.sql:/docker-entrypoint-initdb.d/shop.sql"
     restart: always
     platform: "linux/amd64"
     environment:
@@ -68,7 +118,7 @@ services:
     container_name: dbo-studio-sample-pgsql-ssl
     image: postgres:16.1
     ports:
-      - "${PGSQL_SSL_TEST_PORT-5433}:5432"
+      - "${PGSQL_SSL_TEST_PORT-45433}:5432"
     volumes:
       - "./docker/pgsql-ssl/certs:/certs:ro"
       - "./docker/pgsql-ssl/entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
@@ -85,7 +135,7 @@ services:
     container_name: dbo-studio-sample-sshd
     image: lscr.io/linuxserver/openssh-server:latest
     ports:
-      - "${SSH_TEST_PORT-2222}:2222"
+      - "${SSH_TEST_PORT-42222}:2222"
     volumes:
       - "./e2e/fixtures/ssh/id_ed25519.pub:/keys/id_ed25519.pub:ro"
       - "./docker/sshd/10-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
@@ -102,7 +152,10 @@ services:
     container_name: dbo-studio-sample-mysql
     image: mysql:8.4
     ports:
-      - "${MYSQL_TEST_PORT-3307}:3306"
+      - "${MYSQL_TEST_PORT-43306}:3306"
+    volumes:
+      - "./docs/sample_db/mysql.sql:/docker-entrypoint-initdb.d/01-product.sql:ro"
+      - "./docs/sample_db/shop_mysql.sql:/docker-entrypoint-initdb.d/02-shop.sql:ro"
     restart: always
     platform: "linux/amd64"
     environment:

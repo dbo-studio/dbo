@@ -26,9 +26,9 @@ npm test
 | ------------------- | -------------------------------------------------------------------------- |
 | Go toolchain        | Builds/runs backend via `go run . serve`                                   |
 | Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
-| Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql sample-redis sample-mongo` (Redis on 6380 `REDIS_TEST_PORT`, MongoDB on 27018 `MONGO_TEST_PORT`) |
-| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 2222; set `SSH_KNOWN_HOSTS_PATH` for the host-key test) |
-| TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 5433) |
+| Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql sample-redis sample-mongo` (Redis on 46379 `REDIS_TEST_PORT`, MongoDB on 47017 `MONGO_TEST_PORT`) |
+| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 42222; set `SSH_KNOWN_HOSTS_PATH` for the host-key test) |
+| TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 45433) |
 | Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 
 ```bash
@@ -47,6 +47,8 @@ npm test                          # all projects (postgres + mysql + sqlite)
 npm run test:pg                   # tests/shared + tests/pg
 npm run test:mysql                # tests/mysql
 npm run test:sqlite               # tests/sqlite
+npm run test:mssql                # tests/mssql — SQL Server (needs sample-mssql from docker-compose.dev.yml)
+npm run test:clickhouse           # tests/clickhouse — ClickHouse (needs sample-clickhouse)
 npm run test:nosql                # tests/nosql — NoSQL engine on the in-memory fixture driver (no sample DB)
 npm run test:ui                   # Playwright UI — all engines (pg + mysql + sqlite + shared)
 npm run test:ui:mysql             # UI filtered to MySQL only (also :pg / :sqlite)
@@ -102,7 +104,9 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Connection URI import    | `pg/connection-uri.spec.ts`                   | Paste URI → fields/SSL; save strips password; connect   |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
-| Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
+| Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy on PG + MySQL                  |
+| Command palette          | `sqlite/command-palette.spec.ts`              | Alt+K open/toggle/Escape, filter + empty state, arrows + Enter, New editor, Open settings, object search opens data tab |
+| Mobile tab switcher      | `sqlite/mobile-tab-switcher.spec.ts`          | phone shell: tabs sheet lists tabs = badge, select closes sheet, close another tab |
 | Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab + mode icon, search, Security password   |
 
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
@@ -159,7 +163,7 @@ e2e/
 - Specs use `uniqueTestSuffix` and `withConnectionCleanup` so failed tests still remove connection rows.
 - Object Form lifecycle specs use `test.describe.configure({ mode: "serial" })` so each phase is a trackable test; `afterAll` still attempts full object cleanup on failure.
 - PG/MySQL still use shared `sample-*` containers with unique object names (dedicated e2e DB compose is a follow-up).
-- MySQL publish in `docker-compose.dev.yml` is `3307:3306`.
+- MySQL publish in `docker-compose.dev.yml` is `43306:3306`.
 
 ## Troubleshooting
 

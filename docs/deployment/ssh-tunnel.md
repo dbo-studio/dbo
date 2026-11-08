@@ -41,6 +41,6 @@ Out of scope: cloud IAM auth (RDS IAM), WireGuard and other VPNs.
 
 ```bash
 docker compose -p dbo -f docker-compose.dev.yml up -d sample-pgsql sample-mysql sample-sshd
-# bastion 127.0.0.1:2222  user tunnel  password secret  (key: e2e/fixtures/ssh/id_ed25519, test only)
+# bastion 127.0.0.1:42222  user tunnel  password secret  (key: e2e/fixtures/ssh/id_ed25519, test only)
 # database hosts from inside: sample-pgsql:5432, sample-mysql:3306
 ```

@@ -35,6 +35,7 @@ export default function TabSwitcherSheet({ onClose }: TabSwitcherSheetProps): JS
       {tabs.map((tab) => (
         <ListRow
           key={tab.id}
+          testId={`tab-switcher-row-${tab.id}`}
           title={tabTitle(tab)}
           subtitle={tab.mode}
           selected={tab.id === selectedTabId}

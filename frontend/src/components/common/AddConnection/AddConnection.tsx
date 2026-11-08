@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
+import HostSql from './HostSql/HostSql';
 import Mongo from './Mongo/Mongo';
 import Redis from './Redis/Redis';
 import SQLite from './SQLite/SQLite';
@@ -30,6 +31,11 @@ function formForAlias(alias: ConnectionAliasDef): ComponentType<ConnectionSettin
   }
   if (alias.driver === 'mongodb') {
     return Mongo;
+  }
+  if (alias.driver === 'sqlserver' || alias.driver === 'clickhouse') {
+    const Form = (props: ConnectionSettingsProps): JSX.Element => <HostSql {...props} engine={alias.type} />;
+    Form.displayName = `HostSqlAlias(${alias.type})`;
+    return Form;
   }
   if (alias.driver === 'mysql') {
     const Form = (props: ConnectionSettingsProps): JSX.Element => <Mysql {...props} engine={alias.type} />;

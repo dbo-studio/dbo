@@ -32,7 +32,7 @@ export interface ConnectionConfig {
   username: string;
   password: string;
   database?: string;
-  type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite";
+  type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite" | "SQL Server" | "ClickHouse";
   ssl?: ConnectionSslConfig;
   ssh?: ConnectionSshConfig;
 }
@@ -84,7 +84,13 @@ export class ConnectionPage extends BasePage {
 
   async openSwitcher(): Promise<void> {
     if (await this.switcherPanel.isVisible().catch(() => false)) return;
-    await this.page.getByTestId("connection-switcher").click();
+    const switcher = this.page.getByTestId("connection-switcher");
+    // With no connections the app auto-opens "New connection" once the list loads; on a slow
+    // start that lands between waitForReady and this click and intercepts it.
+    await switcher.click({ timeout: 5000 }).catch(async () => {
+      await this.dismissNewConnectionModalIfOpen();
+      await switcher.click();
+    });
     await expect(this.switcherPanel).toBeVisible();
   }
 
@@ -133,6 +139,11 @@ export class ConnectionPage extends BasePage {
     // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
     await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
+    // Let the connections list load so an empty-state "New connection" auto-open lands now,
+    // not in the middle of the next click. Capped: a long-lived stream must not block here.
+    await this.page
+      .waitForLoadState("networkidle", { timeout: 5000 })
+      .catch(() => undefined);
   }
 
   async openNewConnectionModal(): Promise<void> {

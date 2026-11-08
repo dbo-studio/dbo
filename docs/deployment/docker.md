@@ -67,11 +67,11 @@ Sample DB services:
 
 | Service | Host port | Credentials |
 | ------- | --------- | ----------- |
-| `sample-pgsql` | 5432 | `default` / `secret`, db `default` |
-| `sample-mysql` | 3307 | `default` / `secret`, db `default` |
-| `sample-pgsql-ssl` | 5433 | same as Postgres + TLS |
+| `sample-pgsql` | 45432 | `default` / `secret`, db `default` |
+| `sample-mysql` | 43306 | `default` / `secret`, db `default` |
+| `sample-pgsql-ssl` | 45433 | same as Postgres + TLS |
 
-Override host ports with Compose variables `DB_TEST_PORT`, `MYSQL_TEST_PORT`, and `PGSQL_SSL_TEST_PORT` (project-root `.env` or inline) — see [Configuration](configuration.md#docker-compose--development-docker-composedevyml).
+Override host ports with Compose variables `PGSQL_TEST_PORT`, `MYSQL_TEST_PORT`, and `PGSQL_SSL_TEST_PORT` (project-root `.env` or inline) — see [Configuration](configuration.md#docker-compose--development-docker-composedevyml).
 
 ## Reverse proxy and TLS
 

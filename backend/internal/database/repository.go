@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"sync"
 
+	_ "github.com/dbo-studio/dbo/internal/database/clickhouse"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	databaseGeneric "github.com/dbo-studio/dbo/internal/database/generic"
 	databaseMongo "github.com/dbo-studio/dbo/internal/database/mongo"
+	_ "github.com/dbo-studio/dbo/internal/database/mssql"
 	databaseMysql "github.com/dbo-studio/dbo/internal/database/mysql"
 	databaseNoSQLFixture "github.com/dbo-studio/dbo/internal/database/nosqlfixture"
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"
@@ -25,6 +28,8 @@ func NewDatabaseRepository(ctx context.Context, connection *model.Connection, cm
 		return databaseMysql.NewMySQLRepository(ctx, connection, cm, deps)
 	case databaseContract.IsPostgresFamily(connection.ConnectionType):
 		return databasePostgres.NewPostgresRepository(ctx, connection, cm, deps)
+	case databaseContract.IsHostSQL(connection.ConnectionType):
+		return databaseGeneric.New(ctx, connection, cm, deps)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		return databaseSqlite.NewSQLiteRepository(ctx, connection, cm, deps)
 	default:

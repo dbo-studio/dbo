@@ -253,7 +253,7 @@ test.describe("Shared connections (local auth)", () => {
     browser,
   }, testInfo) => {
     const pgHost = process.env.PGSQL_TEST_HOST ?? "127.0.0.1";
-    const pgPort = Number(process.env.PGSQL_TEST_PORT ?? "5432");
+    const pgPort = Number(process.env.PGSQL_TEST_PORT ?? "45432");
     test.skip(
       !(await canReachHost(pgHost, pgPort)),
       "Sample Postgres is not reachable for password-share coverage",

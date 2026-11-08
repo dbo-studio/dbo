@@ -122,7 +122,7 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		options, err = databaseConnection.UpdateSQLiteConnection(json.RawMessage(connection.Options), req.Options)
-	case databaseContract.IsMysqlFamily(connection.ConnectionType):
+	case databaseContract.IsMysqlFamily(connection.ConnectionType), databaseContract.IsHostSQL(connection.ConnectionType):
 		options, err = databaseConnection.UpdateMysqlConnection(json.RawMessage(connection.Options), req.Options)
 	case databaseContract.IsRedisFamily(connection.ConnectionType):
 		options, err = databaseConnection.UpdateRedisConnection(json.RawMessage(connection.Options), req.Options)

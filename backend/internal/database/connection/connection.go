@@ -15,7 +15,6 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
@@ -155,8 +154,10 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 		dialect = OpenPostgresqlConnection(dialTarget)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		dialect = OpenSQLiteConnection(connection)
-	case connection.ConnectionType == "sqlserver":
-		dialect = sqlserver.Open(connection.Name)
+	case connection.ConnectionType == databaseContract.SQLServer:
+		dialect = OpenSQLServerConnection(dialTarget)
+	case connection.ConnectionType == databaseContract.ClickHouse:
+		dialect = OpenClickHouseConnection(dialTarget)
 	default:
 		_ = tunnel.Close()
 

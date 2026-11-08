@@ -195,6 +195,7 @@ func classifyConnectionFailure(err error) (string, string) {
 	case strings.Contains(msg, "password authentication failed"),
 		strings.Contains(msg, "access denied"),
 		strings.Contains(msg, "authentication failed"),
+		strings.Contains(msg, "login failed"),
 		strings.Contains(msg, "invalid credentials"),
 		strings.Contains(msg, "using password: yes"):
 		return "authentication", "Check username/password and any password prompt settings."

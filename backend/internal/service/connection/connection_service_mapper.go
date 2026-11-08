@@ -98,8 +98,8 @@ func connectionInfo(connection *model.Connection) string {
 		databaseContract.IsMysqlFamily(connection.ConnectionType),
 		databaseContract.IsRedisFamily(connection.ConnectionType),
 		databaseContract.IsMongo(connection.ConnectionType),
-		connection.ConnectionType == "sqlite",
-		connection.ConnectionType == "sqlserver":
+		databaseContract.IsHostSQL(connection.ConnectionType),
+		connection.ConnectionType == "sqlite":
 		version := ""
 		if connection.Version != nil {
 			version = *connection.Version

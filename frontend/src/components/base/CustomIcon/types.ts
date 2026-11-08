@@ -90,6 +90,8 @@ export const IconTypes = {
   keydb: 'keydb',
   dragonfly: 'dragonfly',
   mongodb: 'mongodb',
+  sqlserver: 'sqlserver',
+  clickhouse: 'clickhouse',
   rds_postgresql: 'amazon_rds',
   aurora_postgresql: 'amazon_aurora',
   cloudsql_postgresql: 'google_cloud_sql',

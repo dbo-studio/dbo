@@ -62,15 +62,15 @@ For containerized API + UI + sample databases:
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-Optional host port overrides (`DB_TEST_PORT`, `MYSQL_TEST_PORT`, `PGSQL_SSL_TEST_PORT`) — see [Configuration](../deployment/configuration.md#docker-compose--development-docker-composedevyml).
+Optional host port overrides (`PGSQL_TEST_PORT`, `MYSQL_TEST_PORT`, `PGSQL_SSL_TEST_PORT`, `REDIS_TEST_PORT`, `MONGO_TEST_PORT`) — see [Configuration](../deployment/configuration.md#docker-compose--development-docker-composedevyml).
 
 | Service | URL / port |
 | ------- | ---------- |
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8080/api |
-| Sample Postgres | `localhost:5432` (user `default`, password `secret`, db `default`) |
-| Sample MySQL | `localhost:3307` → container 3306 |
-| Sample Postgres (SSL) | `localhost:5433` — start with `sample-pgsql-ssl` |
+| Sample Postgres | `localhost:45432` (user `default`, password `secret`, db `default`) |
+| Sample MySQL | `localhost:43306` → container 3306 |
+| Sample Postgres (SSL) | `localhost:45433` — start with `sample-pgsql-ssl` |
 
 Makefile shortcuts:
 

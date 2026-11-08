@@ -170,7 +170,12 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	}
 
 	limit, page := sqlguard.ResolveLimitPage(req.Limit, req.Page)
-	applied := sqlguard.ApplyLimitOffset(originalQuery, limit, page)
+	// T-SQL has no LIMIT: the runner stops reading at `limit` rows instead, so SQL Server has no later pages.
+	applied := sqlguard.LimitApplyResult{Query: originalQuery}
+	if connection.ConnectionType != databaseContract.SQLServer {
+		applied = sqlguard.ApplyLimitOffset(originalQuery, limit, page)
+	}
+
 	execReq := *req
 	execReq.Query = applied.Query
 	execReq.Limit = &limit

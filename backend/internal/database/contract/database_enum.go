@@ -11,6 +11,7 @@ const (
 	Mariadb    = "mariadb"
 	Sqlite     = "sqlite"
 	SQLServer  = "sqlserver"
+	ClickHouse = "clickhouse"
 
 	// Redis and its wire-compatible variants share one driver.
 	Redis     = "redis"
@@ -68,7 +69,7 @@ var MysqlFamily = []string{
 var RedisFamily = []string{Redis, Valkey, KeyDB, Dragonfly}
 
 // ValidConnectionTypes is every type Create/Ping may accept.
-var ValidConnectionTypes = append(append(append(append([]string{}, PostgresFamily...), MysqlFamily...), RedisFamily...), Sqlite, SQLServer, Mongo)
+var ValidConnectionTypes = append(append(append(append([]string{}, PostgresFamily...), MysqlFamily...), RedisFamily...), Sqlite, SQLServer, ClickHouse, Mongo)
 
 // NoSQLFixture is the in-memory test driver. It is deliberately absent from
 // ValidConnectionTypes, so it can never be created as a user connection.
@@ -79,6 +80,11 @@ func NoSQLFixtureEnabled() bool { return os.Getenv("DBO_ENABLE_NOSQL_FIXTURE") =
 
 // NoSQLTypes lists connection types served by NoSQLRepository instead of DatabaseRepository.
 var NoSQLTypes = append(append([]string{NoSQLFixture}, RedisFamily...), Mongo)
+
+// IsHostSQL reports whether connectionType is a host/port SQL server served by the generic driver.
+func IsHostSQL(connectionType string) bool {
+	return connectionType == SQLServer || connectionType == ClickHouse
+}
 
 // IsMongo reports whether connectionType uses the MongoDB driver.
 func IsMongo(connectionType string) bool { return connectionType == Mongo }
@@ -120,6 +126,8 @@ func TreeIcon(connectionType string) string {
 		return "sqlite"
 	case SQLServer:
 		return "sqlserver"
+	case ClickHouse:
+		return "clickhouse"
 	default:
 		if connectionType == "" {
 			return "database"

@@ -183,14 +183,14 @@ func (r *Registry) sampleRows(ctx context.Context, table string, toolCtx ToolCon
 func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
 	sqlText, _ := args["sql"].(string)
 
-	safeSQL, err := GuardReadOnlySQL(sqlText)
-	if err != nil {
-		return "", err
-	}
-
 	conn, err := r.connectionRepo.Find(ctx, toolCtx.ConnectionID)
 	if err != nil {
 		return "", fmt.Errorf("connection not found: %w", err)
+	}
+
+	safeSQL, err := GuardReadOnlySQLFor(conn.ConnectionType, sqlText)
+	if err != nil {
+		return "", err
 	}
 
 	return r.runReadOnly(ctx, conn, safeSQL, toolCtx)

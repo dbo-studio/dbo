@@ -3,7 +3,7 @@
  * Stored `type` stays the brand id; dialer/repo follow `driver`.
  */
 
-export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis' | 'mongodb';
+export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis' | 'mongodb' | 'sqlserver' | 'clickhouse';
 
 export type ConnectionEngine =
   | 'postgresql'
@@ -28,6 +28,8 @@ export type ConnectionEngine =
   | 'keydb'
   | 'dragonfly'
   | 'mongodb'
+  | 'sqlserver'
+  | 'clickhouse'
   | 'sqlite';
 
 export type ConnectionAliasDef = {
@@ -42,6 +44,8 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'PostgreSQL', logo: 'postgresql', type: 'postgresql', driver: 'postgresql' },
   { name: 'MySQL', logo: 'mysql', type: 'mysql', driver: 'mysql' },
   { name: 'SQLite', logo: 'sqlite', type: 'sqlite', driver: 'sqlite' },
+  { name: 'SQL Server', logo: 'sqlserver', type: 'sqlserver', driver: 'sqlserver' },
+  { name: 'ClickHouse', logo: 'clickhouse', type: 'clickhouse', driver: 'clickhouse' },
   { name: 'MariaDB', logo: 'mariadb', type: 'mariadb', driver: 'mysql' },
 
   { name: 'AlloyDB', logo: 'alloydb', type: 'alloydb', driver: 'postgresql' },
@@ -83,6 +87,10 @@ export function isPostgresDriver(type: string | undefined): boolean {
 export function isMysqlDriver(type: string | undefined): boolean {
   return getConnectionAlias(type)?.driver === 'mysql';
 }
+
+/** Host/port SQL servers served by the generic driver (no object forms yet). */
+export const isHostSqlDriver = (type: string | undefined): boolean =>
+  getConnectionAlias(type)?.driver === 'sqlserver' || getConnectionAlias(type)?.driver === 'clickhouse';
 
 export function connectionDriver(type: string | undefined): ConnectionDriver | undefined {
   return getConnectionAlias(type)?.driver;

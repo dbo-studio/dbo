@@ -126,9 +126,9 @@ docker compose -f docker-compose.dev.yml up -d
 | ------- | --------------------- |
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8080/api |
-| `sample-pgsql` | `localhost:5432` |
-| `sample-mysql` | `localhost:3307` → container `3306` |
-| `sample-pgsql-ssl` | `localhost:5433` (start service separately if needed) |
+| `sample-pgsql` | `localhost:45432` |
+| `sample-mysql` | `localhost:43306` → container `3306` |
+| `sample-pgsql-ssl` | `localhost:45433` (start service separately if needed) |
 
 ### Compose-level port overrides
 
@@ -136,14 +136,14 @@ Docker Compose reads a project-root `.env` file automatically (or you can export
 
 | Variable | Default | Maps to |
 | -------- | ------- | ------- |
-| `DB_TEST_PORT` | `5432` | `sample-pgsql` → container `5432` |
-| `MYSQL_TEST_PORT` | `3307` | `sample-mysql` → container `3306` |
-| `PGSQL_SSL_TEST_PORT` | `5433` | `sample-pgsql-ssl` → container `5432` |
+| `PGSQL_TEST_PORT` | `45432` | `sample-pgsql` → container `5432` |
+| `MYSQL_TEST_PORT` | `43306` | `sample-mysql` → container `3306` |
+| `PGSQL_SSL_TEST_PORT` | `45433` | `sample-pgsql-ssl` → container `5432` |
 
 Example — avoid port clashes on the host:
 
 ```bash
-DB_TEST_PORT=15432 MYSQL_TEST_PORT=13307 \
+PGSQL_TEST_PORT=15432 MYSQL_TEST_PORT=13307 \
 docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql
 ```
 
@@ -205,15 +205,15 @@ Used only by the Playwright harness — not the main app:
 | `PLAYWRIGHT_BASE_URL` | `http://127.0.0.1:3001` | Frontend URL (harness often overrides) |
 | `PLAYWRIGHT_API_URL` | `http://127.0.0.1:8080/api` | API URL (harness often overrides) |
 | `PGSQL_TEST_HOST` | `127.0.0.1` | Sample Postgres host |
-| `PGSQL_TEST_PORT` | `5432` | Sample Postgres port |
+| `PGSQL_TEST_PORT` | `45432` | Sample Postgres port |
 | `PGSQL_TEST_USER` | `default` | Sample Postgres user |
 | `PGSQL_TEST_PASSWORD` | `secret` | Sample Postgres password |
 | `MYSQL_TEST_HOST` | `127.0.0.1` | Sample MySQL host |
-| `MYSQL_TEST_PORT` | `3307` | Sample MySQL port |
+| `MYSQL_TEST_PORT` | `43306` | Sample MySQL port |
 | `MYSQL_TEST_USER` | `root` | Sample MySQL user |
 | `MYSQL_TEST_PASSWORD` | `secret` | Sample MySQL password |
 | `PGSQL_SSL_TEST_HOST` | `127.0.0.1` | TLS Postgres host |
-| `PGSQL_SSL_TEST_PORT` | `5433` | TLS Postgres port |
+| `PGSQL_SSL_TEST_PORT` | `45433` | TLS Postgres port |
 | `PGSQL_SSL_TEST_USER` | `default` | TLS Postgres user |
 | `PGSQL_SSL_TEST_PASSWORD` | `secret` | TLS Postgres password |
 

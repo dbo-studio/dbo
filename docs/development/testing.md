@@ -35,7 +35,7 @@ cp e2e/.env.example e2e/.env
 cd e2e && npm install
 ```
 
-Default e2e `.env` targets `127.0.0.1` and compose-published ports (`5432` Postgres, `3307` MySQL, `5433` SSL Postgres). Full variable list: [Configuration](../deployment/configuration.md#e2e-e2eenv).
+Default e2e `.env` targets `127.0.0.1` and compose-published ports (`45432` Postgres, `43306` MySQL, `45433` SSL Postgres). Full variable list: [Configuration](../deployment/configuration.md#e2e-e2eenv).
 
 ## Running tests
 

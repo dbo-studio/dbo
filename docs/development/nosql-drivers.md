@@ -64,7 +64,8 @@ v0. It is expected to change when the second real driver lands; update the fixtu
   32 MiB / 500 entries per owner, 7 days; pruned on every list and delete). `POST /nosql/recycle/:id/restore` uses plain `RESTORE`
   (never overwrites, goes through Safe Mode). Bulk, folder and flush deletes are not recycled; keys over the cap are skipped.
 - Tools: CLI (`CommandRunner`) and Pub/Sub (`PubSubProvider`, dedicated connection per subscription).
-- E2E needs a Redis: `docker compose -f docker-compose.dev.yml up -d sample-redis` (`REDIS_TEST_PORT`, default 6380), then `cd e2e && npm run test:nosql`.
+- E2E needs a Redis: `docker compose -f docker-compose.dev.yml up -d sample-redis` (`REDIS_TEST_PORT`, default 46379), then `cd e2e && npm run test:nosql`.
+  `sample-redis` seeds itself on start (`docker/redis/seed.sh`: ~550 keys in db0, 20 in db1, every key type, TTLs, 1000+-member collections); data is not persisted, so a restart re-seeds.
 
 ## MongoDB driver
 
@@ -82,4 +83,5 @@ v0. It is expected to change when the second real driver lands; update the fixtu
   insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|createIndex(...)` with JSON arguments and `.sort() .limit() .skip() .count()` chains, plus
   `show dbs`, `show collections`, `use <db>`. `find` returns at most 200 rows and `aggregate` appends `$limit: 200`.
 - Blocked everywhere (filters and commands): `$where`, `$function`, `$accumulator`, `$out`, `$merge`, `mapReduce`, `eval`, `drop` and any method not listed.
-- E2E needs a MongoDB: `docker compose -f docker-compose.dev.yml up -d sample-mongo` (`MONGO_TEST_PORT`, default 27018), then `cd e2e && npm run test:nosql`.
+- E2E needs a MongoDB: `docker compose -f docker-compose.dev.yml up -d sample-mongo` (`MONGO_TEST_PORT`, default 47017), then `cd e2e && npm run test:nosql`.
+  `sample-mongo` seeds `shop`, `analytics` and `blog` (`docker/mongo/seed.js`) on first start. Re-seed: `docker compose -f docker-compose.dev.yml rm -sfv sample-mongo && docker compose -f docker-compose.dev.yml up -d sample-mongo`.

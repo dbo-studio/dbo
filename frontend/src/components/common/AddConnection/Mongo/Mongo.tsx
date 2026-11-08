@@ -206,7 +206,9 @@ export default function Mongo({
                       : String((o as { value: unknown }).value)) as ConnectionEnv
                   )
                 }
-                helpertext={field.state.value === 'prod' ? locales.connection_env_prod_hint : undefined}
+                helpertext={
+                  field.state.value === 'prod' ? locales.connection_env_prod_hint : locales.connection_env_hint
+                }
               />
             )}
           </form.Field>

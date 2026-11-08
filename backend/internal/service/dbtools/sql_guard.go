@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
 )
 
@@ -12,9 +13,15 @@ const maxSQLRows = 100
 // GuardReadOnlySQL checks that sql is one SELECT and caps its rows. The check is the
 // dialect-neutral classifier, so Postgres-only syntax (ILIKE, ::casts, DISTINCT ON) passes.
 func GuardReadOnlySQL(sql string) (string, error) {
+	return GuardReadOnlySQLFor("", sql)
+}
+
+// GuardReadOnlySQLFor is GuardReadOnlySQL for one engine. T-SQL has no LIMIT, so SQL Server keeps
+// the statement as written and relies on TruncateQueryResult for the row cap.
+func GuardReadOnlySQLFor(connectionType, sql string) (string, error) {
 	statement, err := readStatement(sql)
-	if err != nil {
-		return "", err
+	if err != nil || connectionType == databaseContract.SQLServer {
+		return statement, err
 	}
 
 	return sqlguard.ApplyLimitOffset(statement, maxSQLRows, 1).Query, nil

@@ -8,7 +8,7 @@ import { ConnectionPage } from "../../pages";
  */
 const apiUrl = (): string => process.env.PLAYWRIGHT_API_URL ?? "";
 const redisHost = process.env.REDIS_TEST_HOST ?? "127.0.0.1";
-const redisPort = process.env.REDIS_TEST_PORT ?? "6380";
+const redisPort = process.env.REDIS_TEST_PORT ?? "46379";
 const headers = { "X-Client-Mode": "web" };
 
 async function createRedisConnection(page: Page, name: string): Promise<number> {
