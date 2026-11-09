@@ -79,22 +79,29 @@ function spawnLogged(command, args, options) {
   return child;
 }
 
+const activeStacks = new Set();
+
+export async function stopActiveStacks() {
+  await Promise.all([...activeStacks].map((stop) => stop()));
+}
+
 /**
- * @param {import('node:child_process').ChildProcess} child
+ * @param {import('node:child_process').ChildProcess | undefined} child
+ * @param {NodeJS.Signals} [signal]
  */
-function killTree(child) {
-  if (!child.pid) {
+export function killTree(child, signal = 'SIGTERM') {
+  if (!child?.pid) {
     return;
   }
   try {
     if (process.platform === 'win32') {
       spawn('taskkill', ['/pid', String(child.pid), '/T', '/F']);
     } else {
-      process.kill(-child.pid, 'SIGTERM');
+      process.kill(-child.pid, signal);
     }
   } catch {
     try {
-      child.kill('SIGTERM');
+      child.kill(signal);
     } catch {
       // ignore
     }
@@ -113,6 +120,25 @@ function killTree(child) {
  */
 export async function startStack() {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dbo-e2e-'));
+  let backend;
+  let frontend;
+  let stopped = false;
+  const stop = async () => {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    activeStacks.delete(stop);
+    killTree(frontend);
+    killTree(backend);
+    try {
+      fs.rmSync(dataDir, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  };
+  activeStacks.add(stop);
+
   const apiPort = await getFreePort();
   const fePort = await getFreePort();
 
@@ -153,7 +179,7 @@ export async function startStack() {
     ...(localAuth || setupAuth ? { APP_ALLOWED_ORIGINS: baseURL } : {})
   };
 
-  const backend = spawnLogged('go', ['run', '.', 'serve'], {
+  backend = spawnLogged('go', ['run', '.', 'serve'], {
     cwd: BACKEND_ROOT,
     env: backendEnv,
     detached: process.platform !== 'win32'
@@ -169,7 +195,7 @@ export async function startStack() {
     NODE_ENV: 'development'
   };
 
-  const frontend = spawnLogged(
+  frontend = spawnLogged(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
     ['vite', '--host', '127.0.0.1', '--port', String(fePort), '--strictPort'],
     {
@@ -199,21 +225,6 @@ export async function startStack() {
   // Per run, so concurrent runs (npm run test:parallel) never read each other's ports.
   const runEnvPath = path.join(dataDir, '.run-env');
   fs.writeFileSync(runEnvPath, runEnv);
-
-  let stopped = false;
-  const stop = async () => {
-    if (stopped) {
-      return;
-    }
-    stopped = true;
-    killTree(frontend);
-    killTree(backend);
-    try {
-      fs.rmSync(dataDir, { recursive: true, force: true });
-    } catch {
-      // ignore
-    }
-  };
 
   for (const child of [backend, frontend]) {
     child.on('exit', (code, signal) => {

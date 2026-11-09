@@ -1,9 +1,25 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { startStack, E2E_ROOT } from "./start-stack.mjs";
+import { killTree, startStack, stopActiveStacks, E2E_ROOT } from "./start-stack.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+let activeChild;
+let stopping = false;
+
+async function shutdown(signal) {
+  if (stopping) return;
+  stopping = true;
+  if (activeChild) killTree(activeChild, signal);
+  await stopActiveStacks();
+  process.exit(signal === "SIGINT" ? 130 : 143);
+}
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => {
+    void shutdown(signal);
+  });
+}
 
 async function main() {
   const args = process.argv.slice(2);
@@ -74,8 +90,13 @@ function run(command, args, env) {
       env,
       stdio: "inherit",
       shell: process.platform === "win32",
+      detached: process.platform !== "win32",
     });
-    child.on("exit", (code) => resolve(code ?? 1));
+    activeChild = child;
+    child.on("exit", (code) => {
+      if (activeChild === child) activeChild = undefined;
+      resolve(code ?? 1);
+    });
     child.on("error", () => resolve(1));
   });
 }

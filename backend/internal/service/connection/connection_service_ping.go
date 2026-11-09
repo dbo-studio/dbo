@@ -205,7 +205,10 @@ func classifyConnectionFailure(err error) (string, string) {
 	case strings.Contains(msg, "timeout"),
 		strings.Contains(msg, "i/o timeout"),
 		strings.Contains(msg, "connection refused"),
+		strings.Contains(msg, "connection reset by peer"),
 		strings.Contains(msg, "no such host"),
+		strings.Contains(msg, "server misbehaving"),
+		strings.Contains(msg, "temporary failure in name resolution"),
 		strings.Contains(msg, "network is unreachable"):
 		return "network", "Check host, port, VPN/firewall, and that the database is reachable."
 	case strings.Contains(msg, "ssl"),

@@ -61,6 +61,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
 
           await test.step("Create a new connection", async () => {
             await connectionPage.createConnection(config);
+            await connectionPage.openSwitcher();
             await expect(
               connectionPage.getConnectionItem(connectionName),
             ).toBeVisible();
@@ -115,6 +116,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
               }
               await connectionPage.testConnection();
               await connectionPage.submitConnection();
+              await connectionPage.openSwitcher();
               await expect(
                 connectionPage.getConnectionItem(editedName),
               ).toBeVisible();
@@ -174,6 +176,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
                 await connectionPage.passwordInput.fill(config.password);
               }
               await connectionPage.submitConnection();
+              await connectionPage.openSwitcher();
               await expect(
                 connectionPage.getConnectionItem(duplicatedName),
               ).toBeVisible();

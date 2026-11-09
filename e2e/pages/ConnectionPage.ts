@@ -138,7 +138,7 @@ export class ConnectionPage extends BasePage {
     // Wait on UI readiness — not waitForResponse("connections"). That races with
     // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
-    await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
+    await expect(this.addConnectionButton).toBeVisible({ timeout: 30000 });
     // Let the connections list load so an empty-state "New connection" auto-open lands now,
     // not in the middle of the next click. Capped: a long-lived stream must not block here.
     await this.page
@@ -409,6 +409,7 @@ export class ConnectionPage extends BasePage {
       timeout: 30000,
     });
     await this.getConnectionItem(config.name).click();
+    await expect(this.switcherPanel).toBeHidden();
     await this.waitForConnectionActive();
   }
 
@@ -443,6 +444,7 @@ export class ConnectionPage extends BasePage {
     // API, and a caught timeout still burns ~15s in the report.
     await this.openSwitcher();
     await this.getConnectionItem(name).click();
+    await expect(this.switcherPanel).toBeHidden();
     await this.handlePasswordPrompt(password);
     await this.waitForConnectionActive();
   }
@@ -460,9 +462,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async openContextMenu(connectionName: string): Promise<void> {
+    await this.closeSwitcher();
     await this.openSwitcher();
     await this.getConnectionItem(connectionName).click({ button: "right" });
-    await this.wait(300);
+    await expect(this.page.getByRole("menu")).toBeVisible();
   }
 
   async clickContextMenuItem(menuItemName: string): Promise<void> {
@@ -560,6 +563,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async closeContextMenu(): Promise<void> {
-    await this.page.locator(".MuiBackdrop-root").click();
+    const menu = this.page.getByRole("menu");
+    await expect(menu).toBeVisible();
+    await menu.focus();
+    await this.page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
   }
 }
