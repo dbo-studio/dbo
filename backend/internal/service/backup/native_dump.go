@@ -40,6 +40,16 @@ type NativeCommand struct {
 	secret    string
 }
 
+// requireNativeFamily keeps pg_dump, mysqldump, psql and mysql away from servers they do not speak to:
+// SQL Server and ClickHouse use the built-in dump and restore.
+func requireNativeFamily(connection *model.Connection) error {
+	if databaseContract.IsPostgresFamily(connection.ConnectionType) || databaseContract.IsMysqlFamily(connection.ConnectionType) {
+		return nil
+	}
+
+	return fmt.Errorf("%w: no native tool for %s", ErrNativeUnavailable, connection.ConnectionType)
+}
+
 type dumpTarget struct {
 	host, user, database, sslMode string
 	port                          int32
@@ -50,6 +60,10 @@ type dumpTarget struct {
 // from the best detected tool. database and schema come from the request; an
 // empty database falls back to the connection's own.
 func PlanNativeDump(ctx context.Context, connection *model.Connection, password, database, schema, destPath string) (*NativeCommand, error) {
+	if err := requireNativeFamily(connection); err != nil {
+		return nil, err
+	}
+
 	target, err := resolveDumpTarget(connection)
 	if err != nil {
 		return nil, err
@@ -111,6 +125,10 @@ func PlanNativeDump(ctx context.Context, connection *model.Connection, password,
 
 // nativeClient finds the psql or mysql that talks to a connection's server, and where that server is.
 func nativeClient(ctx context.Context, connection *model.Connection, password string) (*NativeCommand, dumpTarget, error) {
+	if err := requireNativeFamily(connection); err != nil {
+		return nil, dumpTarget{}, err
+	}
+
 	target, err := resolveDumpTarget(connection)
 	if err != nil {
 		return nil, dumpTarget{}, err

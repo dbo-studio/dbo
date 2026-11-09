@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
-dotenv.config({ path: path.resolve(__dirname, ".run-env"), override: true });
+dotenv.config({ path: process.env.E2E_RUN_ENV ?? path.resolve(__dirname, ".run-env"), override: true });
 
 const chromeUse = {
   ...devices["Desktop Chrome"],
@@ -24,7 +24,8 @@ const hasProjectFilter = process.argv.some(
  *   tests/pg/      — PostgreSQL DB-critical
  *   tests/mysql/   — MySQL DB-critical
  *   tests/sqlite/  — SQLite DB-critical
- *   tests/mssql/, tests/clickhouse/ — host SQL engines on the generic driver
+ *   tests/mssql/, tests/clickhouse/ — host SQL engines on the shared SQL driver
+ *   tests/redis/, tests/mongo/ — NoSQL engines (need sample-redis / sample-mongo)
  *
  * `postgres` project runs shared + pg (shared chrome once).
  * Full `npm test` runs all three projects.
@@ -61,10 +62,14 @@ const engineProjects = [
     testMatch: ["**/clickhouse/**/*.spec.ts"],
   },
   {
-    // NoSQL engine against the in-memory fixture driver (DBO_ENABLE_NOSQL_FIXTURE=1); no sample DB needed.
-    name: "nosql",
+    name: "redis",
     use: chromeUse,
-    testMatch: ["**/nosql/**/*.spec.ts"],
+    testMatch: ["**/redis/**/*.spec.ts"],
+  },
+  {
+    name: "mongo",
+    use: chromeUse,
+    testMatch: ["**/mongo/**/*.spec.ts"],
   },
 ];
 
@@ -73,7 +78,9 @@ export default defineConfig({
   globalSetup: require.resolve("./utils/global.setup"),
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
+  // A test that only passes on retry hides a real race: fail the run instead of passing silently.
+  failOnFlakyTests: !!process.env.CI,
   workers: process.env.PLAYWRIGHT_WORKERS
     ? Number(process.env.PLAYWRIGHT_WORKERS)
     : 1,

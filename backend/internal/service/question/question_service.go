@@ -215,13 +215,25 @@ func (s IQuestionServiceImpl) FieldValues(ctx context.Context, req *dto.Question
 	}, "SELECT DISTINCT "+column+" AS value FROM "+table+" WHERE "+column+" IS NOT NULL ORDER BY 1", nil)
 }
 
+// placeholderPrefix is how the driver numbers bound values: $1 on PostgreSQL, @p1 on SQL Server, ? elsewhere.
+func placeholderPrefix(connectionType string) string {
+	switch {
+	case databaseContract.IsPostgresFamily(connectionType):
+		return "$"
+	case connectionType == databaseContract.SQLServer:
+		return "@p"
+	}
+
+	return ""
+}
+
 func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.ToolContext, sql string, params map[string]string) (json.RawMessage, error) {
 	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	rendered, args, err := RenderParams(sql, params, databaseContract.IsPostgresFamily(conn.ConnectionType))
+	rendered, args, err := RenderParams(sql, params, placeholderPrefix(conn.ConnectionType))
 	if err != nil {
 		return nil, apperror.BadRequest(err)
 	}

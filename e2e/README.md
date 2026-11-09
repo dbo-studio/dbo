@@ -6,7 +6,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
 
-CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`, plus **`e2e-auth`** (`npm run test:auth`, no sample DB).
+CI (`.github/workflows/e2e.yml`) runs one sharded job per engine plus a coverage guard (`npm run check:coverage`, matrix in `coverage/capabilities.mjs`). `npm run test:auth` is not in CI yet.
 
 ## Architecture
 
@@ -49,7 +49,10 @@ npm run test:mysql                # tests/mysql
 npm run test:sqlite               # tests/sqlite
 npm run test:mssql                # tests/mssql — SQL Server (needs sample-mssql from docker-compose.dev.yml)
 npm run test:clickhouse           # tests/clickhouse — ClickHouse (needs sample-clickhouse)
-npm run test:nosql                # tests/nosql — NoSQL engine on the in-memory fixture driver (no sample DB)
+npm run test:redis                 # tests/redis — needs sample-redis from docker-compose.dev.yml
+npm run test:mongo                 # tests/mongo — needs sample-mongo
+npm run test:parallel -- --shards=sqlite:4   # split an engine into N shards (own stack each; default sqlite:3). Only shard engines whose tests do not share sample-DB state
+npm run test:parallel            # every engine at once, one Playwright process each (E2E_JOBS=3 at a time; --projects=mysql,sqlite to pick); logs per engine
 npm run test:ui                   # Playwright UI — all engines (pg + mysql + sqlite + shared)
 npm run test:ui:mysql             # UI filtered to MySQL only (also :pg / :sqlite)
 npm test -- tests/sqlite/object-form-sqlite-edit-table.spec.ts

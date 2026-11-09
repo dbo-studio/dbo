@@ -45,13 +45,15 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
           });
 
           await test.step("Fill the one-page schedule form", async () => {
-            await page.getByRole("button", { name: "New backup job" }).click();
+            await page.getByTestId("backup-sidebar-new-schedule").click();
             await expect(page.getByTestId("backup-job-wizard")).toBeVisible();
-            // Nothing can be saved without a name.
-            await expect(page.getByTestId("schedule-save")).toBeDisabled();
+            // The name is optional: an empty one falls back to a suggested name.
+            await expect(page.getByTestId("schedule-save")).toBeEnabled();
             await page.locator('input[name="job-name"]').fill(jobName);
             // The first connection is preselected; storage defaults to this machine.
-            await expect(page.getByText("This machine only").first()).toBeVisible();
+            await expect(page.getByText("This device").first()).toBeVisible();
+            // Encryption is off by default; turning it on asks for the passphrase.
+            await page.getByTestId("protect-encrypt-on").click();
             await page
               .locator('input[name="job-passphrase"]')
               .fill("e2e-secret");
@@ -65,11 +67,10 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
 
           await test.step("Run now completes and the row shows the result", async () => {
             await row.getByRole("button", { name: "Run now" }).click();
-            await backup.expectJobMessage("Backup completed successfully");
-            await backup.closeProgress();
+            // A scheduled run has no progress dialog: the row status is the result.
             await expect(
               row.getByText("Completed", { exact: true }),
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 60_000 });
             await expect(row.getByText("Never")).toHaveCount(0);
           });
 

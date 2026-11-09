@@ -145,6 +145,11 @@ func (p *RestoreDrillProcessor) drillSQL(ctx context.Context, connection *model.
 		return drillResult{drillSkipped, "This backup is not a SQL dump."}
 	}
 
+	// The built-in dump names tables without a database, so it cannot be replayed into a scratch database.
+	if databaseContract.IsHostSQL(connection.ConnectionType) {
+		return drillResult{drillSkipped, "A restore test is not available for this engine."}
+	}
+
 	password, err := p.secrets.GetConnectionPassword(ctx, artifact.OwnerID, connection.ID)
 	if err != nil {
 		return drillResult{drillSkipped, "The connection password is not stored, so a test cannot log in."}

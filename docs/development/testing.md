@@ -93,7 +93,11 @@ Follow [`.cursor/rules/e2e-qa.mdc`](../../.cursor/rules/e2e-qa.mdc) and the `e2e
 - **go-static-checks** — `go mod tidy`, `golangci-lint` on `backend/`
 - **front-quality** — Prettier check on `frontend/`
 
-E2e jobs (`e2e-postgres`, `e2e-mysql`, `e2e-sqlite`) are documented in `e2e/README.md` when enabled in CI.
+`.github/workflows/e2e.yml` runs on the same branches:
+
+- **coverage-guard** — `npm run check:coverage`. Every shared suite must run on every engine in `e2e/coverage/capabilities.mjs`, or carry an `EXEMPT` reason. `TODO` entries are known gaps: add the spec, then delete the entry.
+- **e2e matrix** — one job per engine and shard (`--shard=i/n`), each with its own sample DBs and ephemeral stack. `fail-fast: false`, `PLAYWRIGHT_MAX_FAILURES=0`, so every failure shows.
+- `retries: 1` in CI with `failOnFlakyTests`: a test that passes only on retry fails the run.
 
 ## Troubleshooting
 

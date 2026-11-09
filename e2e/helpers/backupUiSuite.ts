@@ -50,7 +50,7 @@ export function defineBackupUiTests(engine: DbEngine): void {
           await test.step("Tool list is shown and offers nothing silently", async () => {
             await page.getByTestId("backup-nav-tools").click();
             await expect(
-              page.getByText("sqlite3", { exact: true }),
+              page.getByText("sqlite3", { exact: true }).first(),
             ).toBeVisible();
             await expect(
               page.getByText("Nothing is downloaded unless you ask"),

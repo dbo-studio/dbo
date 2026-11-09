@@ -107,6 +107,9 @@ func ClassifyAction(action string) Class {
 	}
 }
 
+// Split splits a SQL script on statement boundaries, ignoring semicolons in strings, quoted names and comments.
+func Split(sql string) []string { return splitStatements(sql) }
+
 // splitStatements splits a SQL batch on statement boundaries. Semicolons inside
 // string literals, quoted identifiers, and comments are not boundaries.
 func splitStatements(sql string) []string {

@@ -48,9 +48,9 @@ func Declared(sql string) []Decl {
 
 // bound collects the placeholders and values of one statement.
 type bound struct {
-	// numbered is PostgreSQL's $1, $2 style; the other engines take ? in order.
-	numbered bool
-	args     []any
+	// prefix numbers the placeholders: "$" gives PostgreSQL's $1, "@p" gives SQL Server's @p1. Empty means ? in order.
+	prefix string
+	args   []any
 }
 
 // add binds a value and returns its placeholder. cast is a PostgreSQL type to pin an otherwise untyped value to
@@ -58,12 +58,12 @@ type bound struct {
 func (b *bound) add(value any, cast string) string {
 	b.args = append(b.args, value)
 
-	if !b.numbered {
+	if b.prefix == "" {
 		return "?"
 	}
 
-	placeholder := "$" + strconv.Itoa(len(b.args))
-	if cast != "" {
+	placeholder := b.prefix + strconv.Itoa(len(b.args))
+	if cast != "" && b.prefix == "$" {
 		placeholder += "::" + cast
 	}
 
@@ -74,7 +74,7 @@ func (b *bound) add(value any, cast string) string {
 // PostgreSQL gets text only: it sends the value for the server to read as whatever type the place needs,
 // where a Go number cannot be encoded into a parameter the server took to be text (SELECT {{x}}).
 func (b *bound) scalar(value string) any {
-	if b.numbered {
+	if b.prefix == "$" {
 		return value
 	}
 
@@ -133,15 +133,15 @@ func (b *bound) param(kind, field, value string) (string, error) {
 }
 
 // RenderParams replaces each {{filter}} with a placeholder and returns the values to bind to them, in order.
-// numbered is set for PostgreSQL ($1, $2, ...); the other engines use ?. An empty field filter matches every row
+// prefix is "$" for PostgreSQL ($1, $2, ...), "@p" for SQL Server (@p1, ...) and empty for the engines that use ?. An empty field filter matches every row
 // (1=1); any other empty filter fails.
-func RenderParams(sql string, values map[string]string, numbered bool) (string, []any, error) {
+func RenderParams(sql string, values map[string]string, prefix string) (string, []any, error) {
 	var (
 		missing  []string
 		firstErr error
 	)
 
-	b := &bound{numbered: numbered}
+	b := &bound{prefix: prefix}
 
 	rendered := paramPattern.ReplaceAllStringFunc(sql, func(match string) string {
 		parts := paramPattern.FindStringSubmatch(match)

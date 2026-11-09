@@ -18,10 +18,6 @@ test.describe("Backup notification", () => {
       await backup.expectJobMessage("Backup completed successfully");
       await backup.closeProgress();
 
-      // The backup dialog covers the header, so the bell can only be clicked once it is closed.
-      await page.keyboard.press("Escape");
-      await expect(page.getByText("A backup copies the whole database")).toBeHidden();
-
       await expect(page.getByTestId("notification-unread")).toHaveText("1", { timeout: 30_000 });
       await page.getByTestId("notification-bell").click();
 

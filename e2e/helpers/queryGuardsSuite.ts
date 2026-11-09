@@ -20,6 +20,8 @@ type RawQueryPayload = {
 function labelOf(engine: DbEngine): string {
   if (engine === "postgresql") return "PostgreSQL";
   if (engine === "mysql") return "MySQL";
+  if (engine === "mssql") return "SQL Server";
+  if (engine === "clickhouse") return "ClickHouse";
   return "SQLite";
 }
 
@@ -37,6 +39,10 @@ async function selectEditorContext(
 function longRunningSql(engine: DbEngine): string {
   if (engine === "postgresql") return "SELECT pg_sleep(30)";
   if (engine === "mysql") return "SELECT SLEEP(30)";
+  if (engine === "mssql") return "WAITFOR DELAY '00:00:30'";
+  // ClickHouse caps one sleep() call at 3s per block, so sleep 1s per row, one row per block.
+  if (engine === "clickhouse")
+    return "SELECT sleep(1) FROM numbers(30) SETTINGS max_block_size = 1";
   // SQLite has no sleep — large recursive CTE is interruptible.
   return `
 WITH RECURSIVE r(i) AS (
@@ -48,7 +54,19 @@ SELECT COUNT(*) FROM r
   `.trim();
 }
 
-function seriesSelectSql(count: number, limitClause = ""): string {
+function seriesSelectSql(
+  count: number,
+  limitClause = "",
+  engine: DbEngine = "sqlite",
+): string {
+  if (engine === "clickhouse") {
+    return `SELECT number + 1 AS n FROM numbers(${count}) ORDER BY 1${limitClause ? ` ${limitClause}` : ""}`;
+  }
+  if (engine === "mssql") {
+    // No LIMIT in T-SQL: the clause arrives as "LIMIT n" and becomes TOP n. MAXRECURSION lifts the 100-level cap.
+    const top = limitClause ? `TOP ${limitClause.replace(/\D/g, "")} ` : "";
+    return `WITH seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < ${count}) SELECT ${top}n FROM seq ORDER BY 1 OPTION (MAXRECURSION 0)`;
+  }
   return `
 WITH RECURSIVE seq(n) AS (
   SELECT 1
@@ -137,28 +155,30 @@ export function defineQueryGuardsTests(engine: DbEngine): void {
 
           await test.step("SELECT without LIMIT is capped and paginated", async () => {
             const responsePromise = pendingResponse(page, apiRoute.queryRaw);
-            await sqlEditor.typeQuery(seriesSelectSql(500));
+            await sqlEditor.typeQuery(seriesSelectSql(500, "", engine));
             await sqlEditor.clickRun();
             const response = await responsePromise;
             const body = (await response.json()) as RawQueryPayload;
 
             expect(body.data.data.length).toBe(100);
-            expect(body.data.paginated).toBe(true);
+            // SQL Server (T-SQL has no LIMIT) stops reading at the cap and has no later pages.
+            expect(body.data.paginated).toBe(engine !== "mssql");
             expect(body.data.limit).toBe(100);
 
             await dataGrid.waitForData("1");
-            await sqlEditor.expectPaginationVisible();
+            if (engine !== "mssql") await sqlEditor.expectPaginationVisible();
           });
 
           await test.step("User LIMIT is not overridden", async () => {
             const responsePromise = pendingResponse(page, apiRoute.queryRaw);
-            await sqlEditor.typeQuery(seriesSelectSql(500, "LIMIT 5"));
+            await sqlEditor.typeQuery(seriesSelectSql(500, "LIMIT 5", engine));
             await sqlEditor.clickRun();
             const response = await responsePromise;
             const body = (await response.json()) as RawQueryPayload;
 
             expect(body.data.data.length).toBe(5);
-            expect(body.data.paginated).toBe(false);
+            // SQL Server never pages raw queries, so only the other engines report the flag.
+            if (engine !== "mssql") expect(body.data.paginated).toBe(false);
 
             await dataGrid.waitForData("1");
           });

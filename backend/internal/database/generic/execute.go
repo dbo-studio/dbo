@@ -18,6 +18,16 @@ var errUnsupportedForm = apperror.Validation(errors.New("this object type cannot
 func (r *Repository) PreviewExecute(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	ns, name := object(nodeID)
 
+	if r.isCreateNamespace(action) || r.isDropNamespace(action) {
+		return r.namespaceStatements(nodeID, action, params)
+	}
+
+	if procedure, ok := isRoutineAction(action); ok {
+		if _, supported := r.routineDialect(); supported {
+			return r.routineStatements(nodeID, action, procedure, params)
+		}
+	}
+
 	switch action {
 	case contract.ExecuteSQLAction:
 		return databaseCore.SQLFromParams(params)

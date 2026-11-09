@@ -24,6 +24,7 @@ async function main() {
     PLAYWRIGHT_API_URL: stack.apiURL,
     // App data of the ephemeral backend (app DB, logs), for specs that read the log.
     E2E_DATA_DIR: stack.dataDir,
+    E2E_RUN_ENV: stack.runEnvPath,
     ...(isUi ? { E2E_UI_MODE: "1" } : {}),
   };
 

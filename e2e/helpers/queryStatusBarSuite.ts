@@ -12,6 +12,7 @@ import { ConnectionPage, DataGridPage, SqlEditorPage } from "../pages";
 function labelOf(engine: DbEngine): string {
   if (engine === "postgresql") return "PostgreSQL";
   if (engine === "mysql") return "MySQL";
+  if (engine === "mssql") return "SQL Server";
   return "SQLite";
 }
 
@@ -27,6 +28,19 @@ async function selectEditorContext(
 }
 
 function actionsTableSql(engine: DbEngine, tableName: string): string {
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE
+);
+INSERT INTO ${tableName} (name, email) VALUES
+  ('Alice', 'alice@example.com'),
+  ('Bob', 'bob@example.com');
+    `.trim();
+  }
   if (engine === "postgresql") {
     return `
 DROP TABLE IF EXISTS ${tableName};
@@ -67,6 +81,19 @@ INSERT INTO ${tableName} (name, email) VALUES
 }
 
 function pageEditSeedSql(engine: DbEngine, tableName: string): string {
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  label VARCHAR(100) NOT NULL
+);
+INSERT INTO ${tableName} (label)
+SELECT 'row-' + CAST(n AS VARCHAR(10)) FROM (
+  SELECT TOP 120 ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n FROM sys.all_objects a CROSS JOIN sys.all_objects b
+) x;
+    `.trim();
+  }
   const seriesInsert =
     engine === "postgresql"
       ? `INSERT INTO ${tableName} (label)
@@ -114,7 +141,10 @@ ${seriesInsert}
 }
 
 /** Portable 1..N series for pagination / non-updatable SELECT. */
-function seriesSelectSql(count: number): string {
+function seriesSelectSql(count: number, engine: DbEngine = "sqlite"): string {
+  if (engine === "mssql") {
+    return `WITH seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < ${count}) SELECT n FROM seq ORDER BY 1 OPTION (MAXRECURSION 0)`;
+  }
   return `
 WITH RECURSIVE seq(n) AS (
   SELECT 1
@@ -226,6 +256,8 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
     test("Pagination next, hasMore gate, and page limit", async ({
       page,
     }, testInfo) => {
+      // T-SQL has no LIMIT: SQL Server raw queries stop at the page size and have no later pages.
+      test.skip(engine === "mssql", "SQL Server has no later pages (service/query/query_service.go)");
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const dataGrid = new DataGridPage(page);
@@ -250,7 +282,7 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
 
           await test.step("Default page shows first page of 250", async () => {
             const responsePromise = pendingResponse(page, apiRoute.queryRaw);
-            await sqlEditor.typeQuery(seriesSelectSql(250));
+            await sqlEditor.typeQuery(seriesSelectSql(250, engine));
             await sqlEditor.clickRun();
             const response = await responsePromise;
             const body = (await response.json()) as {
@@ -296,6 +328,7 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
     test("Edit on page 2 and after changing limit", async ({
       page,
     }, testInfo) => {
+      test.skip(engine === "mssql", "SQL Server has no later pages (service/query/query_service.go)");
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const dataGrid = new DataGridPage(page);
@@ -381,7 +414,11 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
       const config = getDbConfig(engine, connectionName, sqlitePath);
 
       const gateTableSql =
-        engine === "postgresql"
+        engine === "mssql"
+          ? `DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(100));
+INSERT INTO ${tableName} (name) VALUES ('gated');`
+          : engine === "postgresql"
           ? `DROP TABLE IF EXISTS ${tableName};
 CREATE TABLE ${tableName} (id SERIAL PRIMARY KEY, name TEXT);
 INSERT INTO ${tableName} (name) VALUES ('gated');`
@@ -406,7 +443,7 @@ INSERT INTO ${tableName} (name) VALUES ('gated');`;
           });
 
           await test.step("Expression-only SELECT hides edit actions", async () => {
-            await sqlEditor.typeAndRun(seriesSelectSql(3));
+            await sqlEditor.typeAndRun(seriesSelectSql(3, engine));
             await dataGrid.waitForData("1");
             await dataGrid.expectEditActionsVisible(false);
             await dataGrid.expectCellNotEditable("2");

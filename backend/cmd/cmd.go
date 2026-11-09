@@ -18,12 +18,15 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 func ServeCommand() *cobra.Command {
@@ -46,7 +49,17 @@ func loadEnvFiles() {
 	}
 }
 
-func Execute() {
+// app holds what the commands share: config, logger, repositories and services on the migrated app database.
+type app struct {
+	cfg    *config.Config
+	logger logger.Logger
+	rr     *repository.Repository
+	ss     *service.Service
+	cache  cache.Cache
+	db     *gorm.DB
+}
+
+func bootstrap() *app {
 	loadEnvFiles()
 
 	cfg := config.New()
@@ -69,8 +82,8 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	cache := sqlite.NewSQLiteCache(appDB)
-	appContainer.SetCache(cache)
+	appCache := sqlite.NewSQLiteCache(appDB)
+	appContainer.SetCache(appCache)
 
 	aiCipherKey, err := serviceSecretStore.DeriveAICipherKey(cfg)
 	if err != nil {
@@ -79,10 +92,10 @@ func Execute() {
 
 	rr := repository.NewRepository(appDB, aiCipherKey)
 	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, rr.ConnectionSharedSecretRepo, appLogger)
-	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, appCache)
 	ss := service.NewService(rr, cm, secretStore, service.Deps{
 		Logger:    appLogger,
-		Cache:     cache,
+		Cache:     appCache,
 		Config:    cfg,
 		CipherKey: aiCipherKey,
 	})
@@ -91,7 +104,14 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	err = ss.JobManager.CancelAllJobs()
+	return &app{cfg: cfg, logger: appLogger, rr: rr, ss: ss, cache: appCache, db: appDB}
+}
+
+func Execute() {
+	a := bootstrap()
+	cfg, appLogger, rr, ss := a.cfg, a.logger, a.rr, a.ss
+
+	err := ss.JobManager.CancelAllJobs()
 	if err != nil {
 		appLogger.Error(err)
 	}

@@ -18,6 +18,26 @@ import {
 } from "../pages";
 
 function contextMenuSeedSql(engine: DbEngine, tableName: string): string {
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  score INT NOT NULL,
+  note VARCHAR(100) NULL
+);
+INSERT INTO ${tableName} (name, score, note) VALUES
+  ('Alpha', 10, NULL),
+  ('Bravo', 20, 'keep'),
+  ('Charlie', 30, 'keep'),
+  ('Delta', 40, 'keep'),
+  ('Echo', 50, 'keep'),
+  ('Foxtrot', 60, 'keep'),
+  ('Golf', 70, 'keep'),
+  ('Hotel', 80, 'keep');
+    `.trim();
+  }
   if (engine === "postgresql") {
     return `
 DROP TABLE IF EXISTS ${tableName};

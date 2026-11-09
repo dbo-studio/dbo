@@ -29,13 +29,11 @@ async function canReachHost(
 }
 
 function engineLabel(engine: DbEngine): string {
-  if (engine === "postgresql") return "PostgreSQL";
-  if (engine === "mysql") return "MySQL";
-  return "SQLite";
+  return getDbConfig(engine, "label").type ?? "PostgreSQL";
 }
 
-function connectionType(engine: DbEngine): "PostgreSQL" | "MySQL" | "SQLite" {
-  return engineLabel(engine) as "PostgreSQL" | "MySQL" | "SQLite";
+function connectionType(engine: DbEngine): string {
+  return engineLabel(engine);
 }
 
 /**

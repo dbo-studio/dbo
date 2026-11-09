@@ -10,6 +10,16 @@ import (
 // Object forms cover tables (name + columns) and views. Keys, indexes, foreign keys, triggers and
 // routines are not implemented; their tabs are not offered.
 func (r *Repository) GetFormTabs(_ context.Context, action contract.TreeNodeActionName) []contract.FormTab {
+	if r.isCreateNamespace(action) {
+		return []contract.FormTab{{ID: r.namespaceTab(), Name: lo.Ternary(r.d.NamespaceIsSchema(), "Schema", "Database")}}
+	}
+
+	if procedure, ok := isRoutineAction(action); ok {
+		if _, supported := r.routineDialect(); supported {
+			return []contract.FormTab{{ID: routineTab(procedure), Name: lo.Ternary(procedure, "Procedure", "Function")}}
+		}
+	}
+
 	switch action {
 	case contract.CreateTableAction, contract.EditTableAction:
 		tabs := []contract.FormTab{{ID: contract.TableColumnsTab, Name: "Columns"}}

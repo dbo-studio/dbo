@@ -13,11 +13,12 @@ export class BoardsPage extends BasePage {
   }
 
   async open(): Promise<void> {
-    if ((await this.tab.getAttribute("aria-selected")) !== "true") {
+    // Activity bar button: icon only, pressed while its area is open.
+    if ((await this.tab.getAttribute("aria-pressed")) !== "true") {
       await this.tab.click();
     }
-    await expect(this.tab).toHaveAttribute("aria-selected", "true");
-    await expect(this.tab).toHaveText("Boards");
+    await expect(this.tab).toHaveAttribute("aria-pressed", "true");
+    await expect(this.tab).toHaveAttribute("aria-label", "Boards");
     await expect(this.page.getByTestId("boards-view")).toBeVisible();
   }
 

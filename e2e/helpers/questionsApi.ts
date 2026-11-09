@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { getDbConfig, type DbEngine } from "../fixtures/dbConfigs";
 import { ConnectionPage } from "../pages";
+import { createTableSql } from "./ddl";
 
 type Question = { id: number; name: string; chart: { type: string } };
 
@@ -23,7 +24,7 @@ export async function checkQuestionsApi(page: Page, engine: DbEngine, connection
     expect(response.status(), query).toBe(200);
   };
 
-  await raw(`CREATE TABLE ${table} (id INTEGER PRIMARY KEY, region VARCHAR(20), amount INTEGER)`);
+  await raw(createTableSql(engine, table, ["id INTEGER NOT NULL", "region VARCHAR(20)", "amount INTEGER"], "id"));
   try {
     await raw(`INSERT INTO ${table} VALUES (1, 'north', 10), (2, 'south', 20)`);
 

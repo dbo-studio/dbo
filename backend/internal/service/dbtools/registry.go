@@ -163,7 +163,7 @@ func (r *Registry) sampleRows(ctx context.Context, table string, toolCtx ToolCon
 		return ""
 	}
 
-	sample, err := r.query(ctx, conn, fmt.Sprintf("SELECT * FROM %s LIMIT %d", qualifiedSource(conn.ConnectionType, table, toolCtx), describeSampleRows), toolCtx)
+	sample, err := r.query(ctx, conn, selectFirst(conn.ConnectionType, qualifiedSource(conn.ConnectionType, table, toolCtx), describeSampleRows), toolCtx)
 	if err != nil || len(sample.Data) == 0 {
 		return ""
 	}
@@ -215,6 +215,8 @@ func (r *Registry) explainQuery(ctx context.Context, args map[string]any, toolCt
 		safeSQL = "EXPLAIN " + safeSQL
 	case conn.ConnectionType == databaseContract.Sqlite:
 		safeSQL = "EXPLAIN QUERY PLAN " + safeSQL
+	case conn.ConnectionType == databaseContract.ClickHouse:
+		safeSQL = "EXPLAIN " + safeSQL
 	default:
 		return "", fmt.Errorf("query plans are not available for %s connections", conn.ConnectionType)
 	}

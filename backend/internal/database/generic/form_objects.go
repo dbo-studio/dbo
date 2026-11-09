@@ -11,14 +11,25 @@ import (
 // object resolves a form node id. A container id ("<ns>.tableContainer") means "create here".
 func object(nodeID string) (namespace, name string) {
 	namespace, name = node(nodeID)
-	if name == string(contract.TableContainerNodeType) || name == string(contract.ViewContainerNodeType) {
+	if name == string(contract.TableContainerNodeType) || name == string(contract.ViewContainerNodeType) ||
+		name == string(contract.ProcedureContainerNodeType) || name == string(contract.FunctionContainerNodeType) {
 		name = ""
 	}
 
 	return namespace, name
 }
 
-func (r *Repository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+func (r *Repository) Objects(ctx context.Context, nodeID string, tabID contract.TreeTab, action contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	if r.isCreateNamespace(action) {
+		return r.createNamespaceForm()
+	}
+
+	if procedure, ok := isRoutineAction(action); ok {
+		if _, supported := r.routineDialect(); supported {
+			return r.routineForm(ctx, nodeID, procedure)
+		}
+	}
+
 	ns, name := object(nodeID)
 	db := r.base.DB().WithContext(ctx)
 

@@ -1,6 +1,7 @@
 import type { ConnectionConfig } from "../pages";
 
-export type DbEngine = "postgresql" | "mysql" | "sqlite";
+export type HostSqlEngine = "mssql" | "clickhouse";
+export type DbEngine = "postgresql" | "mysql" | "sqlite" | HostSqlEngine;
 
 export function getDbConfig(
   engine: DbEngine,
@@ -8,6 +9,9 @@ export function getDbConfig(
   sqlitePath?: string,
 ): ConnectionConfig {
   switch (engine) {
+    case "mssql":
+    case "clickhouse":
+      return getHostSqlConfig(engine, name);
     case "postgresql":
       return {
         name,
@@ -79,8 +83,6 @@ export function getBastionOnlyPostgresConfig(name: string): ConnectionConfig {
     port: "5432",
   };
 }
-
-export type HostSqlEngine = "mssql" | "clickhouse";
 
 /**
  * SQL Server / ClickHouse sample containers from docker-compose.dev.yml; the fallbacks are its default ports.

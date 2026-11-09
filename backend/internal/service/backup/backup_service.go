@@ -136,6 +136,10 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 		return nil, apperror.BadRequest(ErrNeedPassphrase)
 	}
 
+	if req.CreateDatabase && databaseContract.IsHostSQL(connection.ConnectionType) {
+		return nil, apperror.Validation(errors.New("createDatabase: a restore into a new database is not available for this engine"))
+	}
+
 	if req.ConfirmName != req.Database {
 		return nil, apperror.BadRequest(apperror.ErrRestoreConfirmMismatch)
 	}

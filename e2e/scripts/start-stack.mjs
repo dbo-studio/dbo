@@ -10,7 +10,6 @@ const E2E_ROOT = path.resolve(__dirname, '..');
 const REPO_ROOT = path.resolve(E2E_ROOT, '..');
 const BACKEND_ROOT = path.join(REPO_ROOT, 'backend');
 const FRONTEND_ROOT = path.join(REPO_ROOT, 'frontend');
-const RUN_ENV_PATH = path.join(E2E_ROOT, '.run-env');
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -133,7 +132,7 @@ export async function startStack() {
     APP_PORT: String(apiPort),
     APP_ENV: 'local',
     APP_CLIENT: 'web',
-    // Enables the in-memory NoSQL fixture connection type used by tests/nosql.
+    // Enables the in-memory NoSQL fixture connection type used by tests/shared/fixture-browse.spec.ts and bottom-panels.spec.ts.
     DBO_ENABLE_NOSQL_FIXTURE: '1',
     APP_DATABASE_PATH: dbPath,
     APP_SECRET_KEY_PATH: secretPath,
@@ -197,7 +196,9 @@ export async function startStack() {
       : []),
     ''
   ].join('\n');
-  fs.writeFileSync(RUN_ENV_PATH, runEnv);
+  // Per run, so concurrent runs (npm run test:parallel) never read each other's ports.
+  const runEnvPath = path.join(dataDir, '.run-env');
+  fs.writeFileSync(runEnvPath, runEnv);
 
   let stopped = false;
   const stop = async () => {
@@ -207,11 +208,6 @@ export async function startStack() {
     stopped = true;
     killTree(frontend);
     killTree(backend);
-    try {
-      fs.rmSync(RUN_ENV_PATH, { force: true });
-    } catch {
-      // ignore
-    }
     try {
       fs.rmSync(dataDir, { recursive: true, force: true });
     } catch {
@@ -229,7 +225,7 @@ export async function startStack() {
     });
   }
 
-  return { apiPort, fePort, baseURL, apiURL, dataDir, stop };
+  return { apiPort, fePort, baseURL, apiURL, dataDir, runEnvPath, stop };
 }
 
-export { RUN_ENV_PATH, E2E_ROOT, REPO_ROOT };
+export { E2E_ROOT, REPO_ROOT };

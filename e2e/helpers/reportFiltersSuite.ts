@@ -1,3 +1,4 @@
+import { createTableSql } from "./ddl";
 import { expect, test } from "@playwright/test";
 import { getDbConfig, type DbEngine } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
@@ -18,7 +19,7 @@ export function defineReportFilterTests(engine: DbEngine): void {
       const dbPath = `/tmp/dbo-e2e-filters-${suffix}.db`;
       if (engine === "sqlite") ensureSqliteDbFile(dbPath);
       // A backslash typed into SQL means different things per engine, so it is built from its character code.
-      const backslashNote = { postgresql: "'back' || chr(92) || 'slash'", mysql: "CONCAT('back', CHAR(92), 'slash')", sqlite: "'back' || char(92) || 'slash'" }[engine];
+      const backslashNote = { postgresql: "'back' || chr(92) || 'slash'", mysql: "CONCAT('back', CHAR(92), 'slash')", mssql: "'back' + CHAR(92) + 'slash'", clickhouse: "concat('back', char(92), 'slash')", sqlite: "'back' || char(92) || 'slash'" }[engine];
 
       await withConnectionCleanup(page, connectionName, async () => {
         const connectionPage = new ConnectionPage(page);
@@ -47,7 +48,7 @@ export function defineReportFilterTests(engine: DbEngine): void {
         };
 
         try {
-          await raw(`CREATE TABLE ${table} (region VARCHAR(20), amount INTEGER, note VARCHAR(40))`);
+          await raw(createTableSql(engine, table, ["region VARCHAR(20)", "amount INTEGER", "note VARCHAR(40)"]));
           await raw(`INSERT INTO ${table} VALUES ('east', 10, 'plain'), ('west', 20, 'it''s'), ('east', 500, ${backslashNote})`);
 
           await test.step("A number and a text filter", async () => {
@@ -93,7 +94,7 @@ export function defineReportFilterTests(engine: DbEngine): void {
           await test.step("A date and a true/false filter", async () => {
             const date = await question(`SELECT {{d:date}} AS d`);
             expect(String((await run(date, { d: "2026-01-31" })).rows[0].d)).toContain("2026-01-31");
-            const flag = await question(`SELECT CASE WHEN {{b:boolean}} THEN 1 ELSE 0 END AS flag`);
+            const flag = await question(`SELECT CASE WHEN {{b:boolean}}${engine === "mssql" ? " = 1" : ""} THEN 1 ELSE 0 END AS flag`);
             expect(Number((await run(flag, { b: "true" })).rows[0].flag)).toBe(1);
             expect(Number((await run(flag, { b: "false" })).rows[0].flag)).toBe(0);
           });

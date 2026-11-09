@@ -80,6 +80,12 @@ type Dialect interface {
 	ReturnsRows(query string) bool
 	// Transactional is false when a failed statement cannot be rolled back with the ones before it.
 	Transactional() bool
+	// CreateNamespace and DropNamespace make and remove a schema (SQL Server) or database (ClickHouse). Drop does not
+	// cascade: SQL Server refuses a schema that still has objects.
+	CreateNamespace(name string) string
+	DropNamespace(name string) string
+	// ProtectedNamespace is true for namespaces the server needs, which can never be dropped.
+	ProtectedNamespace(name string) bool
 	// NamespaceIsSchema is true when a namespace is a schema, false when it is a database.
 	NamespaceIsSchema() bool
 }

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { getDbConfig, type DbEngine } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../pages";
+import { createTableSql } from "./ddl";
 import { FakeWebhook } from "./fakeMailbox";
 import { withConnectionCleanup } from "./safeCleanup";
 
@@ -30,7 +31,7 @@ export function defineDashboardSharingTests(engine: DbEngine): void {
         const hookUrl = await hook.start();
 
         try {
-          await raw(`CREATE TABLE ${table} (region VARCHAR(20), amount INTEGER)`);
+          await raw(createTableSql(engine, table, ["region VARCHAR(20)", "amount INTEGER"]));
           await raw(`INSERT INTO ${table} VALUES ('east', 10), ('west', 20), ('east', 500)`);
 
           const question = (

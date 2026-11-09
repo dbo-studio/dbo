@@ -87,6 +87,20 @@ func (c clickhouse) RenameTable(ns, old, next string) string {
 	return "RENAME TABLE " + c.table(ns, old) + " TO " + c.table(ns, next)
 }
 
+func (c clickhouse) CreateNamespace(name string) string { return "CREATE DATABASE " + c.Quote(name) }
+
+func (c clickhouse) DropNamespace(name string) string { return "DROP DATABASE " + c.Quote(name) }
+
+// ProtectedNamespace: the default database and the system ones.
+func (clickhouse) ProtectedNamespace(name string) bool {
+	switch strings.ToLower(name) {
+	case "default", "system", "information_schema":
+		return true
+	}
+
+	return false
+}
+
 func (c clickhouse) DropTable(ns, table string) string { return "DROP TABLE " + c.table(ns, table) }
 
 func (c clickhouse) DropView(ns, view string) string { return "DROP VIEW " + c.table(ns, view) }

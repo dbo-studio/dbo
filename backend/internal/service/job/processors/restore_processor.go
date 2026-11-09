@@ -19,6 +19,7 @@ import (
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/sqlguard"
 )
 
 // maxRestoreErrors bounds the error lines kept in a job result.
@@ -109,7 +110,62 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 		return p.restoreSQLite(ctx, job, connection, artifact)
 	}
 
+	if databaseContract.IsHostSQL(connection.ConnectionType) {
+		return p.restoreHostSQL(ctx, job, connection, artifact)
+	}
+
 	return p.restoreSQL(ctx, job, connection, &jobData, artifact)
+}
+
+// maxHostRestoreBytes bounds the script read into memory by the built-in restore.
+const maxHostRestoreBytes = 256 << 20
+
+// restoreHostSQL replays DBO's own dump into a SQL Server or ClickHouse connection, one statement at a time
+// in the connection's database. It is not atomic: it stops at the first failing statement, and the statements
+// before it stay applied (ClickHouse has no transactions, and a dump mixes DDL with data).
+func (p *RestoreProcessor) restoreHostSQL(ctx context.Context, job *model.Job, connection *model.Connection, artifact *model.BackupArtifact) error {
+	if !strings.HasSuffix(artifact.FileName, ".sql") {
+		return errors.New("this backup is not a SQL dump")
+	}
+
+	info, err := os.Stat(artifact.FilePath)
+	if err != nil {
+		return err
+	}
+
+	if info.Size() > maxHostRestoreBytes {
+		return fmt.Errorf("this backup is %d MB; the built-in restore reads at most %d MB", info.Size()>>20, maxHostRestoreBytes>>20)
+	}
+
+	raw, err := os.ReadFile(artifact.FilePath)
+	if err != nil {
+		return err
+	}
+
+	statements := sqlguard.Split(string(raw))
+
+	db, err := p.cm.GetConnection(ctx, connection, false)
+	if err != nil {
+		return err
+	}
+
+	for i, statement := range statements {
+		if ctx.Err() != nil {
+			return errors.New("job was canceled")
+		}
+
+		if err := db.WithContext(ctx).Exec(statement).Error; err != nil {
+			return fmt.Errorf("restore stopped at statement %d of %d: %w", i+1, len(statements), err)
+		}
+
+		if i%50 == 0 {
+			if err := p.jobManager.UpdateJobProgress(ctx, job, 10+85*i/len(statements), fmt.Sprintf("Restored %d of %d statements", i, len(statements))); err != nil {
+				return err
+			}
+		}
+	}
+
+	return p.jobManager.UpdateJobProgress(ctx, job, 100, "Restore completed successfully")
 }
 
 func (p *RestoreProcessor) restoreSQLite(ctx context.Context, job *model.Job, connection *model.Connection, artifact *model.BackupArtifact) error {

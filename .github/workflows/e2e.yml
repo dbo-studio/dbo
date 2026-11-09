@@ -1,0 +1,86 @@
+name: E2E
+
+on:
+  push:
+    branches: [master, release, dev]
+  pull_request:
+    branches: [master, release, dev]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fails when a shared suite is not run on an engine that requires it (e2e/coverage/capabilities.mjs).
+  coverage-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node e2e/scripts/check-coverage.mjs
+
+  e2e:
+    needs: coverage-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      # Every shard must report: one red shard must not hide failures in the others.
+      fail-fast: false
+      matrix:
+        include:
+          - { engine: pg, project: postgres, shard: 1/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: pg, project: postgres, shard: 2/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: pg, project: postgres, shard: 3/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: mysql, project: mysql, shard: 1/2, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: mysql, project: mysql, shard: 2/2, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: sqlite, project: sqlite, shard: 1/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: sqlite, project: sqlite, shard: 2/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: sqlite, project: sqlite, shard: 3/3, services: "sample-pgsql sample-pgsql-ssl sample-sshd sample-mysql" }
+          - { engine: mssql, project: mssql, shard: 1/1, services: "sample-mssql" }
+          - { engine: clickhouse, project: clickhouse, shard: 1/1, services: "sample-clickhouse" }
+          - { engine: redis, project: redis, shard: 1/1, services: "sample-redis" }
+          - { engine: mongo, project: mongo, shard: 1/1, services: "sample-mongo" }
+    name: e2e ${{ matrix.engine }} ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache: true
+          cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Install e2e deps
+        working-directory: e2e
+        run: npm ci
+      - name: Install Chromium
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+      - name: Start sample databases
+        run: docker compose -f docker-compose.dev.yml up -d --wait ${{ matrix.services }}
+      - name: Run e2e
+        working-directory: e2e
+        env:
+          CI: "true"
+          # Report every failing test in the shard, not just the first.
+          PLAYWRIGHT_MAX_FAILURES: "0"
+        run: npm run test:${{ matrix.engine }} -- --shard=${{ matrix.shard }} --reporter=list,html
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ matrix.engine }}-${{ strategy.job-index }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7

@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { getDbConfig, type DbEngine } from "../fixtures/dbConfigs";
 import { ConnectionPage } from "../pages";
+import { createTableSql } from "./ddl";
 import { clearActiveAiProfile } from "./aiSetup";
 import { FakeLlm, pointProviderAtFakeLlm } from "./fakeLlm";
 import {
@@ -9,10 +10,11 @@ import {
 } from "./objectFormSqliteLifecycle";
 
 /** A word every engine's plan for a full scan of an unindexed column contains. */
-const scanWord: Record<DbEngine, RegExp> = {
+const scanWord: Partial<Record<DbEngine, RegExp>> = {
   postgresql: /Seq Scan/,
   mysql: /"ALL"/,
   sqlite: /SCAN/,
+  clickhouse: /ReadFromMergeTree|Expression/,
 };
 
 type ToolStep = { type: string; content?: string };
@@ -95,9 +97,12 @@ export async function checkInspectTools(
       return step as ToolStep;
     };
 
-    await raw(
-      `CREATE TABLE ${table} (id INTEGER PRIMARY KEY, email VARCHAR(100), age INTEGER)`,
-    );
+    // ClickHouse columns are not nullable unless said so.
+    const cols =
+      engine === "clickhouse"
+        ? ["id UInt32", "email Nullable(String)", "age Nullable(Int32)"]
+        : ["id INT NOT NULL", "email VARCHAR(100)", "age INT"];
+    await raw(createTableSql(engine, table, cols, "id"));
     try {
       await raw(
         `INSERT INTO ${table} VALUES (1, 'a@x.io', 30), (2, 'b@x.io', NULL), (3, 'a@x.io', 50), (4, NULL, 20)`,
@@ -115,8 +120,14 @@ export async function checkInspectTools(
       const plan = await callTool("explain_query", {
         sql: `SELECT id FROM ${table} WHERE email = 'a@x.io'`,
       });
-      expect(plan.type).toBe("tool_result");
-      expect(plan.content).toMatch(scanWord[engine]);
+      if (engine === "mssql") {
+        // SQL Server plans need a session-level SET SHOWPLAN, so the tool says so instead of guessing.
+        expect(plan.type).toBe("tool_error");
+        expect(plan.content).toContain("not available");
+      } else {
+        expect(plan.type, plan.content).toBe("tool_result");
+        expect(plan.content).toMatch(scanWord[engine]!);
+      }
 
       const refused = await callTool("explain_query", {
         sql: `DELETE FROM ${table}`,

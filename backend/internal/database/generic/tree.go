@@ -33,7 +33,7 @@ func (r *Repository) namespaceNode(name string, withContainers bool) *contract.T
 		ID:          name,
 		Name:        name,
 		Type:        r.namespaceType(),
-		Icon:        lo.ToPtr(lo.Ternary(r.d.NamespaceIsSchema(), "schema", "database")),
+		Icon:        lo.ToPtr(lo.Ternary(r.d.NamespaceIsSchema(), "network", "database")),
 		HasChildren: true,
 		ContextMenu: r.ContextMenu(r.namespaceType()),
 		Children:    make([]contract.TreeNode, 0),
@@ -43,7 +43,11 @@ func (r *Repository) namespaceNode(name string, withContainers bool) *contract.T
 		for _, c := range []struct {
 			name string
 			id   contract.TreeNodeType
-		}{{"Tables", contract.TableContainerNodeType}, {"Views", contract.ViewContainerNodeType}} {
+		}{{"Tables", contract.TableContainerNodeType}, {"Views", contract.ViewContainerNodeType}, {"Procedures", contract.ProcedureContainerNodeType}, {"Functions", contract.FunctionContainerNodeType}} {
+			if _, routine := isRoutineContainer(c.id); routine && !r.hasRoutines() {
+				continue
+			}
+
 			node.Children = append(node.Children, contract.TreeNode{
 				ID:          fmt.Sprintf("%s.%s", name, c.id),
 				Name:        c.name,
@@ -107,6 +111,15 @@ func (r *Repository) buildContainer(ctx context.Context, namespace string, conta
 	case contract.ViewContainerNodeType:
 		names, err = r.d.Views(ctx, db, namespace)
 		nodeType = contract.ViewNodeType
+	case contract.ProcedureContainerNodeType, contract.FunctionContainerNodeType:
+		d, ok := r.routineDialect()
+		if !ok {
+			return nil, fmt.Errorf("unsupported container type: %s", container)
+		}
+
+		procedure := container == contract.ProcedureContainerNodeType
+		names, err = d.Routines(ctx, db, namespace, procedure)
+		nodeType = lo.Ternary(procedure, contract.ProcedureNodeType, contract.FunctionNodeType)
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
@@ -116,19 +129,25 @@ func (r *Repository) buildContainer(ctx context.Context, namespace string, conta
 	}
 
 	for _, name := range names {
-		node.Children = append(node.Children, contract.TreeNode{
-			ID:   nodeID(namespace, name),
-			Name: name,
-			Icon: lo.ToPtr("sheet"),
-			Type: nodeType,
-			Action: &contract.TreeNodeAction{
-				Type: contract.TreeNodeActionTypeTab,
-				Params: map[string]any{
-					"path":     "data",
-					"table":    name,
-					"editable": nodeType == contract.TableNodeType && r.d.Editable(),
-				},
+		action := &contract.TreeNodeAction{
+			Type: contract.TreeNodeActionTypeTab,
+			Params: map[string]any{
+				"path":     "data",
+				"table":    name,
+				"editable": nodeType == contract.TableNodeType && r.d.Editable(),
 			},
+		}
+		// A routine has no rows to browse: opening it opens its definition.
+		if _, routine := isRoutineNode(nodeType); routine {
+			action = &r.ContextMenu(nodeType)[0]
+		}
+
+		node.Children = append(node.Children, contract.TreeNode{
+			ID:          nodeID(namespace, name),
+			Name:        name,
+			Icon:        lo.ToPtr("sheet"),
+			Type:        nodeType,
+			Action:      action,
 			ContextMenu: r.ContextMenu(nodeType),
 			Children:    make([]contract.TreeNode, 0),
 		})
@@ -141,6 +160,43 @@ func (r *Repository) ContextMenu(nodeType contract.TreeNodeType) []contract.Tree
 	object := map[string]any{"path": "object"}
 	detail := map[string]any{"path": "object-detail"}
 	actions := make([]contract.TreeNodeAction, 0, 5)
+
+	kind := lo.Ternary(r.d.NamespaceIsSchema(), "schema", "database")
+
+	switch nodeType {
+	case contract.ProcedureContainerNodeType:
+		actions = append(actions, contract.TreeNodeAction{Title: "Create procedure", Name: contract.CreateProcedureAction, Type: contract.TreeNodeActionTypeTab, Params: object})
+	case contract.FunctionContainerNodeType:
+		actions = append(actions, contract.TreeNodeAction{Title: "Create function", Name: contract.CreateFunctionAction, Type: contract.TreeNodeActionTypeTab, Params: object})
+	case contract.ProcedureNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{Title: "Edit procedure", Name: contract.EditProcedureAction, Type: contract.TreeNodeActionTypeTab, Params: detail},
+			contract.TreeNodeAction{Title: "Drop procedure", Name: contract.DropProcedureAction, Type: contract.TreeNodeActionTypeAction},
+			contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand},
+		)
+	case contract.FunctionNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{Title: "Edit function", Name: contract.EditFunctionAction, Type: contract.TreeNodeActionTypeTab, Params: detail},
+			contract.TreeNodeAction{Title: "Drop function", Name: contract.DropFunctionAction, Type: contract.TreeNodeActionTypeAction},
+			contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand},
+		)
+	}
+
+	switch {
+	case nodeType == contract.DatabaseContainerNodeType:
+		actions = append(actions, contract.TreeNodeAction{
+			Title:  "Create " + kind,
+			Name:   lo.Ternary(r.d.NamespaceIsSchema(), contract.CreateSchemaAction, contract.CreateDatabaseAction),
+			Type:   contract.TreeNodeActionTypeTab,
+			Params: object,
+		})
+	case nodeType == r.namespaceType():
+		actions = append(actions, contract.TreeNodeAction{
+			Title: "Drop " + kind,
+			Name:  lo.Ternary(r.d.NamespaceIsSchema(), contract.DropSchemaAction, contract.DropDatabaseAction),
+			Type:  contract.TreeNodeActionTypeAction,
+		})
+	}
 
 	switch nodeType {
 	case contract.TableContainerNodeType:

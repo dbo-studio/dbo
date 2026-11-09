@@ -8,7 +8,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button, Popover, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useMemo, useRef, useState } from 'react';
 import { useConnectionLock } from '@/components/common/Connections/useUnlockConnection';
 import SortableList from '@/components/base/SortableList/SortableList';
 import ConnectionRow from './ConnectionRow';
@@ -36,6 +36,8 @@ export default function ConnectionSwitcherMenu({
   const user = useAuthStore((s) => s.user);
   const canAdd = canCreateConnection(mode, user);
   const [query, setQuery] = useState('');
+  // Dropping a dragged row ends in a click on it; that click must not pick the connection.
+  const dragged = useRef(false);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,6 +86,12 @@ export default function ConnectionSwitcherMenu({
             onReorder={query ? () => undefined : reorder}
             getItemId={(c) => String(c.id)}
             direction='vertical'
+            onDragEnd={() => {
+              dragged.current = true;
+              setTimeout(() => {
+                dragged.current = false;
+              }, 0);
+            }}
             activationDistance={8}
             renderItem={(c, _index, meta) => (
               <ConnectionRow
@@ -94,6 +102,7 @@ export default function ConnectionSwitcherMenu({
                 locked={locked && c.id === current?.id}
                 onMenuClosed={close}
                 onPick={() => {
+                  if (dragged.current) return;
                   close();
                   void switchConnection(c);
                 }}

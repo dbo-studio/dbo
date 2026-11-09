@@ -148,6 +148,15 @@ func (m mssql) RenameTable(ns, old, next string) string {
 	return fmt.Sprintf("EXEC sp_rename N'%s', N'%s'", strings.ReplaceAll(m.table(ns, old), "'", "''"), strings.ReplaceAll(next, "'", "''"))
 }
 
+func (m mssql) CreateNamespace(name string) string { return "CREATE SCHEMA " + m.Quote(name) }
+
+func (m mssql) DropNamespace(name string) string { return "DROP SCHEMA " + m.Quote(name) }
+
+// ProtectedNamespace: the built-in schemas that remain visible in the tree.
+func (mssql) ProtectedNamespace(name string) bool {
+	return strings.EqualFold(name, "dbo") || strings.HasPrefix(strings.ToLower(name), "db_")
+}
+
 func (m mssql) DropTable(ns, table string) string { return "DROP TABLE " + m.table(ns, table) }
 
 func (m mssql) DropView(ns, view string) string { return "DROP VIEW " + m.table(ns, view) }
@@ -170,3 +179,33 @@ func (m mssql) ViewQuery(_ context.Context, db *gorm.DB, ns, view string) (strin
 }
 
 // --- keys, indexes, foreign keys, checks, triggers ---
+
+// Routines lists the stored procedures or the functions (scalar, inline and multi-statement table) of a schema.
+func (mssql) Routines(_ context.Context, db *gorm.DB, namespace string, procedures bool) ([]string, error) {
+	types := lo.Ternary(procedures, "'P', 'PC'", "'FN', 'IF', 'TF', 'FS', 'FT'")
+
+	var names []string
+
+	err := db.Raw(`SELECT name FROM sys.objects WHERE schema_id = SCHEMA_ID(?) AND is_ms_shipped = 0 AND type IN (`+types+`) ORDER BY name`, namespace).Scan(&names).Error
+
+	return names, err
+}
+
+// RoutineDefinition is the routine's CREATE statement as the server stored it; it is NULL for encrypted routines.
+func (m mssql) RoutineDefinition(_ context.Context, db *gorm.DB, namespace, name string) (string, error) {
+	var def *string
+
+	if err := db.Raw(`SELECT OBJECT_DEFINITION(OBJECT_ID(?))`, m.table(namespace, name)).Scan(&def).Error; err != nil {
+		return "", err
+	}
+
+	if def == nil {
+		return "", fmt.Errorf("the definition of %s is not available (encrypted or missing)", name)
+	}
+
+	return *def, nil
+}
+
+func (m mssql) DropRoutine(namespace, name string, procedure bool) string {
+	return "DROP " + lo.Ternary(procedure, "PROCEDURE ", "FUNCTION ") + m.table(namespace, name)
+}

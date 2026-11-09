@@ -92,9 +92,14 @@ test.describe("AI chat history", () => {
         await target.getByTestId("ai-history-pin").click();
         await expect(items.first()).toContainText("users cleanup");
 
-        const list = await page.request.get(`/api/ai/chats?connectionId=${connectionId}&page=1&count=50`);
-        const body = (await list.json()) as { data: Array<{ title: string; pinned: boolean }> };
-        expect(body.data[0]).toMatchObject({ title: "users cleanup", pinned: true });
+        // The list reorders at once; the save follows, so poll the server.
+        await expect
+          .poll(async () => {
+            const list = await page.request.get(`/api/ai/chats?connectionId=${connectionId}&page=1&count=50`);
+            const body = (await list.json()) as { data: Array<{ title: string; pinned: boolean }> };
+            return body.data[0];
+          })
+          .toMatchObject({ title: "users cleanup", pinned: true });
       });
 
       await test.step("Export downloads Markdown", async () => {

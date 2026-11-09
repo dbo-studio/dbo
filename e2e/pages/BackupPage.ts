@@ -42,7 +42,7 @@ export class BackupPage extends BasePage {
 
   historyRows(): Locator {
     // One Restore button per completed backup; the tool list also has Download buttons.
-    return this.page.getByRole("button", { name: "Restore", exact: true });
+    return this.dialog.getByRole("button", { name: "Restore", exact: true });
   }
 
   async startBackup(note?: string): Promise<void> {
@@ -65,10 +65,7 @@ export class BackupPage extends BasePage {
   }
 
   async openRestore(): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Restore", exact: true })
-      .first()
-      .click();
+    await this.historyRows().first().click();
     await expect(this.restoreDialog).toBeVisible();
   }
 }

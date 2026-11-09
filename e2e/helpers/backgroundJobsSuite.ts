@@ -3,6 +3,7 @@ import { getDbConfig, type DbEngine } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../pages";
 import { EventStream } from "./eventStream";
+import { createTableSql } from "./ddl";
 import { withConnectionCleanup } from "./safeCleanup";
 
 type Job = { id: number; type: string; status: string; result?: { data?: { data?: Array<Record<string, unknown>> } } };
@@ -19,7 +20,23 @@ const SERVER = {
     running: (seconds: number): string =>
       `SELECT COUNT(*) AS c FROM information_schema.processlist WHERE id <> CONNECTION_ID() AND info LIKE '%SLEEP(${seconds})%'`,
   },
+  mssql: {
+    sleep: (seconds: number): string => `WAITFOR DELAY '${hms(seconds)}'; SELECT 1 AS n`,
+    running: (seconds: number): string =>
+      `SELECT COUNT(*) AS c FROM sys.dm_exec_requests r CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t WHERE r.session_id <> @@SPID AND t.text LIKE '%WAITFOR DELAY ''${hms(seconds)}''%'`,
+  },
+  // ClickHouse caps one sleep() call at 3s, so sleep 1s per row with one row per block.
+  clickhouse: {
+    sleep: (seconds: number): string => `SELECT sleep(1), 1 AS n FROM numbers(${seconds}) SETTINGS max_block_size = 1`,
+    running: (seconds: number): string =>
+      `SELECT count() AS c FROM system.processes WHERE query LIKE '%numbers(${seconds})%' AND query NOT LIKE '%system.processes%'`,
+  },
 } as const;
+
+function hms(seconds: number): string {
+  const p = (n: number): string => String(n).padStart(2, "0");
+  return `${p(Math.floor(seconds / 3600))}:${p(Math.floor((seconds % 3600) / 60))}:${p(seconds % 60)}`;
+}
 
 /** Background queries and job events on a server database: handover, one run, cancel stops the statement. */
 export function defineBackgroundJobsTests(engine: Exclude<DbEngine, "sqlite">): void {
@@ -56,7 +73,7 @@ export function defineBackgroundJobsTests(engine: Exclude<DbEngine, "sqlite">): 
         };
 
         try {
-          await raw(`CREATE TABLE ${table} (id INTEGER)`);
+          await raw(createTableSql(engine, table, ["id INT NOT NULL"], "id"));
           await raw(`INSERT INTO ${table} VALUES (1),(2)`);
           await stream.open(baseURL, await cookies());
 

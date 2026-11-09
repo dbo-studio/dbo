@@ -63,7 +63,7 @@ func (r *Registry) tableStats(ctx context.Context, args map[string]any, toolCtx 
 
 	measured := source
 	if rows > statsSampleRows {
-		measured = fmt.Sprintf("(SELECT * FROM %s LIMIT %d) sampled", source, statsSampleRows)
+		measured = fmt.Sprintf("(%s) sampled", selectFirst(connectionType, source, statsSampleRows))
 	}
 
 	columns := lo.Slice(shape.Columns, 0, statsMaxColumns)
@@ -157,4 +157,13 @@ func toInt(value any) int64 {
 	n, _ := strconv.ParseFloat(strings.Trim(string(encoded), `"`), 64)
 
 	return int64(n)
+}
+
+// selectFirst reads the first n rows of source. T-SQL has no LIMIT, it uses TOP.
+func selectFirst(connectionType, source string, n int) string {
+	if connectionType == databaseContract.SQLServer {
+		return fmt.Sprintf("SELECT TOP %d * FROM %s", n, source)
+	}
+
+	return fmt.Sprintf("SELECT * FROM %s LIMIT %d", source, n)
 }
