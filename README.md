@@ -60,7 +60,7 @@
 | Supabase, Neon, AlloyDB, TimescaleDB                 | Supported |
 | Amazon RDS / Aurora / Cloud SQL / Azure (PostgreSQL) | Supported |
 | MySQL                                                | Supported |
-| MariaDB, Percona, HeatWave                           | Supported |
+| MariaDB, Percona                                     | Supported |
 | Amazon RDS / Aurora / Cloud SQL / Azure (MySQL)      | Supported |
 | SQLite                                               | Supported |
 | SQL Server, ClickHouse                               | Beta (browse, query, SQL Server row edit; no schema editing yet) |

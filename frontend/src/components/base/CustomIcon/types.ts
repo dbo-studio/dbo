@@ -84,7 +84,6 @@ export const IconTypes = {
   google_cloud_sql: 'google_cloud_sql',
   azure: 'azure',
   percona: 'percona',
-  heatwave: 'heatwave',
   redis: 'redis',
   valkey: 'valkey',
   keydb: 'keydb',

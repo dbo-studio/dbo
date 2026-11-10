@@ -43,7 +43,6 @@ Same pattern: picker branding over the MySQL driver.
 | Cloud SQL (MySQL) | `cloudsql_mysql` | |
 | Azure Database (MySQL) | `azure_mysql` | |
 | Percona | `percona` | |
-| HeatWave | `heatwave` | |
 
 Proxies (ProxySQL, MaxScale, MySQL Router, Vitess VTGate) are not engines. Point at them as MySQL if that is how the app reaches the server.
 
