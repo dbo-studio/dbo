@@ -4,9 +4,12 @@ import { variables } from '../variables';
 export default function Button(theme: Theme): Components {
   return {
     MuiButton: {
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          height: 32,
+          textTransform: 'none',
+          fontWeight: 500,
+          height: variables.control.md,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.Mui-disabled': {
@@ -24,9 +27,9 @@ export default function Button(theme: Theme): Components {
             borderBottom: 'none !important'
           },
           '&.MuiButton-sizeSmall': {
-            minHeight: 24,
-            height: 'auto',
-            padding: '2px 8px',
+            minHeight: variables.control.sm,
+            height: variables.control.sm,
+            padding: '0 8px',
             fontSize: theme.typography.caption.fontSize,
             lineHeight: theme.typography.caption.lineHeight
           },

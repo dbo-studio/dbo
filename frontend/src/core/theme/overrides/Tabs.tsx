@@ -24,6 +24,7 @@ export default function Tabs(theme: Theme): Components {
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+          textTransform: 'none',
           minHeight: 30,
           height: 30,
           borderRadius: variables.radius.small,

@@ -27,50 +27,51 @@ declare module '@mui/material/styles' {
 
 const GREY = {
   0: '#FFFFFF',
-  100: '#F9FAFB',
-  200: '#F4F6F8',
-  300: '#DFE3E8',
-  400: '#C4CDD5',
-  500: '#919EAB',
-  600: '#637381',
-  700: '#454F5B',
-  800: '#212B36',
-  900: '#161C24'
+  100: '#FAFAFA',
+  200: '#F4F4F5',
+  300: '#E4E4E7',
+  400: '#D4D4D8',
+  500: '#A1A1AA',
+  600: '#71717A',
+  700: '#3F3F46',
+  800: '#27272A',
+  900: '#18181B'
 };
 
 const PRIMARY = {
-  light: '#07C',
-  main: '#07C',
-  dark: '#36A2EF'
+  light: '#2563EB',
+  main: '#2563EB',
+  dark: '#5B9DFF'
 };
 
 const SECONDARY = {
-  light: '#f04e98',
-  main: '#f04e98',
-  dark: '#f68fbe'
+  light: '#52525B',
+  main: '#52525B',
+  dark: '#A1A1AA'
 };
 
 const INFO = {
-  light: '#74CAFF',
-  main: '#74CAFF',
-  dark: '#36a2ef'
+  light: '#0284C7',
+  main: '#0284C7',
+  dark: '#38BDF8'
 };
 
 const SUCCESS = {
-  light: '#00bfb3',
-  main: '#00bfb3',
-  dark: '#7dded8'
+  light: '#16A34A',
+  main: '#16A34A',
+  dark: '#4ADE80'
 };
 
 const WARNING = {
-  light: '#fec514',
-  dark: '#f3d371'
+  light: '#D97706',
+  main: '#D97706',
+  dark: '#FBBF24'
 };
 
 const ERROR = {
-  light: '#bd271e',
-  main: '#bd271e',
-  dark: '#f86b63'
+  light: '#DC2626',
+  main: '#DC2626',
+  dark: '#F87171'
 };
 
 const colorPalette = {
@@ -85,12 +86,12 @@ const colorPalette = {
   grey: GREY,
   disabled: { light: '#CCCCCC', dark: '#AAAAAA' },
   constant: { white: '#FFFFFF', black: '#222222' },
-  divider: { light: '#d3dae6', dark: '#343741' },
+  divider: { light: '#E4E4E7', dark: '#2E2E33' },
   action: {
     light: {
       active: GREY[600],
-      hover: '#eaebec',
-      selected: '#dbecfa',
+      hover: '#F0F0F2',
+      selected: '#E8F0FE',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
       focus: alpha(GREY[500], 0.24),
@@ -99,10 +100,10 @@ const colorPalette = {
     },
     dark: {
       active: GREY[600],
-      hover: '#44464d',
-      selected: '#103148',
-      disabled: '#515761',
-      disabledBackground: '#212229',
+      hover: '#2A2A2F',
+      selected: '#1E3354',
+      disabled: '#52525B',
+      disabledBackground: '#222226',
       focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
@@ -110,48 +111,48 @@ const colorPalette = {
   },
   text: {
     light: {
-      text: '#343741',
-      title: '#1a1c21',
-      subdued: '#646a77',
-      success: '#343741',
-      warning: '#343741',
-      danger: '#343741',
-      primary: '#006bb8',
-      secondary: '#ba3d76',
-      disabled: '#a2abba',
-      highlight: '#fff9e8',
-      placeholder: '#69707d'
+      text: '#27272A',
+      title: '#18181B',
+      subdued: '#71717A',
+      success: '#27272A',
+      warning: '#27272A',
+      danger: '#27272A',
+      primary: '#2563EB',
+      secondary: '#52525B',
+      disabled: '#A1A1AA',
+      highlight: '#FEF9C3',
+      placeholder: '#A1A1AA'
     },
     dark: {
-      text: '#dfe5ef',
-      title: '#dfe5ef',
-      subdued: '#7a7f89',
+      text: '#D4D4D8',
+      title: '#F4F4F5',
+      subdued: '#8B8B94',
       success: '#fff',
       warning: '#fff',
       danger: '#fff',
-      primary: '#36a2ef',
-      secondary: '#f68fbe',
-      disabled: '#515761',
-      highlight: '#2e2d25',
-      placeholder: '#81858f'
+      primary: '#5B9DFF',
+      secondary: '#A1A1AA',
+      disabled: '#52525B',
+      highlight: '#3B3A1F',
+      placeholder: '#71717A'
     }
   },
   background: {
     light: {
       primary: '#fff',
-      subdued: '#f7f8fc',
-      secondary: '#FEEDF5',
-      success: '#daebc2',
-      warning: '#ffe18e',
-      danger: '#f5a6b0'
+      subdued: '#F7F7F8',
+      secondary: '#F0F0F2',
+      success: '#DCFCE7',
+      warning: '#FEF3C7',
+      danger: '#FEE2E2'
     },
     dark: {
-      primary: '#1A1C1E',
-      subdued: '#25282A',
-      secondary: '#343A40',
-      success: '#558c3c',
-      warning: '#8b6926',
-      danger: '#8e2f31'
+      primary: '#1C1C1F',
+      subdued: '#232326',
+      secondary: '#2E2E33',
+      success: '#14532D',
+      warning: '#78350F',
+      danger: '#7F1D1D'
     }
   }
 };

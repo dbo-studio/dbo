@@ -1,27 +1,13 @@
+import { variables } from '@/core/theme/variables';
 import { useTheme } from '@mui/material';
 import type { LucideIcon } from 'lucide-react';
 import { icons } from 'lucide-react';
 import type { JSX } from 'react';
 import { type IconProps, IconTypes } from './types';
 
-const sizes = {
-  l: {
-    width: 30,
-    height: 30
-  },
-  m: {
-    width: 20,
-    height: 20
-  },
-  s: {
-    width: 16,
-    height: 16
-  },
-  xs: {
-    width: 11,
-    height: 11
-  }
-};
+const sizes = Object.fromEntries(
+  Object.entries(variables.icon).map(([key, px]) => [key, { width: px, height: px }])
+) as Record<keyof typeof variables.icon, { width: number; height: number }>;
 
 export default function CustomIcon({
   type,

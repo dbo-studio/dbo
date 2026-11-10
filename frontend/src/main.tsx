@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as monaco from 'monaco-editor';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Toaster } from 'sonner';
+import Toaster from './components/base/Toaster/Toaster';
 import { DevCrashProbe, ErrorBoundary } from './components/common/ErrorBoundary/ErrorBoundary';
 import ThemeProvider from './core/theme/index.tsx';
 import Home from './routes/index.tsx';
@@ -40,7 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
           <Home />
         </QueryClientProvider>
-        <Toaster position='bottom-center' duration={5000} richColors closeButton={true} />
+        <Toaster />
       </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>

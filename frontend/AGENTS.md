@@ -79,3 +79,15 @@ Tab SQL: `indexedDBService` hydrates from legacy `localStorage` key `dbo_tab_que
 
 Run `npm run knip` (warn-only) periodically; delete confirmed unused exports before they accumulate.
 
+
+## UI Baseline (design contract)
+
+Direction: minimal, flat, neutral (VSCode / Zed feel). One accent color; status colors only for status. Tokens live in `src/core/theme/variables.ts`; palette in `src/core/theme/palettes/dbo.ts`.
+
+- **Prefer MUI + theme over new components.** Restyle via `core/theme/overrides/`, not a new wrapper in `base/`. Add a `base/` component only for behavior MUI lacks.
+- **Control size** — default `size="medium"` = 28px (forms, dialogs, toolbars). `size="small"` = 24px **only** in dense surfaces (grid cells, tree rows, inline filters). Never `large`, never hardcode heights.
+- **Dialogs** — use `base/Modal` with `size`: `sm` 400 (confirm/prompt), `md` 512 (forms, default), `lg` 768 (wide/editor). No custom min-heights.
+- **Icons** — `CustomIcon` `size`: `xs` 12, `s` 16 (default), `m` 20, `l` 28.
+- **Radius** — `small` 4 (menu items, tabs), `medium` 6 (controls), `large` 8 (modals, menus, toasts).
+- **Color** — never hardcode hex in components; use `theme.palette.*`. Toasts use `base/Toaster` (neutral surface, no `richColors`).
+- Other palettes (`vscode`, `github`, …) inherit sizing from these tokens; only `dbo` has been redesigned so far.

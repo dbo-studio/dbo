@@ -126,7 +126,7 @@ export const GridCheckboxInput = styled('input')(({ theme }) => {
     cursor: 'inherit',
     border: 0,
     backgroundColor: 'transparent',
-    backgroundImage: muiUncheckedCheckboxUrl(color),
+    backgroundImage: muiUncheckedCheckboxUrl(theme.palette.text.subdued),
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     backgroundSize: 'contain',

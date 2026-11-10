@@ -7,7 +7,7 @@ export default function Input(theme: Theme): Components {
       styleOverrides: {
         root: {
           background: theme.palette.background.default,
-          height: 32,
+          height: variables.control.md,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.text,
           borderRadius: variables.radius.medium,
@@ -19,7 +19,8 @@ export default function Input(theme: Theme): Components {
             border: `1px solid ${theme.palette.error.main} !important`
           },
           '&.Mui-focused': {
-            borderBottom: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.light}`
+            borderColor: theme.palette.primary.main,
+            boxShadow: `0 0 0 1px ${theme.palette.primary.main}`
           },
           ':before': {
             borderBottom: 'none !important'
@@ -35,7 +36,7 @@ export default function Input(theme: Theme): Components {
           },
 
           '&.MuiInputBase-sizeSmall': {
-            height: 24,
+            height: variables.control.sm,
             fontSize: theme.typography.caption.fontSize,
             select: {
               padding: 0
