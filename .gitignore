@@ -11,3 +11,4 @@ backend/.env
 .env
 docs/prd/*
 graphify-out
+.playwright-mcp
