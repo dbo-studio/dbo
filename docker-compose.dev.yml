@@ -40,13 +40,12 @@ services:
   sample-redis:
     container_name: dbo-studio-sample-redis
     image: redis:7
-    # Starts redis, then loads docker/redis/seed.sh (every key type, TTLs, >1000-member collections)
     entrypoint: ["sh", "/entrypoint.sh"]
     ports:
       - "${REDIS_TEST_PORT-46379}:6379"
     volumes:
-      - "./docker/redis/entrypoint.sh:/entrypoint.sh:ro"
-      - "./docker/redis/seed.sh:/seed.sh:ro"
+      - "./docs/sample_db/redis-entrypoint.sh:/entrypoint.sh:ro"
+      - "./docs/sample_db/redis-seed.sh:/seed.sh:ro"
 
   sample-mongo:
     container_name: dbo-studio-sample-mongo
@@ -55,7 +54,7 @@ services:
       - "${MONGO_TEST_PORT-47017}:27017"
     volumes:
       # Runs once on first start (databases shop, analytics, blog); re-seed: rm -sfv sample-mongo, then up
-      - "./docker/mongo/seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
+      - "./docs/sample_db/mongo-seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
 
   sample-mssql:
     container_name: dbo-studio-sample-mssql
@@ -69,7 +68,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Secret_pass1"
     volumes:
-      - "./docker/mssql/entrypoint.sh:/entrypoint.sh:ro"
+      - "./docs/sample_db/mssql-entrypoint.sh:/entrypoint.sh:ro"
       - "./docs/sample_db/shop_mssql.sql:/seed.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/seeded"]
@@ -90,7 +89,6 @@ services:
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
     volumes:
-      # Runs once on first start (database `shop`); re-seed: rm -sfv sample-clickhouse, then up
       - "./docs/sample_db/shop_clickhouse.sql:/docker-entrypoint-initdb.d/shop.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --password secret -q 'SELECT count() FROM shop.page_views' | grep -q 40000"]
@@ -104,7 +102,10 @@ services:
     ports:
       - "${PGSQL_TEST_PORT-45432}:5432"
     volumes:
-      - "./docker/data/pgsql:/var/lib/postgresql/data"
+      # Named volume: postgres initdb refuses a data dir it does not own, which
+      # breaks on host filesystems without POSIX ownership (NTFS/exFAT).
+      # Seeds run on first start; re-seed: docker volume rm dbo_pgsql-data.
+      - "pgsql-data:/var/lib/postgresql/data"
       - "./docs/sample_db/public.sql:/docker-entrypoint-initdb.d/public.sql"
       - "./docs/sample_db/shop_pg.sql:/docker-entrypoint-initdb.d/shop.sql"
     restart: always
@@ -120,8 +121,8 @@ services:
     ports:
       - "${PGSQL_SSL_TEST_PORT-45433}:5432"
     volumes:
-      - "./docker/pgsql-ssl/certs:/certs:ro"
-      - "./docker/pgsql-ssl/entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
+      - "./docs/sample_db/certs:/certs:ro"
+      - "./docs/sample_db/pgsql-ssl-entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
     entrypoint: ["/bin/bash", "/usr/local/bin/dbo-ssl-entrypoint.sh"]
     restart: always
     platform: "linux/amd64"
@@ -138,7 +139,7 @@ services:
       - "${SSH_TEST_PORT-42222}:2222"
     volumes:
       - "./e2e/fixtures/ssh/id_ed25519.pub:/keys/id_ed25519.pub:ro"
-      - "./docker/sshd/10-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
+      - "./docs/sample_db/sshd-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
     restart: always
     environment:
       PUID: 1000
@@ -163,3 +164,6 @@ services:
       MYSQL_USER: default
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: secret
+
+volumes:
+  pgsql-data:

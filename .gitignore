@@ -1,14 +1,6 @@
-/docker/*
-# Sample-DB scripts referenced by docker-compose.dev.yml volumes must be tracked;
-# generated data (database files, TLS keys) stays ignored.
-!/docker/sshd/
-!/docker/mongo/
-!/docker/mssql/
-!/docker/redis/
-!/docker/pgsql-ssl/
-!/docker/pgsql-ssl/entrypoint.sh
-!/docker/pgsql-ssl/certs/
-docker/data/
+# Runtime-only: docker compose bind-mounts ./docker/data/pgsql for sample-pgsql;
+# tracked container scripts/certs live in docs/sample_db/.
+/docker/
 .idea
 logs/*
 build

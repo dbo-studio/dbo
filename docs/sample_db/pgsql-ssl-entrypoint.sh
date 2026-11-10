@@ -1,6 +1,6 @@
 #!/bin/bash
 # Entrypoint for the TLS sample Postgres. Certs are mounted read-only from
-# ./docker/pgsql-ssl/certs; copy them to a local dir so postgres can enforce
+# ./docs/sample_db/certs; copy them to a local dir so postgres can enforce
 # its private-key permission checks regardless of the host filesystem.
 set -e
 
