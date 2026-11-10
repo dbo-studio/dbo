@@ -6,7 +6,12 @@ import CustomIcon from '../CustomIcon/CustomIcon';
 import { ContextMenuItemStackStyled } from './ContextMenu.styled';
 import type { ContextMenuProps, MenuType } from './types';
 
-export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuProps): JSX.Element {
+export default function ContextMenu({
+  menu,
+  contextMenu,
+  onClose,
+  focusFirstItem = false
+}: ContextMenuProps): JSX.Element {
   const uuids = useUUID(menu.length);
   const [nestedMenu, setNestedMenu] = useState<{
     mouseX: number;
@@ -106,9 +111,10 @@ export default function ContextMenu({ menu, contextMenu, onClose }: ContextMenuP
   return (
     <Box sx={{ position: 'relative' }}>
       <Menu
-        autoFocus={false}
-        disableAutoFocus={true}
-        disableAutoFocusItem={true}
+        // Opened from the keyboard: move focus into the menu so arrows, Enter and Esc work there.
+        autoFocus={focusFirstItem}
+        disableAutoFocus={!focusFirstItem}
+        disableAutoFocusItem={!focusFirstItem}
         open={contextMenu !== null}
         onClose={onClose}
         anchorReference='anchorPosition'

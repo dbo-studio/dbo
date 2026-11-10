@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"net/url"
 	"strings"
 	"time"
@@ -21,22 +22,35 @@ import (
 )
 
 type Handlers struct {
-	Config       *handler.ConfigHandler
-	Connection   *handler.ConnectionHandler
-	SavedQuery   *handler.SavedQueryHandler
-	History      *handler.HistoryHandler
-	TreeHandler  *handler.TreeHandler
-	QueryHandler *handler.QueryHandler
-	ImportExport *handler.ImportExportHandler
-	Job          *handler.JobHandler
-	AI           *handler.AiHandler
-	AiProvider   *handler.AiProviderHandler
-	AiChat       *handler.AiChatHandler
-	Mcp          *handler.McpHandler
-	Schema       *handler.SchemaHandler
-	SafeMode     *handler.SafeModeHandler
-	Auth         *handler.AuthHandler
-	AdminUsers   *handler.AdminUsersHandler
+	Account               *handler.AccountHandler
+	Config                *handler.ConfigHandler
+	Connection            *handler.ConnectionHandler
+	SavedQuery            *handler.SavedQueryHandler
+	Question              *handler.QuestionHandler
+	Dashboard             *handler.DashboardHandler
+	DashboardShare        *handler.DashboardShareHandler
+	Notification          *handler.NotificationHandler
+	DashboardSubscription *handler.DashboardSubscriptionHandler
+	History               *handler.HistoryHandler
+	TreeHandler           *handler.TreeHandler
+	NoSQL                 *handler.NoSQLHandler
+	CLI                   *handler.CLIHandler
+	QueryHandler          *handler.QueryHandler
+	ImportExport          *handler.ImportExportHandler
+	Backup                *handler.BackupHandler
+	BackupSchedule        *handler.BackupScheduleHandler
+	BackupDestination     *handler.ConnectorHandler
+	NotificationChannel   *handler.ConnectorHandler
+	Job                   *handler.JobHandler
+	AI                    *handler.AiHandler
+	AiProvider            *handler.AiProviderHandler
+	AiChat                *handler.AiChatHandler
+	AiChangeset           *handler.AiChangesetHandler
+	Mcp                   *handler.McpHandler
+	Schema                *handler.SchemaHandler
+	SafeMode              *handler.SafeModeHandler
+	Auth                  *handler.AuthHandler
+	AdminUsers            *handler.AdminUsersHandler
 }
 
 type Server struct {
@@ -56,9 +70,10 @@ func New(
 ) *Server {
 	return &Server{
 		app: fiber.New(fiber.Config{
-			ReadTimeout: 30 * time.Second,
-			// WriteTimeout disabled: AI streams and large query responses can
-			// exceed a fixed cap without indicating a stalled client.
+			ReadBufferSize: 32 * 1024,
+			// Backup uploads and imports arrive as one multipart body.
+			BodyLimit:    helper.MaxUploadSize,
+			ReadTimeout:  30 * time.Second,
 			WriteTimeout: 0,
 			IdleTimeout:  120 * time.Second,
 			ErrorHandler: func(c fiber.Ctx, err error) error {
@@ -93,7 +108,8 @@ func (r *Server) Start(gracefulCtx context.Context, isLocal bool, port string) e
 	if isLocal {
 		r.app.Use(fiberLogger.New())
 	} else {
-		r.app.Use(compress.New())
+		// Compression would hold the event stream back until its buffer fills.
+		r.app.Use(compress.New(compress.Config{Next: func(c fiber.Ctx) bool { return c.Path() == "/api/events" }}))
 	}
 
 	r.app.Use(cors.New(cors.Config{

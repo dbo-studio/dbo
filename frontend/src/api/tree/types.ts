@@ -15,6 +15,23 @@ export type TreeRequestType = {
 
 export type TreeResponseType = TreeNodeType;
 
+export type TreeSearchRequestType = {
+  connectionId: number;
+  query: string;
+  limit?: number;
+};
+
+export type TreeSearchResultType = {
+  node: TreeNodeType;
+  /** Ancestors from the root down to the node's parent; children are not included. */
+  path: TreeNodeType[];
+};
+
+export type TreeSearchResponseType = {
+  results: TreeSearchResultType[];
+  truncated: boolean;
+};
+
 export type TabRequestType = {
   connectionId: number;
   action: string;
@@ -22,12 +39,6 @@ export type TabRequestType = {
 };
 
 export type TabResponseType = ObjectTabType[];
-
-// export type FormObjectResponseType = {
-//   isArray: boolean;
-//   schema: FormFieldType[];
-//   data: Record<string, FormValue>[];
-// };
 
 export type FormObjectResponseType = {
   general: GeneralFieldType[];

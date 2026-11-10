@@ -11,6 +11,10 @@ const (
 	PermCreateConnection = "create_connection"
 	PermAiSettings       = "ai_settings"
 	PermMcpSettings      = "mcp_settings"
+	PermCli              = "cli"
+	PermImport           = "import"
+	PermExport           = "export"
+	PermAiUse            = "ai_use"
 )
 
 func CtxWithPermissions(ctx context.Context, perms dto.UserPermissions) context.Context {
@@ -45,6 +49,14 @@ func HasPermission(ctx context.Context, perm string) bool {
 		return perms.AiSettings
 	case PermMcpSettings:
 		return perms.McpSettings
+	case PermCli:
+		return perms.Cli
+	case PermImport:
+		return perms.Import
+	case PermExport:
+		return perms.Export
+	case PermAiUse:
+		return perms.AiUse
 	default:
 		return false
 	}

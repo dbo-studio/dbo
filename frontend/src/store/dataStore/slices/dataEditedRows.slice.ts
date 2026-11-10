@@ -1,5 +1,5 @@
 import { debouncedSaveEditedAndUnsaved } from '@/core/utils/indexedDbHelper';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type { EditedRow } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataEditedRowsSlice, DataRowSlice, DataStore, DataUnsavedRowsSlice } from '../types';
@@ -12,7 +12,7 @@ export const createDataEditedRowsSlice: StateCreator<
 > = (set, get) => ({
   editedRows: [],
   updateEditedRows: async (editedRows: EditedRow[]): Promise<void> => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return Promise.resolve();
 
     let currentUnsavedRows = [...get().unSavedRows];
@@ -48,7 +48,7 @@ export const createDataEditedRowsSlice: StateCreator<
     return Promise.resolve();
   },
   restoreEditedRows: async (): Promise<void> => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
 
     const currentRows = [...(get().rows ?? [])];

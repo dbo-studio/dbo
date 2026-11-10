@@ -1,6 +1,8 @@
 import type { Components, Theme } from '@mui/material';
 import Baseline from './Baseline';
 import Button from './Button';
+import Chip from './Chip';
+import Dialog from './Dialog';
 import IconButton from './IconButton';
 import Input from './Input';
 import Menu from './Menu';
@@ -13,9 +15,11 @@ export default function ComponentsOverrides(theme: Theme): Components {
   return Object.assign(
     Baseline(theme),
     Input(theme),
+    Dialog(theme),
     Tabs(theme),
     Select(theme),
     Button(theme),
+    Chip(theme),
     IconButton(theme),
     Menu(theme),
     Table(theme),

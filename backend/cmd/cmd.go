@@ -18,12 +18,15 @@ import (
 	"github.com/dbo-studio/dbo/internal/repository"
 	"github.com/dbo-studio/dbo/internal/service"
 	serviceSecretStore "github.com/dbo-studio/dbo/internal/service/secret_store"
+	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/cache/sqlite"
 	"github.com/dbo-studio/dbo/pkg/db"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/logger/zap"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 func ServeCommand() *cobra.Command {
@@ -46,7 +49,17 @@ func loadEnvFiles() {
 	}
 }
 
-func Execute() {
+// app holds what the commands share: config, logger, repositories and services on the migrated app database.
+type app struct {
+	cfg    *config.Config
+	logger logger.Logger
+	rr     *repository.Repository
+	ss     *service.Service
+	cache  cache.Cache
+	db     *gorm.DB
+}
+
+func bootstrap() *app {
 	loadEnvFiles()
 
 	cfg := config.New()
@@ -69,8 +82,8 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	cache := sqlite.NewSQLiteCache(appDB)
-	appContainer.SetCache(cache)
+	appCache := sqlite.NewSQLiteCache(appDB)
+	appContainer.SetCache(appCache)
 
 	aiCipherKey, err := serviceSecretStore.DeriveAICipherKey(cfg)
 	if err != nil {
@@ -79,10 +92,10 @@ func Execute() {
 
 	rr := repository.NewRepository(appDB, aiCipherKey)
 	secretStore := serviceSecretStore.NewSecretStore(cfg, rr.WebSessionRepo, rr.WebConnectionSecretRepo, rr.ConnectionSharedSecretRepo, appLogger)
-	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, cache)
+	cm := databaseConnection.NewConnectionManager(rr.HistoryRepo, secretStore, appLogger, appCache)
 	ss := service.NewService(rr, cm, secretStore, service.Deps{
 		Logger:    appLogger,
-		Cache:     cache,
+		Cache:     appCache,
 		Config:    cfg,
 		CipherKey: aiCipherKey,
 	})
@@ -91,31 +104,54 @@ func Execute() {
 		appLogger.Fatal(err)
 	}
 
-	err = ss.JobManager.CancelAllJobs()
+	return &app{cfg: cfg, logger: appLogger, rr: rr, ss: ss, cache: appCache, db: appDB}
+}
+
+func Execute() {
+	a := bootstrap()
+	cfg, appLogger, rr, ss := a.cfg, a.logger, a.rr, a.ss
+
+	err := ss.JobManager.CancelAllJobs()
 	if err != nil {
 		appLogger.Error(err)
 	}
 
-	restServer := server.New(appLogger, cfg, server.Handlers{Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
-		Connection:   handler.NewConnectionHandler(appLogger, ss.ConnectionService),
-		SavedQuery:   handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
-		History:      handler.NewHistoryHandler(appLogger, ss.HistoryService),
-		TreeHandler:  handler.NewTreeHandler(appLogger, ss.TreeService),
-		QueryHandler: handler.NewQueryHandler(appLogger, ss.QueryService),
-		ImportExport: handler.NewImportExportHandler(appLogger, ss.ImportExportService),
-		Job:          handler.NewJobHandler(appLogger, ss.JobService),
-		AI:           handler.NewAiHandler(appLogger, ss.AiService),
-		AiProvider:   handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
-		AiChat:       handler.NewAiChatHandler(appLogger, ss.AiChatService),
-		Mcp:          handler.NewMcpHandler(appLogger, ss.McpService),
-		Schema:       handler.NewSchemaHandler(appLogger, ss.SchemaService),
-		SafeMode:     handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),
-		Auth:         handler.NewAuthHandler(appLogger, ss.AuthService, cfg),
-		AdminUsers:   handler.NewAdminUsersHandler(appLogger, ss.AdminUsersService),
+	restServer := server.New(appLogger, cfg, server.Handlers{Account: handler.NewAccountHandler(appLogger, ss.AccountService), Config: handler.NewConfigHandler(appLogger, ss.ConfigService),
+		Connection:            handler.NewConnectionHandler(appLogger, ss.ConnectionService),
+		SavedQuery:            handler.NewSavedQueryHandler(appLogger, ss.SavedQueryService),
+		Question:              handler.NewQuestionHandler(appLogger, ss.QuestionService),
+		Dashboard:             handler.NewDashboardHandler(appLogger, ss.DashboardService),
+		DashboardShare:        handler.NewDashboardShareHandler(appLogger, ss.DashboardShareService),
+		Notification:          handler.NewNotificationHandler(appLogger, ss.NotificationService, ss.EventHub),
+		DashboardSubscription: handler.NewDashboardSubscriptionHandler(appLogger, ss.DashboardSubscriptionService),
+		History:               handler.NewHistoryHandler(appLogger, ss.HistoryService),
+		TreeHandler:           handler.NewTreeHandler(appLogger, ss.TreeService),
+		NoSQL:                 handler.NewNoSQLHandler(appLogger, ss.NoSQLService),
+		CLI:                   handler.NewCLIHandler(appLogger, ss.CLIService),
+		QueryHandler:          handler.NewQueryHandler(appLogger, ss.QueryService),
+		ImportExport:          handler.NewImportExportHandler(appLogger, ss.ImportExportService),
+		Backup:                handler.NewBackupHandler(appLogger, ss.BackupService),
+		BackupSchedule:        handler.NewBackupScheduleHandler(appLogger, ss.BackupScheduleService),
+		BackupDestination:     handler.NewDestinationHandler(appLogger, ss.ConnectorService),
+		NotificationChannel:   handler.NewChannelHandler(appLogger, ss.ConnectorService),
+		Job:                   handler.NewJobHandler(appLogger, ss.JobService),
+		AI:                    handler.NewAiHandler(appLogger, ss.AiService),
+		AiProvider:            handler.NewAiProviderHandler(appLogger, ss.AiProviderService),
+		AiChat:                handler.NewAiChatHandler(appLogger, ss.AiChatService),
+		AiChangeset:           handler.NewAiChangesetHandler(appLogger, ss.AiChangesetService),
+		Mcp:                   handler.NewMcpHandler(appLogger, ss.McpService),
+		Schema:                handler.NewSchemaHandler(appLogger, ss.SchemaService),
+		SafeMode:              handler.NewSafeModeHandler(appLogger, ss.SafeModePasswordService),
+		Auth:                  handler.NewAuthHandler(appLogger, ss.AuthService, cfg),
+		AdminUsers:            handler.NewAdminUsersHandler(appLogger, ss.AdminUsersService),
 	}, rr.WebSessionRepo, ss.AuthService)
 
 	gracefulCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// Scheduled dashboard deliveries run in this process, so they only fire while DBO is running.
+	go ss.DashboardSubscriptionService.Start(gracefulCtx)
+	ss.BackupScheduler.Start(gracefulCtx)
 
 	// SIGINT/SIGTERM: stop the job system (abort processors, wait, mark jobs
 	// canceled) while Listen drains in-flight HTTP requests gracefully.

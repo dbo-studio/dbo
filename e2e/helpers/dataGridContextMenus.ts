@@ -18,6 +18,34 @@ import {
 } from "../pages";
 
 function contextMenuSeedSql(engine: DbEngine, tableName: string): string {
+  if (engine === "clickhouse") {
+    // No auto-increment: explicit ids. Nullable note covers the IS NULL filter.
+    const names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
+    const rows = names.map((n, i) => `(${i + 1}, '${n}', ${(i + 1) * 10}, ${i === 0 ? "NULL" : "'keep'"})`).join(", ");
+    return `DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id UInt32, name String, score Int32, note Nullable(String)) ENGINE = MergeTree ORDER BY id;
+INSERT INTO ${tableName} (id, name, score, note) VALUES ${rows};`;
+  }
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  score INT NOT NULL,
+  note VARCHAR(100) NULL
+);
+INSERT INTO ${tableName} (name, score, note) VALUES
+  ('Alpha', 10, NULL),
+  ('Bravo', 20, 'keep'),
+  ('Charlie', 30, 'keep'),
+  ('Delta', 40, 'keep'),
+  ('Echo', 50, 'keep'),
+  ('Foxtrot', 60, 'keep'),
+  ('Golf', 70, 'keep'),
+  ('Hotel', 80, 'keep');
+    `.trim();
+  }
   if (engine === "postgresql") {
     return `
 DROP TABLE IF EXISTS ${tableName};

@@ -23,7 +23,6 @@ export function useDataGridSearchIntegration({
 
   useShortcut(shortcuts.search, () => setIsSearchDialogOpen(true));
 
-  // Handle Ctrl+F to open search dialog
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -38,7 +37,6 @@ export function useDataGridSearchIntegration({
     };
   }, []);
 
-  // Scroll to current match when it changes
   useEffect(() => {
     if (search.matches.length > 0 && search.currentMatchIndex >= 0) {
       const currentMatch = search.matches[search.currentMatchIndex];

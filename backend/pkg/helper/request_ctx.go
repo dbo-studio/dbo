@@ -132,3 +132,24 @@ func CtxConnectionPassword(ctx context.Context) (string, bool) {
 
 	return s, true
 }
+
+// CtxDetached copies what a request carries (who is asking, the pinned connection password) onto a fresh
+// context derived from parent, so work can outlive the request. The request's own context must not be used
+// after the handler returns: Fiber recycles it.
+func CtxDetached(parent, request context.Context) context.Context {
+	ctx := CtxWithOwnerID(parent, CtxOwnerID(request))
+	ctx = CtxWithSessionID(ctx, CtxSessionID(request))
+	ctx = CtxWithUserID(ctx, CtxUserID(request))
+	ctx = CtxWithUserRole(ctx, CtxUserRole(request))
+	ctx = CtxWithMustChangePassword(ctx, CtxMustChangePassword(request))
+
+	if perms, ok := CtxPermissions(request); ok {
+		ctx = CtxWithPermissions(ctx, perms)
+	}
+
+	if password, ok := CtxConnectionPassword(request); ok {
+		ctx = CtxWithConnectionPassword(ctx, password)
+	}
+
+	return ctx
+}

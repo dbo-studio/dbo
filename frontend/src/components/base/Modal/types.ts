@@ -8,7 +8,11 @@ export type ModalProps = {
   size?: ModalSize;
   title?: string;
   children: React.ReactNode;
+  /** Action buttons, pinned to the bottom of the modal below the scrollable body. */
+  footer?: React.ReactNode;
   padding?: string;
+  /** Sizes the modal to its content instead of reserving room for a form (short prompts). */
+  compact?: boolean;
   onClose?: () => void;
   disableEnforceFocus?: boolean;
   zIndex?: number;

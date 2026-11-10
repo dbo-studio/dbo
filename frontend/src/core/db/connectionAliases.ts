@@ -3,7 +3,7 @@
  * Stored `type` stays the brand id; dialer/repo follow `driver`.
  */
 
-export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite';
+export type ConnectionDriver = 'postgresql' | 'mysql' | 'sqlite' | 'redis' | 'mongodb' | 'sqlserver' | 'clickhouse';
 
 export type ConnectionEngine =
   | 'postgresql'
@@ -23,6 +23,13 @@ export type ConnectionEngine =
   | 'azure_mysql'
   | 'percona'
   | 'heatwave'
+  | 'redis'
+  | 'valkey'
+  | 'keydb'
+  | 'dragonfly'
+  | 'mongodb'
+  | 'sqlserver'
+  | 'clickhouse'
   | 'sqlite';
 
 export type ConnectionAliasDef = {
@@ -37,6 +44,8 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'PostgreSQL', logo: 'postgresql', type: 'postgresql', driver: 'postgresql' },
   { name: 'MySQL', logo: 'mysql', type: 'mysql', driver: 'mysql' },
   { name: 'SQLite', logo: 'sqlite', type: 'sqlite', driver: 'sqlite' },
+  { name: 'SQL Server', logo: 'sqlserver', type: 'sqlserver', driver: 'sqlserver' },
+  { name: 'ClickHouse', logo: 'clickhouse', type: 'clickhouse', driver: 'clickhouse' },
   { name: 'MariaDB', logo: 'mariadb', type: 'mariadb', driver: 'mysql' },
 
   { name: 'AlloyDB', logo: 'alloydb', type: 'alloydb', driver: 'postgresql' },
@@ -52,7 +61,13 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'Neon', logo: 'neon', type: 'neon', driver: 'postgresql' },
   { name: 'Percona', logo: 'percona', type: 'percona', driver: 'mysql' },
   { name: 'Supabase', logo: 'supabase', type: 'supabase', driver: 'postgresql' },
-  { name: 'TimescaleDB', logo: 'timescaledb', type: 'timescaledb', driver: 'postgresql' }
+  { name: 'TimescaleDB', logo: 'timescaledb', type: 'timescaledb', driver: 'postgresql' },
+
+  { name: 'Redis', logo: 'redis', type: 'redis', driver: 'redis' },
+  { name: 'Valkey', logo: 'valkey', type: 'valkey', driver: 'redis' },
+  { name: 'KeyDB', logo: 'keydb', type: 'keydb', driver: 'redis' },
+  { name: 'Dragonfly', logo: 'dragonfly', type: 'dragonfly', driver: 'redis' },
+  { name: 'MongoDB', logo: 'mongodb', type: 'mongodb', driver: 'mongodb' }
 ];
 
 const aliasByType = Object.fromEntries(CONNECTION_ALIASES.map((a) => [a.type, a])) as Record<
@@ -73,6 +88,27 @@ export function isMysqlDriver(type: string | undefined): boolean {
   return getConnectionAlias(type)?.driver === 'mysql';
 }
 
+/** Host/port SQL servers served by the generic driver (no object forms yet). */
+export const isHostSqlDriver = (type: string | undefined): boolean =>
+  getConnectionAlias(type)?.driver === 'sqlserver' || getConnectionAlias(type)?.driver === 'clickhouse';
+
 export function connectionDriver(type: string | undefined): ConnectionDriver | undefined {
   return getConnectionAlias(type)?.driver;
 }
+
+/** Connection types served by the NoSQL engine (Browse tab) instead of the SQL data/query tabs. */
+export const isNoSQLType = (type: string | undefined): boolean =>
+  type === 'nosql_fixture' ||
+  getConnectionAlias(type)?.driver === 'redis' ||
+  getConnectionAlias(type)?.driver === 'mongodb';
+
+/** SQL drivers and MongoDB have a query editor tab; Redis and the fixture do not. */
+export const hasEditorTab = (type: string | undefined): boolean => !isNoSQLType(type) || isMongoDriver(type);
+
+export const isRedisDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'redis';
+
+export const isMongoDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'mongodb';
+
+/** Redis and MongoDB are often run without a password, so an empty one must be allowed to unlock them. */
+export const isPasswordOptionalDriver = (type: string | undefined): boolean =>
+  isRedisDriver(type) || isMongoDriver(type);

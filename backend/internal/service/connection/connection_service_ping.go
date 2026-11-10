@@ -9,6 +9,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -22,9 +23,12 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 	ownerID := helper.CtxOwnerID(ctx)
 
 	if req.ID != nil {
-		if _, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID)); err != nil {
+		stored, err := s.connectionRepo.Find(ctx, lo.FromPtr(req.ID))
+		if err != nil {
 			return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 		}
+
+		req.Options = databaseConnection.FillSSHSecrets(req.Options, stored.Options)
 	}
 
 	if _, err := s.createConnectionDto(&dto.CreateConnectionRequest{
@@ -38,6 +42,12 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		ConnectionType: req.Type,
 		Options:        string(req.Options),
 	}
+
+	if databaseContract.IsNoSQL(req.Type) {
+		return s.pingNoSQL(ctx, connection)
+	}
+
+	sshCfg := databaseConnection.SSHOptions(connection)
 
 	start := time.Now()
 	dbConn, err := s.cm.GetConnection(ctx, connection, false)
@@ -70,6 +80,7 @@ func (s IConnectionServiceImpl) Ping(ctx context.Context, req *dto.PingConnectio
 		ServerVersion: version,
 		SSLNegotiated: sslNegotiated,
 		SSLMode:       sslMode,
+		SSHTunnel:     sshCfg != nil,
 	}, nil
 }
 
@@ -167,8 +178,16 @@ func classifyConnectionFailure(err error) (string, string) {
 		return "unknown", "Retry the test connection."
 	}
 
+	// Validation errors wrap the readable cause; classify on that.
+	var appErr *apperror.AppError
+	if errors.As(err, &appErr) && appErr.Err != nil {
+		err = appErr.Err
+	}
+
 	msg := strings.ToLower(err.Error())
 	switch {
+	case strings.Contains(msg, "ssh tunnel"):
+		return "ssh", err.Error()
 	case strings.Contains(msg, "file not found"),
 		strings.Contains(msg, "no such file"),
 		strings.Contains(msg, "unable to open database"):
@@ -176,13 +195,20 @@ func classifyConnectionFailure(err error) (string, string) {
 	case strings.Contains(msg, "password authentication failed"),
 		strings.Contains(msg, "access denied"),
 		strings.Contains(msg, "authentication failed"),
+		strings.Contains(msg, "login failed"),
 		strings.Contains(msg, "invalid credentials"),
 		strings.Contains(msg, "using password: yes"):
 		return "authentication", "Check username/password and any password prompt settings."
+	case strings.Contains(msg, "3d000"),
+		strings.Contains(msg, "database") && strings.Contains(msg, "does not exist"):
+		return "database", "Database does not exist. Set the Database field to an existing database."
 	case strings.Contains(msg, "timeout"),
 		strings.Contains(msg, "i/o timeout"),
 		strings.Contains(msg, "connection refused"),
+		strings.Contains(msg, "connection reset by peer"),
 		strings.Contains(msg, "no such host"),
+		strings.Contains(msg, "server misbehaving"),
+		strings.Contains(msg, "temporary failure in name resolution"),
 		strings.Contains(msg, "network is unreachable"):
 		return "network", "Check host, port, VPN/firewall, and that the database is reachable."
 	case strings.Contains(msg, "ssl"),
@@ -194,4 +220,21 @@ func classifyConnectionFailure(err error) (string, string) {
 	default:
 		return "unknown", "Verify connection details and retry."
 	}
+}
+
+// pingNoSQL checks a NoSQL connection through its driver; there is no SQL dial to diagnose.
+func (s IConnectionServiceImpl) pingNoSQL(ctx context.Context, connection *model.Connection) (*dto.PingConnectionResponse, error) {
+	start := time.Now()
+
+	repo, err := database.NewNoSQLRepository(ctx, connection, s.cm)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	version, err := repo.Version(ctx)
+	if err != nil {
+		return nil, apperror.DriverError(fmt.Errorf("version check failed: %w", err))
+	}
+
+	return &dto.PingConnectionResponse{LatencyMs: time.Since(start).Milliseconds(), ServerVersion: version}, nil
 }

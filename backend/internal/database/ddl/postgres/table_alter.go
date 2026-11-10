@@ -62,7 +62,31 @@ func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 
 	plan = append(plan, columnStatements(input, tableName)...)
 	plan = append(plan, keyStatements(input, tableName)...)
+	indexStatementsPlan, err := indexStatements(input.Schema, tableName, indexRows(input), input.Action)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, indexStatementsPlan...)
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), input.Action)...)
+	checkStatementsPlan, err := checkStatements(input.Schema, tableName, checkRows(input), input.Action)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, checkStatementsPlan...)
+	triggerStatementsPlan, err := triggerStatements(input.Schema, tableName, triggerRows(input), input.Action)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, triggerStatementsPlan...)
+	tableSequenceStatementsPlan, err := tableSequenceStatements(input.Schema, tableName, sequenceRows(input), input.Action)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, tableSequenceStatementsPlan...)
 
 	return plan, tableName, nil
 }

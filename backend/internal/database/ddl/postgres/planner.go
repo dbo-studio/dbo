@@ -19,6 +19,10 @@ type TableInput struct {
 	Columns     *dto.PostgresTableColumnParams
 	Keys        *dto.PostgresTableKeyParams
 	ForeignKeys *dto.PostgresTableForeignKeyParams
+	Indexes     *dto.PostgresTableIndexParams
+	Checks      *dto.PostgresTableCheckParams
+	Triggers    *dto.PostgresTableTriggerParams
+	Sequences   *dto.PostgresTableSequenceParams
 }
 
 func BuildTablePlan(input TableInput) (ddl.Plan, string, error) {

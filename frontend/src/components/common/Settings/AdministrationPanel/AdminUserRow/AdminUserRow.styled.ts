@@ -14,10 +14,3 @@ export const AdministrationModalContentStyled = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   marginTop: theme.spacing(1)
 }));
-
-export const AdministrationModalFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  flexShrink: 0,
-  marginTop: theme.spacing(2)
-}));

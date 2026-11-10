@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -14,17 +15,19 @@ type App struct {
 	MCPURLOverride string
 	DatabaseName   string
 	Version        string
-	ReleaseURLAPI  string
 	ReleaseURL     string
+	WebsiteAPIURL  string
 	LogPath        string
-	// AdminEmail / AdminPassword bootstrap the first local admin when no users exist.
+	Auth           Auth
+	AllowedOrigins []string
+}
+
+type Auth struct {
+	Configured    AuthMode
+	Mode          AuthMode
 	AdminEmail    string
 	AdminPassword string
-	// AuthMode is resolved after DB bootstrap (none | local).
-	AuthMode AuthMode
-	// AllowedOrigins is a comma-separated list of extra origins allowed to make
-	// credentialed cross-origin requests (localhost is always allowed when AuthMode is none).
-	AllowedOrigins []string
+	SharedOwnerID string
 }
 
 type Config struct {
@@ -33,48 +36,79 @@ type Config struct {
 
 var config *Config
 
+const (
+	websiteHost    = "https://dbo-studio.com"
+	devWebsiteHost = "https://dev.dbo-studio.com"
+)
+
 func New() *Config {
+	env := Environment(os.Getenv("APP_ENV"))
+
+	host := websiteHost
+	if env == EnvironmentLocal {
+		host = devWebsiteHost
+	}
+
 	config = &Config{
 		App: App{
 			Name:           "dbo",
 			Port:           os.Getenv("APP_PORT"),
-			Env:            Environment(os.Getenv("APP_ENV")),
+			Env:            env,
 			Client:         Client(os.Getenv("APP_CLIENT")),
 			PublicURL:      os.Getenv("APP_PUBLIC_URL"),
 			MCPURLOverride: os.Getenv("APP_MCP_PUBLIC_URL"),
-			AdminEmail:     strings.TrimSpace(os.Getenv("APP_ADMIN_EMAIL")),
-			AdminPassword:  os.Getenv("APP_ADMIN_PASSWORD"),
-			AuthMode:       AuthModeNone,
+			Auth: Auth{
+				Configured:    AuthMode(strings.ToLower(strings.TrimSpace(os.Getenv("APP_AUTH_MODE")))),
+				Mode:          AuthModeNone,
+				AdminEmail:    strings.TrimSpace(os.Getenv("APP_ADMIN_EMAIL")),
+				AdminPassword: os.Getenv("APP_ADMIN_PASSWORD"),
+			},
 			AllowedOrigins: parseAllowedOrigins(os.Getenv("APP_ALLOWED_ORIGINS")),
 			Version:        "v1.2.0",
 			DatabaseName:   "dbo.db",
-			ReleaseURLAPI:  "https://dbo-studio.com/api/config",
-			ReleaseURL:     "https://dbo-studio.com/releases",
+			ReleaseURL:     host + "/releases",
+			WebsiteAPIURL:  host + "/api",
 		},
+	}
+
+	if override := strings.TrimSpace(os.Getenv("APP_WEBSITE_API_URL")); override != "" {
+		config.App.WebsiteAPIURL = strings.TrimRight(override, "/")
 	}
 
 	return config
 }
 
-// ResolveAuthMode picks web auth mode: local if users exist or admin env is set; else none.
-func ResolveAuthMode(hasUsers bool, cfg *Config) AuthMode {
+// ResolveAuthMode picks web auth mode. APP_AUTH_MODE wins when set. Unset keeps
+// the old behavior (local if users exist or admin env is set) so upgrades
+// never drop login; legacy reports that fallback was used.
+func ResolveAuthMode(hasUsers bool, cfg *Config) (mode AuthMode, legacy bool, err error) {
 	if cfg == nil || cfg.App.Client == ClientDesktop {
-		return AuthModeNone
+		return AuthModeNone, false, nil
 	}
 
-	adminEmail := strings.TrimSpace(cfg.App.AdminEmail)
-	adminPassword := cfg.App.AdminPassword
+	switch cfg.App.Auth.Configured {
+	case AuthModeLocal:
+		return AuthModeLocal, false, nil
+	case AuthModeNone:
+		return AuthModeNone, false, nil
+	case "":
+	default:
+		return "", false, fmt.Errorf("invalid APP_AUTH_MODE %q: use none or local", cfg.App.Auth.Configured)
+	}
+
+	adminEmail := strings.TrimSpace(cfg.App.Auth.AdminEmail)
+	adminPassword := cfg.App.Auth.AdminPassword
 
 	if hasUsers || (adminEmail != "" && adminPassword != "") {
-		return AuthModeLocal
+		return AuthModeLocal, true, nil
 	}
 
-	return AuthModeNone
+	return AuthModeNone, false, nil
 }
 
 // AuthRequiresSession reports whether unauthenticated API access is blocked.
 func (a App) AuthRequiresSession() bool {
-	return a.AuthMode == AuthModeLocal
+	return a.Auth.Mode == AuthModeLocal
 }
 
 func parseAllowedOrigins(raw string) []string {

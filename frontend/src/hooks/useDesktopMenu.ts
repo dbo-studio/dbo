@@ -8,6 +8,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect } from 'react';
+import { pickAndOpenSqlFile } from './useDesktopOpenFiles';
 
 /**
  * Bridges native app-menu clicks to existing React/store actions.
@@ -34,6 +35,9 @@ export const useDesktopMenu = (): void => {
             break;
           case 'newTab':
             addEditorTab();
+            break;
+          case 'openSqlFile':
+            void pickAndOpenSqlFile().catch(() => undefined);
             break;
           case 'closeTab': {
             const selectedTabId = useTabStore.getState().selectedTabId;

@@ -20,18 +20,21 @@ const (
 )
 
 var (
-	wherePattern        = regexp.MustCompile(`(?i)\bwhere\b`)
-	dropPattern         = regexp.MustCompile(`(?i)^\s*drop\b`)
-	truncatePattern     = regexp.MustCompile(`(?i)^\s*truncate\b`)
-	alterPattern        = regexp.MustCompile(`(?i)^\s*alter\b`)
-	createPattern       = regexp.MustCompile(`(?i)^\s*create\b`)
-	insertPattern       = regexp.MustCompile(`(?i)^\s*insert\b`)
-	updatePattern       = regexp.MustCompile(`(?i)^\s*update\b`)
-	deletePattern       = regexp.MustCompile(`(?i)^\s*delete\b`)
-	selectPattern       = regexp.MustCompile(`(?i)^\s*(with\b[\s\S]+)?select\b`)
-	explainPattern      = regexp.MustCompile(`(?i)^\s*(explain|show|pragma|describe|desc)\b`)
-	writableCTEPattern  = regexp.MustCompile(`(?i)\bwith\b[\s\S]*?\bas\s*\([\s\S]*?\b(delete|insert|update|drop|truncate|alter|create)\b`)
-	catastrophicPattern = regexp.MustCompile(`(?i)\b(drop|truncate)\b`)
+	wherePattern    = regexp.MustCompile(`(?i)\bwhere\b`)
+	dropPattern     = regexp.MustCompile(`(?i)^\s*drop\b`)
+	truncatePattern = regexp.MustCompile(`(?i)^\s*truncate\b`)
+	alterPattern    = regexp.MustCompile(`(?i)^\s*alter\b`)
+	createPattern   = regexp.MustCompile(`(?i)^\s*create\b`)
+	insertPattern   = regexp.MustCompile(`(?i)^\s*insert\b`)
+	updatePattern   = regexp.MustCompile(`(?i)^\s*update\b`)
+	deletePattern   = regexp.MustCompile(`(?i)^\s*delete\b`)
+	selectPattern   = regexp.MustCompile(`(?i)^\s*(with\b[\s\S]+)?select\b`)
+	explainPattern  = regexp.MustCompile(`(?i)^\s*(explain|show|pragma|describe|desc)\b`)
+	// SELECT ... INTO creates a table (Postgres) or writes a file or variables (MySQL); it is not a read.
+	selectIntoPattern    = regexp.MustCompile(`(?is)^\s*(?:with\b.*\)\s*)?select\b.*\binto\b`)
+	stringLiteralPattern = regexp.MustCompile(`'(?:[^']|'')*'`)
+	writableCTEPattern   = regexp.MustCompile(`(?i)\bwith\b[\s\S]*?\bas\s*\([\s\S]*?\b(delete|insert|update|drop|truncate|alter|create)\b`)
+	catastrophicPattern  = regexp.MustCompile(`(?i)\b(drop|truncate)\b`)
 )
 
 // Classification is the result of classifying one or more statements.
@@ -84,7 +87,8 @@ func ClassifySQL(sql string) Classification {
 func ClassifyAction(action string) Class {
 	switch action {
 	case "dropDatabase", "dropSchema", "dropTable", "dropView",
-		"dropMaterializedView", "dropIndex", "dropSequence":
+		"dropMaterializedView", "dropIndex", "dropSequence", "dropType",
+		"dropFunction", "dropProcedure", "dropEvent":
 		if action == "dropIndex" || action == "dropSequence" {
 			return ClassDDL
 		}
@@ -93,12 +97,18 @@ func ClassifyAction(action string) Class {
 	case "createDatabase", "editDatabase", "createSchema", "editSchema",
 		"createTable", "editTable", "createView", "editView",
 		"createMaterializedView", "editMaterializedView",
-		"createIndex", "editIndex", "createSequence", "editSequence":
+		"createIndex", "editIndex", "createSequence", "editSequence",
+		"createType", "editType", "createFunction", "editFunction",
+		"createProcedure", "editProcedure", "createEvent", "editEvent",
+		"refreshMaterializedView", "refreshMaterializedViewNoData", "rename":
 		return ClassDDL
 	default:
 		return ClassUnknown
 	}
 }
+
+// Split splits a SQL script on statement boundaries, ignoring semicolons in strings, quoted names and comments.
+func Split(sql string) []string { return splitStatements(sql) }
 
 // splitStatements splits a SQL batch on statement boundaries. Semicolons inside
 // string literals, quoted identifiers, and comments are not boundaries.
@@ -276,6 +286,10 @@ func classifySingle(sql string) Class {
 		}
 
 		return ClassWriteDML
+	}
+
+	if selectIntoPattern.MatchString(stringLiteralPattern.ReplaceAllString(trimmed, "''")) {
+		return ClassDDL
 	}
 
 	stmt, err := sqlparser.Parse(trimmed)

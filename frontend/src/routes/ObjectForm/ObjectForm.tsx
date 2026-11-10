@@ -7,7 +7,7 @@ import { CircularProgress, Stack } from '@mui/material';
 import React, { useCallback } from 'react';
 import ArrayForm from './components/ArrayForm/ArrayForm';
 import GeneralForm from './components/GeneralForm/GeneralForm';
-import QueryPreviewModal from './components/QueryPreviewModal/QueryPreviewModal';
+import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import FormStatusBar from './components/StatusBar/FormStatusBar';
 import FormTabs from './components/Tabs/FormTabs';
 import { useFormData } from './hooks/useFormData';

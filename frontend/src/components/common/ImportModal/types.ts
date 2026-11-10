@@ -1,3 +1,5 @@
+export type ImportFormat = 'sql' | 'json' | 'csv';
+
 export type ImportModalProps = {
   show: boolean;
   connectionId: number;

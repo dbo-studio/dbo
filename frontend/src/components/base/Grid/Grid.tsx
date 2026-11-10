@@ -72,9 +72,6 @@ function getGridColumnValue(
   return `span ${resolvedSpan} / span ${resolvedSpan}`;
 }
 
-/**
- * this grid works with container-width-based size
- */
 export default function Grid({
   children,
   breakpointValues,

@@ -17,9 +17,10 @@ export class SidebarPage extends BasePage {
     super(page);
     this.itemsTab = page.getByRole("tab", { name: "Items" });
     this.queriesTab = page.getByRole("tab", { name: "Queries" });
-    this.historyTab = page.getByRole("tab", { name: "History" });
-    // Explorer content only — avoids matching the SQL editor / result grid.
-    this.panel = page.getByRole("tabpanel");
+    // History lives in the bottom panel (opened from the status bar), not in the explorer.
+    this.historyTab = page.getByTestId("bottom-tab-history");
+    // Explorer content or the bottom panel — avoids matching the SQL editor / result grid.
+    this.panel = page.getByRole("tabpanel").or(page.getByTestId("bottom-panel"));
   }
 
   getTab(tabName: SidebarTab): Locator {
@@ -34,6 +35,10 @@ export class SidebarPage extends BasePage {
   }
 
   async switchTo(tabName: SidebarTab): Promise<void> {
+    if (tabName === "History" && !(await this.page.getByTestId("bottom-panel").isVisible())) {
+      await this.page.getByTestId("status-panel").click();
+    }
+
     const tab = this.getTab(tabName);
     const alreadySelected = (await tab.getAttribute("aria-selected")) === "true";
 
@@ -52,6 +57,7 @@ export class SidebarPage extends BasePage {
     }
 
     await expect(tab).toHaveAttribute("aria-selected", "true");
+    await expect(tab).toHaveText(tabName);
   }
 
   item(text: string): Locator {

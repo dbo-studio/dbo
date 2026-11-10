@@ -4,6 +4,12 @@ type UserPermissionFlags struct {
 	CreateConnection bool
 	AiSettings       bool
 	McpSettings      bool
+	// Cli opens a database terminal; it is never granted by default.
+	Cli bool
+	// Import, Export and AiUse gate those features for the user.
+	Import bool
+	Export bool
+	AiUse  bool
 }
 
 func (u *User) PermissionFlags() UserPermissionFlags {
@@ -15,6 +21,10 @@ func (u *User) PermissionFlags() UserPermissionFlags {
 		CreateConnection: u.PermCreateConnection,
 		AiSettings:       u.PermAiSettings,
 		McpSettings:      u.PermMcpSettings,
+		Cli:              u.PermCli,
+		Import:           u.PermImport,
+		Export:           u.PermExport,
+		AiUse:            u.PermAiUse,
 	}
 }
 
@@ -23,6 +33,10 @@ func DefaultMemberPermissionFlags() UserPermissionFlags {
 		CreateConnection: false,
 		AiSettings:       true,
 		McpSettings:      false,
+		Cli:              false,
+		Import:           true,
+		Export:           true,
+		AiUse:            true,
 	}
 }
 
@@ -31,6 +45,10 @@ func DefaultAdminPermissionFlags() UserPermissionFlags {
 		CreateConnection: true,
 		AiSettings:       true,
 		McpSettings:      true,
+		Cli:              true,
+		Import:           true,
+		Export:           true,
+		AiUse:            true,
 	}
 }
 
@@ -42,4 +60,8 @@ func ApplyPermissionFlags(u *User, flags UserPermissionFlags) {
 	u.PermCreateConnection = flags.CreateConnection
 	u.PermAiSettings = flags.AiSettings
 	u.PermMcpSettings = flags.McpSettings
+	u.PermCli = flags.Cli
+	u.PermImport = flags.Import
+	u.PermExport = flags.Export
+	u.PermAiUse = flags.AiUse
 }

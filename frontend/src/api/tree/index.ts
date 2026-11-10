@@ -9,12 +9,15 @@ import type {
   TabRequestType,
   TabResponseType,
   TreeRequestType,
-  TreeResponseType
+  TreeResponseType,
+  TreeSearchRequestType,
+  TreeSearchResponseType
 } from '@/api/tree/types';
 import { api } from '@/core/api';
 
 const endpoints = {
   getTree: (): string => '/tree',
+  search: (): string => '/tree/search',
   getTabs: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}`,
   getObject: (nodeId: string, action: string, tabId: string): string =>
     `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
@@ -26,6 +29,14 @@ const endpoints = {
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {
   return (
     await api.get<{ data: TreeResponseType }>(endpoints.getTree(), {
+      params
+    })
+  ).data.data;
+};
+
+export const searchTree = async (params: TreeSearchRequestType): Promise<TreeSearchResponseType> => {
+  return (
+    await api.get<{ data: TreeSearchResponseType }>(endpoints.search(), {
       params
     })
   ).data.data;

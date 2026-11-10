@@ -20,6 +20,7 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
             rightSidebarTab: 0
           },
           showConnectionsDrawer: false,
+          agentWorkspaceOpen: false,
           showAddConnection: false,
           duplicateConnectionId: undefined,
           showEditConnection: false,
@@ -29,8 +30,10 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           titleBar: {
             paddingLeft: 16,
             paddingTop: 8,
-            onHeaderAreaClick: () => undefined
-          }
+            draggable: false
+          },
+          bottomPanel: { open: false, tab: 'terminal', height: 280 },
+          browseListWidth: 320
         },
         theme: {
           isDark: false,
@@ -52,7 +55,18 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           ignoredRelease: '',
           logsPath: '',
           version: '',
-          release: undefined
+          release: undefined,
+          backgroundAfterSeconds: 10,
+          keepRunningInBackground: true,
+          notifications: {
+            enabled: true,
+            onlyWhenUnfocused: true,
+            sound: false,
+            query: true,
+            import: true,
+            export: true,
+            backup: true
+          }
         },
         setup: {
           hasCompletedSetup: false
@@ -112,7 +126,9 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           setup: state.setup,
           editorContextByConnection: state.editorContextByConnection,
           ui: {
-            sidebar: state.ui.sidebar
+            sidebar: state.ui.sidebar,
+            bottomPanel: state.ui.bottomPanel,
+            browseListWidth: state.ui.browseListWidth
           }
         }),
         merge: (persistedState, currentState) => {
@@ -120,12 +136,23 @@ export const useSettingStore: UseBoundStore<StoreApi<SettingState>> = create<Set
           return {
             ...currentState,
             ...persisted,
+            // Settings added later fall back to their defaults for people who saved before them.
+            general: {
+              ...currentState.general,
+              ...persisted?.general,
+              notifications: { ...currentState.general.notifications, ...persisted?.general?.notifications }
+            },
             ui: {
               ...currentState.ui,
               sidebar: {
                 ...currentState.ui.sidebar,
                 ...persisted?.ui?.sidebar
-              }
+              },
+              bottomPanel: {
+                ...currentState.ui.bottomPanel,
+                ...persisted?.ui?.bottomPanel
+              },
+              browseListWidth: persisted?.ui?.browseListWidth ?? currentState.ui.browseListWidth
             }
           };
         }

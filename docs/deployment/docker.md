@@ -31,7 +31,7 @@ docker compose up -d
 | Volume | `./docker/dbo:/backend/data` |
 | Env | `APP_PORT=9000`, `APP_ENV=docker` |
 
-For public deployment, set `APP_PUBLIC_URL`, `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD`, and `APP_ALLOWED_ORIGINS` — see [Configuration](configuration.md) and [Security](security.md).
+For public deployment, set `APP_PUBLIC_URL`, `APP_AUTH_MODE=local`, and `APP_ALLOWED_ORIGINS` — see [Configuration](configuration.md) and [Security](security.md).
 
 ## Image build
 
@@ -67,11 +67,11 @@ Sample DB services:
 
 | Service | Host port | Credentials |
 | ------- | --------- | ----------- |
-| `sample-pgsql` | 5432 | `default` / `secret`, db `default` |
-| `sample-mysql` | 3307 | `default` / `secret`, db `default` |
-| `sample-pgsql-ssl` | 5433 | same as Postgres + TLS |
+| `sample-pgsql` | 45432 | `default` / `secret`, db `default` |
+| `sample-mysql` | 43306 | `default` / `secret`, db `default` |
+| `sample-pgsql-ssl` | 45433 | same as Postgres + TLS |
 
-Override host ports with Compose variables `DB_TEST_PORT`, `MYSQL_TEST_PORT`, and `PGSQL_SSL_TEST_PORT` (project-root `.env` or inline) — see [Configuration](configuration.md#docker-compose--development-docker-composedevyml).
+Override host ports with Compose variables `PGSQL_TEST_PORT`, `MYSQL_TEST_PORT`, and `PGSQL_SSL_TEST_PORT` (project-root `.env` or inline) — see [Configuration](configuration.md#docker-compose--development-docker-composedevyml).
 
 ## Reverse proxy and TLS
 
@@ -79,8 +79,7 @@ Terminate TLS at nginx, Caddy, or a cloud load balancer. Set:
 
 ```bash
 APP_PUBLIC_URL=https://dbo.example.com
-APP_ADMIN_EMAIL=admin@example.com
-APP_ADMIN_PASSWORD=<8-40-chars-letter-and-number>
+APP_AUTH_MODE=local
 APP_ALLOWED_ORIGINS=https://dbo.example.com
 ```
 

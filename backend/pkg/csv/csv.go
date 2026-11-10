@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
-func Reader(data string) (rows [][]string, headers []string, err error) {
+// Reader parses CSV with a header row. A zero delimiter means a comma.
+func Reader(data string, delimiter rune) (rows [][]string, headers []string, err error) {
 	reader := csv.NewReader(strings.NewReader(data))
+	if delimiter != 0 {
+		reader.Comma = delimiter
+	}
 
 	allRows, err := reader.ReadAll()
 	if err != nil {
@@ -26,6 +30,12 @@ func Reader(data string) (rows [][]string, headers []string, err error) {
 }
 
 func Writer(headers []string, rows []map[string]any) string {
+	return Header(headers) + Rows(headers, rows)
+}
+
+// Header returns the CSV header line; with Rows it lets callers stream a file
+// chunk by chunk instead of building it in memory.
+func Header(headers []string) string {
 	var content strings.Builder
 
 	for i, col := range headers {
@@ -37,6 +47,12 @@ func Writer(headers []string, rows []map[string]any) string {
 	}
 
 	content.WriteString("\n")
+
+	return content.String()
+}
+
+func Rows(headers []string, rows []map[string]any) string {
+	var content strings.Builder
 
 	for _, row := range rows {
 		for i := range headers {

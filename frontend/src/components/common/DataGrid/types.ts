@@ -6,6 +6,11 @@ export type DataGridProps = {
   columns: ColumnType[];
   loading: boolean;
   editable?: boolean;
+  /**
+   * Rows that belong to no table tab (the agent canvas): read-only, without sorting or the row menu,
+   * since those act on the open tab's query.
+   */
+  standalone?: boolean;
 };
 
 export type DataGridTableCellProps = {
@@ -64,6 +69,8 @@ export type DataGridTableHeaderRowProps = {
   startResize: (columnId: string, event: React.MouseEvent | React.TouchEvent) => void;
   resizingColumnId: string | null;
   editable?: boolean;
+  /** Clicking a header sorts the tab's query; off for rows that belong to no tab. */
+  sortable?: boolean;
   onHeaderContextMenu?: (event: React.MouseEvent, columnName: string) => void;
 };
 

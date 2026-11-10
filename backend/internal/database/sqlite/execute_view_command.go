@@ -6,6 +6,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/samber/lo"
 )
@@ -35,7 +36,7 @@ func (r *SQLiteRepository) handleViewCommands(nodeID string, tabID contract.Tree
 	if action == contract.CreateViewAction {
 		query := ""
 		if params.New.Name != nil && params.New.Query != nil {
-			query = fmt.Sprintf("CREATE VIEW %s AS %s", *params.New.Name, *params.New.Query)
+			query = fmt.Sprintf("CREATE VIEW %s AS %s", quote.SqliteIdent(*params.New.Name), *params.New.Query)
 		}
 
 		queries = append(queries, query)
@@ -43,18 +44,18 @@ func (r *SQLiteRepository) handleViewCommands(nodeID string, tabID contract.Tree
 
 	if action == contract.EditViewAction {
 		if params.Old.Name != nil && params.New.Name != nil && *params.Old.Name != *params.New.Name {
-			queries = append(queries, fmt.Sprintf("DROP VIEW IF EXISTS %s", *params.Old.Name))
+			queries = append(queries, fmt.Sprintf("DROP VIEW IF EXISTS %s", quote.SqliteIdent(*params.Old.Name)))
 			if params.New.Query != nil {
-				queries = append(queries, fmt.Sprintf("CREATE VIEW %s AS %s", *params.New.Name, *params.New.Query))
+				queries = append(queries, fmt.Sprintf("CREATE VIEW %s AS %s", quote.SqliteIdent(*params.New.Name), *params.New.Query))
 			}
 		} else if params.Old.Name != nil && params.New.Query != nil {
-			queries = append(queries, fmt.Sprintf("DROP VIEW IF EXISTS %s", *params.Old.Name))
-			queries = append(queries, fmt.Sprintf("CREATE VIEW %s AS %s", *params.Old.Name, *params.New.Query))
+			queries = append(queries, fmt.Sprintf("DROP VIEW IF EXISTS %s", quote.SqliteIdent(*params.Old.Name)))
+			queries = append(queries, fmt.Sprintf("CREATE VIEW %s AS %s", quote.SqliteIdent(*params.Old.Name), *params.New.Query))
 		}
 	}
 
 	if action == contract.DropViewAction {
-		query := fmt.Sprintf("DROP VIEW IF EXISTS %s", nodeID)
+		query := fmt.Sprintf("DROP VIEW IF EXISTS %s", quote.SqliteIdent(nodeID))
 		queries = append(queries, query)
 	}
 

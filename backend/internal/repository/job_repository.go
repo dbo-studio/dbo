@@ -58,6 +58,16 @@ func (r JobRepository) GetRunningJobs(ctx context.Context) ([]model.Job, error) 
 	return jobs, err
 }
 
+func (r JobRepository) ListActiveByOwner(ctx context.Context, ownerID string) ([]model.Job, error) {
+	var jobs []model.Job
+
+	err := r.db.WithContext(ctx).
+		Where("owner_id = ? AND status IN ?", ownerID, []model.JobStatus{model.JobStatusPending, model.JobStatusRunning}).
+		Order("id").Find(&jobs).Error
+
+	return jobs, err
+}
+
 func (r JobRepository) DeleteOldJobs(ctx context.Context, days int) error {
 	return r.db.WithContext(ctx).Where("created_at < DATE_SUB(NOW(), INTERVAL ? DAY)", days).Delete(&model.Job{}).Error
 }

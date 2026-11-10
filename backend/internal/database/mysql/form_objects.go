@@ -21,8 +21,18 @@ func (r *MySQLRepository) Objects(ctx context.Context, nodeID string, tabID cont
 		return r.getTableForeignKeys(ctx, node, action)
 	case contract.TableKeysTab:
 		return r.getTableKeys(ctx, node, action)
+	case contract.TableTriggersTab:
+		return r.getTableTriggers(ctx, node, action)
 	case contract.TableIndexesTab:
 		return r.getTableIndexes(ctx, node, action)
+	case contract.TableChecksTab:
+		return r.getTableChecks(ctx, node, action)
+	case contract.EventTab:
+		return r.getEventInfo(ctx, node)
+	case contract.FunctionTab:
+		return r.getRoutineInfo(ctx, node, false)
+	case contract.ProcedureTab:
+		return r.getRoutineInfo(ctx, node, true)
 	case contract.ViewTab:
 		return r.getViewInfo(ctx, node)
 	default:
@@ -168,9 +178,91 @@ func (r *MySQLRepository) getTableKeys(ctx context.Context, node contract.DBNode
 				"ref_columns":     columns,
 			})
 		}
+
+		// A UNIQUE constraint is a unique index in MySQL; it is listed here, not under Indexes.
+		indexes, err := r.tableIndexes(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		uniques := map[string]map[string]any{}
+		order := []string{}
+
+		for _, index := range indexes {
+			if index.IndexName == "PRIMARY" || index.NonUnique == 1 {
+				continue
+			}
+
+			entry, ok := uniques[index.IndexName]
+			if !ok {
+				entry = map[string]any{
+					"constraint_name": index.IndexName,
+					"constraint_type": "UNIQUE",
+					"ref_columns":     []string{},
+				}
+				uniques[index.IndexName] = entry
+				order = append(order, index.IndexName)
+			}
+
+			entry["ref_columns"] = append(entry["ref_columns"].([]string), index.ColumnName)
+		}
+
+		for _, name := range order {
+			result = append(result, uniques[name])
+		}
 	}
 
 	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getRoutineInfo(ctx context.Context, node contract.DBNode, procedure bool) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.FunctionContainerNodeType) && node.Table != string(contract.ProcedureContainerNodeType) {
+		routines, err := r.routines(ctx, node.Database, procedure)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, routine := range routines {
+			if routine.Name == node.Table {
+				row = map[string]any{
+					"name":          routine.Name,
+					"parameters":    routine.Parameters,
+					"returns":       routine.Returns,
+					"deterministic": routine.Deterministic,
+					"comment":       routine.Comment,
+					"body":          routine.Body,
+				}
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.routineFields(procedure), row)
+}
+
+func (r *MySQLRepository) getTableTriggers(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		triggers, err := r.tableTriggers(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trigger := range triggers {
+			result = append(result, map[string]any{
+				"name":   trigger.Name,
+				"timing": trigger.Timing,
+				"event":  trigger.Event,
+				"body":   trigger.Body,
+			})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.triggerFields())
 }
 
 func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
@@ -187,7 +279,7 @@ func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBN
 		indexOrder := make([]string, 0)
 
 		for _, index := range indexes {
-			if index.IndexName == "PRIMARY" {
+			if index.IndexName == "PRIMARY" || index.NonUnique == 0 {
 				continue
 			}
 
@@ -213,6 +305,51 @@ func (r *MySQLRepository) getTableIndexes(ctx context.Context, node contract.DBN
 	}
 
 	return r.base.BuildArrayFormResponse(result, fields)
+}
+
+func (r *MySQLRepository) getTableChecks(ctx context.Context, node contract.DBNode, _ contract.TreeNodeActionName) (*contract.FormResponse, error) {
+	result := []map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.TableContainerNodeType) {
+		checks, err := r.tableChecks(ctx, node.Database, node.Table)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, check := range checks {
+			result = append(result, map[string]any{"name": check.Name, "expression": check.Expression})
+		}
+	}
+
+	return r.base.BuildArrayFormResponse(result, r.checkFields())
+}
+
+func (r *MySQLRepository) getEventInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {
+	row := map[string]any{}
+
+	if node.Table != "" && node.Table != string(contract.EventContainerNodeType) {
+		events, err := r.events(ctx, node.Database)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, event := range events {
+			if event.Name == node.Table {
+				row = map[string]any{
+					"name":     event.Name,
+					"schedule": event.Schedule,
+					"status":   event.Status,
+					"preserve": event.Preserve,
+					"comment":  event.Comment,
+					"body":     event.Body,
+				}
+
+				break
+			}
+		}
+	}
+
+	return r.base.BuildGeneralFormResponse(r.eventFields(), row)
 }
 
 func (r *MySQLRepository) getViewInfo(ctx context.Context, node contract.DBNode) (*contract.FormResponse, error) {

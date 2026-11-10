@@ -5,10 +5,10 @@ declare module '@mui/material/styles' {
   export interface TypeBackground {
     default: string;
     paper: string;
-    neutral?: string;
     primary: string;
     subdued: string;
     secondary: string;
+    highlight: string;
     success: string;
     warning: string;
     danger: string;
@@ -17,81 +17,42 @@ declare module '@mui/material/styles' {
     text: string;
     title: string;
     subdued: string;
+    accent: string;
+    link: string;
     success: string;
     warning: string;
     danger: string;
-    highlight: string;
     placeholder: string;
   }
 }
 
 const GREY = {
   0: '#FFFFFF',
-  100: '#FAFAFA',
-  200: '#F4F4F5',
-  300: '#E4E4E7',
-  400: '#D4D4D8',
-  500: '#A1A1AA',
-  600: '#71717A',
-  700: '#3F3F46',
-  800: '#27272A',
-  900: '#18181B'
+  100: '#F9FAFB',
+  200: '#F4F6F8',
+  300: '#DFE3E8',
+  400: '#C4CDD5',
+  500: '#919EAB',
+  600: '#637381',
+  700: '#454F5B',
+  800: '#212B36',
+  900: '#161C24'
 };
 
-const PRIMARY = {
-  light: '#2563EB',
-  main: '#2563EB',
-  dark: '#5B9DFF'
-};
-
-const SECONDARY = {
-  light: '#52525B',
-  main: '#52525B',
-  dark: '#A1A1AA'
-};
-
-const INFO = {
-  light: '#0284C7',
-  main: '#0284C7',
-  dark: '#38BDF8'
-};
-
-const SUCCESS = {
-  light: '#16A34A',
-  main: '#16A34A',
-  dark: '#4ADE80'
-};
-
-const WARNING = {
-  light: '#D97706',
-  main: '#D97706',
-  dark: '#FBBF24'
-};
-
-const ERROR = {
-  light: '#DC2626',
-  main: '#DC2626',
-  dark: '#F87171'
-};
-
+// Dark mode raises luminance of brand/semantic colors so they stay readable on #1A1C1E.
 const colorPalette = {
-  common: { black: '#000', white: '#fff' },
-  primary: PRIMARY,
-  secondary: SECONDARY,
-  accent: SECONDARY,
-  info: INFO,
-  success: SUCCESS,
-  warning: WARNING,
-  error: ERROR,
-  grey: GREY,
-  disabled: { light: '#CCCCCC', dark: '#AAAAAA' },
-  constant: { white: '#FFFFFF', black: '#222222' },
-  divider: { light: '#E4E4E7', dark: '#2E2E33' },
+  primary: { light: '#07C', dark: '#36A2EF' },
+  secondary: { light: '#f04e98', dark: '#f68fbe' },
+  info: { light: '#74CAFF', dark: '#36a2ef' },
+  success: { light: '#00bfb3', dark: '#7dded8' },
+  warning: { light: '#fec514', dark: '#f3d371' },
+  error: { light: '#bd271e', dark: '#f86b63' },
+  divider: { light: '#d3dae6', dark: '#343741' },
   action: {
     light: {
       active: GREY[600],
-      hover: '#F0F0F2',
-      selected: '#E8F0FE',
+      hover: '#eaebec',
+      selected: '#dbecfa',
       disabled: alpha(GREY[500], 0.8),
       disabledBackground: alpha(GREY[500], 0.24),
       focus: alpha(GREY[500], 0.24),
@@ -99,165 +60,87 @@ const colorPalette = {
       disabledOpacity: 0.48
     },
     dark: {
-      active: GREY[600],
-      hover: '#2A2A2F',
-      selected: '#1E3354',
-      disabled: '#52525B',
-      disabledBackground: '#222226',
+      active: GREY[500],
+      hover: '#44464d',
+      selected: '#103148',
+      disabled: '#515761',
+      disabledBackground: '#212229',
       focus: alpha(GREY[500], 0.24),
       hoverOpacity: 0.08,
       disabledOpacity: 0.48
     }
   },
+  // `primary` is body copy and `secondary` is muted copy (MUI convention); pink lives in `accent`.
   text: {
     light: {
-      text: '#27272A',
-      title: '#18181B',
-      subdued: '#71717A',
-      success: '#27272A',
-      warning: '#27272A',
-      danger: '#27272A',
-      primary: '#2563EB',
-      secondary: '#52525B',
-      disabled: '#A1A1AA',
-      highlight: '#FEF9C3',
-      placeholder: '#A1A1AA'
+      primary: '#343741',
+      secondary: '#646a77',
+      text: '#343741',
+      title: '#1a1c21',
+      subdued: '#646a77',
+      accent: '#ba3d76',
+      link: '#006bb8',
+      success: '#343741',
+      warning: '#343741',
+      danger: '#343741',
+      disabled: '#a2abba',
+      placeholder: '#69707d'
     },
     dark: {
-      text: '#D4D4D8',
-      title: '#F4F4F5',
-      subdued: '#8B8B94',
+      primary: '#dfe5ef',
+      secondary: '#98a0aa',
+      text: '#dfe5ef',
+      title: '#f0f3f8',
+      subdued: '#98a0aa',
+      accent: '#f68fbe',
+      link: '#36a2ef',
       success: '#fff',
       warning: '#fff',
       danger: '#fff',
-      primary: '#5B9DFF',
-      secondary: '#A1A1AA',
-      disabled: '#52525B',
-      highlight: '#3B3A1F',
-      placeholder: '#71717A'
+      disabled: '#515761',
+      placeholder: '#98a0aa'
     }
   },
   background: {
     light: {
       primary: '#fff',
-      subdued: '#F7F7F8',
-      secondary: '#F0F0F2',
-      success: '#DCFCE7',
-      warning: '#FEF3C7',
-      danger: '#FEE2E2'
+      subdued: '#f7f8fc',
+      secondary: '#FEEDF5',
+      highlight: '#fff9e8',
+      success: '#daebc2',
+      warning: '#ffe18e',
+      danger: '#f5a6b0'
     },
     dark: {
-      primary: '#1C1C1F',
-      subdued: '#232326',
-      secondary: '#2E2E33',
-      success: '#14532D',
-      warning: '#78350F',
-      danger: '#7F1D1D'
+      primary: '#1A1C1E',
+      subdued: '#25282A',
+      secondary: '#2A2228',
+      highlight: '#2e2d25',
+      success: '#4a7a33',
+      warning: '#8b6926',
+      danger: '#8e2f31'
     }
   }
 };
 
 export default function dboPalette(themeMode: ThemeModeEnum): Record<string, unknown> {
-  const theme = {
-    light: {
-      primary: {
-        main: colorPalette.primary.light
-      },
-      secondary: {
-        main: colorPalette.secondary.light
-      },
-      accent: {
-        main: colorPalette.accent.light
-      },
-      white: {
-        main: colorPalette.constant.white
-      },
-      black: {
-        main: colorPalette.constant.black
-      },
-      error: {
-        main: colorPalette.error.light
-      },
-      warning: {
-        main: colorPalette.warning.light
-      },
-      success: {
-        main: colorPalette.success.light
-      },
-      background: {
-        default: colorPalette.background.light.primary,
-        paper: colorPalette.background.light.subdued,
-        neutral: colorPalette.background.light.secondary,
-        primary: colorPalette.background.light.primary,
-        subdued: colorPalette.background.light.subdued,
-        secondary: colorPalette.background.light.secondary,
-        success: colorPalette.background.light.success,
-        warning: colorPalette.background.light.warning,
-        danger: colorPalette.background.light.danger
-      },
-      text: colorPalette.text.light,
-      action: {
-        selected: colorPalette.action.light.selected,
-        active: colorPalette.action.light.active,
-        hover: colorPalette.action.light.hover,
-        disabled: colorPalette.action.light.disabled,
-        disabledBackground: colorPalette.action.light.disabledBackground,
-        focus: colorPalette.action.light.focus,
-        hoverOpacity: colorPalette.action.light.hoverOpacity,
-        disabledOpacity: colorPalette.action.light.disabledOpacity
-      },
-      divider: colorPalette.divider.light
-    },
-    dark: {
-      primary: {
-        main: colorPalette.primary.dark
-      },
-      secondary: {
-        main: colorPalette.secondary.dark
-      },
-      accent: {
-        main: colorPalette.accent.dark
-      },
-      white: {
-        main: colorPalette.constant.white
-      },
-      black: {
-        main: colorPalette.constant.black
-      },
-      error: {
-        main: colorPalette.error.dark
-      },
-      warning: {
-        main: colorPalette.warning.dark
-      },
-      success: {
-        main: colorPalette.success.dark
-      },
-      background: {
-        default: colorPalette.background.dark.primary,
-        paper: colorPalette.background.dark.subdued,
-        neutral: colorPalette.background.dark.secondary,
-        primary: colorPalette.background.dark.primary,
-        subdued: colorPalette.background.dark.subdued,
-        secondary: colorPalette.background.dark.secondary,
-        success: colorPalette.background.dark.success,
-        warning: colorPalette.background.dark.warning,
-        danger: colorPalette.background.dark.danger
-      },
-      action: {
-        selected: colorPalette.action.dark.selected,
-        active: colorPalette.action.dark.active,
-        hover: colorPalette.action.dark.hover,
-        disabled: colorPalette.action.dark.disabled,
-        disabledBackground: colorPalette.action.dark.disabledBackground,
-        focus: colorPalette.action.dark.focus,
-        hoverOpacity: colorPalette.action.dark.hoverOpacity,
-        disabledOpacity: colorPalette.action.dark.disabledOpacity
-      },
-      text: colorPalette.text.dark,
-      divider: colorPalette.divider.dark
-    }
-  } as const;
+  const { primary, secondary, info, success, warning, error, divider, action, text, background } = colorPalette;
 
-  return { ...theme[themeMode] };
+  return {
+    primary: { main: primary[themeMode] },
+    secondary: { main: secondary[themeMode] },
+    info: { main: info[themeMode] },
+    success: { main: success[themeMode] },
+    warning: { main: warning[themeMode] },
+    error: { main: error[themeMode] },
+    grey: GREY,
+    background: {
+      default: background[themeMode].primary,
+      paper: background[themeMode].subdued,
+      ...background[themeMode]
+    },
+    text: text[themeMode],
+    action: action[themeMode],
+    divider: divider[themeMode]
+  };
 }

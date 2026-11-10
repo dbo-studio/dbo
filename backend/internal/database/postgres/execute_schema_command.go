@@ -5,6 +5,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
@@ -20,7 +21,7 @@ func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID co
 			return queries, nil
 		}
 
-		queries = append(queries, fmt.Sprintf("DROP SCHEMA %s CASCADE", node.Schema))
+		queries = append(queries, fmt.Sprintf("DROP SCHEMA %s CASCADE", quote.PostgresIdent(node.Schema)))
 
 		return queries, nil
 	}
@@ -40,14 +41,16 @@ func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID co
 			return queries, nil
 		}
 
-		queries = append(queries, fmt.Sprintf("CREATE SCHEMA %s", *params.New.Name))
+		schemaName := quote.PostgresIdent(*params.New.Name)
+
+		queries = append(queries, fmt.Sprintf("CREATE SCHEMA %s", schemaName))
 
 		if params.New.Owner != nil {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", *params.New.Name, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", schemaName, quote.PostgresIdent(*params.New.Owner)))
 		}
 
 		if params.New.Comment != nil {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS '%s'", *params.New.Name, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", schemaName, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 
@@ -56,19 +59,19 @@ func (r *PostgresRepository) handleSchemaCommands(node contract.DBNode, tabID co
 			return queries, nil
 		}
 
-		schemaName := *params.Old.Name
+		schemaName := quote.PostgresIdent(*params.Old.Name)
 
 		if params.New.Name != nil && *params.Old.Name != *params.New.Name {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", schemaName, *params.New.Name))
-			schemaName = *params.New.Name
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s RENAME TO %s", schemaName, quote.PostgresIdent(*params.New.Name)))
+			schemaName = quote.PostgresIdent(*params.New.Name)
 		}
 
 		if params.New.Owner != nil && (params.Old.Owner == nil || *params.Old.Owner != *params.New.Owner) {
-			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", schemaName, *params.New.Owner))
+			queries = append(queries, fmt.Sprintf("ALTER SCHEMA %s OWNER TO %s", schemaName, quote.PostgresIdent(*params.New.Owner)))
 		}
 
 		if params.New.Comment != nil && (params.Old.Comment == nil || *params.Old.Comment != *params.New.Comment) {
-			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS '%s'", schemaName, *params.New.Comment))
+			queries = append(queries, fmt.Sprintf("COMMENT ON SCHEMA %s IS %s", schemaName, quote.PostgresLiteral(*params.New.Comment)))
 		}
 	}
 

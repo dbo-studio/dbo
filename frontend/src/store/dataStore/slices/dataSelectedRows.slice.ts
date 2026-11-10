@@ -1,4 +1,4 @@
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type { StateCreator } from 'zustand';
 import type { DataSelectedRowsSlice, DataStore, SelectedRow } from '../types';
 
@@ -10,7 +10,7 @@ export const createDataSelectedRowsSlice: StateCreator<
 > = (set, get) => ({
   selectedRows: [],
   updateSelectedRows: (rows: SelectedRow[], replace?: boolean): void => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
 
     const currentSelectedRows = get().selectedRows;

@@ -110,7 +110,6 @@ func getDBPath(cfg *config.Config, logger logger.Logger) string {
 		return defaultPath
 	}
 
-	// Ensure the directory exists
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0700); err != nil {
 		return defaultPath
 	}

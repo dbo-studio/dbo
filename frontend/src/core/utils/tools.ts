@@ -28,19 +28,12 @@ export const tools = {
     if (!value.length) {
       return '';
     }
-    return (
-      value
-        // Remove multiline comments
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        // Remove single-line comments
-        .replace(/--.*$/gm, '')
-        // Remove leading and trailing whitespace from each line
-        .replace(/^\s+|\s+$/gm, '')
-        // Remove extra spaces between keywords and values
-        .replace(/\s+/g, ' ')
-        // Trim any remaining whitespace at the start and end of the string
-        .trim()
-    );
+    return value
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/--.*$/gm, '')
+      .replace(/^\s+|\s+$/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   },
   formatSql: (query: string, lang: SqlLanguage): string => {
     return format(query, { language: lang, keywordCase: 'preserve' });

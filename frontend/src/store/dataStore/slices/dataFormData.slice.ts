@@ -1,10 +1,10 @@
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type { FormFieldWithState } from '@/types/Tree';
 import type { StateCreator } from 'zustand';
-import type { DataFormDataSlice } from '../types';
+import type { DataFormDataSlice, DataStore } from '../types';
 
 export const createDataFormDataSlice: StateCreator<
-  DataFormDataSlice,
+  DataStore & DataFormDataSlice,
   [['zustand/devtools', never]],
   [],
   DataFormDataSlice
@@ -39,7 +39,7 @@ export const createDataFormDataSlice: StateCreator<
   },
 
   resetFormData: (tabId: string, objectTabId: string): void => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
 
     set(

@@ -1,11 +1,12 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
-import { useAiStore } from '@/store/aiStore/ai.store';
+import { useAiSession } from '../../hooks/useAiSession';
 import { Box, Collapse, Stack, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 import { useState } from 'react';
 import { ThinkingMessageStyled } from './ThinkingMessage.styled';
 import type { ThinkingMessageProps } from '../../types';
+import { variables } from '@/core/theme/variables';
 
 const pulse = keyframes`
   0%, 100% { opacity: 0.5; }
@@ -20,7 +21,7 @@ export default function ThinkingMessage({
 }: ThinkingMessageProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed && !isLive);
   const [prevProps, setPrevProps] = useState({ defaultCollapsed, isLive });
-  const streaming = useAiStore((state) => state.streaming);
+  const { streaming } = useAiSession();
 
   if (prevProps.defaultCollapsed !== defaultCollapsed || prevProps.isLive !== isLive) {
     setPrevProps({ defaultCollapsed, isLive });
@@ -33,7 +34,7 @@ export default function ThinkingMessage({
   if (!content && !isLive) return null;
 
   return (
-    <ThinkingMessageStyled $isLive={isLive}>
+    <ThinkingMessageStyled $isLive={isLive} data-testid={isLive ? 'ai-thinking' : undefined}>
       <Stack
         direction='row'
         spacing={0.75}
@@ -65,7 +66,7 @@ export default function ThinkingMessage({
             whiteSpace: 'pre-wrap',
             fontStyle: 'italic',
             lineHeight: 1.55,
-            fontSize: '0.8125rem'
+            fontSize: variables.fontSize.md
           }}
         >
           {content || (isLive ? '...' : '')}

@@ -33,7 +33,11 @@ export const authChangePasswordSchema = v.pipe(
 const userPermissionsSchema = v.object({
   createConnection: v.boolean(),
   aiSettings: v.boolean(),
-  mcpSettings: v.boolean()
+  mcpSettings: v.boolean(),
+  cli: v.boolean(),
+  import: v.boolean(),
+  export: v.boolean(),
+  aiUse: v.boolean()
 });
 
 export const adminCreateUserSchema = v.object({
@@ -46,6 +50,19 @@ export const adminCreateUserSchema = v.object({
 export const adminResetPasswordSchema = v.object({
   password: authPasswordSchema
 });
+
+export const authSetupSchema = v.pipe(
+  v.object({
+    token: v.pipe(v.string(), v.trim(), v.minLength(1, 'Setup token is required')),
+    email: v.pipe(v.string(), v.email('Valid email is required')),
+    password: authPasswordSchema,
+    confirm: authPasswordSchema
+  }),
+  v.forward(
+    v.partialCheck([['password'], ['confirm']], (input) => input.password === input.confirm, 'Passwords must match'),
+    ['confirm']
+  )
+);
 
 export const authForcedChangePasswordSchema = v.pipe(
   v.object({

@@ -29,13 +29,11 @@ async function canReachHost(
 }
 
 function engineLabel(engine: DbEngine): string {
-  if (engine === "postgresql") return "PostgreSQL";
-  if (engine === "mysql") return "MySQL";
-  return "SQLite";
+  return getDbConfig(engine, "label").type ?? "PostgreSQL";
 }
 
-function connectionType(engine: DbEngine): "PostgreSQL" | "MySQL" | "SQLite" {
-  return engineLabel(engine) as "PostgreSQL" | "MySQL" | "SQLite";
+function connectionType(engine: DbEngine): string {
+  return engineLabel(engine);
 }
 
 /**
@@ -63,6 +61,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
 
           await test.step("Create a new connection", async () => {
             await connectionPage.createConnection(config);
+            await connectionPage.openSwitcher();
             await expect(
               connectionPage.getConnectionItem(connectionName),
             ).toBeVisible();
@@ -117,6 +116,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
               }
               await connectionPage.testConnection();
               await connectionPage.submitConnection();
+              await connectionPage.openSwitcher();
               await expect(
                 connectionPage.getConnectionItem(editedName),
               ).toBeVisible();
@@ -176,6 +176,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
                 await connectionPage.passwordInput.fill(config.password);
               }
               await connectionPage.submitConnection();
+              await connectionPage.openSwitcher();
               await expect(
                 connectionPage.getConnectionItem(duplicatedName),
               ).toBeVisible();
@@ -218,6 +219,7 @@ export function defineConnectionsTests(engine: DbEngine): void {
             });
 
             await test.step("Drag second connection above the first", async () => {
+              await connectionPage.openSwitcher();
               const before = connectionPage.getConnectionItems();
               await expect(before).toHaveCount(2);
               await expect(before.nth(0)).toHaveAttribute(

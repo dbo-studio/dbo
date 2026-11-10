@@ -57,6 +57,25 @@ func (r *userRepoImpl) FindByEmail(ctx context.Context, email string) (*model.Us
 	return &user, nil
 }
 
+// FindFirstAdmin returns the oldest active admin.
+func (r *userRepoImpl) FindFirstAdmin(ctx context.Context) (*model.User, error) {
+	var user model.User
+
+	err := r.db.WithContext(ctx).
+		Where("role = ? AND disabled_at IS NULL", model.UserRoleAdmin).
+		Order("created_at ASC").
+		First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperror.ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *userRepoImpl) List(ctx context.Context) ([]model.User, error) {
 	var users []model.User
 

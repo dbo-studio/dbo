@@ -16,12 +16,14 @@ import (
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
 const (
 	sessionTouchInterval = 60 * time.Second
 	mcpProxyPrefix       = "/api/mcp"
+	publicPrefix         = "/api/public/"
 	healthzPath          = "/healthz"
 	apiPrefix            = "/api"
 )
@@ -44,6 +46,11 @@ func OwnerSessionMiddleware(
 			return c.Next()
 		}
 
+		// A share link's visitors have no account; the link's token is checked by its handler.
+		if strings.HasPrefix(path, publicPrefix) {
+			return c.Next()
+		}
+
 		// SPA / static assets: no auth. Data APIs live under /api.
 		if !strings.HasPrefix(path, apiPrefix) {
 			return c.Next()
@@ -55,12 +62,15 @@ func OwnerSessionMiddleware(
 
 		mode := config.AuthModeNone
 		if cfg != nil {
-			mode = cfg.App.AuthMode
+			mode = cfg.App.Auth.Mode
 		}
 
 		publicURL := ""
+		sharedOwnerID := ""
+
 		if cfg != nil {
 			publicURL = cfg.App.PublicURL
+			sharedOwnerID = cfg.App.Auth.SharedOwnerID
 		}
 
 		// Login / token exchange: no session required.
@@ -68,7 +78,7 @@ func OwnerSessionMiddleware(
 			return c.Next()
 		}
 
-		bound, err := tryBindCookieSession(c, webSessionRepo, authService, mode, publicURL)
+		bound, err := tryBindCookieSession(c, webSessionRepo, authService, mode, publicURL, sharedOwnerID)
 		if err != nil {
 			return err
 		}
@@ -96,7 +106,7 @@ func OwnerSessionMiddleware(
 			}
 
 			SetSessionCookie(c, newSessionID, publicURL)
-			setOwner(c, newSessionID)
+			setOwner(c, lo.CoalesceOrEmpty(sharedOwnerID, newSessionID))
 			setSessionID(c, newSessionID)
 
 			return c.Next()
@@ -110,6 +120,7 @@ func tryBindCookieSession(
 	authService serviceAuth.IAuthService,
 	mode config.AuthMode,
 	publicURL string,
+	sharedOwnerID string,
 ) (bool, error) {
 	sessionID := c.Cookies(serviceAuth.SessionCookieName)
 	if sessionID == "" {
@@ -136,7 +147,15 @@ func tryBindCookieSession(
 		return false, nil
 	}
 
-	user, userErr := authService.LoadSessionUser(c.Context(), session)
+	// Login off: a session left over from login-on must not act as its user.
+	var (
+		user    *model.User
+		userErr error
+	)
+	if mode == config.AuthModeLocal {
+		user, userErr = authService.LoadSessionUser(c.Context(), session)
+	}
+
 	if userErr != nil {
 		if errors.Is(userErr, apperror.ErrUserDisabled) || errors.Is(userErr, apperror.ErrUserNotFound) {
 			_ = webSessionRepo.Delete(c.Context(), sessionID)
@@ -160,7 +179,7 @@ func tryBindCookieSession(
 		return false, response.ErrorBuilder().FromError(apperror.InternalServerError(err)).Send(c)
 	}
 
-	bindSession(c, session, user)
+	bindSession(c, session, user, sharedOwnerID)
 
 	return true, nil
 }
@@ -170,7 +189,7 @@ func isUnauthOnlyPath(method, path string) bool {
 		return false
 	}
 
-	return path == "/api/auth/login" || path == "/api/auth/login/totp"
+	return path == "/api/auth/login" || path == "/api/auth/login/totp" || path == "/api/auth/setup"
 }
 
 func isMustChangeAllowed(method, path string) bool {
@@ -189,7 +208,7 @@ func isMustChangeAllowed(method, path string) bool {
 	return false
 }
 
-func bindSession(c fiber.Ctx, session *model.WebSession, user *model.User) {
+func bindSession(c fiber.Ctx, session *model.WebSession, user *model.User, sharedOwnerID string) {
 	setSessionID(c, session.ID)
 
 	if user != nil {
@@ -199,7 +218,7 @@ func bindSession(c fiber.Ctx, session *model.WebSession, user *model.User) {
 		return
 	}
 
-	setOwner(c, session.ID)
+	setOwner(c, lo.CoalesceOrEmpty(sharedOwnerID, session.ID))
 }
 
 func setOwner(c fiber.Ctx, ownerID string) {
@@ -218,6 +237,10 @@ func setUser(c fiber.Ctx, user *model.User) {
 		CreateConnection: flags.CreateConnection,
 		AiSettings:       flags.AiSettings,
 		McpSettings:      flags.McpSettings,
+		Cli:              flags.Cli,
+		Import:           flags.Import,
+		Export:           flags.Export,
+		AiUse:            flags.AiUse,
 	}
 	// Fiber Ctx.Value reads Locals (UserValue), not SetContext — put auth
 	// fields on Locals so services that receive fiber.Ctx see them.

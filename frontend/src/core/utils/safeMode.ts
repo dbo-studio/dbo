@@ -10,6 +10,7 @@ export type SafeModeErrorData = {
   requiresPassword?: boolean;
   canUnlock?: boolean;
   safeMode?: string;
+  connectionName?: string;
   unlocked?: boolean;
 };
 
@@ -28,7 +29,8 @@ export function getSafeModeError(error: unknown): { message: string; data: SafeM
   if (
     message !== 'safe_mode_blocked' &&
     message !== 'safe_mode_confirm_required' &&
-    message !== 'safe_mode_password_required'
+    message !== 'safe_mode_password_required' &&
+    message !== 'safe_mode_prod_locked'
   ) {
     return null;
   }

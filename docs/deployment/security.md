@@ -8,7 +8,7 @@ DBO Studio security behavior depends heavily on **deployment mode**. Treat local
 | ---------- | ---------- | --------------------------- |
 | Desktop / local dev (`none`) | User at the keyboard owns the machine; anonymous auto-session | Low locally — **do not** expose on a network |
 | Web `local` | Per-user principals; HttpOnly `dbo_session`; connection ownership = user id | Medium on LAN; use TLS on the public internet |
-| Public server | Untrusted clients | **High without `local` auth** — bootstrap an admin and terminate TLS |
+| Public server | Untrusted clients | **High without `local` auth** — set `APP_AUTH_MODE=local` and terminate TLS |
 
 Without local auth (`none`), the API issues an owner session to any client that can reach the port. That is intentional for local development but **must not** be exposed on the public internet.
 
@@ -28,18 +28,32 @@ When auth mode is `local`:
 - Idle TTL 24h; absolute TTL 7d; logout deletes the server row; login/password change rotates the session.
 - Database errors during session lookup return 500 — they do not silently mint a new owner.
 
-### Bootstrap
+### First admin
 
-- `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD` create the first admin once; password must change before data APIs.
-- Bootstrap password must be 8–40 characters and include a letter and a number.
-- Bootstrap env is ignored after users exist.
+- With `APP_AUTH_MODE=local` and no user, the UI shows a one-time setup screen. It needs a random token that the server prints at startup (stderr and log), so only someone with access to the server output can create the admin. The token is compared in constant time and cleared once used.
+- `APP_ADMIN_EMAIL` + `APP_ADMIN_PASSWORD` seed the first admin at startup; that password must change before data APIs.
+- Passwords must be 8–40 characters and include a letter and a number.
+- Seed env is ignored after users exist.
 - Passwords hashed with bcrypt; never logged.
+
+### Turning login off
+
+`APP_AUTH_MODE=none` with existing users makes every client act as the oldest active admin, including its remembered connection passwords. Only do this on a host no one else can reach.
 
 ### Roles and permissions
 
 - `admin` \| `member` roles. Administration → Users is admin-only.
 - Per-user permissions (toggle in Administration): **Create connection**, **AI settings**, **MCP settings**. Admins implicitly have all permissions.
 - AI provider configuration is **per user** (`owner_id` on `ai_providers`). MCP settings are also stored per user (`mcp_settings.owner_id`).
+- Feature flags (Administration → Users): **Terminal (CLI)**, **Import**, **Export**, **AI use**. Terminal is off for members by default; the other
+  three stay on for existing users. The API enforces them (`/api/cli/run`, `/nosql/tools/cli/run`, import/export jobs, AI chat/complete), not just the UI.
+- The terminal adds no database capability: lines run through the same Safe Mode and history paths as the editors. It also refuses SQL that reaches
+  the database host (`COPY … PROGRAM`, `pg_read_file`, `INTO OUTFILE`, `LOAD DATA`, `ATTACH`, …), times out after 30 s, allows one statement in flight per
+  user, and writes an audit line per statement (NoSQL input is redacted because lines like `AUTH` carry secrets; SQL is truncated). Terminal output is
+  sanitized so data cannot move the cursor or restyle the screen.
+- **MongoDB** filters and terminal commands refuse server-side JavaScript and writes outside the browsed collection (`$where`, `$function`, `$accumulator`, `$out`, `$merge`, `mapReduce`, `eval`, `drop`). The terminal is a JSON-argument parser, not a JavaScript engine.
+- **Production tag**: a connection with environment `prod` rejects every non-read operation (SQL and NoSQL) with `safe_mode_prod_locked` until the user
+  types the connection name (15 min window, per user and connection, in memory only). Lifting the tag needs the same unlock.
 - SQL ACL is **not** in DBO (DB GRANT + Safe Mode).
 
 ### Two-factor authentication (TOTP)
@@ -113,7 +127,7 @@ MCP access uses hashed tokens in the app database. Token comparison uses constan
 ## Hardening checklist (public deployment)
 
 - [ ] TLS termination at reverse proxy
-- [ ] Auth mode `local` (bootstrap admin via `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD`)
+- [ ] `APP_AUTH_MODE=local`, first admin created before the port is public
 - [ ] `APP_PUBLIC_URL` matches public origin
 - [ ] `APP_ALLOWED_ORIGINS` lists only trusted frontends
 - [ ] Persistent volume backed up (`dbo.db`, `app_secret.key`)

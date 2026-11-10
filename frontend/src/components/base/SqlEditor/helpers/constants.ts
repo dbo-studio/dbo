@@ -1,6 +1,5 @@
 export const themes = ['github-light', 'github-dark'];
 
-// Completion Item Kinds (from Monaco Editor)
 export const CompletionItemKind = {
   Function: 1,
   Variable: 2,
@@ -9,12 +8,10 @@ export const CompletionItemKind = {
   Text: 1
 } as const;
 
-// Completion Item Insert Text Rules
 export const CompletionItemInsertTextRule = {
   InsertAsSnippet: 4
 } as const;
 
-// Marker Severity (from Monaco Editor)
 export const MarkerSeverity = {
   Hint: 1,
   Info: 2,
@@ -22,17 +19,14 @@ export const MarkerSeverity = {
   Error: 8
 } as const;
 
-// Debounce delays
 export const DEBOUNCE_DELAYS = {
   inlineAITrigger: 500,
   inlineAIProvider: 300,
   sqlValidation: 500
 } as const;
 
-// Minimum text length for AI completion
 export const MIN_TEXT_LENGTH_FOR_AI = 10;
 
-// SQL Keywords
 export const SQL_KEYWORDS = [
   'SELECT',
   'FROM',

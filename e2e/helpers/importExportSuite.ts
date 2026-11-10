@@ -6,6 +6,7 @@ import {
   cleanupImportExportSqlite,
   createImportExportTmpDir,
   dropTables,
+  engineLabel,
   setupImportExport,
   treePathForEngine,
 } from "./importExport";
@@ -15,12 +16,7 @@ import { withConnectionCleanup } from "./safeCleanup";
  * Same depth as PostgreSQL import/export for every shipped engine.
  */
 export function defineImportExportTests(engine: DbEngine): void {
-  const label =
-    engine === "postgresql"
-      ? "PostgreSQL"
-      : engine === "mysql"
-        ? "MySQL"
-        : "SQLite";
+  const label = engineLabel(engine);
 
   test.describe(`Import Export ${label}`, () => {
   test("Export CSV and verify download", async ({ page }, testInfo) => {
@@ -243,6 +239,48 @@ export function defineImportExportTests(engine: DbEngine): void {
           await dataGrid.refreshQuery();
           await dataGrid.waitForData("Imported Alpha");
           await dataGrid.expectCellVisible("Imported Beta");
+        });
+
+        await test.step("Cleanup tables", async () => {
+          await dropTables(sqlEditor, [importCsvTable]);
+        });
+      } finally {
+        cleanup();
+        if (pages) cleanupImportExportSqlite(pages);
+      }
+    });
+  });
+
+  test("Import CSV with a column mapping and a custom delimiter", async ({ page }, testInfo) => {
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `import-export-${suffix}`;
+    const importCsvTable = `e2e_imp_map_${suffix}`;
+    const { paths, cleanup } = createImportExportTmpDir(suffix);
+    const tableTreePath = treePathForEngine(engine, connectionName);
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      let pages: Awaited<ReturnType<typeof setupImportExport>> | undefined;
+      try {
+        pages = await setupImportExport(page, { connectionName, importCsvTable }, engine);
+        const { sqlEditor, dataBrowser, dataGrid } = pages;
+
+        await test.step("Header names differ and one column is skipped", async () => {
+          // ';' delimiter is typed in the wizard; "who" goes to name, "junk" stays out.
+          fs.writeFileSync(
+            paths.handCsv,
+            "id;who;junk\n30;Mapped Gamma;x\n40;Mapped Delta;y\n",
+            "utf8",
+          );
+
+          await dataBrowser.openTableFromTree([...tableTreePath], importCsvTable);
+          await expect(page.getByTestId("data-grid")).toBeVisible({ timeout: 15000 });
+          await dataBrowser.importFile(paths.handCsv, {
+            delimiter: ";",
+            mapping: { who: "name", junk: "Do not import" },
+          });
+          await dataGrid.refreshQuery();
+          await dataGrid.waitForData("Mapped Gamma");
+          await dataGrid.expectCellVisible("Mapped Delta");
         });
 
         await test.step("Cleanup tables", async () => {

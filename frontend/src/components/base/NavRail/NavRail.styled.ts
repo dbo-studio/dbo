@@ -1,17 +1,18 @@
 import { alpha, Box, styled } from '@mui/material';
 
 export const NavRailStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'hideOnMobile'
-})<{ hideOnMobile?: boolean }>(({ theme, hideOnMobile }) => ({
+  shouldForwardProp: (prop) => prop !== 'hideOnMobile' && prop !== 'fullWidth'
+})<{ hideOnMobile?: boolean; fullWidth?: boolean }>(({ theme, hideOnMobile, fullWidth }) => ({
   display: 'flex',
   flexDirection: 'column',
-  width: 240,
-  minWidth: 240,
-  maxWidth: 240,
+  width: fullWidth ? '100%' : 240,
+  minWidth: fullWidth ? 0 : 240,
+  maxWidth: fullWidth ? '100%' : 240,
+  flex: fullWidth ? 1 : undefined,
   height: '100%',
   minHeight: 0,
   background: theme.palette.background.subdued,
-  borderRight: `1px solid ${theme.palette.divider}`,
+  borderRight: fullWidth ? 'none' : `1px solid ${theme.palette.divider}`,
   ...(hideOnMobile
     ? {
         [theme.breakpoints.down('md')]: {
@@ -41,7 +42,7 @@ export const NavRailItemStyled = styled(Box, {
   borderRadius: 4,
   borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
   background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-  color: selected ? theme.palette.text.primary : theme.palette.text.text,
+  color: selected ? theme.palette.text.link : theme.palette.text.text,
   textTransform: 'none',
   '&:hover': {
     background: selected ? alpha(theme.palette.primary.main, 0.14) : alpha(theme.palette.action.hover, 0.6)

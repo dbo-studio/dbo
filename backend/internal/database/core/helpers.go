@@ -2,6 +2,7 @@ package databaseCore
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -11,7 +12,7 @@ import (
 
 func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 	switch {
-	case databaseContract.IsMysqlFamily(r.Connection().ConnectionType):
+	case databaseContract.IsMysqlFamily(r.Connection().ConnectionType), databaseContract.IsHostSQL(r.Connection().ConnectionType):
 		return r.mysqlNode(node)
 	case databaseContract.IsPostgresFamily(r.Connection().ConnectionType):
 		return r.postgresqlNode(node)
@@ -26,7 +27,7 @@ func (r *BaseRepository) ExtractNode(node string) databaseContract.DBNode {
 // Container suffixes (tableContainer, etc.) are never emitted as object names.
 func FormatNodeID(connectionType string, node databaseContract.DBNode) string {
 	switch {
-	case databaseContract.IsMysqlFamily(connectionType):
+	case databaseContract.IsMysqlFamily(connectionType), databaseContract.IsHostSQL(connectionType):
 		return formatMysqlNodeID(node)
 	case databaseContract.IsPostgresFamily(connectionType):
 		return formatPostgresqlNodeID(node)
@@ -41,7 +42,12 @@ func isContainerSegment(segment string) bool {
 	switch databaseContract.TreeNodeType(segment) {
 	case databaseContract.TableContainerNodeType,
 		databaseContract.ViewContainerNodeType,
-		databaseContract.MaterializedViewContainerNodeType:
+		databaseContract.MaterializedViewContainerNodeType,
+		databaseContract.TypeContainerNodeType,
+		databaseContract.SequenceContainerNodeType,
+		databaseContract.FunctionContainerNodeType,
+		databaseContract.ProcedureContainerNodeType,
+		databaseContract.EventContainerNodeType:
 		return true
 	default:
 		return false
@@ -104,7 +110,7 @@ const (
 )
 
 func (*BaseRepository) ColumnMappedFormat(dataType string) string {
-	normalized := strings.ToUpper(strings.TrimSpace(dataType))
+	normalized := strings.ToUpper(strings.TrimSpace(unwrapNullable(dataType)))
 	if idx := strings.Index(normalized, "("); idx > -1 {
 		normalized = normalized[:idx]
 	}
@@ -114,23 +120,23 @@ func (*BaseRepository) ColumnMappedFormat(dataType string) string {
 	}
 
 	switch normalized {
-	case "VARCHAR", "CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "CHARACTER VARYING", "CHARACTER", "TEXT", "VARBIT", "BIT VARYING", "NAME", "BPCHAR", "CITEXT", "BIT":
+	case "VARCHAR", "CHAR", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT", "CHARACTER VARYING", "CHARACTER", "TEXT", "NVARCHAR", "NCHAR", "NTEXT", "SYSNAME", "XML", "STRING", "FIXEDSTRING", "VARBIT", "BIT VARYING", "NAME", "BPCHAR", "CITEXT", "BIT":
 		return MappedTypeString
-	case "ENUM":
+	case "ENUM", "ENUM8", "ENUM16":
 		return MappedTypeEnum
 	case "SET":
 		return MappedTypeString
-	case "JSON", "JSONB":
+	case "JSON", "JSONB", "ARRAY", "MAP", "TUPLE", "NESTED":
 		return MappedTypeJSON
-	case "UUID":
+	case "UUID", "UNIQUEIDENTIFIER":
 		return MappedTypeUUID
 	case "BOOL", "BOOLEAN":
 		return MappedTypeBoolean
-	case "INT", "INTEGER", "SMALLINT", "BIGINT", "FLOAT", "REAL", "DOUBLE PRECISION", "NUMERIC", "DECIMAL", "SERIAL", "BIGSERIAL", "TINYINT", "MEDIUMINT", "DOUBLE", "INT2", "INT4", "INT8", "FLOAT4", "FLOAT8", "MONEY", "OID":
+	case "INT", "INTEGER", "SMALLINT", "BIGINT", "FLOAT", "REAL", "DOUBLE PRECISION", "NUMERIC", "DECIMAL", "SERIAL", "BIGSERIAL", "TINYINT", "MEDIUMINT", "DOUBLE", "INT2", "INT4", "INT8", "FLOAT4", "FLOAT8", "MONEY", "SMALLMONEY", "OID", "INT16", "INT32", "INT64", "INT128", "INT256", "UINT8", "UINT16", "UINT32", "UINT64", "UINT128", "UINT256", "FLOAT32", "FLOAT64", "DECIMAL32", "DECIMAL64", "DECIMAL128", "DECIMAL256":
 		return MappedTypeNumber
-	case "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY", "BYTEA", "BYTE":
+	case "BLOB", "IMAGE", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "BINARY", "VARBINARY", "BYTEA", "BYTE":
 		return MappedTypeBinary
-	case "DATETIME", "TIMESTAMP", "TIMESTAMP WITHOUT TIME ZONE", "TIMESTAMP WITH TIME ZONE", "TIMESTAMPTZ":
+	case "DATETIME", "TIMESTAMP", "TIMESTAMP WITHOUT TIME ZONE", "TIMESTAMP WITH TIME ZONE", "TIMESTAMPTZ", "DATETIME2", "SMALLDATETIME", "DATETIMEOFFSET", "DATETIME64":
 		return MappedTypeDateTime
 	case "YEAR":
 		return MappedTypeNumber
@@ -144,6 +150,22 @@ func (*BaseRepository) ColumnMappedFormat(dataType string) string {
 		return MappedTypeGeometry
 	default:
 		return MappedTypeUnknown
+	}
+}
+
+// unwrapNullable drops ClickHouse Nullable(...) / LowCardinality(...) wrappers so the inner type is mapped.
+func unwrapNullable(t string) string {
+	t = strings.TrimSpace(t)
+
+	for {
+		switch {
+		case strings.HasPrefix(t, "Nullable(") && strings.HasSuffix(t, ")"):
+			t = t[len("Nullable(") : len(t)-1]
+		case strings.HasPrefix(t, "LowCardinality(") && strings.HasSuffix(t, ")"):
+			t = t[len("LowCardinality(") : len(t)-1]
+		default:
+			return t
+		}
 	}
 }
 
@@ -225,12 +247,22 @@ func sanitizeBytes(data []byte, mappedType string) any {
 		return BinaryCellValue(data)
 	}
 
+	if mappedType == MappedTypeUUID && len(data) == 16 {
+		return guidString(data)
+	}
+
 	forceBinary := mappedType == MappedTypeBinary
 	if forceBinary || !utf8.Valid(data) {
 		return BinaryCellValue(data)
 	}
 
 	return string(data)
+}
+
+// guidString formats the 16 bytes SQL Server sends for uniqueidentifier: the first three groups are little-endian.
+func guidString(b []byte) string {
+	return fmt.Sprintf("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+		b[3], b[2], b[1], b[0], b[5], b[4], b[7], b[6], b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15])
 }
 
 func BinaryCellValue(data []byte) map[string]any {

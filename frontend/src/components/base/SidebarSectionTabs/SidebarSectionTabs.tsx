@@ -1,5 +1,12 @@
-import { Tab, Tabs } from '@mui/material';
-import type { JSX } from 'react';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import locales from '@/locales';
+import type { KeyboardEvent, JSX } from 'react';
+import {
+  SidebarSectionTabCloseStyled,
+  SidebarSectionTabLabelStyled,
+  SidebarSectionTabStyled,
+  SidebarSectionTabsRootStyled
+} from './SidebarSectionTabs.styled';
 import type { SidebarSectionTabsProps } from './types';
 
 export default function SidebarSectionTabs<T extends string | number>({
@@ -8,18 +15,54 @@ export default function SidebarSectionTabs<T extends string | number>({
   tabs,
   'aria-label': ariaLabel
 }: SidebarSectionTabsProps<T>): JSX.Element {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, index: number): void => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+      return;
+    }
+
+    event.preventDefault();
+
+    const direction = event.key === 'ArrowRight' ? 1 : -1;
+    const nextIndex = (index + direction + tabs.length) % tabs.length;
+    onChange(tabs[nextIndex].id);
+  };
+
   return (
-    <Tabs
-      className='MuiTabs-flat'
-      value={value}
-      variant='fullWidth'
-      aria-label={ariaLabel}
-      sx={{ flexShrink: 0 }}
-      onChange={(_event, next: T): void => onChange(next)}
-    >
-      {tabs.map((tab) => (
-        <Tab key={String(tab.id)} className='Mui-flat' value={tab.id} label={tab.label} disableRipple />
-      ))}
-    </Tabs>
+    <SidebarSectionTabsRootStyled role='tablist' aria-label={ariaLabel}>
+      {tabs.map((tab, index) => {
+        const selected = value === tab.id;
+
+        return (
+          <SidebarSectionTabStyled
+            key={String(tab.id)}
+            role='tab'
+            aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
+            selected={selected}
+            isLast={index === tabs.length - 1}
+            title={tab.label}
+            onClick={(): void => onChange(tab.id)}
+            onKeyDown={(event: KeyboardEvent<HTMLDivElement>): void => handleKeyDown(event, index)}
+            {...Object.fromEntries(Object.entries(tab.data ?? {}).map(([key, value]) => [`data-${key}`, value]))}
+          >
+            {tab.icon && <CustomIcon type={tab.icon} size='xs' />}
+            <SidebarSectionTabLabelStyled>{tab.label}</SidebarSectionTabLabelStyled>
+            {tab.onClose && (
+              <SidebarSectionTabCloseStyled
+                role='button'
+                aria-label={locales.close}
+                data-testid='sidebar-tab-close'
+                onClick={(event): void => {
+                  event.stopPropagation();
+                  tab.onClose?.();
+                }}
+              >
+                <CustomIcon type='close' size='xs' />
+              </SidebarSectionTabCloseStyled>
+            )}
+          </SidebarSectionTabStyled>
+        );
+      })}
+    </SidebarSectionTabsRootStyled>
   );
 }

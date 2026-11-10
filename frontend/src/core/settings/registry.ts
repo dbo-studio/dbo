@@ -65,6 +65,13 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     group: 'prefs'
   },
   {
+    id: 7,
+    name: locales.notifications,
+    icon: 'bell',
+    keywords: ['notifications', 'alerts', 'background', 'tray', 'sound', 'query', 'export', 'import'],
+    group: 'prefs'
+  },
+  {
     id: 5,
     name: locales.about,
     icon: 'about',
@@ -96,6 +103,12 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     keywords: ['update', 'version', 'release']
   },
   {
+    id: 'general.account',
+    sectionId: 0,
+    label: locales.account_row_title,
+    keywords: ['account', 'sign in', 'login', 'log in', 'sign out', 'dbo']
+  },
+  {
     id: 'general.analytics',
     sectionId: 0,
     label: locales.analytics,
@@ -120,6 +133,24 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     label: locales.reset_factory,
     keywords: ['reset', 'factory', 'clear'],
     instanceAdminOnly: true
+  },
+  {
+    id: 'notifications.enabled',
+    sectionId: 7,
+    label: locales.notification_settings_enabled,
+    keywords: ['notifications', 'alerts', 'desktop']
+  },
+  {
+    id: 'notifications.background',
+    sectionId: 7,
+    label: locales.notification_settings_background,
+    keywords: ['background', 'long query', 'seconds']
+  },
+  {
+    id: 'notifications.keep-running',
+    sectionId: 7,
+    label: locales.notification_settings_keep_running,
+    keywords: ['tray', 'background', 'close', 'quit']
   },
   {
     id: 'appearance.theme',

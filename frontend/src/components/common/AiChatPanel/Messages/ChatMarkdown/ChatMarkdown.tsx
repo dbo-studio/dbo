@@ -1,12 +1,27 @@
 import { Box, Typography, useTheme, type Theme } from '@mui/material';
 import AppMarkdown from '@/components/base/AppMarkdown/AppMarkdown';
-import type { JSX } from 'react';
+import { useMemo, type JSX } from 'react';
 import ChatDataTable from '../ChatDataTable/ChatDataTable';
 import { messageMarkdownSx } from '../messageMarkdownSx';
 import { splitStreamingMarkdown } from '../splitStreamingMarkdown';
-import { StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
+import { inlineCaretSx, StreamingCursorStyled } from '../StreamingPreview/StreamingPreview.styled';
 import { splitChatContent, type ChatContentSegment } from '../../utils/chatTableContent';
+import type { AiMessageType } from '@/types';
 import type { ChatMarkdownProps } from '../../types';
+import CodeMessage from '../CodeMessage/CodeMessage';
+
+/** Fenced code in markdown gets the same actions (insert / open tab / run / copy) as code blocks. */
+const renderCodeBlock = (code: string, language: string): JSX.Element => (
+  <CodeMessage
+    message={{
+      role: 'assistant',
+      type: 'code',
+      content: code,
+      language: language as AiMessageType['language'],
+      createdAt: ''
+    }}
+  />
+);
 
 const getSegmentKey = (segment: ChatContentSegment): string => {
   if (segment.type === 'table') {
@@ -33,7 +48,7 @@ const renderSegments = (text: string, theme: Theme): JSX.Element[] => {
 
     return (
       <Typography key={key} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
-        <AppMarkdown>{segment.content}</AppMarkdown>
+        <AppMarkdown renderCodeBlock={renderCodeBlock}>{segment.content}</AppMarkdown>
       </Typography>
     );
   });
@@ -45,54 +60,49 @@ export default function ChatMarkdown({
   showCursor = false
 }: ChatMarkdownProps): JSX.Element | null {
   const theme = useTheme();
+  const { stable, pending } = useMemo(
+    () => (isStreaming ? splitStreamingMarkdown(content) : { stable: content, pending: '' }),
+    [content, isStreaming]
+  );
+  // The finished part only changes at a paragraph break, so it is not parsed again for every token.
+  const stableNode = useMemo(() => (stable ? renderSegments(stable, theme) : null), [stable, theme]);
 
   if (!content) {
     return null;
   }
 
   if (!isStreaming) {
-    const segments = renderSegments(content, theme);
-    return <Box>{segments}</Box>;
+    return <Box>{stableNode}</Box>;
   }
 
-  const { stable, pending } = splitStreamingMarkdown(content);
-
-  if (!stable) {
-    return (
-      <Typography
-        component='div'
-        variant='body2'
-        sx={{
-          whiteSpace: 'pre-wrap',
-          lineHeight: 1.65,
-          wordBreak: 'break-word'
-        }}
-      >
-        {pending}
-        {showCursor && <StreamingCursorStyled />}
-      </Typography>
-    );
-  }
+  // An unfinished code fence stays plain text until it closes, so it is not re-highlighted every token.
+  const hasOpenFence = (pending.match(/```/g)?.length ?? 0) % 2 === 1;
 
   return (
     <Box>
-      {renderSegments(stable, theme)}
-      {pending && (
-        <Typography
-          component='div'
-          variant='body2'
-          sx={{
-            whiteSpace: 'pre-wrap',
-            lineHeight: 1.65,
-            wordBreak: 'break-word',
-            mt: 0.5
-          }}
-        >
-          {pending}
-          {showCursor && <StreamingCursorStyled />}
-        </Typography>
-      )}
-      {!pending && showCursor && <StreamingCursorStyled />}
+      {stableNode}
+      {pending &&
+        (hasOpenFence ? (
+          <Typography
+            component='div'
+            variant='body2'
+            sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.65, wordBreak: 'break-word', mt: 0.5 }}
+          >
+            {pending}
+          </Typography>
+        ) : (
+          <Typography
+            component='div'
+            variant='body2'
+            sx={{
+              ...messageMarkdownSx(theme),
+              ...(showCursor ? inlineCaretSx(theme.palette.primary.main) : undefined)
+            }}
+          >
+            <AppMarkdown renderCodeBlock={renderCodeBlock}>{pending}</AppMarkdown>
+          </Typography>
+        ))}
+      {showCursor && (!pending || hasOpenFence) && <StreamingCursorStyled />}
     </Box>
   );
 }

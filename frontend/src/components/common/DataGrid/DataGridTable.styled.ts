@@ -57,6 +57,7 @@ export const StyledTable = styled('table')<{ width?: number | string }>(({ width
   borderSpacing: 0,
   tableLayout: 'fixed',
   borderCollapse: 'separate',
+  minWidth: '100%',
   ...(width !== undefined && { width: typeof width === 'number' ? `${width}px` : width })
 }));
 

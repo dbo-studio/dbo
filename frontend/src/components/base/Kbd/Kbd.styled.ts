@@ -9,7 +9,7 @@ export const KbdGroupStyled = styled(Box)(({ theme }) => ({
   '& > *:not(:last-child)::after': {
     marginLeft: theme.spacing(0.5),
     color: theme.palette.text.subdued,
-    fontSize: '0.75rem',
+    fontSize: variables.fontSize.sm,
     fontWeight: 400
   }
 }));

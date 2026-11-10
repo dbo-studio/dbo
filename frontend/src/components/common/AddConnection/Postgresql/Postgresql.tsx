@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import type { CreateConnectionRequestType, PostgresqlOptionsType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
@@ -11,13 +12,14 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled
+  ConnectionFormContainerStyled
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
+import ConnectionSSHFields from '../ConnectionSSHFields';
 import ConnectionSSLFields from '../ConnectionSSLFields';
-import { buildConnectionUri, parseConnectionUri } from '../connectionUri';
+import { buildConnectionUri, DEFAULT_PORTS, parseConnectionUri } from '../connectionUri';
 import { applyParsedConnectionUri } from '../connectionUriForm';
+import { sshFormDefaults, sshFormSchema, sshOptionsFromForm } from '../ssh';
 import { sslFormDefaults, sslOptionsFromForm } from '../ssl';
 import type { ConnectionSettingsProps } from '../types';
 
@@ -36,7 +38,8 @@ const formSchema = v.union([
     sslMode: v.string(),
     sslCaCert: v.string(),
     sslClientCert: v.string(),
-    sslClientKey: v.string()
+    sslClientKey: v.string(),
+    ssh: sshFormSchema
   }),
   v.object({
     useUri: v.literal(false),
@@ -55,12 +58,14 @@ const formSchema = v.union([
     sslMode: v.string(),
     sslCaCert: v.string(),
     sslClientCert: v.string(),
-    sslClientKey: v.string()
+    sslClientKey: v.string(),
+    ssh: sshFormSchema
   })
 ]);
 
 export default function PostgreSQL({
   connection,
+  submitLabel,
   engine = 'postgresql',
   onClose,
   onPing,
@@ -89,7 +94,8 @@ export default function PostgreSQL({
           database: value.database,
           uri: value.useUri ? value.uri : '',
           port: Number(value.port || 0),
-          ssl: sslOptionsFromForm(value)
+          ssl: sslOptionsFromForm(value),
+          ssh: sshOptionsFromForm(value.ssh)
         }
       } as CreateConnectionRequestType;
 
@@ -107,12 +113,14 @@ export default function PostgreSQL({
       rememberPassword: false,
       name: connection?.name ?? '',
       host: options?.host || parsedUri?.host || '',
-      port: options?.port?.toString() || parsedUri?.port || '',
+      // A new connection starts on the engine's usual port, which the field shows as its placeholder.
+      port: options?.port?.toString() || parsedUri?.port || DEFAULT_PORTS.postgresql,
       username: options?.username || parsedUri?.username || '',
       password: '',
       database: options?.database || parsedUri?.database || '',
       uri: parsedUri?.redactedUri ?? options?.uri ?? '',
       ...sslDefaults,
+      ssh: sshFormDefaults(options?.ssh),
       sslMode: options?.ssl?.mode || parsedUri?.sslMode || sslDefaults.sslMode
     }
   });
@@ -185,6 +193,7 @@ export default function PostgreSQL({
         <ConnectionFormTabs
           generalLabel={locales.general}
           sslLabel={locales.ssl}
+          sshLabel={locales.ssh}
           general={
             <>
               <form.Field name='name'>
@@ -413,6 +422,13 @@ export default function PostgreSQL({
               </ConnectionFormCheckboxRowStyled>
             </>
           }
+          ssh={
+            <form.Subscribe selector={(state) => state.values.ssh}>
+              {(ssh): JSX.Element => (
+                <ConnectionSSHFields value={ssh} onChange={(next): void => form.setFieldValue('ssh', next)} />
+              )}
+            </form.Subscribe>
+          }
           ssl={
             <form.Subscribe
               selector={(state) => ({
@@ -439,25 +455,24 @@ export default function PostgreSQL({
           }
         />
       </ConnectionFormBodyStyled>
-      <ConnectionFormFooterStyled>
-        <Button type='button' size='small' onClick={onClose}>
-          {locales.cancel}
+      <ModalFooter spread>
+        <Button
+          type='button'
+          data-testid='test-connection'
+          loadingPosition='start'
+          loading={pingLoading}
+          onClick={(): void => {
+            form.state.values.isPing = true;
+            void form.handleSubmit();
+          }}
+          size='small'
+          variant='outlined'
+        >
+          {locales.test}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <Button
-            type='button'
-            data-testid='test-connection'
-            loadingPosition='start'
-            loading={pingLoading}
-            onClick={(): void => {
-              form.state.values.isPing = true;
-              void form.handleSubmit();
-            }}
-            size='small'
-            variant='contained'
-            color='secondary'
-          >
-            {locales.test}
+          <Button type='button' size='small' onClick={onClose}>
+            {locales.cancel}
           </Button>
           <Button
             type='submit'
@@ -467,10 +482,10 @@ export default function PostgreSQL({
             size='small'
             variant='contained'
           >
-            {connection ? locales.update : locales.create}
+            {submitLabel ?? (connection ? locales.update : locales.create)}
           </Button>
         </Stack>
-      </ConnectionFormFooterStyled>
+      </ModalFooter>
     </ConnectionFormContainerStyled>
   );
 }

@@ -44,7 +44,7 @@ export const PanelTabItemStyled = styled(Box, {
   touchAction: 'none',
   cursor: 'pointer',
   span: {
-    color: selected ? theme.palette.text.primary : theme.palette.text.subdued,
+    color: selected ? theme.palette.text.link : theme.palette.text.subdued,
     fontWeight: selected ? theme.typography.fontWeightBold : theme.typography.fontWeightRegular
   },
 
@@ -56,7 +56,7 @@ export const PanelTabItemStyled = styled(Box, {
 
   '&:hover': {
     span: {
-      color: selected ? theme.palette.text.primary : theme.palette.text.text
+      color: selected ? theme.palette.text.link : theme.palette.text.text
     },
 
     '> svg:last-of-type': {

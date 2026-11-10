@@ -10,7 +10,6 @@ const E2E_ROOT = path.resolve(__dirname, '..');
 const REPO_ROOT = path.resolve(E2E_ROOT, '..');
 const BACKEND_ROOT = path.join(REPO_ROOT, 'backend');
 const FRONTEND_ROOT = path.join(REPO_ROOT, 'frontend');
-const RUN_ENV_PATH = path.join(E2E_ROOT, '.run-env');
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -80,22 +79,29 @@ function spawnLogged(command, args, options) {
   return child;
 }
 
+const activeStacks = new Set();
+
+export async function stopActiveStacks() {
+  await Promise.all([...activeStacks].map((stop) => stop()));
+}
+
 /**
- * @param {import('node:child_process').ChildProcess} child
+ * @param {import('node:child_process').ChildProcess | undefined} child
+ * @param {NodeJS.Signals} [signal]
  */
-function killTree(child) {
-  if (!child.pid) {
+export function killTree(child, signal = 'SIGTERM') {
+  if (!child?.pid) {
     return;
   }
   try {
     if (process.platform === 'win32') {
       spawn('taskkill', ['/pid', String(child.pid), '/T', '/F']);
     } else {
-      process.kill(-child.pid, 'SIGTERM');
+      process.kill(-child.pid, signal);
     }
   } catch {
     try {
-      child.kill('SIGTERM');
+      child.kill(signal);
     } catch {
       // ignore
     }
@@ -114,6 +120,25 @@ function killTree(child) {
  */
 export async function startStack() {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dbo-e2e-'));
+  let backend;
+  let frontend;
+  let stopped = false;
+  const stop = async () => {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    activeStacks.delete(stop);
+    killTree(frontend);
+    killTree(backend);
+    try {
+      fs.rmSync(dataDir, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  };
+  activeStacks.add(stop);
+
   const apiPort = await getFreePort();
   const fePort = await getFreePort();
 
@@ -124,30 +149,37 @@ export async function startStack() {
 
   const apiURL = `http://127.0.0.1:${apiPort}/api`;
   const baseURL = `http://127.0.0.1:${fePort}`;
+  // E2E_LOCAL_AUTH=1: login on with a seeded admin. =setup: login on, no account yet.
   const localAuth = process.env.E2E_LOCAL_AUTH === '1';
+  const setupAuth = process.env.E2E_LOCAL_AUTH === 'setup';
 
   const backendEnv = {
     ...process.env,
     APP_PORT: String(apiPort),
     APP_ENV: 'local',
     APP_CLIENT: 'web',
+    // Enables the in-memory NoSQL fixture connection type used by tests/shared/fixture-browse.spec.ts and bottom-panels.spec.ts.
+    DBO_ENABLE_NOSQL_FIXTURE: '1',
     APP_DATABASE_PATH: dbPath,
     APP_SECRET_KEY_PATH: secretPath,
     APP_LOG_PATH: logPath,
-    // Prevent backend/.env APP_ADMIN_* from enabling local auth (or failing Bootstrap
-    // on a non-policy password) during normal e2e runs. godotenv does not override these.
+    // Pin login settings so backend/.env cannot change them (or fail Bootstrap on a
+    // non-policy password) during e2e runs. godotenv does not override these.
+    // Never post feedback to the real website from tests; specs listen on this port.
+    APP_WEBSITE_API_URL: 'http://127.0.0.1:4599/api',
+    APP_AUTH_MODE: localAuth || setupAuth ? 'local' : 'none',
     APP_ADMIN_EMAIL: '',
     APP_ADMIN_PASSWORD: '',
     ...(localAuth
       ? {
           APP_ADMIN_EMAIL: process.env.E2E_ADMIN_EMAIL ?? 'admin@example.com',
-          APP_ADMIN_PASSWORD: process.env.E2E_ADMIN_PASSWORD ?? 'bootstrap1',
-          APP_ALLOWED_ORIGINS: baseURL
+          APP_ADMIN_PASSWORD: process.env.E2E_ADMIN_PASSWORD ?? 'bootstrap1'
         }
-      : {})
+      : {}),
+    ...(localAuth || setupAuth ? { APP_ALLOWED_ORIGINS: baseURL } : {})
   };
 
-  const backend = spawnLogged('go', ['run', '.', 'serve'], {
+  backend = spawnLogged('go', ['run', '.', 'serve'], {
     cwd: BACKEND_ROOT,
     env: backendEnv,
     detached: process.platform !== 'win32'
@@ -163,7 +195,7 @@ export async function startStack() {
     NODE_ENV: 'development'
   };
 
-  const frontend = spawnLogged(
+  frontend = spawnLogged(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
     ['vite', '--host', '127.0.0.1', '--port', String(fePort), '--strictPort'],
     {
@@ -190,27 +222,9 @@ export async function startStack() {
       : []),
     ''
   ].join('\n');
-  fs.writeFileSync(RUN_ENV_PATH, runEnv);
-
-  let stopped = false;
-  const stop = async () => {
-    if (stopped) {
-      return;
-    }
-    stopped = true;
-    killTree(frontend);
-    killTree(backend);
-    try {
-      fs.rmSync(RUN_ENV_PATH, { force: true });
-    } catch {
-      // ignore
-    }
-    try {
-      fs.rmSync(dataDir, { recursive: true, force: true });
-    } catch {
-      // ignore
-    }
-  };
+  // Per run, so concurrent runs (npm run test:parallel) never read each other's ports.
+  const runEnvPath = path.join(dataDir, '.run-env');
+  fs.writeFileSync(runEnvPath, runEnv);
 
   for (const child of [backend, frontend]) {
     child.on('exit', (code, signal) => {
@@ -222,7 +236,7 @@ export async function startStack() {
     });
   }
 
-  return { apiPort, fePort, baseURL, apiURL, dataDir, stop };
+  return { apiPort, fePort, baseURL, apiURL, dataDir, runEnvPath, stop };
 }
 
-export { RUN_ENV_PATH, E2E_ROOT, REPO_ROOT };
+export { E2E_ROOT, REPO_ROOT };

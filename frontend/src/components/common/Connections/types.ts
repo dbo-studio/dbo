@@ -20,4 +20,16 @@ export type ConnectionContextMenuProps = {
 
 export type ConnectionsProps = {
   expanded?: boolean;
+  /** Pinned under the connection list (the rail's areas). */
+  footer?: React.ReactNode;
+};
+
+export type MobileConnectionListProps = {
+  /** Called after the user picks the connection that is already current. */
+  onOpenCurrent: () => void;
+};
+
+export type ConnectionActionSheetProps = {
+  connection: ConnectionType;
+  onClose: () => void;
 };

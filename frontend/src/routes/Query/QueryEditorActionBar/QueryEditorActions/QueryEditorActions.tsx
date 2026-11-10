@@ -2,7 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { shortcuts, tools } from '@/core/utils';
-import { useCurrentConnection, useShortcut } from '@/hooks';
+import { useCurrentConnection, useFeaturePermissions, useShortcut } from '@/hooks';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -16,9 +16,13 @@ export default function QueryEditorActions({
   onFormat,
   onRunQuery,
   onAiExplain,
-  loading
+  loading,
+  formatQuery,
+  onExport,
+  onStop
 }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
+  const perms = useFeaturePermissions();
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -36,6 +40,10 @@ export default function QueryEditorActions({
   });
 
   const handleFormatSql = (): void => {
+    if (formatQuery) {
+      formatQuery();
+      return;
+    }
     updateQuery(tools.formatSql(getQuery(), 'postgresql'));
     onFormat();
   };
@@ -85,7 +93,7 @@ export default function QueryEditorActions({
 
   const handleRunOrStop = (): void => {
     if (loading) {
-      cancelRunningQuery();
+      (onStop ?? cancelRunningQuery)();
       return;
     }
     onRunQuery();
@@ -98,16 +106,24 @@ export default function QueryEditorActions({
           <CustomIcon type='save' />
         </IconButton>
       </Tooltip>
-      <Tooltip title={locales.export}>
-        <IconButton aria-label={locales.export} color='default' onClick={handleExport}>
-          <CustomIcon type='export' />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={locales.minify}>
-        <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
-          <CustomIcon type='pickaxe' />
-        </IconButton>
-      </Tooltip>
+      {(perms.export || onExport) && (
+        <Tooltip title={locales.export}>
+          <IconButton
+            aria-label={locales.export}
+            color='default'
+            onClick={(e): void => (onExport ? onExport(e.currentTarget) : handleExport())}
+          >
+            <CustomIcon type='export' />
+          </IconButton>
+        </Tooltip>
+      )}
+      {!formatQuery && (
+        <Tooltip title={locales.minify}>
+          <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
+            <CustomIcon type='pickaxe' />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title={`${locales.beatify} (${shortcuts.formatSql.command.join('+')})`}>
         <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />

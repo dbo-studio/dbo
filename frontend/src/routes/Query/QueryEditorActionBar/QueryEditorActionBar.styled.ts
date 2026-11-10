@@ -2,14 +2,15 @@ import { Box, Stack, styled } from '@mui/material';
 
 export const QueryEditorActionBarStackStyled = styled(Stack)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
-  borderTop: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1),
   justifyContent: 'space-between',
   alignItems: 'center',
   flexShrink: 0
 }));
 
-export const QueryEditorActionBarBoxStyled = styled(Box)(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarBoxStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isCompact'
+})(({ isCompact }: { isCompact: boolean }) => ({
   display: 'flex',
   justifyContent: 'flex-start',
   minWidth: 0,
@@ -17,7 +18,9 @@ export const QueryEditorActionBarBoxStyled = styled(Box)(({ isCompact }: { isCom
   flex: isCompact ? undefined : 1
 }));
 
-export const QueryEditorActionBarActionsBoxStyled = styled(Box)(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarActionsBoxStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isCompact'
+})(({ isCompact }: { isCompact: boolean }) => ({
   display: 'flex',
   justifyContent: 'flex-end',
   overflowX: 'auto',

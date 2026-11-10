@@ -5,7 +5,7 @@ import locales from '@/locales/index.ts';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Badge, IconButton, Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
-import McpStatusButton from './McpStatusButton';
+import NotificationBell from '../NotificationBell/NotificationBell';
 
 export default function Actions(): JSX.Element {
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -23,12 +23,11 @@ export default function Actions(): JSX.Element {
   return (
     <Stack
       direction='row'
-      onMouseDown={(event) => event.stopPropagation()}
       sx={{
         justifyContent: 'flex-end'
       }}
     >
-      <McpStatusButton />
+      <NotificationBell />
       {release ? (
         <Tooltip title={locales.new_version_available}>
           <IconButton aria-label='settings' onClick={(): void => openSettings({ section: 0 })}>

@@ -5,6 +5,7 @@ export type CreateChatRequestType = {
 
 export type AiChatRequestType = {
   connectionId: number | string;
+  search?: string;
   page?: number;
   count?: number;
 };

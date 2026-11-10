@@ -17,7 +17,11 @@ export function defineDataBrowserTests(engine: DbEngine): void {
       ? "PostgreSQL"
       : engine === "mysql"
         ? "MySQL"
-        : "SQLite";
+        : engine === "mssql"
+          ? "SQL Server"
+          : engine === "clickhouse"
+            ? "ClickHouse"
+            : "SQLite";
 
   test.describe(`Data browser ${label}`, () => {
     async function withSeed(

@@ -2,7 +2,7 @@ import { AppHeaderGridStyled, AppHeaderStyled } from '@/components/layout/AppHea
 import { useLayoutMode } from '@/hooks';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Grid } from '@mui/material';
-import type { JSX, MouseEvent as ReactMouseEvent } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 import Actions from './Actions/Actions.tsx';
 import ConnectionInfo from './ConnectionInfo/ConnectionInfo';
 import HeaderOverflowMenu from './HeaderOverflowMenu/HeaderOverflowMenu';
@@ -11,10 +11,21 @@ import Leading from './Leading/Leading.tsx';
 export default function AppHeader(): JSX.Element {
   const { useCompactHeader } = useLayoutMode();
   const titleBar = useSettingStore((state) => state.ui.titleBar);
+  const draggable = Boolean(titleBar?.draggable);
+  const [windowFocused, setWindowFocused] = useState(true);
 
-  const onMouseDown = (event: ReactMouseEvent<HTMLDivElement>): void => {
-    titleBar?.onHeaderAreaClick?.(event.nativeEvent);
-  };
+  // Native title bars dim when the window is inactive; only the desktop overlay title bar does this.
+  useEffect(() => {
+    if (!draggable) return;
+    const onFocus = (): void => setWindowFocused(true);
+    const onBlur = (): void => setWindowFocused(false);
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [draggable]);
 
   return (
     <AppHeaderStyled
@@ -23,9 +34,11 @@ export default function AppHeader(): JSX.Element {
       spacing={0}
       style={{
         paddingLeft: titleBar?.paddingLeft,
-        paddingTop: titleBar?.paddingTop
+        opacity: draggable && !windowFocused ? 0.55 : 1,
+        transition: 'opacity 150ms'
       }}
-      onMouseDown={onMouseDown}
+      // Tauri drag script: drag/zoom from any non-interactive descendant
+      data-tauri-drag-region={titleBar?.draggable ? 'deep' : undefined}
     >
       <AppHeaderGridStyled useCompactHeader={useCompactHeader} size='auto'>
         <HeaderOverflowMenu />

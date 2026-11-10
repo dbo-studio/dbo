@@ -1,4 +1,5 @@
 import { alpha, Box, Grid, InputBase, styled } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const SettingsRootStyled = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -7,7 +8,6 @@ export const SettingsRootStyled = styled('div')(({ theme }) => ({
   minHeight: 0,
   width: '100%',
   overflow: 'hidden',
-  borderTop: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.default,
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column'
@@ -25,7 +25,7 @@ export const SettingsRailSearchStyled = styled(Box)(({ theme }) => ({
 
 export const SettingsSearchInputStyled = styled(InputBase)(({ theme }) => ({
   width: '100%',
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
   borderRadius: 4,
   border: `1px solid ${theme.palette.divider}`,

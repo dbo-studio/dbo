@@ -3,8 +3,9 @@ import { useScopedSelectAll } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store.ts';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import { type JSX, useMemo, useRef } from 'react';
+import { type JSX, useRef } from 'react';
 import { ModalStyled } from '../Modal.styled.ts';
+import ModalFooter from '../ModalFooter/ModalFooter';
 
 export default function ConfirmModal(): JSX.Element {
   const isOpen = useConfirmModalStore((state) => state.isOpen);
@@ -20,30 +21,8 @@ export default function ConfirmModal(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   useScopedSelectAll(containerRef, isOpen);
 
-  const style = useMemo(() => {
-    if (mode === 'danger') {
-      return {
-        background: theme.palette.background.danger,
-        color: theme.palette.text.danger
-      };
-    }
-
-    if (mode === 'success') {
-      return {
-        background: theme.palette.background.success,
-        color: theme.palette.text.success
-      };
-    }
-
-    if (mode === 'warning') {
-      return {
-        background: theme.palette.background.warning,
-        color: theme.palette.text.warning
-      };
-    }
-
-    return {};
-  }, [mode, theme]);
+  // Destructive and cautionary confirmations use the semantic button colors; everything else is the primary action.
+  const confirmColor = mode === 'danger' ? 'error' : mode === 'warning' ? 'warning' : 'primary';
 
   const handleCancel = (): void => {
     onCancel?.();
@@ -62,8 +41,7 @@ export default function ConfirmModal(): JSX.Element {
       <ConfirmModalStyled ref={containerRef}>
         <Box
           sx={{
-            flex: 1,
-            mb: theme.spacing(1)
+            flex: 1
           }}
         >
           <Box
@@ -89,27 +67,20 @@ export default function ConfirmModal(): JSX.Element {
             )}
           </Box>
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'end'
-          }}
-        >
-          <Button
-            variant='text'
-            style={{
-              marginRight: theme.spacing(2)
-            }}
-            size='small'
-            autoFocus={mode === 'danger'}
-            onClick={handleCancel}
-          >
+        <ModalFooter>
+          <Button variant='text' size='small' autoFocus={mode === 'danger'} onClick={handleCancel}>
             {locales.cancel}
           </Button>
-          <Button style={style} onClick={handleConfirm} size='small' variant='contained' autoFocus={mode !== 'danger'}>
+          <Button
+            color={confirmColor}
+            onClick={handleConfirm}
+            size='small'
+            variant='contained'
+            autoFocus={mode !== 'danger'}
+          >
             {resolvedConfirmLabel}
           </Button>
-        </Box>
+        </ModalFooter>
       </ConfirmModalStyled>
     </ModalStyled>
   );

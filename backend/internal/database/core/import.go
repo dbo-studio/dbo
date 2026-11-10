@@ -118,10 +118,15 @@ func importValueToArg(value string) any {
 }
 
 func (r *BaseRepository) quoteIdent(name string) string {
+	return QuoteIdent(r.Connection().ConnectionType, name)
+}
+
+// QuoteIdent quotes an identifier for the given connection type.
+func QuoteIdent(connectionType, name string) string {
 	switch {
-	case contract.IsMysqlFamily(r.Connection().ConnectionType):
+	case contract.IsMysqlFamily(connectionType):
 		return QuoteMySQLIdent(name)
-	case r.Connection().ConnectionType == string(contract.Sqlite):
+	case connectionType == string(contract.Sqlite):
 		return QuoteSQLiteIdent(name)
 	default:
 		return QuotePGIdent(name)

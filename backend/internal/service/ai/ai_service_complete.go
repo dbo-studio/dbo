@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -12,11 +13,15 @@ import (
 )
 
 func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
+	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+		return nil, err
+	}
+
 	if err := ctx.Err(); err != nil {
 		return nil, apperror.QueryCanceled()
 	}
 
-	provider, dbProvider, err := s.createProvider(ctx)
+	provider, dbProvider, err := s.createProvider(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

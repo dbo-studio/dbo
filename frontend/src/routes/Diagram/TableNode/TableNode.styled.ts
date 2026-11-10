@@ -17,6 +17,8 @@ type AccentBarProps = AccentProps & {
 type ColumnRowProps = {
   removed: boolean;
   striped: boolean;
+  /** Pending agent change: added (green) or changed (amber) column. */
+  pendingColor?: string;
 };
 
 type ColumnNameProps = {
@@ -86,7 +88,7 @@ export const HeaderTextStyled = styled(Box)({
 });
 
 export const TableNameStyled = styled(Typography)(({ theme }) => ({
-  fontSize: 13,
+  fontSize: variables.fontSize.md,
   fontWeight: 600,
   lineHeight: 1.25,
   color: theme.palette.textTitle
@@ -94,7 +96,7 @@ export const TableNameStyled = styled(Typography)(({ theme }) => ({
 
 export const SchemaNameStyled = styled(Typography)(({ theme }) => ({
   display: 'block',
-  fontSize: 10,
+  fontSize: variables.fontSize.xxs,
   lineHeight: 1.2,
   color: theme.palette.textSubdued
 }));
@@ -111,8 +113,8 @@ export const EmptyColumnsStyled = styled(Typography)(({ theme }) => ({
 }));
 
 export const ColumnRowStyled = styled(Box, {
-  shouldForwardProp: (prop): boolean => prop !== 'removed' && prop !== 'striped'
-})<ColumnRowProps>(({ theme, removed, striped }) => ({
+  shouldForwardProp: (prop): boolean => prop !== 'removed' && prop !== 'striped' && prop !== 'pendingColor'
+})<ColumnRowProps>(({ theme, removed, striped, pendingColor }) => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
@@ -121,9 +123,12 @@ export const ColumnRowStyled = styled(Box, {
   minHeight: 26,
   opacity: removed ? 0.45 : 1,
   textDecoration: removed ? 'line-through' : 'none',
-  backgroundColor: striped
-    ? alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.03 : 0.02)
-    : 'transparent'
+  backgroundColor: pendingColor
+    ? alpha(pendingColor, 0.12)
+    : striped
+      ? alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.03 : 0.02)
+      : 'transparent',
+  boxShadow: pendingColor ? `inset 2px 0 0 ${pendingColor}` : 'none'
 }));
 
 export const ColumnKeyIconStyled = styled(Box)({
@@ -139,7 +144,7 @@ export const ColumnNameStyled = styled(Typography, {
   flex: 1,
   minWidth: 0,
   fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Monaco, Consolas, monospace",
-  fontSize: 11.5,
+  fontSize: variables.fontSize.xs,
   fontWeight: primary ? 600 : 400,
   color: theme.palette.text.text,
   userSelect: 'text',
@@ -156,7 +161,7 @@ export const ColumnMetaStyled = styled(Box)(({ theme }) => ({
 
 export const ColumnTypeStyled = styled(Typography)(({ theme }) => ({
   maxWidth: 72,
-  fontSize: 10.5,
+  fontSize: variables.fontSize.xxs,
   color: theme.palette.textSubdued,
   userSelect: 'text',
   cursor: 'text'
@@ -166,7 +171,7 @@ export const KeyBadgeStyled = styled(Box, {
   shouldForwardProp: (prop): boolean => prop !== 'badgeColor'
 })<KeyBadgeProps>(({ badgeColor }) => ({
   display: 'inline-flex',
-  fontSize: 9,
+  fontSize: variables.fontSize.xxs,
   fontWeight: 700,
   letterSpacing: 0.4,
   lineHeight: 1,

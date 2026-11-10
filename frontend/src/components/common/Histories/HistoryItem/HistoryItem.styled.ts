@@ -1,16 +1,18 @@
 import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { alpha, Box, styled } from '@mui/material';
 import type { HistoryItemStyledProps } from '../types';
 
 export const HistoryItemStyled = styled(Box)<HistoryItemStyledProps>(({ theme, selected }) => ({
-  padding: `${theme.spacing(1)}`,
-  cursor: 'pointer',
-  border: `1px solid ${theme.palette.divider}`,
-  // border: `1px solid ${selected ? theme.palette.divider : 'transparent'}`,
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
+  gap: theme.spacing(1.5),
+  padding: theme.spacing(0.5, 1),
+  minHeight: 32,
+  cursor: 'pointer',
   borderRadius: variables.radius.medium,
-  background: theme.palette.background.default,
-  color: selected ? theme.palette.text.primary : theme.palette.text.text
+  background: selected ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
+  '&:hover': { background: selected ? alpha(theme.palette.primary.main, 0.16) : theme.palette.action.hover },
+  '& .history-actions': { opacity: 0, transition: 'opacity 120ms' },
+  '&:hover .history-actions, &:focus-within .history-actions': { opacity: 1 },
+  [theme.breakpoints.down('sm')]: { minHeight: 44, '& .history-actions': { opacity: 1 } }
 }));

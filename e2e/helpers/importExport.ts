@@ -3,12 +3,15 @@ import os from "node:os";
 import path from "node:path";
 import type { Page } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
+import { createTableSql } from "./ddl";
+import { HOST_SQL } from "./hostSql";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
 } from "./objectFormSqliteLifecycle";
 import {
   ConnectionPage,
+  type ConnectionConfig,
   DataBrowserPage,
   DataGridPage,
   SqlEditorPage,
@@ -77,19 +80,31 @@ export function treePathForEngine(
   if (engine === "mysql") {
     return [connectionName, "default"];
   }
-  return [connectionName];
+  if (engine === "sqlite") {
+    return [connectionName];
+  }
+  return [connectionName, HOST_SQL[engine].namespace];
 }
 
-function buildSetupSql(names: ImportExportSetupNames): string {
+export function engineLabel(engine: DbEngine): string {
+  if (engine === "mssql" || engine === "clickhouse") return HOST_SQL[engine].label;
+  return engine === "postgresql" ? "PostgreSQL" : engine === "mysql" ? "MySQL" : "SQLite";
+}
+
+function buildSetupSql(names: ImportExportSetupNames, engine: DbEngine): string {
+  const table = (name: string) =>
+    engine === "clickhouse"
+      ? createTableSql(engine, name, ["id Int32", "name String"], "id")
+      : `CREATE TABLE ${name} (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+)`;
   const statements: string[] = [];
 
   if (names.exportTable) {
     statements.push(
       `DROP TABLE IF EXISTS ${names.exportTable};`,
-      `CREATE TABLE ${names.exportTable} (
-  id INT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL
-);`,
+      `${table(names.exportTable)};`,
       `INSERT INTO ${names.exportTable} (id, name) VALUES
   (1, 'Export One'),
   (2, 'Export Two'),
@@ -97,19 +112,16 @@ function buildSetupSql(names: ImportExportSetupNames): string {
     );
   }
 
-  for (const table of [
+  for (const t of [
     names.importCsvTable,
     names.importJsonTable,
     names.importSqlTable,
     names.roundTripTable,
   ]) {
-    if (table) {
+    if (t) {
       statements.push(
-        `DROP TABLE IF EXISTS ${table};`,
-        `CREATE TABLE ${table} (
-  id INT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL
-);`,
+        `DROP TABLE IF EXISTS ${t};`,
+        `${table(t)};`,
       );
     }
   }
@@ -129,6 +141,7 @@ export async function setupImportExport(
   page: Page,
   names: ImportExportSetupNames,
   engine: DbEngine = "postgresql",
+  configOverride: Partial<ConnectionConfig> = {},
 ): Promise<ImportExportPages> {
   const connectionPage = new ConnectionPage(page);
   const sqlEditor = new SqlEditorPage(page);
@@ -143,16 +156,17 @@ export async function setupImportExport(
 
   await connectionPage.goto();
   await connectionPage.waitForReady();
-  await connectionPage.setupConnection(
-    getDbConfig(engine, names.connectionName, sqliteDbPath),
-  );
+  await connectionPage.setupConnection({
+    ...getDbConfig(engine, names.connectionName, sqliteDbPath),
+    ...configOverride,
+  });
   await sqlEditor.open();
   if (engine === "postgresql") {
     await sqlEditor.selectContext("default", "public");
   } else if (engine === "mysql") {
     await sqlEditor.selectContext("default");
   }
-  await sqlEditor.typeAndRun(buildSetupSql(names));
+  await sqlEditor.typeAndRun(buildSetupSql(names, engine));
 
   return { connectionPage, sqlEditor, dataBrowser, dataGrid, sqliteDbPath };
 }

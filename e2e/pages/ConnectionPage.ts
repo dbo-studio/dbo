@@ -14,6 +14,17 @@ export interface ConnectionSslConfig {
   clientKey?: string;
 }
 
+export interface ConnectionSshConfig {
+  host: string;
+  port: string;
+  username: string;
+  authMethod: "password" | "key" | "agent";
+  password?: string;
+  privateKey?: string;
+  passphrase?: string;
+  jump?: Omit<ConnectionSshConfig, "jump">;
+}
+
 export interface ConnectionConfig {
   name: string;
   host: string;
@@ -21,15 +32,12 @@ export interface ConnectionConfig {
   username: string;
   password: string;
   database?: string;
-  type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite";
+  type?: "PostgreSQL" | "MySQL" | "MariaDB" | "SQLite" | "SQL Server" | "ClickHouse";
   ssl?: ConnectionSslConfig;
+  ssh?: ConnectionSshConfig;
 }
 
-/**
- * Page Object for Connection management
- */
 export class ConnectionPage extends BasePage {
-  // Locators
   readonly newConnectionModal: Locator;
   readonly editConnectionModal: Locator;
   readonly connectionTypeSelector: (type: string) => Locator;
@@ -38,7 +46,6 @@ export class ConnectionPage extends BasePage {
   readonly createConnectionButton: Locator;
   readonly addConnectionButton: Locator;
 
-  // Form fields
   readonly nameInput: Locator;
   readonly hostInput: Locator;
   readonly portInput: Locator;
@@ -70,6 +77,29 @@ export class ConnectionPage extends BasePage {
     this.copyUriButton = page.getByTestId("copy-connection-uri");
   }
 
+  /** Connections live in the switcher at the top of the explorer sidebar. */
+  get switcherPanel(): Locator {
+    return this.page.getByTestId("connection-switcher-panel");
+  }
+
+  async openSwitcher(): Promise<void> {
+    if (await this.switcherPanel.isVisible().catch(() => false)) return;
+    const switcher = this.page.getByTestId("connection-switcher");
+    // With no connections the app auto-opens "New connection" once the list loads; on a slow
+    // start that lands between waitForReady and this click and intercepts it.
+    await switcher.click({ timeout: 5000 }).catch(async () => {
+      await this.dismissNewConnectionModalIfOpen();
+      await switcher.click();
+    });
+    await expect(this.switcherPanel).toBeVisible();
+  }
+
+  async closeSwitcher(): Promise<void> {
+    if (!(await this.switcherPanel.isVisible().catch(() => false))) return;
+    await this.page.keyboard.press("Escape");
+    await expect(this.switcherPanel).toBeHidden();
+  }
+
   getConnectionItem(name: string): Locator {
     return this.page.getByTestId(`connection-item-${name}`);
   }
@@ -79,7 +109,9 @@ export class ConnectionPage extends BasePage {
   }
 
   async expectConnectionActive(name: string): Promise<void> {
+    await this.openSwitcher();
     await expect(this.getConnectionItem(name)).toBeVisible();
+    await this.closeSwitcher();
     await this.waitForConnectionActive();
     await expect(
       this.page.getByRole("heading", { name: /^No active connection$/i }),
@@ -87,9 +119,12 @@ export class ConnectionPage extends BasePage {
   }
 
   async connectionExists(name: string): Promise<boolean> {
-    return await this.getConnectionItem(name)
+    await this.openSwitcher().catch(() => undefined);
+    const exists = await this.getConnectionItem(name)
       .isVisible()
       .catch(() => false);
+    await this.closeSwitcher().catch(() => undefined);
+    return exists;
   }
 
   async isNewConnectionModalVisible(): Promise<boolean> {
@@ -103,7 +138,12 @@ export class ConnectionPage extends BasePage {
     // Wait on UI readiness — not waitForResponse("connections"). That races with
     // goto() (response often already finished) and burns the full 30s timeout.
     await this.page.waitForLoadState("domcontentloaded");
-    await expect(this.addConnectionButton).toBeVisible({ timeout: 15000 });
+    await expect(this.addConnectionButton).toBeVisible({ timeout: 30000 });
+    // Let the connections list load so an empty-state "New connection" auto-open lands now,
+    // not in the middle of the next click. Capped: a long-lived stream must not block here.
+    await this.page
+      .waitForLoadState("networkidle", { timeout: 5000 })
+      .catch(() => undefined);
   }
 
   async openNewConnectionModal(): Promise<void> {
@@ -151,6 +191,67 @@ export class ConnectionPage extends BasePage {
 
     if (config.ssl) {
       await this.applySslConfig(config.ssl);
+    }
+
+    if (config.ssh) {
+      await this.applySshConfig(config.ssh);
+    }
+  }
+
+  async openSshTab(): Promise<void> {
+    await this.page.getByTestId("connection-tab-ssh").click();
+    await expect(this.page.getByTestId("connection-ssh-fields")).toBeVisible();
+  }
+
+  async setSshEnabled(enabled: boolean): Promise<void> {
+    await this.openSshTab();
+    await this.page.getByTestId("ssh-enabled").setChecked(enabled);
+  }
+
+  private async fillSshHop(
+    prefix: "ssh" | "sshJump",
+    hop: Omit<ConnectionSshConfig, "jump">,
+  ): Promise<void> {
+    const labels = {
+      password: "Password",
+      key: "Private key",
+      agent: "SSH agent",
+    };
+    const page = this.page;
+    const root = page.getByTestId(`${prefix}-fields`);
+
+    await root.locator(`input[name="${prefix}Host"]`).fill(hop.host);
+    await root.locator(`input[name="${prefix}Port"]`).fill(hop.port);
+    await root.locator(`input[name="${prefix}Username"]`).fill(hop.username);
+    await root.locator(`.${prefix}-auth__control`).click();
+    await page
+      .getByRole("option", { name: labels[hop.authMethod], exact: true })
+      .click();
+
+    if (hop.authMethod === "password") {
+      await root
+        .locator(`input[name="${prefix}Password"]`)
+        .fill(hop.password ?? "");
+    }
+    if (hop.authMethod === "key") {
+      await page
+        .getByTestId(`${prefix}-private-key`)
+        .fill(hop.privateKey ?? "");
+      if (hop.passphrase) {
+        await root
+          .locator(`input[name="${prefix}Passphrase"]`)
+          .fill(hop.passphrase);
+      }
+    }
+  }
+
+  async applySshConfig(ssh: ConnectionSshConfig): Promise<void> {
+    await this.setSshEnabled(true);
+    await this.fillSshHop("ssh", ssh);
+
+    if (ssh.jump) {
+      await this.page.getByTestId("ssh-jump-enabled").check();
+      await this.fillSshHop("sshJump", ssh.jump);
     }
   }
 
@@ -247,9 +348,11 @@ export class ConnectionPage extends BasePage {
       .check();
     await this.testConnection();
     await this.submitConnection();
+    await this.openSwitcher();
     await expect(this.getConnectionItem(name)).toBeVisible({
       timeout: 30000,
     });
+    await this.closeSwitcher();
   }
 
   async expectSslMode(
@@ -301,10 +404,12 @@ export class ConnectionPage extends BasePage {
     await this.fillConnectionForm(config);
     await this.testConnection();
     await this.submitConnection();
+    await this.openSwitcher();
     await expect(this.getConnectionItem(config.name)).toBeVisible({
       timeout: 30000,
     });
     await this.getConnectionItem(config.name).click();
+    await expect(this.switcherPanel).toBeHidden();
     await this.waitForConnectionActive();
   }
 
@@ -319,27 +424,27 @@ export class ConnectionPage extends BasePage {
     });
   }
 
+  /** A locked connection asks for its password inline in the explorer, not in a dialog. */
   async handlePasswordPrompt(password: string): Promise<void> {
-    const heading = this.page.getByRole("heading", {
-      name: "Password",
-      exact: true,
-    });
-    if (!(await heading.isVisible({ timeout: 5000 }).catch(() => false))) {
+    const panel = this.page.getByTestId("connection-unlock-panel");
+    if (!(await panel.isVisible({ timeout: 5000 }).catch(() => false))) {
       return;
     }
 
-    await this.passwordInput.fill(password);
+    await panel.locator('input[name="password"]').fill(password);
 
     await waitForResponseDuring(this.page, apiRoute.connectionCredentials, () =>
-      this.page.getByRole("button", { name: "Save" }).click(),
+      panel.getByTestId("connection-unlock-submit").click(),
     );
-    await expect(heading).toBeHidden({ timeout: 10_000 });
+    await expect(panel).toBeHidden({ timeout: 10_000 });
   }
 
   async activateConnection(name: string, password = "secret"): Promise<void> {
     // Do not soft-wait for PUT/PATCH — already-active connections may not hit the
     // API, and a caught timeout still burns ~15s in the report.
+    await this.openSwitcher();
     await this.getConnectionItem(name).click();
+    await expect(this.switcherPanel).toBeHidden();
     await this.handlePasswordPrompt(password);
     await this.waitForConnectionActive();
   }
@@ -357,8 +462,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async openContextMenu(connectionName: string): Promise<void> {
+    await this.closeSwitcher();
+    await this.openSwitcher();
     await this.getConnectionItem(connectionName).click({ button: "right" });
-    await this.wait(300);
+    await expect(this.page.getByRole("menu")).toBeVisible();
   }
 
   async clickContextMenuItem(menuItemName: string): Promise<void> {
@@ -419,6 +526,7 @@ export class ConnectionPage extends BasePage {
     sourceName: string,
     targetName: string,
   ): Promise<void> {
+    await this.openSwitcher();
     const source = this.getConnectionItem(sourceName);
     const target = this.getConnectionItem(targetName);
     await expect(source).toBeVisible();
@@ -455,6 +563,10 @@ export class ConnectionPage extends BasePage {
   }
 
   async closeContextMenu(): Promise<void> {
-    await this.page.locator(".MuiBackdrop-root").click();
+    const menu = this.page.getByRole("menu");
+    await expect(menu).toBeVisible();
+    await menu.focus();
+    await this.page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
   }
 }

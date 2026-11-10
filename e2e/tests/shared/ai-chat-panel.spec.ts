@@ -27,15 +27,14 @@ test.describe("AI Chat panel", () => {
       });
 
       await test.step("Ensure right sidebar visible", async () => {
-        if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-          await settingsPage.toggleRightSidebar();
-        }
+        await settingsPage.openRightSidebar();
         await expect(settingsPage.rightSidebarTab()).toBeVisible({
           timeout: 15000,
         });
       });
 
       await test.step("In-place setup is visible before a profile exists", async () => {
+        await page.getByTestId("ai-empty-quick-setup").click();
         await expect(settingsPage.aiSetupForm()).toBeVisible({
           timeout: 10000,
         });

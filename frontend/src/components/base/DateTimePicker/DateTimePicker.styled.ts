@@ -99,7 +99,7 @@ export const PickerPaper = styled(Box)(({ theme }) => ({
   background: theme.palette.background.default,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
-  boxShadow: '0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1)',
+  boxShadow: `0 4px 6px -1px ${alpha(theme.palette.common.black, 0.1)}, 0 2px 4px -2px ${alpha(theme.palette.common.black, 0.1)}`,
   padding: 8,
   minWidth: 248,
   color: theme.palette.text.text,
@@ -147,7 +147,7 @@ export const WeekdayRow = styled(Box)(({ theme }) => ({
   gap: 2,
   marginBottom: 4,
   color: theme.palette.text.subdued,
-  fontSize: 11,
+  fontSize: variables.fontSize.xs,
   textAlign: 'center'
 }));
 
@@ -172,7 +172,7 @@ export const DayCell = styled('button')<{
   color: selected ? theme.palette.common.white : outside ? theme.palette.text.disabled : theme.palette.text.text,
   cursor: 'pointer',
   fontFamily: 'inherit',
-  fontSize: 12,
+  fontSize: variables.fontSize.sm,
   lineHeight: 1,
   '&:hover': {
     backgroundColor: selected ? theme.palette.primary.main : theme.palette.action.hover
@@ -199,7 +199,7 @@ export const TimeSelect = styled('select')(({ theme }) => ({
   background: theme.palette.background.subdued,
   color: theme.palette.text.text,
   fontFamily: 'inherit',
-  fontSize: 12,
+  fontSize: variables.fontSize.sm,
   outline: 'none',
   cursor: 'pointer',
   '&:focus': {
@@ -209,7 +209,7 @@ export const TimeSelect = styled('select')(({ theme }) => ({
 
 export const TimeSep = styled('span')(({ theme }) => ({
   color: theme.palette.text.subdued,
-  fontSize: 12
+  fontSize: variables.fontSize.sm
 }));
 
 export const PickerFooter = styled(Box)(({ theme }) => ({
@@ -232,7 +232,7 @@ export const PickerActionButton = styled('button')<{ actionVariant?: 'primary' |
     background: actionVariant === 'primary' ? theme.palette.primary.main : 'transparent',
     color: actionVariant === 'primary' ? theme.palette.common.white : theme.palette.text.subdued,
     fontFamily: 'inherit',
-    fontSize: 12,
+    fontSize: variables.fontSize.sm,
     cursor: 'pointer',
     '&:hover': {
       backgroundColor:

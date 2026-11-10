@@ -10,18 +10,27 @@ export const messageMarkdownSx = (theme: Theme) => ({
     '&:last-child': { marginBottom: 0 }
   },
   '& ul, & ol': {
-    margin: '0.25em 0 0.6em',
+    margin: '0.25em 0 0.7em',
     paddingLeft: '1.35em'
   },
   '& li': {
-    marginBottom: '0.2em'
+    marginBottom: '0.25em',
+    '& > p': { margin: 0 }
   },
-  '& h1, & h2, & h3': {
-    margin: '0.6em 0 0.35em',
-    fontSize: theme.typography.body2.fontSize,
+  '& h1, & h2, & h3, & h4': {
+    margin: '1em 0 0.4em',
     fontWeight: 600,
-    lineHeight: 1.4,
-    '&:first-of-type': { marginTop: 0 }
+    lineHeight: 1.35,
+    '&:first-child': { marginTop: 0 }
+  },
+  '& h1': { fontSize: '1.3em' },
+  '& h2': { fontSize: '1.15em' },
+  '& h3': { fontSize: '1.05em' },
+  '& h4': { fontSize: '1em' },
+  '& hr': {
+    border: 'none',
+    borderTop: `1px solid ${theme.palette.divider}`,
+    margin: '1em 0'
   },
   '& code': {
     fontFamily: theme.typography.fontFamily,
@@ -48,7 +57,7 @@ export const messageMarkdownSx = (theme: Theme) => ({
     color: theme.palette.text.subdued
   },
   '& a': {
-    color: theme.palette.primary.main,
+    color: theme.palette.text.link,
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline'

@@ -16,9 +16,11 @@ type (
 		Type                string  `json:"type"`
 		Info                string  `json:"info"`
 		Options             any     `json:"options"`
+		Env                 string  `json:"env"`
 		SafeMode            string  `json:"safeMode"`
 		SafeModeUnlocked    bool    `json:"safeModeUnlocked"`
 		SafeModeUnlockUntil *string `json:"safeModeUnlockUntil,omitempty"`
+		AgentTier           string  `json:"agentTier"`
 		Access              string  `json:"access"`
 		Shared              bool    `json:"shared"`
 		PasswordShared      bool    `json:"passwordShared"`

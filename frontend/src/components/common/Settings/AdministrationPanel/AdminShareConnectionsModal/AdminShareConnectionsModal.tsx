@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import api from '@/api';
 import type { AdminConnectionCatalogItemType, AdminConnectionShareType } from '@/api/connection/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
@@ -15,7 +16,6 @@ import {
   AdministrationModalContentStyled
 } from '../AdminUserRow/AdminUserRow.styled';
 import {
-  ShareModalFooterStyled,
   ShareModalPickerPanelStyled,
   ShareModalSectionPanelStyled,
   ShareModalSectionStyled,
@@ -324,7 +324,7 @@ export default function AdminShareConnectionsModal({
           </ShareModalSectionStyled>
         </AdministrationModalContentStyled>
 
-        <ShareModalFooterStyled>
+        <ModalFooter>
           {selectedIds.length > 0 ? (
             <Typography variant='caption' color='textText' sx={{ mr: 'auto' }}>
               {selectedCountLabel}
@@ -344,7 +344,7 @@ export default function AdminShareConnectionsModal({
           >
             {locales.admin_share_grant}
           </Button>
-        </ShareModalFooterStyled>
+        </ModalFooter>
       </AdministrationModalContainerStyled>
     </Modal>
   );

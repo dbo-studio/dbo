@@ -6,11 +6,25 @@ import (
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 )
 
 func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
+
+	if action == contract.ExecuteSQLAction {
+		return databaseCore.SQLFromParams(params)
+	}
+
+	if action == contract.RenameAction {
+		newName, err := databaseCore.NewNameFromParams(params)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{fmt.Sprintf("RENAME TABLE %s TO %s", quote.MysqlQualifiedTable(node.Database, node.Table), quote.MysqlQualifiedTable(node.Database, newName))}, nil
+	}
 
 	type ExecuteParams map[contract.TreeTab]any
 
@@ -43,6 +57,16 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 			return nil, err
 		}
 
+		routineQueries, err := r.handleRoutineCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		eventQueries, err := r.handleEventCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		tableQueries, t, err := r.handleTableCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
@@ -54,6 +78,8 @@ func (r *MySQLRepository) buildExecuteQueries(ctx context.Context, nodeID string
 
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
+		queries = append(queries, routineQueries...)
+		queries = append(queries, eventQueries...)
 		queries = append(queries, tableQueries...)
 	}
 

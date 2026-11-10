@@ -1,4 +1,5 @@
 import { Box, styled, Typography } from '@mui/material';
+import { variables } from '@/core/theme/variables';
 
 export const HeaderColumnContentStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -8,6 +9,6 @@ export const HeaderColumnContentStyled = styled(Box)(({ theme }) => ({
 }));
 
 export const HeaderColumnTypeStyled = styled(Typography)(({ theme }) => ({
-  fontSize: 10,
+  fontSize: variables.fontSize.xxs,
   color: theme.palette.text.placeholder
 }));

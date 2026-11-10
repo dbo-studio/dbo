@@ -3,6 +3,8 @@ import type { IconTypes } from '@/components/base/CustomIcon/types';
 import type { ConnectionType } from '@/types';
 import type { ReactNode } from 'react';
 
+import type { SSHFormValues } from './ssh';
+
 export type SelectionConnectionType = {
   name: string;
   logo: keyof typeof IconTypes;
@@ -30,6 +32,8 @@ export type ConnectionSettingsProps = {
   connection?: ConnectionType;
   /** Stored connection type / branding alias. */
   engine?: string;
+  /** Overrides the submit button text (default: Update when editing, Create otherwise). */
+  submitLabel?: string;
   pingLoading: boolean;
   submitLoading: boolean;
   onSubmit: (data: CreateConnectionRequestType) => void;
@@ -37,13 +41,15 @@ export type ConnectionSettingsProps = {
   onClose: () => void;
 };
 
-export type ConnectionFormTabId = 'general' | 'ssl';
+export type ConnectionFormTabId = 'general' | 'ssl' | 'ssh';
 
 export type ConnectionFormTabsProps = {
   general: ReactNode;
   ssl: ReactNode;
+  ssh: ReactNode;
   generalLabel: string;
   sslLabel: string;
+  sshLabel: string;
 };
 
 export type ConnectionSSLFieldsProps = {
@@ -65,4 +71,9 @@ export type SSLCertFieldProps = {
   placeholder: string;
   testId: string;
   onChange: (value: string) => void;
+};
+
+export type ConnectionSSHFieldsProps = {
+  value: SSHFormValues;
+  onChange: (value: SSHFormValues) => void;
 };

@@ -1,4 +1,3 @@
-import locales from '@/locales';
 import type { AiProviderType } from '@/types';
 
 export type AiStatusReason = 'missing_key' | 'missing_url' | 'missing_model' | 'none';
@@ -31,6 +30,10 @@ function providerGap(provider: AiProviderType): AiStatusReason {
   return 'none';
 }
 
+export function isProviderReady(provider: AiProviderType): boolean {
+  return providerGap(provider) === 'none';
+}
+
 export function getAiStatus(providers: AiProviderType[] | undefined): AiStatus {
   const provider = providers?.find((item) => item.isActive);
   if (!provider) {
@@ -43,32 +46,4 @@ export function getAiStatus(providers: AiProviderType[] | undefined): AiStatus {
   }
 
   return { state: 'incomplete', reason, ready: false, provider };
-}
-
-export function providerNeedsApiKey(provider: AiProviderType | undefined): boolean {
-  return Boolean(provider && provider.type !== 'ollama' && !hasApiKey(provider));
-}
-
-export function providerNeedsUrl(provider: AiProviderType | undefined): boolean {
-  return Boolean(provider && !provider.url);
-}
-
-export function aiStatusLabel(status: AiStatus): string {
-  if (status.state === 'ready') {
-    return locales.ai_status_ready;
-  }
-
-  if (status.state === 'unconfigured') {
-    return locales.ai_status_unconfigured;
-  }
-
-  if (status.reason === 'missing_key') {
-    return locales.ai_status_missing_key;
-  }
-
-  if (status.reason === 'missing_url') {
-    return locales.ai_status_missing_url;
-  }
-
-  return locales.ai_status_missing_model;
 }

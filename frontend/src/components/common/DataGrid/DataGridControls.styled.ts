@@ -17,7 +17,7 @@ export const SearchBarContainer = styled('div')(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
-  boxShadow: theme.palette.mode === 'dark' ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.15)',
+  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, theme.palette.mode === 'dark' ? 0.3 : 0.15)}`,
   padding: theme.spacing(0.5, 1),
   minWidth: theme.spacing(30),
   maxWidth: theme.spacing(40)
@@ -53,7 +53,7 @@ export const DataGridLoadingOverlayStyled = styled(Box)(({ theme }) => ({
 
 export const SearchMatchCountStyled = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.subdued,
-  fontSize: '12px',
+  fontSize: variables.fontSize.sm,
   whiteSpace: 'nowrap'
 }));
 
@@ -113,6 +113,8 @@ export const GridCheckboxRoot = styled('label')(({ theme }) => ({
 /** Native input painted with MUI Material checkbox glyphs. */
 export const GridCheckboxInput = styled('input')(({ theme }) => {
   const color = theme.palette.primary.main;
+  // Unchecked boxes are neutral so a column of them does not outshine the data.
+  const idleColor = theme.palette.action.active;
   return {
     appearance: 'none',
     WebkitAppearance: 'none',
@@ -126,7 +128,7 @@ export const GridCheckboxInput = styled('input')(({ theme }) => {
     cursor: 'inherit',
     border: 0,
     backgroundColor: 'transparent',
-    backgroundImage: muiUncheckedCheckboxUrl(theme.palette.text.subdued),
+    backgroundImage: muiUncheckedCheckboxUrl(idleColor),
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
     backgroundSize: 'contain',
@@ -143,7 +145,7 @@ export const GridCheckboxInput = styled('input')(({ theme }) => {
 });
 
 export const HeaderBadgeStyled = styled('span')(({ theme }) => ({
-  fontSize: 9,
+  fontSize: variables.fontSize.xxs,
   lineHeight: 1,
   padding: '1px 3px',
   borderRadius: 2,

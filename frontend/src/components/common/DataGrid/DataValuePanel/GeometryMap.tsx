@@ -1,4 +1,4 @@
-import { Box, Typography, useTheme } from '@mui/material';
+import { alpha, Box, Typography, useTheme } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,11 +11,11 @@ type GeometryMapProps = {
 };
 
 /** Lucide MapPin as a Leaflet DivIcon (matches app icon set). */
-function createMapPinIcon(color: string): L.DivIcon {
+function createMapPinIcon(color: string, shadowColor: string): L.DivIcon {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
       stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-      style="filter: drop-shadow(0 1px 2px rgba(0,0,0,.35));">
+      style="filter: drop-shadow(0 1px 2px ${shadowColor});">
       <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
       <circle cx="12" cy="10" r="3"/>
     </svg>
@@ -50,7 +50,8 @@ function useOnlineStatus(): boolean {
 export default function GeometryMap({ wkt, height = '100%' }: GeometryMapProps): JSX.Element {
   const theme = useTheme();
   const pinColor = theme.palette.primary.main;
-  const pinIcon = useMemo(() => createMapPinIcon(pinColor), [pinColor]);
+  const pinShadow = alpha(theme.palette.common.black, 0.35);
+  const pinIcon = useMemo(() => createMapPinIcon(pinColor, pinShadow), [pinColor, pinShadow]);
   const online = useOnlineStatus();
 
   const containerRef = useRef<HTMLDivElement>(null);

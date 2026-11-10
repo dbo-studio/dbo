@@ -25,7 +25,7 @@ export const DiagramControlsStyled = styled(Box)(({ theme }) => ({
       maxHeight: 12
     },
     '&:hover svg': {
-      fill: theme.palette.text.primary
+      fill: theme.palette.primary.main
     }
   },
   '& .react-flow__controls-button:last-child': {

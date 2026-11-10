@@ -10,6 +10,8 @@ export const CodeEditorBoxStyled = styled(Box, {
 })<CodeEditorBoxStyledProps>(({ width, height }) => ({
   width: width || '100%',
   height: height || '100%',
+  minHeight: 0,
+  flex: height ? undefined : 1,
   '& .monaco-editor, .monaco-editor .margin': {
     userSelect: 'text',
     WebkitUserSelect: 'text',

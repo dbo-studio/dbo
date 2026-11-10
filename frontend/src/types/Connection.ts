@@ -3,6 +3,11 @@ import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionSafeMode = 'silent' | 'alert' | 'alert_write' | 'safe' | 'safe_write';
 
+export type ConnectionEnv = '' | 'dev' | 'uat' | 'prod';
+
+/** How far the AI agent may go on a connection. */
+export type AgentTier = 'read_only' | 'data_write' | 'schema_change';
+
 export type ConnectionAccess = 'owner' | 'viewer' | 'editor';
 
 export type ConnectionOptionsType = PostgresqlOptionsType | MysqlOptionsType | SQLiteOptionsType;
@@ -16,9 +21,11 @@ export interface ConnectionType {
   info: string;
   icon: string;
   options: ConnectionOptionsType;
+  env?: ConnectionEnv;
   safeMode?: ConnectionSafeMode;
   safeModeUnlocked?: boolean;
   safeModeUnlockUntil?: string;
+  agentTier?: AgentTier;
   access?: ConnectionAccess;
   shared?: boolean;
   passwordShared?: boolean;

@@ -7,11 +7,12 @@ import type { NavRailItemProps, NavRailProps } from './types';
 export default function NavRail({
   children,
   hideOnMobile = false,
+  fullWidth = false,
   role,
   'aria-label': ariaLabel
 }: NavRailProps): JSX.Element {
   return (
-    <NavRailStyled hideOnMobile={hideOnMobile} role={role} aria-label={ariaLabel}>
+    <NavRailStyled hideOnMobile={hideOnMobile} fullWidth={fullWidth} role={role} aria-label={ariaLabel}>
       {children}
     </NavRailStyled>
   );

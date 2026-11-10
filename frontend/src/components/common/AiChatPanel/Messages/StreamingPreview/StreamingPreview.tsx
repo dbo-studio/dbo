@@ -1,5 +1,6 @@
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import { Typography } from '@mui/material';
+import { useSmoothText } from '../../hooks/useSmoothText';
 import StreamingMarkdown from '../StreamingMarkdown/StreamingMarkdown';
 import { isToolCallLeakContent, sanitizeAssistantContent } from '../../utils/assistantContent';
 import type { StreamingPreviewProps } from '../../types';
@@ -11,7 +12,7 @@ export default function StreamingPreview({
   blockType,
   isStreaming = false
 }: StreamingPreviewProps) {
-  const displayContent = sanitizeAssistantContent(content);
+  const displayContent = useSmoothText(sanitizeAssistantContent(content), isStreaming);
 
   if (!displayContent && !statusLabel) {
     return null;

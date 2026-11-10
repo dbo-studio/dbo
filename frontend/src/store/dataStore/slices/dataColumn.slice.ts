@@ -1,5 +1,5 @@
 import { debouncedSaveColumns } from '@/core/utils/indexedDbHelper';
-import { useTabStore } from '@/store/tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type { ColumnType } from '@/types';
 import type { StateCreator } from 'zustand';
 import type { DataColumnSlice, DataStore } from '../types';
@@ -15,7 +15,7 @@ export const createDataColumnSlice: StateCreator<
     return get().columns?.filter((c) => c.isActive) ?? [];
   },
   updateColumns: async (columns: ColumnType[]): Promise<void> => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
 
     set({ columns }, undefined, 'updateColumns');

@@ -3,6 +3,7 @@ package databaseConnection
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
@@ -27,6 +27,7 @@ type IConnectionManager interface {
 
 type conn struct {
 	DB       *gorm.DB
+	Tunnel   *sshTunnel
 	LastUsed time.Time
 }
 
@@ -55,6 +56,7 @@ type ConnectionManager struct {
 	historyRepo HistoryWriter
 	secrets     PasswordHydrator
 	safetyTTL   time.Duration
+	onClose     []func(ownerID string, connectionID uint)
 }
 
 func NewConnectionManager(historyRepo HistoryWriter, secrets PasswordHydrator, appLogger logger.Logger, appCache cache.Cache) *ConnectionManager {
@@ -140,27 +142,39 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	var dialect gorm.Dialector
 
+	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
 	switch {
 	case databaseContract.IsMysqlFamily(connection.ConnectionType):
-		dialect = OpenMysqlConnection(connection)
+		dialect = OpenMysqlConnection(dialTarget)
 	case databaseContract.IsPostgresFamily(connection.ConnectionType):
-		dialect = OpenPostgresqlConnection(connection)
+		dialect = OpenPostgresqlConnection(dialTarget)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		dialect = OpenSQLiteConnection(connection)
-	case connection.ConnectionType == "sqlserver":
-		dialect = sqlserver.Open(connection.Name)
+	case connection.ConnectionType == databaseContract.SQLServer:
+		dialect = OpenSQLServerConnection(dialTarget)
+	case connection.ConnectionType == databaseContract.ClickHouse:
+		dialect = OpenClickHouseConnection(dialTarget)
 	default:
+		_ = tunnel.Close()
+
 		cm.logger.Error(fmt.Errorf("unsupported database type: %s", connection.ConnectionType))
+
 		return nil, fmt.Errorf("unsupported database type: %s", connection.ConnectionType)
 	}
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
+		_ = tunnel.Close()
+
 		return nil, apperror.DriverError(err)
 	}
 
 	if err := configureConnPool(db); err != nil {
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return nil, apperror.DriverError(err)
 	}
@@ -172,13 +186,14 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 	// entry and discard ours.
 	if existing, ok := cm.connections[key]; ok {
 		cm.mu.Unlock()
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return existing.DB, nil
 	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
+		Tunnel:   tunnel,
 		LastUsed: time.Now(),
 	}
 	cm.mu.Unlock()
@@ -230,18 +245,27 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		}
 	}
 
-	dialect := OpenPostgresqlConnectionForDatabase(connection, databaseName)
+	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	dialect := OpenPostgresqlConnectionForDatabase(dialTarget, databaseName)
 	if dialect == nil {
+		_ = tunnel.Close()
+
 		return nil, fmt.Errorf("failed to open postgresql connection for database %q", databaseName)
 	}
 
 	db, err := gorm.Open(dialect, &gorm.Config{})
 	if err != nil {
+		_ = tunnel.Close()
+
 		return nil, apperror.DriverError(err)
 	}
 
 	if err := configureConnPool(db); err != nil {
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return nil, apperror.DriverError(err)
 	}
@@ -251,13 +275,14 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 	cm.mu.Lock()
 	if existing, ok := cm.connections[key]; ok {
 		cm.mu.Unlock()
-		_ = cm.closeConn(&conn{DB: db})
+		_ = cm.closeConn(&conn{DB: db, Tunnel: tunnel})
 
 		return existing.DB, nil
 	}
 
 	cm.connections[key] = &conn{
 		DB:       db,
+		Tunnel:   tunnel,
 		LastUsed: time.Now(),
 	}
 	cm.mu.Unlock()
@@ -285,8 +310,27 @@ func (cm *ConnectionManager) IsOpen(ctx context.Context, ownerID string, connect
 	return true
 }
 
+// OnClose registers a hook run when a connection is closed. NoSQL drivers keep their own
+// clients and use it to release them together with the SQL pool entry.
+func (cm *ConnectionManager) OnClose(fn func(ownerID string, connectionID uint)) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	cm.onClose = append(cm.onClose, fn)
+}
+
+// HydratePassword fills connection.Options with the stored password (see hydrateConnectionPassword).
+func (cm *ConnectionManager) HydratePassword(ctx context.Context, connection *model.Connection) error {
+	if cm.secrets == nil {
+		return nil
+	}
+
+	return hydrateConnectionPassword(ctx, cm.secrets, helper.CtxOwnerID(ctx), connection)
+}
+
 func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connectionID uint) error {
 	cm.mu.Lock()
+	hooks := slices.Clone(cm.onClose)
 
 	toClose := make([]*conn, 0)
 
@@ -302,6 +346,10 @@ func (cm *ConnectionManager) Close(_ context.Context, ownerID string, connection
 
 	for _, c := range toClose {
 		_ = cm.closeConn(c)
+	}
+
+	for _, fn := range hooks {
+		fn(ownerID, connectionID)
 	}
 
 	return nil
@@ -428,12 +476,31 @@ func (cm *ConnectionManager) closeConn(c *conn) error {
 		return nil
 	}
 
+	defer func() { _ = c.Tunnel.Close() }()
+
 	db, err := c.DB.DB()
 	if err != nil {
 		return err
 	}
 
 	return db.Close()
+}
+
+// openTunnelIfNeeded returns the connection to dial (rewritten to a local
+// tunnel port when SSH is enabled) and the tunnel owning that port, or the
+// original connection and a nil tunnel.
+func (cm *ConnectionManager) openTunnelIfNeeded(ctx context.Context, connection *model.Connection) (*model.Connection, *sshTunnel, error) {
+	cfg := SSHOptions(connection)
+	if cfg == nil {
+		return connection, nil, nil
+	}
+
+	tunnel, dialConn, err := openSSHTunnel(ctx, connection, cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return dialConn, tunnel, nil
 }
 
 func RegisterHistoryHooks(db *gorm.DB, historyRepo HistoryWriter, connectionID uint) {

@@ -1,4 +1,4 @@
-import type { ConnectionSafeMode } from '@/types';
+import type { ConnectionEnv, ConnectionSafeMode } from '@/types';
 import type { ConnectionEngine } from '@/core/db/connectionAliases';
 
 export type ConnectionDetailRequestType = {
@@ -8,15 +8,16 @@ export type ConnectionDetailRequestType = {
 export type CreateConnectionRequestType = {
   name: string;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
   rememberPassword?: boolean;
   safeMode?: ConnectionSafeMode;
+  env?: ConnectionEnv;
 };
 
 export type PingConnectionRequestType = {
   id?: number;
   type: ConnectionEngine;
-  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
 };
 
 export type PingConnectionResponseType = {
@@ -24,6 +25,7 @@ export type PingConnectionResponseType = {
   serverVersion?: string;
   sslNegotiated?: boolean;
   sslMode?: string;
+  sshTunnel?: boolean;
 };
 
 export type UpdateConnectionRequestType = {
@@ -33,9 +35,11 @@ export type UpdateConnectionRequestType = {
   isActive?: boolean;
   isClose?: boolean;
   rememberPassword?: boolean;
-  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType;
+  options?: PostgresqlOptionsType | SQLiteOptionsType | MysqlOptionsType | RedisOptionsType | MongoOptionsType;
   safeMode?: ConnectionSafeMode;
   safeModePassword?: string;
+  env?: ConnectionEnv;
+  agentTier?: 'read_only' | 'data_write' | 'schema_change';
 };
 
 export type SetConnectionCredentialsRequestType = {
@@ -51,6 +55,22 @@ export type ConnectionSSLOptionsType = {
   clientKey?: string;
 };
 
+export type ConnectionSSHOptionsType = {
+  enabled: boolean;
+  host?: string;
+  port?: number;
+  username?: string;
+  authMethod?: string;
+  password?: string;
+  privateKey?: string;
+  passphrase?: string;
+  /** Response only: whether the secret is stored. */
+  passwordSet?: boolean;
+  privateKeySet?: boolean;
+  passphraseSet?: boolean;
+  jump?: ConnectionSSHOptionsType;
+};
+
 export type PostgresqlOptionsType = {
   host?: string;
   port?: number;
@@ -59,6 +79,7 @@ export type PostgresqlOptionsType = {
   database?: string;
   uri?: string;
   ssl?: ConnectionSSLOptionsType;
+  ssh?: ConnectionSSHOptionsType;
 };
 
 export type MysqlOptionsType = {
@@ -69,6 +90,31 @@ export type MysqlOptionsType = {
   database?: string;
   uri?: string;
   ssl?: ConnectionSSLOptionsType;
+  ssh?: ConnectionSSHOptionsType;
+};
+
+export type RedisOptionsType = {
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: number;
+  tls?: boolean;
+  tlsInsecure?: boolean;
+  isPing?: boolean;
+};
+
+export type MongoOptionsType = {
+  uri?: string;
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  authSource?: string;
+  database?: string;
+  tls?: boolean;
+  tlsInsecure?: boolean;
+  isPing?: boolean;
 };
 
 export type SQLiteOptionsType = {

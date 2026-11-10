@@ -31,10 +31,3 @@ export const ConnectionWrapperStyled = styled(Box)(({ theme }) => ({
   overflowX: 'hidden',
   alignContent: 'start'
 })) as typeof Box;
-
-export const ConnectionSelectionFooterStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  flexShrink: 0,
-  marginTop: theme.spacing(2)
-}));

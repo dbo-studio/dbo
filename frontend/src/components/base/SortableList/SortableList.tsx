@@ -79,11 +79,11 @@ function SortableList<T>({
 
       const { active, over } = event;
 
-      if (over && active.id !== over.id) {
+      // onDragEnd returning true means the drop was handled elsewhere (e.g. moved to another pane).
+      const handled = onDragEnd?.(event) === true;
+      if (!handled && over && active.id !== over.id) {
         onReorder(String(active.id), String(over.id));
       }
-
-      onDragEnd?.(event);
     },
     [onReorder, onDragEnd]
   );

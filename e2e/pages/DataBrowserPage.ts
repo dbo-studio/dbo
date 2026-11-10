@@ -405,6 +405,10 @@ export class DataBrowserPage extends BasePage {
     options?: {
       continueOnError?: boolean;
       skipErrors?: boolean;
+      /** CSV delimiter typed in the wizard (default ","). */
+      delimiter?: string;
+      /** File column -> table column, for files whose headers differ from the table. */
+      mapping?: Record<string, string>;
       /** Override auto-detected format (SQL | JSON | CSV). */
       format?: "SQL" | "JSON" | "CSV";
       /** Regex matched against the progress status line (default: /import completed/i). */
@@ -425,6 +429,27 @@ export class DataBrowserPage extends BasePage {
     if (options?.format) {
       await this.selectLabeledFormat(options.format);
     }
+    // Wizard: file -> column mapping (guessed by name) -> options.
+    if (options?.delimiter) {
+      // FieldInput renders its label as a caption, not a <label>, so getByLabel cannot match.
+      await modal
+        .getByText("Delimiter", { exact: true })
+        .locator("xpath=following::input[1]")
+        .fill(options.delimiter);
+    }
+    await modal.getByRole("button", { name: "Next", exact: true }).click();
+    await expect(modal.getByTestId("import-mapping")).toBeVisible({
+      timeout: 10000,
+    });
+    if (options?.mapping) {
+      for (const [fileColumn, tableColumn] of Object.entries(options.mapping)) {
+        await modal.getByTestId(`import-map-${fileColumn}`).click();
+        await this.page
+          .getByRole("option", { name: tableColumn, exact: true })
+          .click();
+      }
+    }
+    await modal.getByRole("button", { name: "Next", exact: true }).click();
     if (options?.continueOnError) {
       await modal.getByRole("checkbox", { name: /continue on error/i }).check();
     }

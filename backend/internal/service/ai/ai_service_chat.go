@@ -3,16 +3,22 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
+	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
 func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.AiChatResponse, error) {
-	provider, dbProvider, err := s.createProvider(ctx)
+	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+		return nil, err
+	}
+
+	provider, dbProvider, err := s.createProvider(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -41,21 +47,23 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, err
 	}
 
+	s.refreshSummary(ctx, provider, dbProvider.Model, chat)
+
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 
 	providerResp, providerResErr := provider.Chat(ctx, providerReq)
 
-	if err := s.saveChatMessages(ctx, chat, req.Message, providerResp); err != nil {
+	if err := s.saveChatMessages(ctx, chat, req.Message, nil, providerResp, dbProvider.Model); err != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", err))
 	}
 
 	if providerResErr != nil {
-		return nil, providerResErr
+		return nil, aiProvider.ProviderError(providerResErr)
 	}
 
 	response := &dto.AiChatResponse{
@@ -70,6 +78,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 			Type:      string(providerResp.Type),
 			Language:  string(providerResp.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 
@@ -80,6 +89,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 			Type:      string(content.Type),
 			Language:  string(content.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 

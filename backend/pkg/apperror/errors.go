@@ -16,6 +16,7 @@ var (
 	ErrJobNotCompleted                = errors.New("job not completed")
 	ErrJobNotFound                    = errors.New("job not found")
 	ErrAiChatNotFound                 = errors.New("ai chat not found")
+	ErrAiChangesetNotFound            = errors.New("ai changeset not found")
 	ErrProviderNotConfigured          = errors.New("provider not configured")
 	ErrAiNoSelectedModel              = errors.New("select a model first")
 	ErrAiNotConfigured                = errors.New("ai is not configured")
@@ -24,6 +25,7 @@ var (
 	ErrAiMissingModel                 = errors.New("ai model is required")
 	ErrPasswordRequired               = errors.New("password_required")
 	ErrSafeModeBlocked                = errors.New("safe_mode_blocked")
+	ErrSafeModeProdLocked             = errors.New("safe_mode_prod_locked")
 	ErrSafeModeConfirmRequired        = errors.New("safe_mode_confirm_required")
 	ErrSafeModePasswordRequired       = errors.New("safe_mode_password_required")
 	ErrSafeModePasswordInvalid        = errors.New("safe_mode_password_invalid")
@@ -35,9 +37,19 @@ var (
 	ErrQueryCanceled                  = errors.New("query canceled")
 	ErrUnauthenticated                = errors.New("authentication required")
 	ErrAuthNotEnabled                 = errors.New("authentication is not enabled")
+	ErrAuthSetupDone                  = errors.New("an admin account already exists")
+	ErrAuthSetupTokenInvalid          = errors.New("setup token is not valid")
 	ErrInvalidSavePath                = errors.New("invalid save path")
 	ErrInvalidInlineQuery             = errors.New("invalid inline query")
 	ErrExportQueryNotRead             = errors.New("export query must be a read-only statement")
+	ErrBackupNotFound                 = errors.New("backup not found")
+	ErrBackupNotCompleted             = errors.New("backup is not completed")
+	ErrRestoreConfirmMismatch         = errors.New("typed name does not match the target database")
+	ErrBackupFileType                 = errors.New("backup file must be .sql or .sqlite")
+	ErrBackupFileTooLarge             = errors.New("backup file is too large")
+	ErrSafetyBackupFailed             = errors.New("the safety backup did not complete, so nothing was restored")
+	ErrRestoreToolMissing             = errors.New("restore tool missing; download it from the backup tools list")
+	ErrRestoreDriverMismatch          = errors.New("this backup was made for a different database type")
 	ErrImportFileTooLarge             = errors.New("import file is too large")
 	ErrInvalidProviderURL             = errors.New("provider URL must use http or https")
 	ErrUserNotFound                   = errors.New("user not found")
@@ -197,6 +209,15 @@ func SafeModeBlocked(data map[string]any) error {
 	}
 }
 
+func SafeModeProdLocked(data map[string]any) error {
+	return &AppError{
+		Code:    http.StatusForbidden,
+		Message: "safe_mode_prod_locked",
+		Err:     ErrSafeModeProdLocked,
+		Data:    data,
+	}
+}
+
 func SafeModeConfirmRequired(data map[string]any) error {
 	return &AppError{
 		Code:    http.StatusForbidden,
@@ -284,5 +305,15 @@ func MustChangePassword() error {
 		Code:    http.StatusForbidden,
 		Message: "must_change_password",
 		Err:     ErrMustChangePassword,
+	}
+}
+
+// AccountRejected is returned when the DBO website refuses an account request.
+// The reason is a stable code the app maps to a message, e.g. "account_email_taken".
+func AccountRejected(code int, reason string) error {
+	return &AppError{
+		Code:    code,
+		Message: reason,
+		Err:     errors.New(reason),
 	}
 }

@@ -19,7 +19,11 @@ export function defineDataGridContextMenuTests(engine: DbEngine): void {
       ? "PostgreSQL"
       : engine === "mysql"
         ? "MySQL"
-        : "SQLite";
+        : engine === "mssql"
+          ? "SQL Server"
+          : engine === "clickhouse"
+            ? "ClickHouse"
+            : "SQLite";
 
   test.describe(`Data grid context menus ${label}`, () => {
   test("Empty area Add row and Refresh", async ({ page }, testInfo) => {

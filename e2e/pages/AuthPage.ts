@@ -45,12 +45,15 @@ export class AuthPage {
       .click({ noWaitAfter: true });
   }
 
-  async loginAdmin(adminPassword = "AdminPass1!"): Promise<void> {
+  /** Signs in as the shared-stack admin and returns the password now in effect. */
+  async loginAdmin(adminPassword = "AdminPass1!"): Promise<string> {
     const adminEmail = process.env.E2E_ADMIN_EMAIL ?? "admin@example.com";
     const bootstrapPassword = process.env.E2E_ADMIN_PASSWORD ?? "bootstrap1";
     const candidates = [
       bootstrapPassword,
       adminPassword,
+      // Other auth specs leave the shared admin on one of these.
+      "AdminPass1!",
       "AdminPass2!",
     ].filter((password, index, all) => all.indexOf(password) === index);
 
@@ -61,7 +64,7 @@ export class AuthPage {
         .isVisible()
         .catch(() => false)
     ) {
-      return;
+      return adminPassword;
     }
 
     await this.expectLoginVisible();
@@ -79,19 +82,24 @@ export class AuthPage {
       try {
         await expect(changeSubmit.or(appReady)).toBeVisible({ timeout: 15000 });
       } catch {
-        await expect(submit).toBeEnabled({ timeout: 10000 }).catch(() => undefined);
+        await expect(submit)
+          .toBeEnabled({ timeout: 10000 })
+          .catch(() => undefined);
         continue;
       }
 
       if (await changeSubmit.isVisible().catch(() => false)) {
         await this.changePasswordForced(adminPassword);
+        await this.expectAppReady();
+        return adminPassword;
       }
 
       await this.expectAppReady();
-      return;
+      return password;
     }
 
     await this.expectAppReady();
+    return adminPassword;
   }
 
   async expectAppReady(): Promise<void> {

@@ -1,15 +1,33 @@
 import type { TabMode } from '@/core/enums';
-import type { DiagramTabType, FilterType, SettingsTabType, SortType, TabType } from '@/types/Tab';
+import type { PaneId, SelectedByPane } from './tabs';
+import type {
+  BackupSection,
+  BackupTabType,
+  BrowseTabType,
+  ToolTabType,
+  QuestionTabType,
+  DashboardTabType,
+  DiagramTabType,
+  FilterType,
+  SettingsTabType,
+  SortType,
+  TabType
+} from '@/types/Tab';
 
 export type TabStore = {
   tabs: TabType[];
   selectedTabId: string | undefined;
+  selectedByPane: SelectedByPane;
+  focusedPane: PaneId;
   selectedTab: <T extends TabType>() => T | undefined;
   reset: () => void;
   getTabs: () => TabType[];
   updateTabs: (tabs: TabType[]) => void;
   updateSelectedTab: (selectedTab: TabType | undefined) => void;
   reorderTabs: (activeId: string, overId: string) => void;
+  moveTabToPane: (tabId: string, pane: PaneId, overId?: string) => void;
+  splitRight: (tabId: string) => void;
+  focusPane: (pane: PaneId) => void;
 };
 
 export type TabFilterSlice = {
@@ -31,12 +49,24 @@ export type AddSettingsTabOptions = {
   highlightId?: string;
 };
 
+export type AddBackupTabOptions = {
+  section?: BackupSection;
+  connectionId?: string | number;
+  database?: string;
+  scheduleId?: number | 'new';
+};
+
 export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
-  addEditorTab: (query?: string) => TabType;
-  addDiagramTab: (args: { database: string; schema: string; focusTable?: string }) => DiagramTabType;
+  addBrowseTab: (name: string, containerId: string) => BrowseTabType;
+  addToolTab: (toolId: string, name: string) => ToolTabType;
+  addEditorTab: (query?: string, options?: { forceNew?: boolean }) => TabType;
+  addDiagramTab: (args: { database: string; schema: string; focusTables?: string[] }) => DiagramTabType;
+  addDashboardTab: (dashboard: { id: number; name: string }) => DashboardTabType;
+  addQuestionTab: (question: { id: number; name: string }) => QuestionTabType;
   addSettingsTab: (options?: AddSettingsTabOptions) => SettingsTabType;
+  addBackupTab: (options?: AddBackupTabOptions) => BackupTabType;
   removeTab: (tabId: string) => TabType | null | undefined;
   switchTab: (tabId: string | null) => void;
   handleAddNewTab: (tabs: TabType[], newTab: TabType) => TabType;
@@ -44,7 +74,7 @@ export type TabSettingSlice = {
 
 export type TabQuerySlice = {
   getQuery: (tabId?: string) => string;
-  updateQuery: (query: string) => void;
+  updateQuery: (query: string, tabId?: string) => void;
   removeQuery: (tabId: string) => void;
   clearStoredQueries: () => void;
 };

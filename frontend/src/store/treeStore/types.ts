@@ -5,6 +5,8 @@ export type TreeStore = {
   expandedNodes: Record<string, string[]>;
   loadedParentIds: Record<string, string[]>;
   focusedNodeId: Record<string, string | undefined>;
+  /** Nodes pinned above the tree, per connection (snapshots without children; the real node stays in the tree). */
+  pinnedNodes: Record<string, TreeNodeType[]>;
   isLoading: boolean;
   treeError: Error | undefined;
 
@@ -19,6 +21,9 @@ export type TreeStore = {
   setNodeChildren: (nodeId: string, children: TreeNodeType[]) => void;
   addLoadedParentId: (parentId: string) => void;
   getLoadedParentIds: () => string[];
+  pinNodes: (nodes: TreeNodeType[]) => void;
+  unpinNodes: (nodeIds: string[]) => void;
+  renamePinned: (nodeId: string, oldName: string, newName: string) => void;
   reloadTree: (fromCache: boolean) => Promise<void>;
   toggleIsLoading: (isLoading: boolean) => void;
   reset: () => void;

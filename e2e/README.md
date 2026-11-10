@@ -6,7 +6,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
 
-CI runs three parallel jobs (`e2e-postgres` / `e2e-mysql` / `e2e-sqlite`) via `.github/workflows/tests.yml`, plus **`e2e-auth`** (`npm run test:auth`, no sample DB).
+CI (`.github/workflows/e2e.yml`) runs one sharded job per engine plus a coverage guard (`npm run check:coverage`, matrix in `coverage/capabilities.mjs`). `npm run test:auth` is not in CI yet.
 
 ## Architecture
 
@@ -26,8 +26,9 @@ npm test
 | ------------------- | -------------------------------------------------------------------------- |
 | Go toolchain        | Builds/runs backend via `go run . serve`                                   |
 | Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
-| Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql` |
-| TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 5433) |
+| Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql sample-redis sample-mongo` (Redis on 46379 `REDIS_TEST_PORT`, MongoDB on 47017 `MONGO_TEST_PORT`) |
+| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 42222; set `SSH_KNOWN_HOSTS_PATH` for the host-key test) |
+| TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 45433) |
 | Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 
 ```bash
@@ -46,6 +47,12 @@ npm test                          # all projects (postgres + mysql + sqlite)
 npm run test:pg                   # tests/shared + tests/pg
 npm run test:mysql                # tests/mysql
 npm run test:sqlite               # tests/sqlite
+npm run test:mssql                # tests/mssql — SQL Server (needs sample-mssql from docker-compose.dev.yml)
+npm run test:clickhouse           # tests/clickhouse — ClickHouse (needs sample-clickhouse)
+npm run test:redis                 # tests/redis — needs sample-redis from docker-compose.dev.yml
+npm run test:mongo                 # tests/mongo — needs sample-mongo
+npm run test:parallel -- --shards=sqlite:4   # split an engine into N shards (own stack each; default sqlite:3). Only shard engines whose tests do not share sample-DB state
+npm run test:parallel            # every engine at once, one Playwright process each (E2E_JOBS=3 at a time; --projects=mysql,sqlite to pick); logs per engine
 npm run test:ui                   # Playwright UI — all engines (pg + mysql + sqlite + shared)
 npm run test:ui:mysql             # UI filtered to MySQL only (also :pg / :sqlite)
 npm test -- tests/sqlite/object-form-sqlite-edit-table.spec.ts
@@ -86,19 +93,29 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
 | Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview + Ctrl+A stays in preview |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |
+| Export scopes            | `pg\|mysql\|sqlite/export-scope.spec.ts`      | tables/schema/database export, FK-ordered schema dump, zip bundle, 150-row (uncapped) export, invalid combinations |
+| Backup / Restore         | `pg\|mysql\|sqlite/backup.spec.ts`            | backup history + checksum + download, typed-confirm and name validation, upload scan, tool manager API; SQLite round trip, safety backup, Safe Mode block |
+| Backup tab (UI)          | `pg\|mysql\|sqlite/backup-ui.spec.ts`         | connection menu → Backup & Restore tab: progress, history, tools section, typed-name restore confirm, cancel queues nothing, database node opens the tab on that database |
+| Backup schedules         | `pg\|mysql\|sqlite/backup-schedule.spec.ts`   | create/validate, run now, retention keeps newest N, pause/edit, delete keeps backups |
+| Backup schedules (UI)    | `pg\|mysql\|sqlite/backup-console.spec.ts`    | header → Backup tab → Schedules: 5-step job wizard, run now, last result, per-job runs, pause/delete |
+| Backup encryption/verify | `pg\|mysql\|sqlite/backup-seal.spec.ts`        | gzip + AES-GCM schedule run, verify (checksum / contents / wrong passphrase), restore needs passphrase, SQLite round trip |
 | Export SavePath          | `shared/export-savepath.spec.ts`                | web export API rejects `..` and absolute savePath → 400 |
 | Job cancel / failure     | `shared/job-cancel.spec.ts`                   | cancel running export → `canceled`; bad query → `failed` + error |
 | Object Form multi-col FK | `*/object-form-multi-column-fk.spec.ts`       | Add composite FK on edit ×3 |
+| Connection SSH tunnel    | `pg/connection-ssh.spec.ts`, `mysql/connection-ssh.spec.ts` | password/key/jump auth via sample-sshd, host-key mismatch, secrets not returned |
 | Connection SSL           | `pg/connection-ssl.spec.ts`                   | SSL tab UI + Require on sample-pgsql-ssl + bad CA fail  |
 | Connection URI import    | `pg/connection-uri.spec.ts`                   | Paste URI → fields/SSL; save strips password; connect   |
 | Data grid typed cells    | `shared/data-grid-typed-cells.spec.ts`        | MySQL+PG; SQLite n/a (no typed editors yet)             |
 | Data grid FK autocomplete| `shared/data-grid-fk-autocomplete.spec.ts`    | PG+MySQL+SQLite single-col pick/paste; SQLite composite fill; NOT NULL hides NULL |
-| Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy                                |
+| Saved / history          | `shared/saved-history.spec.ts`                | history, save, run, copy on PG + MySQL                  |
+| Command palette          | `sqlite/command-palette.spec.ts`              | Alt+K open/toggle/Escape, filter + empty state, arrows + Enter, New editor, Open settings, object search opens data tab |
+| Mobile tab switcher      | `sqlite/mobile-tab-switcher.spec.ts`          | phone shell: tabs sheet lists tabs = badge, select closes sheet, close another tab |
 | Settings / theme         | `shared/settings-theme.spec.ts`               | theme persistence, settings tab + mode icon, search, Security password   |
 
 | Keyboard shortcuts       | `shared/keyboard-shortcuts.spec.ts`           | cheatsheet groups/filter, Alt+/ open, grid Save/Refresh tooltips |
 | Workspace dirty tab      | `shared/workspace-dirty-tab.spec.ts`          | dirty Cancel / Yes / clean close                        |
 | Workspace tab reorder    | `shared/workspace-tab-reorder.spec.ts`        | drag query tabs; drag Settings before query tab         |
+| Workspace split view     | `shared/split-view.spec.ts`                   | split right / move back / reload persistence            |
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | In-place setup then composer (no LLM)                   |
 | AI in-place setup        | `shared/ai-setup.spec.ts`                     | Query AI switch opens setup popover; save makes ready   |
 | AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |
@@ -107,12 +124,20 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form PG edit      | `pg/object-form-postgres-edit-table.spec.ts`  | serial deep column/FK drop+re-add+rename / varchar length / key edits    |
 | Object Form PG schema    | `pg/object-form-postgres-schema-matview.spec.ts` | serial schema, matview, rename, drop schema          |
+| Object Form PG indexes/checks | `pg/object-form-postgres-indexes-checks.spec.ts` | serial: index create/method change/drop + check add/edit/drop, each reloaded from the catalog |
+| Object Form PG routines/triggers | `pg/object-form-postgres-routines-triggers.spec.ts` | serial: trigger function create/edit/drop, table trigger round-trip, procedure create/drop |
+| Object Form PG sequences/types | `pg/object-form-postgres-sequences-types.spec.ts` | serial: standalone + table-owned sequences, enum create/append/use on column, double-click opens edit |
+| Object Form PG safe mode | `pg/object-form-postgres-safe-mode.spec.ts` | every new object action is classified: blocked in Alert Mode 2 with the right reason (destructive vs DDL), plus an unclassified control |
+| Object Form PG matview edit | `pg/object-form-postgres-matview-edit.spec.ts` | serial: matview comment edit, query edit (drop+recreate), refresh with/without data, drop |
 | Object Form MySQL        | `mysql/object-form-mysql-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |
 | Object Form MySQL edit   | `mysql/object-form-mysql-edit-table.spec.ts`  | serial ENGINE/AI, CHANGE length, index drop+recreate / keys     |
+| Object Form MySQL triggers/routines | `mysql/object-form-mysql-triggers-routines.spec.ts` | serial: table trigger add/edit/drop, function and procedure create/edit/drop |
 | Object Form SQLite       | `sqlite/object-form-sqlite-lifecycle.spec.ts` | serial: connect → tables → FK → view → edit → drop      |
 | Object Form SQLite edit  | `sqlite/object-form-sqlite-edit-table.spec.ts`| serial FK edit / column rename copy / keys    |
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
 | Object Form generated col | `pg|sqlite/object-form-generated-column.spec.ts` | Add generated column on edit (STORED / VIRTUAL)     |
+| Boards sidebar           | `sqlite/boards-sidebar.spec.ts`               | Boards tab: new/rename/duplicate/delete dashboard, new/save/delete report, `{{filters}}`, CSV/PNG/JSON export + import |
+| Dashboard share / schedule | `sqlite/dashboard-share.spec.ts`, `sqlite/dashboard-subscriptions.spec.ts` | opened from the Boards tab; share actions in the modal footer |
 | Database diagram (ERD)   | `shared/database-diagram.spec.ts`             | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export, Source DBML |
 
 **Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).
@@ -141,7 +166,7 @@ e2e/
 - Specs use `uniqueTestSuffix` and `withConnectionCleanup` so failed tests still remove connection rows.
 - Object Form lifecycle specs use `test.describe.configure({ mode: "serial" })` so each phase is a trackable test; `afterAll` still attempts full object cleanup on failure.
 - PG/MySQL still use shared `sample-*` containers with unique object names (dedicated e2e DB compose is a follow-up).
-- MySQL publish in `docker-compose.dev.yml` is `3307:3306`.
+- MySQL publish in `docker-compose.dev.yml` is `43306:3306`.
 
 ## Troubleshooting
 

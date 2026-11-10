@@ -65,6 +65,9 @@ export const unlockSafeMode = async (
     .data.data;
 };
 
+export const unlockProd = async (id: string | number, confirmName: string): Promise<SafeModeUnlockResponseType> =>
+  (await api.post<{ data: SafeModeUnlockResponseType }>(endpoint.unlockSafeMode(id), { confirmName })).data.data;
+
 export const lockSafeMode = async (id: string | number): Promise<void> => {
   await api.post(endpoint.lockSafeMode(id));
 };

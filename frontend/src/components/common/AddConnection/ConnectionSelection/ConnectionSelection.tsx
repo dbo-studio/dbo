@@ -1,3 +1,4 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import { useUUID } from '@/hooks';
 import locales from '@/locales';
 import { Button } from '@mui/material';
@@ -8,7 +9,6 @@ import ConnectionItem from './ConnectionItem/ConnectionItem';
 import {
   ConnectionSelectionBodyStyled,
   ConnectionSelectionContainerStyled,
-  ConnectionSelectionFooterStyled,
   ConnectionWrapperStyled
 } from './ConnectionSelection.styled';
 
@@ -50,7 +50,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
           ))}
         </ConnectionWrapperStyled>
       </ConnectionSelectionBodyStyled>
-      <ConnectionSelectionFooterStyled>
+      <ModalFooter>
         <Button size='small' onClick={onClose}>
           {locales.cancel}
         </Button>
@@ -63,7 +63,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
         >
           {locales.create}
         </Button>
-      </ConnectionSelectionFooterStyled>
+      </ModalFooter>
     </ConnectionSelectionContainerStyled>
   );
 }

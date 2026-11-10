@@ -4,6 +4,8 @@ import type { KeyboardEvent, ReactNode, Ref } from 'react';
 export type NavRailProps = {
   children: ReactNode;
   hideOnMobile?: boolean;
+  /** Fill the container instead of the fixed rail width (compact layouts). */
+  fullWidth?: boolean;
   role?: string;
   'aria-label'?: string;
 };

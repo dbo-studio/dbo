@@ -92,6 +92,21 @@ func buildDatabase(_ context.Context, r *MySQLRepository, dbName string) (*contr
 			contract.ViewContainerNodeType,
 			r.ContextMenu(contract.ViewContainerNodeType),
 		},
+		{
+			"Functions",
+			contract.FunctionContainerNodeType,
+			r.ContextMenu(contract.FunctionContainerNodeType),
+		},
+		{
+			"Procedures",
+			contract.ProcedureContainerNodeType,
+			r.ContextMenu(contract.ProcedureContainerNodeType),
+		},
+		{
+			"Events",
+			contract.EventContainerNodeType,
+			r.ContextMenu(contract.EventContainerNodeType),
+		},
 	}
 
 	for _, c := range containers {
@@ -167,9 +182,50 @@ func buildContainer(ctx context.Context, r *MySQLRepository, dbName string, cont
 				Children:    make([]contract.TreeNode, 0),
 			})
 		}
+	case contract.FunctionContainerNodeType, contract.ProcedureContainerNodeType:
+		procedure := container == contract.ProcedureContainerNodeType
+
+		routines, err := r.routines(ctx, dbName, procedure)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		nodeType := lo.Ternary(procedure, contract.ProcedureNodeType, contract.FunctionNodeType)
+
+		for _, routine := range routines {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s", dbName, routine.Name),
+				Name:        routine.Name,
+				Type:        nodeType,
+				Action:      editAction(r.ContextMenu(nodeType)),
+				ContextMenu: r.ContextMenu(nodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
+	case contract.EventContainerNodeType:
+		events, err := r.events(ctx, dbName)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		for _, event := range events {
+			containerNode.Children = append(containerNode.Children, contract.TreeNode{
+				ID:          fmt.Sprintf("%s.%s", dbName, event.Name),
+				Name:        event.Name,
+				Type:        contract.EventNodeType,
+				Action:      editAction(r.ContextMenu(contract.EventNodeType)),
+				ContextMenu: r.ContextMenu(contract.EventNodeType),
+				Children:    make([]contract.TreeNode, 0),
+			})
+		}
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
 
 	return containerNode, nil
+}
+
+// editAction makes double-click open the node's Edit form (first menu entry).
+func editAction(menu []contract.TreeNodeAction) *contract.TreeNodeAction {
+	return lo.ToPtr(menu[0])
 }

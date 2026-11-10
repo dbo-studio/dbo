@@ -129,7 +129,7 @@ func (s *IAuthServiceImpl) TotpDisable(ctx context.Context, req *dto.AuthTotpDis
 }
 
 func (s *IAuthServiceImpl) LoginTotp(ctx context.Context, req *dto.AuthLoginTotpRequest) (string, error) {
-	if s.cfg == nil || s.cfg.App.AuthMode != config.AuthModeLocal {
+	if s.cfg == nil || s.cfg.App.Auth.Mode != config.AuthModeLocal {
 		return "", apperror.BadRequest(apperror.ErrAuthNotEnabled)
 	}
 

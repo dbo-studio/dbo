@@ -1,20 +1,24 @@
 import ResizableModal from '@/components/base/Modal/ResizableModal/ResizableModal.tsx';
 import type { QuickViewDialogProps } from '@/components/common/DataGrid/QuickViewDialog/types';
-import { DataValueEditor } from '@/components/common/DataGrid/DataValuePanel/DataValuePanel';
+import { DataValueEditor, editorStateKey } from '@/components/common/DataGrid/DataValuePanel/DataValuePanel';
 import { handleRowChangeLog } from '@/core/utils';
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import type { SelectedRow } from '@/store/dataStore/types.ts';
+import type { ColumnType } from '@/types';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { type JSX, useMemo, useState } from 'react';
 import { QuickViewDialogContainerStyled, QuickViewDialogEditorStyled } from './QuickViewDialog.styled';
+
+// A fresh [] per call makes the selector's snapshot unstable and loops React when the store has no columns.
+const NO_COLUMNS: ColumnType[] = [];
 
 export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX.Element {
   const [dimensions, setDimensions] = useState({ width: 480, height: 420 });
 
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
-  const columns = useDataStore((state) => state.columns ?? []);
+  const columns = useDataStore((state) => state.columns ?? NO_COLUMNS);
   const showQuickLookEditor = useSettingStore((state) => state.ui.showQuickLookEditor);
 
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -53,11 +57,13 @@ export default function QuickViewDialog({ editable }: QuickViewDialogProps): JSX
         <QuickViewDialogEditorStyled>
           {activeRow?.selectedColumn && (
             <DataValueEditor
+              key={editorStateKey(sourceValue, column?.mappedType)}
               value={sourceValue}
               column={column}
               editable={cellEditable}
               width={dimensions.width}
               height={dimensions.height}
+              onCancel={handleClose}
               onApply={(next): void => {
                 const newEditedRows = handleRowChangeLog(
                   editedRows,

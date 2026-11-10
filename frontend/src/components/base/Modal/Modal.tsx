@@ -1,15 +1,17 @@
 import { useScopedSelectAll } from '@/hooks';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useRef } from 'react';
-import { ModalStyled, ModalWrapperStyled } from './Modal.styled';
+import { ModalBodyStyled, ModalStyled, ModalWrapperStyled } from './Modal.styled';
+import ModalFooter from './ModalFooter/ModalFooter';
 import type { ModalProps } from './types';
 
 export default function Modal({
   open,
-  size,
   title,
   children,
+  footer,
   padding,
+  compact,
   onClose,
   disableEnforceFocus,
   zIndex
@@ -25,22 +27,29 @@ export default function Modal({
       disableEnforceFocus={disableEnforceFocus}
       sx={zIndex ? { zIndex } : undefined}
     >
-      <ModalWrapperStyled ref={containerRef} padding={padding} size={size}>
+      <ModalWrapperStyled ref={containerRef} padding={padding} compact={compact}>
         {title && (
           <Box
             data-select-all-skip
             sx={{
-              mb: theme.spacing(1.5),
+              mb: theme.spacing(1),
               userSelect: 'none'
             }}
           >
             <Typography color={'textTitle'} variant='h6'>
               {title}
             </Typography>
-            
+            <Divider />
           </Box>
         )}
-        {children}
+        {footer ? (
+          <>
+            <ModalBodyStyled>{children}</ModalBodyStyled>
+            <ModalFooter>{footer}</ModalFooter>
+          </>
+        ) : (
+          children
+        )}
       </ModalWrapperStyled>
     </ModalStyled>
   );

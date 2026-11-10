@@ -19,7 +19,6 @@ func upAddOwnerIDToConnections(ctx context.Context, tx *sql.Tx) error {
 	}
 
 	if has {
-		// Ensure backfill.
 		if _, err := tx.ExecContext(ctx, "UPDATE connections SET owner_id = 'desktop' WHERE owner_id IS NULL OR owner_id = ''"); err != nil {
 			return err
 		}

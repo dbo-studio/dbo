@@ -2,7 +2,7 @@ import { styled } from '@mui/material/styles';
 
 export const TypewriterCursor = styled('span')(({ theme }) => ({
   animation: 'blink 1s infinite',
-  color: theme.palette.primary.main,
+  color: theme.palette.text.link,
   fontWeight: 'bold',
   '@keyframes blink': {
     '0%, 50%': {

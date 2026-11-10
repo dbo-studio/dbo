@@ -24,6 +24,7 @@ import (
 
 type ITreeService interface {
 	Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error)
+	Search(ctx context.Context, req *dto.TreeSearchRequest) (*TreeSearchResponse, error)
 	Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error)
 	ObjectDetail(ctx context.Context, req *dto.ObjectDetailRequest) (*contract.FormResponse, error)
 	GetDynamicFieldOptions(ctx context.Context, req *dto.DynamicFieldOptionsRequest) ([]contract.FormFieldOption, error)
@@ -76,7 +77,7 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 		return nil, apperror.InternalServerError(err)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := database.NewTreeRepository(ctx, connection, i.cm)
 	if err != nil {
 		return nil, err
 	}

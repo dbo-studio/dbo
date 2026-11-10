@@ -40,9 +40,8 @@ test.describe('AI chat cancel', () => {
       });
 
       await test.step('Open assistant and complete in-place setup', async () => {
-        if (!(await settingsPage.rightSidebarTab().isVisible().catch(() => false))) {
-          await settingsPage.toggleRightSidebar();
-        }
+        await settingsPage.openRightSidebar();
+        await page.getByTestId("ai-empty-quick-setup").click();
         await expect(settingsPage.aiSetupForm()).toBeVisible({ timeout: 15000 });
         await saveAiSetup(page, 'sk-e2e-fake-key');
         await expect(page.getByPlaceholder(/ask anything/i)).toBeVisible({ timeout: 15000 });

@@ -18,7 +18,17 @@ export type FilterType = {
   isActive: boolean;
 };
 
-export type TabType = DataTabType | EditorTabType | ObjectTabType | DiagramTabType | SettingsTabType;
+export type TabType =
+  | DataTabType
+  | EditorTabType
+  | ObjectTabType
+  | DiagramTabType
+  | DashboardTabType
+  | QuestionTabType
+  | SettingsTabType
+  | BackupTabType
+  | BrowseTabType
+  | ToolTabType;
 
 type BaseTab = {
   id: string;
@@ -26,6 +36,8 @@ type BaseTab = {
   nodeId: string;
   action?: string;
   mode: TabMode;
+  /** Split view pane. Undefined = primary (left) pane. */
+  pane?: 1;
 };
 
 export type DataTabType = BaseTab & {
@@ -62,7 +74,19 @@ export type DiagramTabType = BaseTab & {
   name: string;
   database: string;
   schema: string;
-  focusTable?: string;
+  focusTables?: string[];
+};
+
+export type DashboardTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Dashboard;
+  dashboardId: number;
+};
+
+export type QuestionTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Question;
+  questionId: number;
 };
 
 export type SettingsTabType = BaseTab & {
@@ -72,6 +96,34 @@ export type SettingsTabType = BaseTab & {
   aiTab?: 'providers' | 'mcp';
   query?: string;
   highlightId?: string;
+};
+
+export type BackupSection = 'backups' | 'restore' | 'schedules' | 'destinations' | 'notifications' | 'tools';
+
+/** Global singleton like Settings; `targetConnectionId`/`database` pick what the Backups section shows. */
+export type BackupTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Backup;
+  section: BackupSection;
+  targetConnectionId?: string | number;
+  database?: string;
+  /** Schedules section: the schedule shown, or 'new' for the create form. */
+  scheduleId?: number | 'new';
+};
+
+/** NoSQL container browser; `nodeId` is the container id. Filters/sorts reuse the Data tab shapes. */
+export type BrowseTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Browse;
+  filters?: FilterType[];
+  sorts?: SortType[];
+};
+
+/** NoSQL tool (pubsub, cli, ...) opened from a Browse tab or the tree. */
+export type ToolTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Tool;
+  toolId: string;
 };
 
 export type EditedRow = {

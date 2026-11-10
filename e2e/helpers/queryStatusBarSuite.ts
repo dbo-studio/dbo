@@ -12,6 +12,8 @@ import { ConnectionPage, DataGridPage, SqlEditorPage } from "../pages";
 function labelOf(engine: DbEngine): string {
   if (engine === "postgresql") return "PostgreSQL";
   if (engine === "mysql") return "MySQL";
+  if (engine === "mssql") return "SQL Server";
+  if (engine === "clickhouse") return "ClickHouse";
   return "SQLite";
 }
 
@@ -27,6 +29,26 @@ async function selectEditorContext(
 }
 
 function actionsTableSql(engine: DbEngine, tableName: string): string {
+  if (engine === "clickhouse") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id UInt32, name String, email String) ENGINE = MergeTree ORDER BY id;
+INSERT INTO ${tableName} (id, name, email) VALUES (1, 'Alice', 'alice@example.com'), (2, 'Bob', 'bob@example.com');
+    `.trim();
+  }
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE
+);
+INSERT INTO ${tableName} (name, email) VALUES
+  ('Alice', 'alice@example.com'),
+  ('Bob', 'bob@example.com');
+    `.trim();
+  }
   if (engine === "postgresql") {
     return `
 DROP TABLE IF EXISTS ${tableName};
@@ -67,6 +89,26 @@ INSERT INTO ${tableName} (name, email) VALUES
 }
 
 function pageEditSeedSql(engine: DbEngine, tableName: string): string {
+  if (engine === "clickhouse") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id UInt32, label String) ENGINE = MergeTree ORDER BY id;
+INSERT INTO ${tableName} SELECT number + 1, concat('row-', toString(number + 1)) FROM numbers(120);
+    `.trim();
+  }
+  if (engine === "mssql") {
+    return `
+DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (
+  id INT IDENTITY(1,1) PRIMARY KEY,
+  label VARCHAR(100) NOT NULL
+);
+INSERT INTO ${tableName} (label)
+SELECT 'row-' + CAST(n AS VARCHAR(10)) FROM (
+  SELECT TOP 120 ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n FROM sys.all_objects a CROSS JOIN sys.all_objects b
+) x;
+    `.trim();
+  }
   const seriesInsert =
     engine === "postgresql"
       ? `INSERT INTO ${tableName} (label)
@@ -114,7 +156,13 @@ ${seriesInsert}
 }
 
 /** Portable 1..N series for pagination / non-updatable SELECT. */
-function seriesSelectSql(count: number): string {
+function seriesSelectSql(count: number, engine: DbEngine = "sqlite"): string {
+  if (engine === "clickhouse") {
+    return `SELECT number + 1 AS n FROM numbers(${count}) ORDER BY n`;
+  }
+  if (engine === "mssql") {
+    return `WITH seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < ${count}) SELECT n FROM seq ORDER BY 1 OPTION (MAXRECURSION 0)`;
+  }
   return `
 WITH RECURSIVE seq(n) AS (
   SELECT 1
@@ -209,6 +257,8 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
           await test.step("Refresh discards dirty edit and re-runs query", async () => {
             await dataGrid.editCell("Alice", "Alice Temp");
             await dataGrid.expectCellVisible("Alice Temp");
+            // A "Changes saved" toast can still cover the status bar buttons after the earlier saves.
+            await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, { timeout: 20000 });
             await dataGrid.refreshQuery();
             await dataGrid.waitForData("Alice");
             await dataGrid.expectCellHidden("Alice Temp");
@@ -226,6 +276,8 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
     test("Pagination next, hasMore gate, and page limit", async ({
       page,
     }, testInfo) => {
+      // T-SQL has no LIMIT: SQL Server raw queries stop at the page size and have no later pages.
+      test.skip(engine === "mssql", "SQL Server has no later pages (service/query/query_service.go)");
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const dataGrid = new DataGridPage(page);
@@ -236,6 +288,11 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
         engine === "sqlite" ? `/tmp/dbo-e2e-qsb-page-${suffix}.db` : undefined;
       if (sqlitePath) ensureSqliteDbFile(sqlitePath);
       const config = getDbConfig(engine, connectionName, sqlitePath);
+      const seriesTable = `e2e_qsb_series_${suffix}`;
+      const pageQuery =
+        engine === "clickhouse"
+          ? `SELECT n FROM ${seriesTable} ORDER BY n`
+          : seriesSelectSql(250, engine);
 
       await withConnectionCleanup(page, connectionName, async () => {
         try {
@@ -246,11 +303,17 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
             await connectionPage.setupConnection(config);
             await sqlEditor.open();
             await selectEditorContext(sqlEditor, engine);
+            if (engine === "clickhouse") {
+              // Table functions such as numbers() are not paginated, so page over a real table.
+              await sqlEditor.typeAndRun(
+                `DROP TABLE IF EXISTS ${seriesTable};\nCREATE TABLE ${seriesTable} (n UInt32) ENGINE = MergeTree ORDER BY n;\nINSERT INTO ${seriesTable} SELECT number + 1 FROM numbers(250);`,
+              );
+            }
           });
 
           await test.step("Default page shows first page of 250", async () => {
             const responsePromise = pendingResponse(page, apiRoute.queryRaw);
-            await sqlEditor.typeQuery(seriesSelectSql(250));
+            await sqlEditor.typeQuery(pageQuery);
             await sqlEditor.clickRun();
             const response = await responsePromise;
             const body = (await response.json()) as {
@@ -288,6 +351,9 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
             await dataGrid.expectCellHidden("6");
           });
         } finally {
+          if (engine === "clickhouse") {
+            await sqlEditor.typeAndRun(`DROP TABLE IF EXISTS ${seriesTable};`);
+          }
           if (sqlitePath) removeSqliteDbFile(sqlitePath);
         }
       });
@@ -296,6 +362,7 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
     test("Edit on page 2 and after changing limit", async ({
       page,
     }, testInfo) => {
+      test.skip(engine === "mssql", "SQL Server has no later pages (service/query/query_service.go)");
       const connectionPage = new ConnectionPage(page);
       const sqlEditor = new SqlEditorPage(page);
       const dataGrid = new DataGridPage(page);
@@ -381,7 +448,15 @@ export function defineQueryStatusBarTests(engine: DbEngine): void {
       const config = getDbConfig(engine, connectionName, sqlitePath);
 
       const gateTableSql =
-        engine === "postgresql"
+        engine === "mssql"
+          ? `DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(100));
+INSERT INTO ${tableName} (name) VALUES ('gated');`
+          : engine === "clickhouse"
+          ? `DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id UInt32, name String) ENGINE = MergeTree ORDER BY id;
+INSERT INTO ${tableName} (id, name) VALUES (1, 'gated');`
+          : engine === "postgresql"
           ? `DROP TABLE IF EXISTS ${tableName};
 CREATE TABLE ${tableName} (id SERIAL PRIMARY KEY, name TEXT);
 INSERT INTO ${tableName} (name) VALUES ('gated');`
@@ -406,7 +481,7 @@ INSERT INTO ${tableName} (name) VALUES ('gated');`;
           });
 
           await test.step("Expression-only SELECT hides edit actions", async () => {
-            await sqlEditor.typeAndRun(seriesSelectSql(3));
+            await sqlEditor.typeAndRun(seriesSelectSql(3, engine));
             await dataGrid.waitForData("1");
             await dataGrid.expectEditActionsVisible(false);
             await dataGrid.expectCellNotEditable("2");

@@ -8,6 +8,7 @@ type MysqlCreateConnectionParams struct {
 	Password *string              `json:"password"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 type MysqlUpdateConnectionParams struct {
@@ -18,6 +19,7 @@ type MysqlUpdateConnectionParams struct {
 	Database *string              `json:"database"`
 	URI      *string              `json:"uri"`
 	SSL      *ConnectionSSLParams `json:"ssl,omitempty"`
+	SSH      *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 // MysqlTableParams is the general-tab payload for MySQL table create/edit.
@@ -114,4 +116,38 @@ type MysqlTableIndexData struct {
 	Columns   []string `json:"ref_columns"`
 	NonUnique *bool    `json:"non_unique"`
 	Collation *string  `json:"collation"`
+}
+
+type MysqlTableTriggerParams struct {
+	Columns []MysqlTableTrigger `json:"columns"`
+}
+
+type MysqlTableTrigger struct {
+	New     *MysqlTableTriggerData `json:"new"`
+	Old     *MysqlTableTriggerData `json:"old"`
+	Added   *bool                  `json:"added"`
+	Deleted *bool                  `json:"deleted"`
+}
+
+type MysqlTableTriggerData struct {
+	Name   *string `json:"name"`
+	Timing *string `json:"timing"`
+	Event  *string `json:"event"`
+	Body   *string `json:"body"`
+}
+
+type MysqlTableCheckParams struct {
+	Columns []MysqlTableCheck `json:"columns"`
+}
+
+type MysqlTableCheck struct {
+	New     *MysqlTableCheckData `json:"new"`
+	Old     *MysqlTableCheckData `json:"old"`
+	Added   *bool                `json:"added"`
+	Deleted *bool                `json:"deleted"`
+}
+
+type MysqlTableCheckData struct {
+	Name       *string `json:"name"`
+	Expression *string `json:"expression"`
 }

@@ -1,6 +1,7 @@
 import type { MenuType } from '@/components/base/ContextMenu/types.ts';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
+import { tabPane } from '@/store/tabStore/tabs';
 import type { TabType } from '@/types';
 import { useMemo } from 'react';
 import { useRemoveTab } from './useRemoveTab';
@@ -9,10 +10,19 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const getTabs = useTabStore((state) => state.getTabs);
   const switchTab = useTabStore((state) => state.switchTab);
+  const moveTabToPane = useTabStore((state) => state.moveTabToPane);
   const { handleRemoveTab } = useRemoveTab();
 
   const menu = useMemo<MenuType[]>(
     () => [
+      {
+        name: tab && tabPane(tab) === 1 ? locales.move_to_left_pane : locales.split_right,
+        action: (): void => {
+          if (!tab) return;
+          moveTabToPane(tab.id, tabPane(tab) === 1 ? 0 : 1);
+        },
+        closeAfterAction: true
+      },
       {
         name: locales.close,
         action: (): void => {
@@ -43,7 +53,7 @@ export const usePanelTabMenu = (tab: TabType): MenuType[] => {
         closeAfterAction: true
       }
     ],
-    [tab, selectedTabId, getTabs, handleRemoveTab, switchTab]
+    [tab, selectedTabId, getTabs, handleRemoveTab, switchTab, moveTabToPane]
   );
 
   return menu;

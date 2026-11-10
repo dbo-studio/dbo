@@ -1,11 +1,7 @@
-import Connections from '@/components/common/Connections/Connections';
 import type { JSX } from 'react';
-import { StartContainerStyled } from './Container.styled';
+import ActivityBar from '../ActivityBar/ActivityBar';
 
+/** The left edge: the activity bar (desktop only). */
 export default function StartContainer(): JSX.Element {
-  return (
-    <StartContainerStyled>
-      <Connections />
-    </StartContainerStyled>
-  );
+  return <ActivityBar />;
 }

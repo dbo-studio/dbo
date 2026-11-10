@@ -33,6 +33,18 @@ func connectionsToResponse(ctx context.Context, ownerID string, cm *databaseConn
 
 func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConnection.ConnectionManager, unlock *serviceSafemode.UnlockStore, connection *model.Connection, view connectionView) dto.Connection {
 	options, _ := sjson.Set(connection.Options, "password", "")
+
+	access := view.access
+	if access == "" {
+		if connection.OwnerID == ownerID {
+			access = "owner"
+		} else {
+			access = model.ConnectionShareViewer
+		}
+	}
+
+	options = databaseConnection.RedactSSHSecrets(options, access == model.ConnectionShareViewer)
+
 	if uri := gjson.Get(options, "uri").String(); uri != "" {
 		if cleaned, _, stripErr := databaseConnection.StripURIPassword(uri); stripErr == nil && cleaned != uri {
 			options, _ = sjson.Set(options, "uri", cleaned)
@@ -60,15 +72,6 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		unlockUntil = &formatted
 	}
 
-	access := view.access
-	if access == "" {
-		if connection.OwnerID == ownerID {
-			access = "owner"
-		} else {
-			access = model.ConnectionShareViewer
-		}
-	}
-
 	return dto.Connection{
 		ID:                  int64(connection.ID),
 		Name:                connection.Name,
@@ -78,9 +81,11 @@ func connectionToResponse(ctx context.Context, ownerID string, cm *databaseConne
 		Type:                connection.ConnectionType,
 		Info:                connectionInfo(connection),
 		Options:             j,
+		Env:                 connection.Env,
 		SafeMode:            string(policy.Mode),
 		SafeModeUnlocked:    policy.Unlocked,
 		SafeModeUnlockUntil: unlockUntil,
+		AgentTier:           string(connection.AgentTier),
 		Access:              access,
 		Shared:              access != "owner",
 		PasswordShared:      view.passwordShared,
@@ -91,14 +96,16 @@ func connectionInfo(connection *model.Connection) string {
 	switch {
 	case databaseContract.IsPostgresFamily(connection.ConnectionType),
 		databaseContract.IsMysqlFamily(connection.ConnectionType),
-		connection.ConnectionType == "sqlite",
-		connection.ConnectionType == "sqlserver":
+		databaseContract.IsRedisFamily(connection.ConnectionType),
+		databaseContract.IsMongo(connection.ConnectionType),
+		databaseContract.IsHostSQL(connection.ConnectionType),
+		connection.ConnectionType == "sqlite":
 		version := ""
 		if connection.Version != nil {
 			version = *connection.Version
 		}
 
-		return fmt.Sprintf("%s | %s %s :  SQL Query", connection.Name, connection.ConnectionType, version)
+		return fmt.Sprintf("%s | %s %s", connection.Name, connection.ConnectionType, version)
 	default:
 		return "unknown"
 	}

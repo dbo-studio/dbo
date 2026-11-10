@@ -42,7 +42,7 @@ export const AuthShellPanelStyled = styled(Box)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.96),
   boxShadow:
     theme.palette.mode === 'dark'
-      ? `0 24px 48px ${alpha('#000', 0.45)}`
+      ? `0 24px 48px ${alpha(theme.palette.common.black, 0.45)}`
       : `0 20px 40px ${alpha(theme.palette.common.black, 0.08)}, 0 1px 0 ${alpha(theme.palette.common.white, 0.6)} inset`,
   backdropFilter: 'blur(8px)'
 }));

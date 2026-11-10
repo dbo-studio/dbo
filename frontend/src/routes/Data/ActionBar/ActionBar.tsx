@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { GridItem } from '@/components/base/Grid/Grid';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
-import { useSelectedTab } from '@/hooks';
+import { useSelectedTab, useFeaturePermissions } from '@/hooks';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
@@ -11,14 +11,15 @@ import { DataTabType } from '@/types';
 import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
-import Filters from './Filters/Filters';
+import Filters from '@/components/common/Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
-import QueryPreview from './QueryPreview/QueryPreview';
-import Sorts from './Sorts/Sorts';
+import QueryPreview from '@/components/common/QueryPreview/QueryPreview';
+import Sorts from '@/components/common/Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
+  const getQuery = useTabStore((state) => state.getQuery);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const columns = useDataStore((state) => state.columns);
 
@@ -30,6 +31,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
   const showSorts = selectedTab?.showSorts ?? false;
   const showQuery = selectedTab?.showQuery ?? false;
 
+  const perms = useFeaturePermissions();
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -147,17 +149,21 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={locales.export}>
-            <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
-              <CustomIcon type='export' size='s' />
-            </IconButton>
-          </Tooltip>
+          {perms.export && (
+            <Tooltip title={locales.export}>
+              <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
+                <CustomIcon type='export' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
 
-          <Tooltip title={locales.import}>
-            <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
-              <CustomIcon type='import' size='s' />
-            </IconButton>
-          </Tooltip>
+          {perms.import && (
+            <Tooltip title={locales.import}>
+              <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
+                <CustomIcon type='import' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Tooltip title={locales.query_preview}>
             <IconButton
@@ -187,7 +193,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
       {showFilters && <Filters />}
       {showSorts && <Sorts />}
-      {showQuery && <QueryPreview />}
+      {showQuery && <QueryPreview query={getQuery()} />}
     </Box>
   );
 }

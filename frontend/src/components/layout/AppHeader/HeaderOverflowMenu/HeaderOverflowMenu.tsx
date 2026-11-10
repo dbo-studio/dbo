@@ -2,6 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
 import { canCreateConnection, canManageMcpSettings } from '@/core/auth/permissions';
+import { hasEditorTab } from '@/core/db/connectionAliases';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
@@ -122,7 +123,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
 
   return (
     <>
-      <IconButton aria-label='header-menu' onClick={handleOpen} onMouseDown={(event) => event.stopPropagation()}>
+      <IconButton aria-label='header-menu' onClick={handleOpen}>
         <CustomIcon type='ellipsisVertical' size='m' />
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
@@ -132,7 +133,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
           </ListItemIcon>
           <ListItemText>{locales.refresh}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleAddEditorTab} disabled={!currentConnection}>
+        <MenuItem onClick={handleAddEditorTab} disabled={!currentConnection || !hasEditorTab(currentConnection.type)}>
           <ListItemIcon>
             <CustomIcon type='sql' size='s' />
           </ListItemIcon>

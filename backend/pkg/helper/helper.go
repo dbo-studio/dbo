@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/goccy/go-json"
 )
@@ -61,11 +63,25 @@ func FormatSQLValue(value any) string {
 }
 
 func FormatSQLValueForDriver(driver string, value any) (string, error) {
+	// Nullable columns arrive as pointers (ClickHouse): format what they point at.
+	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Ptr {
+		if rv.IsNil() {
+			return "NULL", nil
+		}
+
+		return FormatSQLValueForDriver(driver, rv.Elem().Interface())
+	}
+
 	switch v := value.(type) {
 	case nil:
 		return "NULL", nil
 	case string:
 		escaped := strings.ReplaceAll(v, "'", "''")
+
+		// T-SQL reads a plain literal in the database code page, which turns characters outside it into '?'.
+		if NormalizeSQLDriver(driver) == "sqlserver" {
+			return fmt.Sprintf("N'%s'", escaped), nil
+		}
 
 		return fmt.Sprintf("'%s'", escaped), nil
 	case int, int8, int16, int32, int64:
@@ -74,10 +90,22 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 		return fmt.Sprintf("%d", v), nil
 	case float32, float64:
 		return strconv.FormatFloat(reflect.ValueOf(v).Float(), 'f', -1, 64), nil
+	case time.Time:
+		// A plain literal cannot carry the offset ClickHouse needs; the function reads it and casts to the column type.
+		if NormalizeSQLDriver(driver) == "clickhouse" {
+			return "parseDateTime64BestEffort('" + v.Format("2006-01-02 15:04:05.999999999-07:00") + "', 9)", nil
+		}
+
+		// MySQL datetimes carry no zone; the others keep the offset.
+		if NormalizeSQLDriver(driver) == "mysql" {
+			return "'" + v.Format("2006-01-02 15:04:05.999999") + "'", nil
+		}
+
+		return "'" + v.Format("2006-01-02 15:04:05.999999999-07:00") + "'", nil
 	case bool:
 		// MySQL/SQLite store booleans as 0/1; Postgres accepts true/false literals.
 		switch NormalizeSQLDriver(driver) {
-		case "mysql", "sqlite", "sqlite3":
+		case "mysql", "sqlite", "sqlite3", "sqlserver":
 			if v {
 				return "1", nil
 			}
@@ -91,12 +119,71 @@ func FormatSQLValueForDriver(driver string, value any) (string, error) {
 			return formatBinarySQL(driver, v)
 		}
 
+		if NormalizeSQLDriver(driver) == "clickhouse" {
+			if literal, ok := clickhouseCollectionLiteral(driver, v); ok {
+				return literal, nil
+			}
+		}
+
 		escaped := strings.ReplaceAll(fmt.Sprintf("%v", v), "'", "''")
 
 		return fmt.Sprintf("'%s'", escaped), nil
 	default:
+		if NormalizeSQLDriver(driver) == "clickhouse" {
+			if literal, ok := clickhouseCollectionLiteral(driver, v); ok {
+				return literal, nil
+			}
+		}
+
 		escaped := strings.ReplaceAll(fmt.Sprintf("%v", v), "'", "''")
+
 		return fmt.Sprintf("'%s'", escaped), nil
+	}
+}
+
+// clickhouseCollectionLiteral writes Array and Map values as ClickHouse literals; printing them with %v
+// would store the Go text "map[k:v]" instead of the value.
+func clickhouseCollectionLiteral(driver string, v any) (string, bool) {
+	rv := reflect.ValueOf(v)
+
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return "", false
+		}
+
+		parts := make([]string, rv.Len())
+
+		for i := range parts {
+			part, err := FormatSQLValueForDriver(driver, rv.Index(i).Interface())
+			if err != nil {
+				return "", false
+			}
+
+			parts[i] = part
+		}
+
+		return "[" + strings.Join(parts, ", ") + "]", true
+	case reflect.Map:
+		keys := rv.MapKeys()
+		sort.Slice(keys, func(i, j int) bool { return fmt.Sprint(keys[i].Interface()) < fmt.Sprint(keys[j].Interface()) })
+
+		parts := make([]string, 0, len(keys)*2)
+
+		for _, key := range keys {
+			k, err1 := FormatSQLValueForDriver(driver, key.Interface())
+			val, err2 := FormatSQLValueForDriver(driver, rv.MapIndex(key).Interface())
+
+			if err1 != nil || err2 != nil {
+				return "", false
+			}
+
+			parts = append(parts, k, val)
+		}
+
+		return "map(" + strings.Join(parts, ", ") + ")", true
+	default:
+		return "", false
 	}
 }
 
@@ -140,6 +227,8 @@ func formatBinarySQL(driver string, m map[string]any) (string, error) {
 	switch NormalizeSQLDriver(driver) {
 	case "postgresql":
 		return fmt.Sprintf(`'\x%s'::bytea`, hexStr), nil
+	case "sqlserver":
+		return "0x" + strings.ToUpper(hexStr), nil
 	default:
 		return fmt.Sprintf("X'%s'", strings.ToUpper(hexStr)), nil
 	}
@@ -149,6 +238,8 @@ func emptyBinaryLiteral(driver string) string {
 	switch NormalizeSQLDriver(driver) {
 	case "postgresql":
 		return `'\x'::bytea`
+	case "sqlserver":
+		return "0x"
 	default:
 		return "X''"
 	}

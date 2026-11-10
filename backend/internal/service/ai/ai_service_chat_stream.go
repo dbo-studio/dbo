@@ -3,6 +3,7 @@ package serviceAi
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -15,6 +16,10 @@ import (
 )
 
 func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, emit func([]byte) error) error {
+	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+		return err
+	}
+
 	emitEvent := func(event aiProvider.StreamEvent) error {
 		data, err := json.Marshal(event)
 		if err != nil {
@@ -24,7 +29,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return emit(data)
 	}
 
-	provider, dbProvider, err := s.createProvider(ctx)
+	provider, dbProvider, err := s.createProvider(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -37,6 +42,12 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	conn, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	// The connection's agent level is the ceiling: a read-only connection always runs in Ask.
+	req.AgentTier = string(conn.AgentTier)
+	if conn.AgentTier == model.AgentTierReadOnly {
+		req.Mode = dto.AiChatModeAsk
 	}
 
 	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
@@ -56,17 +67,22 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return apperror.InternalServerError(err)
 	}
 
+	s.saveChatContext(ctx, chat.ID, req.ContextOpts)
+
 	if err := s.updateChatTitle(ctx, chat, req.Message); err != nil {
 		return err
 	}
+
+	s.refreshSummary(ctx, provider, dbProvider.Model, chat)
 
 	chat.Messages = append(chat.Messages, model.AiChatMessage{
 		Role:    model.AiChatMessageRoleUser,
 		Content: req.Message,
 	})
 
-	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, true)
-	providerReq.Tools = serviceDbtools.ChatTools()
+	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
+	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
+	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -75,31 +91,32 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	providerResp, providerErr := s.runAgentLoop(ctx, provider, providerReq, req, emitEvent)
+	providerResp, traces, providerErr := s.runAgentLoop(ctx, provider, providerReq, chat.ID, req, emitEvent)
 
-	if saveErr := s.saveChatMessages(ctx, chat, req.Message, providerResp); saveErr != nil {
+	// Persist even when the user stopped the turn so the tool cards and any
+	// pending diagram proposal survive a reload.
+	if saveErr := s.saveChatMessages(context.WithoutCancel(ctx), chat, req.Message, traces, providerResp, dbProvider.Model); saveErr != nil {
 		s.logger.Error(fmt.Sprintf("Failed to save chat messages: %v", saveErr))
 	}
 
 	if providerErr != nil {
-		errPayload, marshalErr := json.Marshal(map[string]string{
-			"type":    "error",
-			"message": providerErr.Error(),
-		})
-		if marshalErr != nil {
-			return marshalErr
-		}
-
-		if emitErr := emit(errPayload); emitErr != nil {
-			return emitErr
-		}
-
-		return providerErr
+		return aiProvider.ProviderError(providerErr)
 	}
 
 	response := &dto.AiChatResponse{
 		ChatID: chat.ID,
 		Title:  chat.Title,
+	}
+
+	for _, trace := range traces {
+		response.Messages = append(response.Messages, dto.AiMessage{
+			Role:      string(trace.Role),
+			Content:   trace.Content,
+			Type:      string(trace.Type),
+			Language:  string(trace.Language),
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
+		})
 	}
 
 	if len(providerResp.Contents) == 0 {
@@ -109,6 +126,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 			Type:      string(providerResp.Type),
 			Language:  string(providerResp.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 
@@ -119,6 +137,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 			Type:      string(content.Type),
 			Language:  string(content.Language),
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+			Model:     dbProvider.Model,
 		})
 	}
 

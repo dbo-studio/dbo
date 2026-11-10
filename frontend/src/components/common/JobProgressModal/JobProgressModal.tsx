@@ -1,16 +1,26 @@
 import api from '@/api';
 import Modal from '@/components/base/Modal/Modal';
 import { tools } from '@/core/utils/tools';
-import { useJobPolling } from '@/hooks/useJobPolling';
+import { useJob } from '@/hooks/useJob';
 import locales from '@/locales';
 import { ErrorType, ImportResultType } from '@/types/Job';
-import { Box, Button, LinearProgress, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { useWatchJob } from '@/core/notifications/watching';
+import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
+import { parseTransfer, transferDetail, transferLabel } from '@/core/utils/transferProgress';
+import { Box, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { JobProgressModalProps } from './types';
 
-export function JobProgressModal({ open, jobId, onClose, title }: JobProgressModalProps) {
+const formatBytes = (bytes: number): string =>
+  bytes < 1024
+    ? `${bytes} B`
+    : bytes < 1024 * 1024
+      ? `${(bytes / 1024).toFixed(1)} KB`
+      : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobProgressModalProps) {
   const [isTauri, setIsTauri] = useState(false);
 
   const { mutateAsync: jobResultMutation } = useMutation({
@@ -24,12 +34,21 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
     })();
   }, []);
 
-  const { job, error: pollingError, cancelJob } = useJobPolling(jobId);
+  useWatchJob(jobId, open);
+  const { job, cancelJob } = useJob(jobId === null || jobId === undefined || jobId === '' ? null : Number(jobId));
 
   const handleDownload = async () => {
     if (!jobId) return;
 
     try {
+      const backupResult = job?.result as { artifactId?: number; fileName?: string } | undefined;
+      const artifactId = backupResult?.artifactId;
+      if (job?.type === 'backup' && artifactId) {
+        const blob = await api.backup.download(artifactId);
+        tools.fileDownload(blob, backupResult?.fileName || 'backup');
+        return;
+      }
+
       const blob = await jobResultMutation(jobId);
       const fileName = job?.result?.fileName || 'export';
       tools.fileDownload(blob, fileName);
@@ -37,6 +56,8 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
       toast.error(locales.download_failed);
     }
   };
+
+  const transfer = job ? parseTransfer(job.message) : null;
 
   const getStatusMessage = () => {
     if (!job) return `${locales.connecting}...`;
@@ -50,52 +71,115 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
           const totalRows = result?.totalRows || 0;
           return `${locales.import_completed}: ${successRows} ${locales.successful}, ${failedRows} ${locales.failed} (${totalRows} ${locales.total_rows})`;
         }
+        if (job.type === 'backup') return locales.backup_completed_successfully;
+        if (job.type === 'restore') return locales.restore_completed_successfully;
+        if (job.type === 'tool_install') return locales.backup_tool_install_completed;
+        // What the test found comes in the result; the job's own message is generic once it completes.
+        if (job.type === 'restore_drill') {
+          const found = (job.result as { data?: { status?: string; message?: string } } | undefined)?.data;
+          return found?.message
+            ? `${found.status === 'skipped' ? locales.backup_drill_skipped : locales.backup_drill_passed}: ${found.message}`
+            : locales.backup_drill_passed;
+        }
         return locales.export_completed_successfully;
       case 'failed':
         return `${locales.job_failed}: ${job.error}`;
       case 'canceled':
         return locales.job_cancelled;
       default:
-        return job.message || `${locales.processing}...`;
+        return (transfer ? transferLabel(transfer) : job.message) || `${locales.processing}...`;
     }
   };
 
-  return (
-    <Modal open={open} onClose={onClose} title={title} padding='24px'>
-      <Box sx={{ width: 'min(500px, calc(100vw - 64px))' }}>
-        {pollingError && (
-          <Typography variant='body2' gutterBottom color='error.main'>
-            {locales.error}: {pollingError}
-          </Typography>
-        )}
+  const finished = job?.status === 'completed' || job?.status === 'failed' || job?.status === 'canceled';
+  const canDownload = job?.status === 'completed' && (job.type === 'export' || job.type === 'backup') && !isTauri;
 
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      padding='24px'
+      footer={
+        (job?.status === 'running' || finished) && (
+          <>
+            {job?.status === 'running' && (
+              <Button size='small' variant='outlined' onClick={() => void cancelJob()}>
+                {locales.cancel_job}
+              </Button>
+            )}
+            {finished && (
+              <Button size='small' onClick={onClose}>
+                {locales.close}
+              </Button>
+            )}
+            {onRetry && job && job.type !== 'query' && (job.status === 'failed' || job.status === 'canceled') && (
+              <Button
+                size='small'
+                variant='contained'
+                data-testid='job-retry'
+                onClick={() =>
+                  void api.job
+                    .retry(String(job.id))
+                    .then(onRetry)
+                    .catch(() => toast.error(locales.action_failed))
+                }
+              >
+                {locales.job_retry}
+              </Button>
+            )}
+            {canDownload && (
+              <Button size='small' variant='contained' onClick={() => void handleDownload()}>
+                {locales.download_file}
+              </Button>
+            )}
+          </>
+        )
+      }
+    >
+      <Box sx={{ width: 'min(500px, calc(100vw - 64px))' }}>
         {job && (
           <>
             <Typography variant='body2' gutterBottom color='textSubdued'>
               {getStatusMessage()}
             </Typography>
 
-            <LinearProgress variant='determinate' value={job.progress} sx={{ mb: 2 }} />
+            {job.status === 'completed' && job.type === 'export' && job.result && (
+              <Typography variant='body2' gutterBottom data-testid='export-result'>
+                {[
+                  job.result.fileName,
+                  job.result.format?.toUpperCase(),
+                  job.result.rows === undefined ? undefined : `${job.result.rows} ${locales.ai_unit_rows}`,
+                  job.result.size === undefined ? undefined : formatBytes(job.result.size),
+                  job.startedAt && job.completedAt
+                    ? `${Math.max(1, Math.round((Date.parse(job.completedAt) - Date.parse(job.startedAt)) / 1000))} s`
+                    : undefined
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Typography>
+            )}
 
-            <Typography variant='body2' color='textSubdued'>
-              {locales.progress}: {job.progress}%
-            </Typography>
-
-            {job.status === 'running' && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='outlined' onClick={() => void cancelJob()} fullWidth>
-                  {locales.cancel_job}
-                </Button>
+            {job.status === 'completed' && job.type === 'export' && (job.result?.tables?.length ?? 0) > 1 && (
+              <Box sx={{ mb: 1 }} data-testid='export-tables'>
+                <Typography variant='subtitle2'>{locales.job_tables_result}</Typography>
+                <List dense sx={{ maxHeight: 160, overflow: 'auto' }}>
+                  {job.result?.tables?.map((t) => (
+                    <ListItem key={t.name} disableGutters>
+                      <ListItemText primary={t.name} secondary={`${t.rows} ${locales.ai_unit_rows}`} />
+                    </ListItem>
+                  ))}
+                </List>
               </Box>
             )}
 
-            {job.status === 'completed' && job.type === 'export' && !isTauri && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='contained' onClick={() => void handleDownload()} fullWidth>
-                  {locales.download_file}
-                </Button>
-              </Box>
-            )}
+            <ProgressBar
+              testId='job-progress'
+              value={job.status === 'pending' ? undefined : job.progress}
+              status={job.status === 'failed' ? 'error' : job.status === 'completed' ? 'success' : 'active'}
+              label={`${locales.progress}: ${job.progress}%`}
+              detail={transfer ? transferDetail(transfer) : undefined}
+            />
 
             {job.status === 'completed' &&
               job.type === 'import' &&
@@ -125,14 +209,6 @@ export function JobProgressModal({ open, jobId, onClose, title }: JobProgressMod
                   </List>
                 </Box>
               )}
-
-            {(job.status === 'completed' || job.status === 'failed' || job.status === 'canceled') && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant='outlined' onClick={onClose} fullWidth>
-                  {locales.close}
-                </Button>
-              </Box>
-            )}
           </>
         )}
       </Box>

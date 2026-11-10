@@ -1,4 +1,4 @@
-import { useDataStore } from '@/store/dataStore/data.store';
+import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import { cellSearchText } from '@/core/utils/dataValue';
 import clsx from 'clsx';
 import { JSX, memo, useCallback, useMemo } from 'react';
@@ -22,6 +22,7 @@ const DataGridTableRow = memo(
     currentMatch
   }: DataGridTableRowProps): JSX.Element {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
+    const dataStoreApi = useDataStoreApi();
 
     const hasHighlight: boolean = isRemoved || isUnsaved || isEdited || isSelected;
     const isStriped: boolean = !hasHighlight && rowIndex % 2 !== 0;
@@ -53,14 +54,14 @@ const DataGridTableRow = memo(
             }
           ]);
         } else {
-          const selectedRows = useDataStore.getState().selectedRows;
+          const selectedRows = dataStoreApi.getState().selectedRows;
           const newSelectedRows = selectedRows.filter(
             (selectedRow: { index: number }) => selectedRow.index !== rowIndex
           );
           updateSelectedRows(newSelectedRows, true);
         }
       },
-      [updateSelectedRows, rowIndex, row]
+      [updateSelectedRows, dataStoreApi, rowIndex, row]
     );
 
     const rowClassName = useMemo(

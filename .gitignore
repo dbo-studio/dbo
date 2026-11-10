@@ -1,4 +1,5 @@
-/docker
+/docker/*
+!/docker/sshd/
 .idea
 logs/*
 build
@@ -8,3 +9,4 @@ frontend/.cursor
 backend/.env
 .env
 docs/prd/*
+graphify-out

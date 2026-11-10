@@ -9,6 +9,7 @@ export type ChatsProps = {
   currentChat: AiChatType | undefined;
   onChatChange: (chat: AiChatType) => void;
   onChatDelete: (chat: AiChatType) => void;
+  onChatRename: (chat: AiChatType, title: string) => void;
 };
 
 export type ChatItemProps = {
@@ -16,35 +17,23 @@ export type ChatItemProps = {
   selected: boolean;
   onClick: () => void;
   onDelete: () => void;
+  onRename: (title: string) => void;
 };
 
 export type ChatTextInputProps = {
   loading: boolean;
   onSend: () => void;
+  onCancel: () => void;
   autocomplete?: AutoCompleteType;
-};
-
-export type ChatContextModalProps = {
-  open: boolean;
-  onClose: () => void;
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
-  children: React.ReactElement;
 };
 
 export type ChatContextProps = {
   autocomplete: AutoCompleteType;
 };
 
-export type ChatContextModalItemProps = {
-  name: string;
-  type: ContextItemType;
-  isActive: boolean;
-  onClick: (name: string, type: ContextItemType) => void;
-};
-
 export type ChatContextItemProps = {
   name: string;
-  type: 'tables' | 'views' | 'database' | 'schema';
+  type: 'tables' | 'views' | 'database' | 'schema' | 'query';
   onClick: () => void;
 };
 
@@ -60,6 +49,9 @@ export type MessagesProps = {
   onLoadMore?: () => void;
   onSelectPrompt?: (prompt: string) => void;
   onRetry?: () => void;
+  onRegenerate?: () => void;
+  onCompare?: (providerId: number, model: string) => void;
+  onFeedback?: (rating: 'up' | 'down', comment: string) => Promise<void>;
 };
 
 export type CodeMessageProps = {
@@ -67,7 +59,8 @@ export type CodeMessageProps = {
 };
 
 export type ChatBoxProps = {
-  onSend: () => void;
+  /** Sends the composer text, or `prompt` when given (a queued message). */
+  onSend: (prompt?: string) => void;
   onCancel: () => void;
   loading: boolean;
   autocomplete?: AutoCompleteType;
@@ -86,7 +79,7 @@ export type ChatErrorMessageProps = {
 };
 
 export type ChatEmptyStateProps = {
-  onSelectPrompt: (prompt: string) => void;
+  onSelectPrompt?: (prompt: string) => void;
 };
 
 export type ThinkingMessageProps = {
@@ -104,6 +97,12 @@ export type ChatMarkdownProps = {
 
 export type ChatDataTableProps = {
   rows: Record<string, unknown>[];
+  /** Column names in result order; rows are objects, so without it the order is not the SELECT's. */
+  columns?: string[];
+  /** Source SELECT; enables "Open in Data Grid" (runs it in a query tab). */
+  query?: string;
+  /** Lets the table grow, for the workstation canvas; the chat keeps a short table. */
+  tall?: boolean;
 };
 
 export type StreamingMarkdownProps = {

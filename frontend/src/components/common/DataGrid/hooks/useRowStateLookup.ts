@@ -31,7 +31,6 @@ export function useRowStateLookup() {
     return set;
   }, [editedRows]);
 
-  // Use Map for selected rows to allow column lookup
   const selectedRowsMap = useMemo(() => {
     const map = new Map<number, string>();
     for (const row of selectedRows) {

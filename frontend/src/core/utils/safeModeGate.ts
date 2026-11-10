@@ -3,13 +3,14 @@ import { storeSafeModePassword } from '@/core/tauri/biometry';
 import { confirmSafeModeAction, formatSafeModeReason, getSafeModeError } from '@/core/utils/safeMode';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useProdUnlockStore } from '@/store/prodUnlock/prodUnlock.store';
 import { useSafeModePasswordStore } from '@/store/safeModePassword/safeModePassword.store';
 import { toast } from 'sonner';
 
 /**
  * Handles Safe Mode API errors. Returns true when the caller should retry with confirmed=true.
  */
-export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
+export async function resolveSafeModeGate(error: unknown, connectionId?: number): Promise<boolean> {
   const safeModeError = getSafeModeError(error);
   if (!safeModeError) {
     throw error;
@@ -20,8 +21,8 @@ export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
   }
 
   if (safeModeError.message === 'safe_mode_password_required') {
-    const connectionId = useConnectionStore.getState().currentConnectionId;
-    const connection = useConnectionStore.getState().connections?.find((item) => item.id === Number(connectionId));
+    const targetId = connectionId ?? Number(useConnectionStore.getState().currentConnectionId);
+    const connection = useConnectionStore.getState().connections?.find((item) => item.id === targetId);
     if (!connection) {
       toast.error(locales.safe_mode_blocked_generic);
       return false;
@@ -45,6 +46,25 @@ export async function resolveSafeModeGate(error: unknown): Promise<boolean> {
       return true;
     } catch {
       toast.error(locales.safe_mode_password_invalid);
+      return false;
+    }
+  }
+
+  if (safeModeError.message === 'safe_mode_prod_locked') {
+    const targetId = connectionId ?? Number(useConnectionStore.getState().currentConnectionId);
+    const name = safeModeError.data.connectionName;
+    if (!name || !(await useProdUnlockStore.getState().request(name))) {
+      return false;
+    }
+
+    try {
+      const result = await api.connection.unlockProd(targetId, name);
+      useConnectionStore
+        .getState()
+        .patchConnectionSafeModeUnlock(targetId, { unlocked: true, until: result.unlockedUntil });
+      return true;
+    } catch {
+      toast.error(locales.safe_mode_blocked_generic);
       return false;
     }
   }

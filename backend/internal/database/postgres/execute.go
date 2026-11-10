@@ -2,15 +2,30 @@ package databasePostgres
 
 import (
 	"context"
+	"fmt"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	quote "github.com/dbo-studio/dbo/internal/database/ddl/quote"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"gorm.io/gorm"
 )
 
 func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID string, action contract.TreeNodeActionName, params []byte) ([]string, error) {
 	node := r.base.ExtractNode(nodeID)
+
+	if action == contract.ExecuteSQLAction {
+		return databaseCore.SQLFromParams(params)
+	}
+
+	if action == contract.RenameAction {
+		newName, err := databaseCore.NewNameFromParams(params)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{fmt.Sprintf("ALTER TABLE %s RENAME TO %s", quote.PostgresQualifiedTable(node.Schema, node.Table), quote.PostgresIdent(newName))}, nil
+	}
 
 	type ExecuteParams map[contract.TreeTab]any
 
@@ -48,6 +63,21 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 			return nil, err
 		}
 
+		routineQueries, err := r.handleRoutineCommands(ctx, node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		sequenceQueries, err := r.handleSequenceCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
+		typeQueries, err := r.handleTypeCommands(node, tabID, action, params)
+		if err != nil {
+			return nil, err
+		}
+
 		schemaQueries, err := r.handleSchemaCommands(node, tabID, action, params)
 		if err != nil {
 			return nil, err
@@ -65,6 +95,9 @@ func (r *PostgresRepository) buildExecuteQueries(ctx context.Context, nodeID str
 		queries = append(queries, dbQueries...)
 		queries = append(queries, viewQueries...)
 		queries = append(queries, materializedViewQueries...)
+		queries = append(queries, routineQueries...)
+		queries = append(queries, sequenceQueries...)
+		queries = append(queries, typeQueries...)
 		queries = append(queries, schemaQueries...)
 		queries = append(queries, tableQueries...)
 	}
@@ -95,17 +128,87 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 		return nil, err
 	}
 
-	for _, query := range queries {
-		if query == "" {
-			continue
+	run := func(tx *gorm.DB) error {
+		for _, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			if err := tx.Exec(query).Error; err != nil {
+				return err
+			}
 		}
 
-		if err := conn.WithContext(ctx).Exec(query).Error; err != nil {
-			return nil, err
+		return nil
+	}
+
+	// Edits drop and recreate objects. One transaction means a failing CREATE rolls the DROP back
+	// instead of leaving the object gone.
+	if runsInTransaction(action) {
+		err = conn.WithContext(ctx).Transaction(run)
+	} else {
+		err = run(conn.WithContext(ctx))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params)
+
+	return r.pinRoutineNode(ctx, node, action, result), nil
+}
+
+// pinRoutineNode adds the pg_proc oid to the node id of a routine that was just created or
+// renamed. With overloads a bare name would be ambiguous, and the form reopened after the
+// save would fail. The new routine is the highest oid of that name.
+func (r *PostgresRepository) pinRoutineNode(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName, result *contract.ExecuteResult) *contract.ExecuteResult {
+	var procedure bool
+
+	switch action {
+	case contract.CreateFunctionAction, contract.EditFunctionAction:
+	case contract.CreateProcedureAction, contract.EditProcedureAction:
+		procedure = true
+	default:
+		return result
+	}
+
+	if result == nil || result.NodeID == "" {
+		return result
+	}
+
+	created := r.base.ExtractNode(result.NodeID)
+
+	routines, err := r.routines(ctx, &created.Database, &created.Schema, procedure)
+	if err != nil {
+		return result
+	}
+
+	var newest *Routine
+
+	for i := range routines {
+		if routines[i].Name == created.Table && (newest == nil || routines[i].OID > newest.OID) {
+			newest = &routines[i]
 		}
 	}
 
-	return databaseCore.ResolveExecuteIdentity(r.base.Connection().ConnectionType, nodeID, action, params), nil
+	if newest != nil {
+		result.NodeID = fmt.Sprintf("%s~%d", result.NodeID, newest.OID)
+	}
+
+	return result
+}
+
+// runsInTransaction is false for statements PostgreSQL refuses inside a transaction block
+// (database DDL) and for enum edits, whose ALTER TYPE ... ADD VALUE needs PostgreSQL 12+.
+func runsInTransaction(action contract.TreeNodeActionName) bool {
+	switch action {
+	case contract.CreateDatabaseAction, contract.EditDatabaseAction, contract.DropDatabaseAction,
+		contract.CreateTypeAction, contract.EditTypeAction:
+		return false
+	default:
+		return true
+	}
 }
 
 func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName) (*gorm.DB, error) {
@@ -115,4 +218,57 @@ func (r *PostgresRepository) executeConn(ctx context.Context, node contract.DBNo
 	default:
 		return r.db(ctx, &node.Database)
 	}
+}
+
+// ExecuteAtomic runs every step in a single transaction on the steps' shared
+// database. All queries are planned up front, as PreviewExecute does.
+func (r *PostgresRepository) ExecuteAtomic(ctx context.Context, steps []contract.ExecuteStep) error {
+	if len(steps) == 0 {
+		return nil
+	}
+
+	database := r.base.ExtractNode(steps[0].NodeID).Database
+
+	var queries []string
+
+	for _, step := range steps {
+		if r.base.ExtractNode(step.NodeID).Database != database {
+			return fmt.Errorf("atomic execute needs every step on one database")
+		}
+
+		stepQueries, err := r.buildExecuteQueries(ctx, step.NodeID, step.Action, step.Params)
+		if err != nil {
+			return err
+		}
+
+		queries = append(queries, stepQueries...)
+	}
+
+	conn, err := r.db(ctx, &database)
+	if err != nil {
+		return err
+	}
+
+	schema := r.base.ExtractNode(steps[0].NodeID).Schema
+
+	return conn.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Data changes name their tables without a schema.
+		if schema != "" {
+			if err := tx.Exec("SET LOCAL search_path TO " + quote.PostgresIdent(schema)).Error; err != nil {
+				return err
+			}
+		}
+
+		for _, query := range queries {
+			if query == "" {
+				continue
+			}
+
+			if err := tx.Exec(query).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

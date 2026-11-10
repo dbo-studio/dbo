@@ -1,5 +1,10 @@
 import { variables } from '@/core/theme/variables';
-import { Box, styled } from '@mui/material';
+import { Box, keyframes, styled } from '@mui/material';
+
+const rise = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+`;
 
 export const ExplanationMessageStyled = styled(Box, {
   shouldForwardProp: (prop) => prop !== '$isUser'
@@ -28,7 +33,11 @@ export const UserMessageActionsStyled = styled(Box)(({ theme }) => ({
   flexShrink: 0
 }));
 
-export const UserMessageRowStyled = styled(Box)(() => ({
+/** A message the user just sent eases in; older ones appear as they are. */
+export const UserMessageRowStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== '$isNew'
+})<{ $isNew?: boolean }>(({ $isNew }) => ({
+  animation: $isNew ? `${rise} 200ms ease-out` : undefined,
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'flex-start',

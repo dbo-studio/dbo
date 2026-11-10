@@ -16,6 +16,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/invopop/validation"
 	"github.com/samber/lo"
+	"github.com/tidwall/gjson"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -33,9 +34,15 @@ func CreateMysqlConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
+	if err := dto.ValidateSSHSecrets(options.SSH); err != nil {
+		return "", apperror.Validation(err)
+	}
+
 	if options.SSL != nil {
 		options.SSL.Mode = dto.NormalizeSSLMode(options.SSL.Mode)
 	}
+
+	dto.NormalizeSSH(options.SSH)
 
 	return helper.StructToJSON(options), nil
 }
@@ -62,6 +69,7 @@ func UpdateMysqlConnection(oldParams json.RawMessage, newParams json.RawMessage)
 	newOptions.Database = helper.OptionalOrKeep(newOptions.Database, oldOptions.Database)
 	newOptions.URI = helper.OptionalOrKeep(newOptions.URI, oldOptions.URI)
 	newOptions.SSL = mergeSSLParams(newOptions.SSL, oldOptions.SSL)
+	newOptions.SSH = mergeSSHParams(newOptions.SSH, oldOptions.SSH)
 
 	return mysqlUpdateParamsToCreateJSON(newOptions), nil
 }
@@ -75,6 +83,7 @@ func mysqlUpdateParamsToCreateJSON(opts MysqlUpdateParams) string {
 		Database: opts.Database,
 		URI:      opts.URI,
 		SSL:      opts.SSL,
+		SSH:      opts.SSH,
 	}
 
 	return helper.StructToJSON(params)
@@ -102,6 +111,10 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 		uri = InjectURIPassword(uri, password)
 
 		serverName := options.Host
+		if override := gjson.Get(connection.Options, tlsServerNameKey).String(); override != "" {
+			serverName = override
+		}
+
 		if serverName == "" {
 			if parsed, parseErr := url.Parse(uri); parseErr == nil {
 				serverName = parsed.Hostname()
@@ -134,7 +147,7 @@ func OpenMysqlConnection(connection *model.Connection) gorm.Dialector {
 
 	dsn := cfg.FormatDSN()
 
-	dsnWithTLS, tlsErr := appendMysqlTLSQuery(dsn, options.SSL, options.Host)
+	dsnWithTLS, tlsErr := appendMysqlTLSQuery(dsn, options.SSL, mysqlTLSServerName(connection, options.Host))
 	if tlsErr != nil {
 		return nil
 	}
@@ -173,6 +186,7 @@ func (req MysqlCreateParams) Validate() error {
 		validation.Field(&req.Password, validation.Length(0, 120)),
 		validation.Field(&req.URI, validation.Length(0, 2048)),
 		validation.Field(&req.SSL),
+		validation.Field(&req.SSH),
 	)
 }
 
@@ -184,5 +198,15 @@ func (req MysqlUpdateParams) Validate() error {
 		validation.Field(&req.Port, validation.Min(0)),
 		validation.Field(&req.URI, validation.Length(0, 2048)),
 		validation.Field(&req.SSL),
+		validation.Field(&req.SSH),
 	)
+}
+
+// mysqlTLSServerName prefers the real DB host over a tunnel's loopback address.
+func mysqlTLSServerName(connection *model.Connection, host string) string {
+	if override := gjson.Get(connection.Options, tlsServerNameKey).String(); override != "" {
+		return override
+	}
+
+	return host
 }

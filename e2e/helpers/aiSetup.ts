@@ -37,3 +37,11 @@ export async function saveAiSetup(page: Page, apiKey: string): Promise<void> {
     },
   );
 }
+
+/** Picks Ask or Agent from the composer's mode menu (the first visible one when the panel and workstation are both mounted). */
+export async function setAiMode(page: Page, mode: "ask" | "agent"): Promise<void> {
+  const toggle = page.getByTestId("ai-mode-toggle").filter({ visible: true }).first();
+  await toggle.click();
+  await page.getByTestId(`ai-mode-${mode}`).click();
+  await expect(toggle).toHaveAttribute("data-mode", mode);
+}

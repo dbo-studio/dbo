@@ -4,7 +4,6 @@ import { applyUserWorkspaceScope } from '@/core/storage/applyUserWorkspace';
 import { tools } from '@/core/utils';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useQuery } from '@tanstack/react-query';
@@ -21,9 +20,7 @@ export const useStartup = (): StartupState => {
   const done = boot.ready;
   const debug = useSettingStore((state) => state.general.debug);
   const updateProviders = useAiStore((state) => state.updateProviders);
-  const updateContext = useAiStore((state) => state.updateContext);
   const updateGeneral = useSettingStore((state) => state.updateGeneral);
-  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const applyStatus = useAuthStore((state) => state.applyStatus);
   const gate = useAuthStore((state) => state.gate);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -69,25 +66,6 @@ export const useStartup = (): StartupState => {
 
   const authReady = isDesktop || (authFetched && gate === 'ready');
 
-  useQuery({
-    queryKey: ['startup-autocomplete', currentConnectionId, updateContext],
-    queryFn: async () => {
-      if (!currentConnectionId) return null;
-      const autocomplete = await api.query.autoComplete({
-        connectionId: Number(currentConnectionId)
-      });
-      const context = useAiStore.getState().context;
-      updateContext({
-        ...context,
-        tables: autocomplete.tables.slice(0, 5),
-        views: autocomplete.views.slice(0, 5)
-      });
-      return autocomplete;
-    },
-    enabled: done && authReady && !!currentConnectionId,
-    staleTime: 5 * 60 * 1000
-  });
-
   const { isLoading: isLoadingConfig } = useQuery({
     queryKey: ['config', updateProviders, updateGeneral],
     queryFn: async () => {
@@ -117,7 +95,7 @@ export const useStartup = (): StartupState => {
           try {
             eruda.default.init();
           } catch {
-            // Ignore error
+            /* ignored */
           }
         })
         .catch(() => undefined);

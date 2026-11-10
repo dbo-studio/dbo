@@ -28,10 +28,19 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 	ownerID := helper.CtxOwnerID(ctx)
 
 	optionsProvided := len(req.Options) > 0
-	metadataEdit := optionsProvided || req.Name != nil || req.SafeMode != nil
+	metadataEdit := optionsProvided || req.Name != nil || req.SafeMode != nil || req.AgentTier != nil || req.Env != nil
 
 	if metadataEdit && !access.canEdit() {
 		return nil, apperror.Forbidden(apperror.ErrConnectionEditForbidden)
+	}
+
+	// Lifting the prod tag is itself a write: it needs the typed-name unlock, or the lock would be one PATCH deep.
+	if req.Env != nil && connection.Env == serviceSafemode.EnvProd && *req.Env != serviceSafemode.EnvProd {
+		if unlocked, _ := s.unlockStore.IsUnlocked(ctx, ownerID, connection.ID); !unlocked {
+			return nil, apperror.SafeModeProdLocked(map[string]any{
+				"reason": "unlock this production connection before changing its environment", "connectionName": connection.Name,
+			})
+		}
 	}
 
 	if lo.FromPtrOr(req.IsClose, false) {
@@ -113,8 +122,12 @@ func (s IConnectionServiceImpl) Update(ctx context.Context, connectionID int32, 
 		options, err = databaseConnection.UpdatePostgresqlConnection(json.RawMessage(connection.Options), req.Options)
 	case connection.ConnectionType == string(databaseContract.Sqlite):
 		options, err = databaseConnection.UpdateSQLiteConnection(json.RawMessage(connection.Options), req.Options)
-	case databaseContract.IsMysqlFamily(connection.ConnectionType):
+	case databaseContract.IsMysqlFamily(connection.ConnectionType), databaseContract.IsHostSQL(connection.ConnectionType):
 		options, err = databaseConnection.UpdateMysqlConnection(json.RawMessage(connection.Options), req.Options)
+	case databaseContract.IsRedisFamily(connection.ConnectionType):
+		options, err = databaseConnection.UpdateRedisConnection(json.RawMessage(connection.Options), req.Options)
+	case databaseContract.IsMongo(connection.ConnectionType):
+		options, err = databaseConnection.UpdateMongoConnection(json.RawMessage(connection.Options), req.Options)
 	}
 
 	if err != nil {

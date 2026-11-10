@@ -14,7 +14,7 @@ export const VisuallyHiddenInputStyled = styled('input')({
 });
 
 export const ImportButtonStyled = styled(Button)<ImportButtonStyledProps>(({ theme, drag }) => ({
-  border: '1px solid #000',
+  border: `1px solid ${theme.palette.text.subdued}`,
   width: '100%',
   height: '50px',
   justifyContent: 'center',

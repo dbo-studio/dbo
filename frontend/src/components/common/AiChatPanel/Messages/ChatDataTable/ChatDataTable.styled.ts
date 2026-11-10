@@ -4,7 +4,9 @@ import {
   StyledTable,
   StyledTableHead,
   StyledTableRow,
-  TableContainer
+  TableCell,
+  TableContainer,
+  TableHeader
 } from '@/components/common/DataGrid/DataGrid.styled';
 import { variables } from '@/core/theme/variables';
 import { Box, styled, Typography } from '@mui/material';
@@ -13,63 +15,41 @@ export const ChatDataTableWrapper = styled(Box)(({ theme }) => ({
   margin: `${theme.spacing(1)} 0`,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.background.default,
   overflow: 'hidden'
 }));
 
-export const ChatDataTableScroll = styled(TableContainer)(({ theme }) => ({
+export const ChatDataTableScroll = styled(TableContainer)(() => ({
   maxHeight: 280,
   height: 'auto',
-  backgroundColor: theme.palette.background.paper,
-  borderBottom: `1px solid ${theme.palette.divider}`
+  // The toolbar (or footer) below draws the separating border.
+  'tbody tr:last-child td': { borderBottom: 'none' }
 }));
 
-export const ChatTableHeader = styled('th')(({ theme }) => ({
-  backgroundColor: theme.palette.background.subdued,
-  color: theme.palette.text.subdued,
-  fontWeight: 500,
-  fontSize: theme.typography.caption.fontSize,
-  letterSpacing: '0.02em',
-  textTransform: 'none',
-  position: 'sticky',
-  top: 0,
-  zIndex: 1,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  borderRight: `1px solid ${theme.palette.divider}`,
-  padding: '6px 10px',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  boxSizing: 'border-box',
-  minWidth: 96
-}));
+// Header and cells are the Data tab grid's own; only the read-only cell cursor differs.
+export const ChatTableHeader = styled(TableHeader)(() => ({ minWidth: 96 }));
 
-export const ChatTableCell = styled('td')(({ theme }) => ({
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  borderRight: `1px solid ${theme.palette.divider}`,
-  height: 28,
-  boxSizing: 'border-box',
-  color: theme.palette.text.text,
-  fontSize: theme.typography.caption.fontSize,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  backgroundColor: theme.palette.background.paper,
-  padding: 0,
-  'tr.is-striped &': {
-    backgroundColor: theme.palette.background.subdued
-  }
-}));
+export const ChatTableCell = styled(TableCell)(() => ({ padding: 0 }));
 
 export const ChatCellContent = styled(CellContent)(() => ({
   cursor: 'default',
-  height: 28,
-  lineHeight: '28px',
-  padding: '0 10px'
+  lineHeight: '22px',
+  padding: '0 8px',
+  boxSizing: 'border-box'
+}));
+
+export const ChatDataTableToolbar = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(0.5),
+  padding: `${theme.spacing(0.25)} ${theme.spacing(0.75)}`,
+  backgroundColor: theme.palette.background.default,
+  borderTop: `1px solid ${theme.palette.divider}`
 }));
 
 export const ChatDataTableFooter = styled(Typography)(({ theme }) => ({
   display: 'block',
+  borderTop: `1px solid ${theme.palette.divider}`,
   padding: `${theme.spacing(0.75)} ${theme.spacing(1.25)}`,
   color: theme.palette.text.subdued,
   backgroundColor: theme.palette.background.default,

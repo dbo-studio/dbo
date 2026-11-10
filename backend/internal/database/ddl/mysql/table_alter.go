@@ -57,5 +57,19 @@ func buildEditTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, indexStatements(input.Database, tableName, indexRows(input), input.Action)...)
 	plan = append(plan, foreignKeyStatements(input.Database, tableName, foreignKeyRows(input), input.Action)...)
 
+	triggerPlan, err := triggerStatements(input.Database, tableName, triggerRows(input), input.Action)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, triggerPlan...)
+
+	checkPlan, err := checkStatements(input, tableName)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, checkPlan...)
+
 	return plan, tableName, nil
 }

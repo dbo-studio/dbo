@@ -8,6 +8,9 @@ export default function ResizableXBox({
   direction,
   width,
   maxWidth,
+  defaultWidth,
+  widthOverride,
+  sx,
   children,
   onChange
 }: ResizableBoxXProps): JSX.Element {
@@ -15,6 +18,13 @@ export default function ResizableXBox({
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
   const currentWidthRef = useRef(boxWidth);
+  const [prevWidth, setPrevWidth] = useState(width);
+
+  // Follow the prop (reset, restored setting) unless the user is dragging.
+  if (prevWidth !== width) {
+    setPrevWidth(width);
+    if (!isResizing) setBoxWidth(width);
+  }
 
   currentWidthRef.current = boxWidth;
 
@@ -73,8 +83,19 @@ export default function ResizableXBox({
   }, [handleMouseMove, handleMouseUp, isResizing]);
 
   return (
-    <ResizableXBoxStyled boxWidth={boxWidth}>
-      <ResizableToggle onMouseDown={handleMouseDown} direction={direction} />
+    <ResizableXBoxStyled boxWidth={widthOverride ?? boxWidth} animate={!isResizing} sx={sx}>
+      <ResizableToggle
+        onMouseDown={handleMouseDown}
+        onDoubleClick={
+          defaultWidth === undefined
+            ? undefined
+            : (): void => {
+                setBoxWidth(defaultWidth);
+                onChange?.(defaultWidth);
+              }
+        }
+        direction={direction}
+      />
       {children}
     </ResizableXBoxStyled>
   );

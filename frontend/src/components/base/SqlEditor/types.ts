@@ -21,4 +21,6 @@ export type SqlEditorSettingType = {
 
 export interface SqlEditorRef {
   getSelectedQuery: () => string | undefined;
+  /** Replaces the selection (or inserts at the cursor) and keeps the editor focused. */
+  insertText: (text: string) => void;
 }

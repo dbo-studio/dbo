@@ -1,6 +1,13 @@
-import { runQuery, runRawQuery } from '@/api/query';
-import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
+import { TabMode } from '@/core/enums';
+import { runQueryInBackground, runRawQueryInBackground } from '@/api/query';
+import {
+  isBackgroundQuery,
+  type BackgroundQueryType,
+  type GridMetaType,
+  type RunQueryResponseType
+} from '@/api/query/types';
 import { filterOperatorRequiresValue } from '@/core/constants';
+import { reconcileBackgroundQuery } from '@/core/events/backgroundQueries';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { getSafeModeError } from '@/core/utils/safeMode';
@@ -8,13 +15,14 @@ import { debouncedSaveToIndexedDB } from '@/core/utils/indexedDbHelper';
 import { summarizeQueryResult } from '@/core/utils/queryResultSummary';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { DataTabType, EditorTabType } from '@/types';
 import type { StateCreator } from 'zustand';
 import { toast } from 'sonner';
-import { useTabStore } from '../../tabStore/tab.store';
+import { selectPaneSelectedTab, selectPaneSelectedTabId, useTabStore } from '@/store/tabStore/tab.store';
 import type {
   DataColumnSlice,
   DataEditedRowsSlice,
@@ -84,7 +92,13 @@ export const createDataQuerySlice: StateCreator<
     },
     runQueryInEditor: (query: string): void => {
       const tab = useTabStore.getState().addEditorTab(query);
-      set({ pendingEditorQueryRun: { tabId: tab.id, query } }, undefined, 'runQueryInEditor');
+      set({ pendingEditorQueryRun: { tabId: tab.id, query, run: true } }, undefined, 'runQueryInEditor');
+    },
+    insertQueryInEditor: (query: string): void => {
+      const tabStore = useTabStore.getState();
+      const selected = tabStore.selectedTab();
+      const tab = selected?.mode === TabMode.Query ? selected : tabStore.addEditorTab(query);
+      set({ pendingEditorQueryRun: { tabId: tab.id, query, run: false } }, undefined, 'insertQueryInEditor');
     },
     toggleReRunQuery(): void {
       set({ reRunQuery: !get().reRunQuery }, undefined, 'toggleReRunQuery');
@@ -96,7 +110,7 @@ export const createDataQuerySlice: StateCreator<
       set({ isDataFetching: loading ?? !get().isDataFetching }, undefined, 'toggleDataFetching');
     },
     updateGridMeta: async (meta: GridMetaType): Promise<void> => {
-      const selectedTabId = useTabStore.getState().selectedTabId;
+      const selectedTabId = selectPaneSelectedTabId(get().paneId);
       set(
         {
           gridEditable: meta.gridEditable,
@@ -117,15 +131,15 @@ export const createDataQuerySlice: StateCreator<
       get().updateSelectedRows([], true);
     },
     runQuery: async (abortController?: AbortController): Promise<RunQueryResponseType | undefined> => {
-      const tab = useTabStore.getState().selectedTab<DataTabType>();
+      const tab = selectPaneSelectedTab<DataTabType>(get().paneId);
       if (!tab) return;
 
       const filters = tab.filters ?? [];
       const sorts = tab.sorts ?? [];
       const controller = attachAbortController(abortController);
 
-      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
-        return runQuery(
+      const execute = async (confirmed: boolean): Promise<RunQueryResponseType | BackgroundQueryType> => {
+        return runQueryInBackground(
           {
             connectionId: Number(tab.connectionId),
             nodeId: tab.nodeId,
@@ -142,7 +156,8 @@ export const createDataQuerySlice: StateCreator<
                 (filterOperatorRequiresValue(f.operator) ? f.value.toString().length > 0 : true)
             ),
             sorts: sorts.filter((f) => f.column.length > 0 && f.operator.length > 0 && f.isActive),
-            confirmed
+            confirmed,
+            backgroundAfterSeconds: useSettingStore.getState().general.backgroundAfterSeconds
           },
           controller.signal
         );
@@ -156,8 +171,8 @@ export const createDataQuerySlice: StateCreator<
           updatableNodeId: tab.nodeId
         });
 
-        const res = await withSafeModeRetry((confirmed) => execute(!!confirmed));
-        if (res === undefined) {
+        const answer = await withSafeModeRetry((confirmed) => execute(!!confirmed));
+        if (answer === undefined) {
           return;
         }
 
@@ -165,7 +180,15 @@ export const createDataQuerySlice: StateCreator<
           return;
         }
 
-        useTabStore.getState().updateQuery(res.query);
+        if (isBackgroundQuery(answer)) {
+          useBackgroundQueryStore.getState().start(tab.id, { jobId: answer.jobId, kind: 'run', startedAt: Date.now() });
+          void reconcileBackgroundQuery(answer.jobId);
+
+          return;
+        }
+
+        const res = answer;
+        useTabStore.getState().updateQuery(res.query, tab.id);
 
         await Promise.all([
           get().updateRows(res.data),
@@ -204,17 +227,17 @@ export const createDataQuerySlice: StateCreator<
       query?: string,
       abortController?: AbortController
     ): Promise<RunQueryResponseType | undefined> => {
-      const selectedTabId = useTabStore.getState().selectedTabId;
-      const selectedTab = useTabStore.getState().selectedTab<EditorTabType>();
+      const selectedTabId = selectPaneSelectedTabId(get().paneId);
+      const selectedTab = selectPaneSelectedTab<EditorTabType>(get().paneId);
       const currentConnectionId = useConnectionStore.getState().currentConnectionId;
       if (!currentConnectionId || !selectedTabId) return;
 
-      const requestQuery = query ? query : useTabStore.getState().getQuery();
+      const requestQuery = query ? query : useTabStore.getState().getQuery(selectedTabId);
       const controller = attachAbortController(abortController);
 
-      const execute = async (confirmed: boolean): Promise<RunQueryResponseType> => {
+      const execute = async (confirmed: boolean): Promise<RunQueryResponseType | BackgroundQueryType> => {
         const session = getEditorSessionContext();
-        return runRawQuery(
+        return runRawQueryInBackground(
           {
             connectionId: Number(currentConnectionId),
             query: requestQuery,
@@ -222,7 +245,8 @@ export const createDataQuerySlice: StateCreator<
             schema: session.schema,
             confirmed,
             limit: selectedTab?.pagination?.limit ?? 100,
-            page: selectedTab?.pagination?.page ?? 1
+            page: selectedTab?.pagination?.page ?? 1,
+            backgroundAfterSeconds: useSettingStore.getState().general.backgroundAfterSeconds
           },
           controller.signal
         );
@@ -232,8 +256,8 @@ export const createDataQuerySlice: StateCreator<
         get().toggleDataFetching(true);
         await get().clearGridChanges();
 
-        const res = await withSafeModeRetry((confirmed) => execute(!!confirmed));
-        if (res === undefined) {
+        const answer = await withSafeModeRetry((confirmed) => execute(!!confirmed));
+        if (answer === undefined) {
           return;
         }
 
@@ -241,8 +265,18 @@ export const createDataQuerySlice: StateCreator<
           return;
         }
 
+        if (isBackgroundQuery(answer)) {
+          useBackgroundQueryStore
+            .getState()
+            .start(selectedTabId, { jobId: answer.jobId, kind: 'raw', startedAt: Date.now() });
+          void reconcileBackgroundQuery(answer.jobId);
+
+          return;
+        }
+
+        const res = answer;
         if (res.query) {
-          useTabStore.getState().updateQuery(res.query);
+          useTabStore.getState().updateQuery(res.query, selectedTabId);
         }
 
         const gridMeta: GridMetaType = {

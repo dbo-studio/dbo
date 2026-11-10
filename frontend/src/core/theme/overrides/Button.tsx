@@ -12,6 +12,9 @@ export default function Button(theme: Theme): Components {
           height: variables.control.md,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
+          '&.MuiButton-textPrimary, &.MuiButton-outlinedPrimary': {
+            color: theme.palette.text.link
+          },
           '&.Mui-disabled': {
             background: theme.palette.action.disabledBackground,
             color: theme.palette.action.disabled,
@@ -32,6 +35,11 @@ export default function Button(theme: Theme): Components {
             padding: '0 8px',
             fontSize: theme.typography.caption.fontSize,
             lineHeight: theme.typography.caption.lineHeight
+          },
+          '&.MuiButton-sizeLarge': {
+            height: 40,
+            padding: '0 16px',
+            fontSize: theme.typography.body2.fontSize
           },
           '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
             visibility: 'hidden'

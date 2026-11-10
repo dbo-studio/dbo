@@ -1,7 +1,7 @@
 import { debouncedSaveRemovedRows } from '@/core/utils/indexedDbHelper';
 import type { RowType } from '@/types';
 import type { StateCreator } from 'zustand';
-import { useTabStore } from '../../tabStore/tab.store';
+import { selectPaneSelectedTabId } from '@/store/tabStore/tab.store';
 import type {
   DataRemovedRowsSlice,
   DataRowSlice,
@@ -18,7 +18,7 @@ export const createDataRemovedRowsSlice: StateCreator<
 > = (set, get) => ({
   removedRows: [],
   updateRemovedRows: async (removedRows: RowType[] | undefined): Promise<void> => {
-    const selectedTabId = useTabStore.getState().selectedTabId;
+    const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return Promise.resolve();
 
     if (removedRows) {

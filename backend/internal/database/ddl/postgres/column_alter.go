@@ -124,8 +124,13 @@ func editColumnStatements(alter string, input TableInput, tableName string, colu
 }
 
 func columnTypeChanged(oldData, newData *dto.PostgresTableColumnData) bool {
-	if oldData == nil || oldData.DataType == nil || newData == nil || newData.DataType == nil {
+	if newData == nil || newData.DataType == nil {
 		return false
+	}
+
+	// Without the old definition the column is set to the new type, as MySQL and SQLite do.
+	if oldData == nil || oldData.DataType == nil {
+		return true
 	}
 
 	return !strings.EqualFold(columnTypeSpec(oldData), columnTypeSpec(newData))

@@ -1,10 +1,10 @@
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
 import {
   ConnectionFormBodyStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled
+  ConnectionFormContainerStyled
 } from '@/components/common/Connections/ConnectionPasswordPrompt/ConnectionPasswordPrompt.styled';
 import { loadSafeModePassword, safeModeBiometricsAvailable } from '@/core/tauri/biometry';
 import locales from '@/locales';
@@ -133,24 +133,25 @@ export default function SafeModePasswordPrompt({
           )}
           <FormError mb={0} errors={validationErrors} />
         </ConnectionFormBodyStyled>
-        <ConnectionFormFooterStyled>
-          <Button type='button' size='small' onClick={handleClose}>
-            {locales.cancel}
-          </Button>
+        <ModalFooter spread>
+          {biometricsAvailable && (
+            <Button
+              type='button'
+              data-testid='safe-mode-biometrics'
+              size='small'
+              variant='outlined'
+              loading={biometricsPending}
+              loadingPosition='start'
+              onClick={() => void handleBiometrics()}
+            >
+              {locales.safe_mode_use_biometrics}
+            </Button>
+          )}
+          {!biometricsAvailable && <span />}
           <Stack spacing={1} direction={'row'}>
-            {biometricsAvailable && (
-              <Button
-                type='button'
-                data-testid='safe-mode-biometrics'
-                size='small'
-                variant='outlined'
-                loading={biometricsPending}
-                loadingPosition='start'
-                onClick={() => void handleBiometrics()}
-              >
-                {locales.safe_mode_use_biometrics}
-              </Button>
-            )}
+            <Button type='button' size='small' onClick={handleClose}>
+              {locales.cancel}
+            </Button>
             <Button
               type='submit'
               data-testid='safe-mode-password-save'
@@ -161,7 +162,7 @@ export default function SafeModePasswordPrompt({
               {locales.save}
             </Button>
           </Stack>
-        </ConnectionFormFooterStyled>
+        </ModalFooter>
       </ConnectionFormContainerStyled>
     </Modal>
   );

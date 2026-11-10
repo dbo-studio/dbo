@@ -2,12 +2,11 @@ import Modal from '@/components/base/Modal/Modal';
 import { tools } from '@/core/utils';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Box, Button } from '@mui/material';
-import { Stack } from '@mui/system';
+import { Button } from '@mui/material';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
 import AppMarkdown from '@/components/base/AppMarkdown/AppMarkdown';
-import { UpdateDialogContentStyled, UpdateDialogStyled } from './UpdateDialog.styled';
+import { UpdateDialogStyled } from './UpdateDialog.styled';
 
 export default function UpdateDialog() {
   const release = useSettingStore((state) => state.general.release);
@@ -45,32 +44,27 @@ export default function UpdateDialog() {
   }
 
   return (
-    <Modal title={locales.new_version_available} open={show} onClose={() => {}}>
-      <UpdateDialogContentStyled>
-        <UpdateDialogStyled>
-          <AppMarkdown>{release.body}</AppMarkdown>
-        </UpdateDialogStyled>
-      </UpdateDialogContentStyled>
-      <Box
-        sx={{
-          display: 'flex',
-          flexShrink: 0,
-          justifyContent: 'space-between'
-        }}
-      >
-        <Stack direction={'row'} spacing={1}>
+    <Modal
+      title={locales.new_version_available}
+      open={show}
+      onClose={() => {}}
+      footer={
+        <>
           <Button disabled={release.isMinimum} onClick={handleOnClose} size='small' color='info' variant='outlined'>
             {locales.cancel}
           </Button>
-          <Button disabled={release.isMinimum} onClick={handleOnIgnore} size='small' variant='outlined'>
+          <Button size='small' disabled={release.isMinimum} onClick={handleOnIgnore} variant='outlined'>
             {locales.ignore_this_update}
           </Button>
-        </Stack>
-
-        <Button size='small' color='primary' variant='contained' onClick={() => void handleOnUpdate()}>
-          {locales.update}
-        </Button>
-      </Box>
+          <Button size='small' color='primary' variant='contained' onClick={() => void handleOnUpdate()}>
+            {locales.update}
+          </Button>
+        </>
+      }
+    >
+      <UpdateDialogStyled>
+        <AppMarkdown>{release.body}</AppMarkdown>
+      </UpdateDialogStyled>
     </Modal>
   );
 }

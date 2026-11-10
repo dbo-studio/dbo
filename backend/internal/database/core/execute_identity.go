@@ -30,10 +30,20 @@ func ResolveExecuteIdentity(
 	case databaseContract.CreateDatabaseAction, databaseContract.EditDatabaseAction:
 		return newExecuteResult(newName, action)
 	case databaseContract.CreateSchemaAction, databaseContract.EditSchemaAction:
-		node.Schema = newName
+		// Host SQL ids are `<namespace>.<object>`, so a schema (SQL Server) sits in the database slot.
+		if databaseContract.IsHostSQL(connectionType) {
+			node.Database = newName
+		} else {
+			node.Schema = newName
+		}
 	case databaseContract.CreateTableAction, databaseContract.EditTableAction,
 		databaseContract.CreateViewAction, databaseContract.EditViewAction,
-		databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction:
+		databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction,
+		databaseContract.CreateTypeAction, databaseContract.EditTypeAction,
+		databaseContract.CreateSequenceAction, databaseContract.EditSequenceAction,
+		databaseContract.CreateFunctionAction, databaseContract.EditFunctionAction,
+		databaseContract.CreateProcedureAction, databaseContract.EditProcedureAction,
+		databaseContract.CreateEventAction, databaseContract.EditEventAction:
 		node.Table = newName
 	default:
 		return &databaseContract.ExecuteResult{}
@@ -55,7 +65,7 @@ func newExecuteResult(nodeID string, action databaseContract.TreeNodeActionName)
 
 func parseNodeID(connectionType, nodeID string) databaseContract.DBNode {
 	switch {
-	case databaseContract.IsMysqlFamily(connectionType):
+	case databaseContract.IsMysqlFamily(connectionType), databaseContract.IsHostSQL(connectionType):
 		return (&BaseRepository{}).mysqlNode(nodeID)
 	case databaseContract.IsPostgresFamily(connectionType):
 		return (&BaseRepository{}).postgresqlNode(nodeID)
@@ -113,6 +123,39 @@ func objectNames(action databaseContract.TreeNodeActionName, params []byte) (old
 
 		return ptrName(m.Old), ptrName(m.New)
 
+	case databaseContract.CreateTypeAction, databaseContract.EditTypeAction:
+		t := decodeTab[dto.PostgresTypeParams](params, databaseContract.TypeTab, databaseContract.GeneralTab)
+		if t == nil {
+			return "", ""
+		}
+
+		return ptrName(t.Old), ptrName(t.New)
+
+	case databaseContract.CreateFunctionAction, databaseContract.EditFunctionAction,
+		databaseContract.CreateProcedureAction, databaseContract.EditProcedureAction:
+		routine := decodeTab[dto.RoutineParams](params, databaseContract.FunctionTab, databaseContract.ProcedureTab, databaseContract.GeneralTab)
+		if routine == nil {
+			return "", ""
+		}
+
+		return ptrName(routine.Old), ptrName(routine.New)
+
+	case databaseContract.CreateEventAction, databaseContract.EditEventAction:
+		event := decodeTab[dto.EventParams](params, databaseContract.EventTab, databaseContract.GeneralTab)
+		if event == nil {
+			return "", ""
+		}
+
+		return ptrName(event.Old), ptrName(event.New)
+
+	case databaseContract.CreateSequenceAction, databaseContract.EditSequenceAction:
+		s := decodeTab[dto.PostgresSequenceParams](params, databaseContract.SequenceTab, databaseContract.GeneralTab)
+		if s == nil {
+			return "", ""
+		}
+
+		return ptrName(s.Old), ptrName(s.New)
+
 	default:
 		return "", ""
 	}
@@ -153,6 +196,22 @@ func ptrName(data any) string {
 			return *v.Name
 		}
 	case *dto.PostgresViewParamsData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.RoutineData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.EventData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.PostgresSequenceData:
+		if v != nil && v.Name != nil {
+			return *v.Name
+		}
+	case *dto.PostgresTypeData:
 		if v != nil && v.Name != nil {
 			return *v.Name
 		}

@@ -1,0 +1,60 @@
+import locales from '@/locales';
+import type { SchemaChangeOp } from '@/types';
+
+export type ChangesetLine = { label: string; detail: string };
+
+/** Human-readable one-liners for an agent-proposed changeset. */
+export const summarizeChangeset = (ops: SchemaChangeOp[]): ChangesetLine[] =>
+  ops.map((op) => {
+    switch (op.op) {
+      case 'write':
+        return { label: locales.ai_op_write, detail: op.sql ?? '' };
+      case 'undo':
+        return { label: locales.ai_op_undo, detail: op.sql ?? '' };
+      case 'create_database':
+        return { label: locales.ai_op_create_database, detail: op.name ?? '' };
+      case 'create_schema':
+        return { label: locales.ai_op_create_schema, detail: op.name ?? '' };
+      case 'create_table':
+        return {
+          label: locales.ai_op_create_table,
+          detail: `${op.table} (${(op.columns ?? []).map((column) => column.name).join(', ')})`
+        };
+      case 'add_column':
+        return {
+          label: locales.ai_op_add_column,
+          detail: `${op.table}.${op.column?.name ?? ''} ${op.column?.type ?? ''}`.trim()
+        };
+      case 'alter_column':
+        return {
+          label: locales.ai_op_alter_column,
+          detail: `${op.table}.${op.column?.name ?? ''} ${op.column?.type ?? ''}`.trim()
+        };
+      case 'drop_column':
+        return { label: locales.ai_op_drop_column, detail: `${op.table}.${op.columnName ?? ''}` };
+      case 'add_index':
+        return {
+          label: locales.ai_op_add_index,
+          detail: `${op.table}(${(op.indexColumns ?? []).join(', ')})${op.unique ? ' unique' : ''}`
+        };
+      case 'rename_table':
+        return { label: locales.ai_op_rename_table, detail: `${op.table} → ${op.name ?? ''}` };
+      case 'rename_column':
+        return { label: locales.ai_op_rename_column, detail: `${op.table}.${op.columnName ?? ''} → ${op.name ?? ''}` };
+      case 'create_view':
+        return { label: locales.ai_op_create_view, detail: op.name ?? '' };
+      case 'drop_view':
+        return { label: locales.ai_op_drop_view, detail: op.name ?? '' };
+      case 'add_check':
+        return { label: locales.ai_op_add_check, detail: `${op.table} (${op.sql ?? ''})` };
+      case 'drop_constraint':
+        return { label: locales.ai_op_drop_constraint, detail: `${op.table}.${op.name ?? ''}` };
+      case 'drop_table':
+        return { label: locales.ai_op_drop_table, detail: op.table };
+      case 'add_foreign_key':
+        return {
+          label: locales.ai_op_add_foreign_key,
+          detail: `${op.table}(${(op.fkColumns ?? []).join(', ')}) → ${op.refTable}(${(op.refColumns ?? []).join(', ')})`
+        };
+    }
+  });

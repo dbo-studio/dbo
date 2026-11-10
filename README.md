@@ -63,7 +63,7 @@
 | MariaDB, Percona, HeatWave                           | Supported |
 | Amazon RDS / Aurora / Cloud SQL / Azure (MySQL)      | Supported |
 | SQLite                                               | Supported |
-| SQL Server                                           | Planned   |
+| SQL Server, ClickHouse                               | Beta (browse, query, SQL Server row edit; no schema editing yet) |
 
 ## Quick start
 

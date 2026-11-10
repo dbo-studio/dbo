@@ -15,6 +15,10 @@ import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { cellValueForFilter, serializeRowForClipboard } from './clipboard';
 import type { DataGridContextTarget } from './types';
+import type { ColumnType } from '@/types';
+
+// A fresh [] per call makes the selector's snapshot unstable and loops React when the store has no columns.
+const NO_COLUMNS: ColumnType[] = [];
 
 const filterOperator = (value: string): string => PgsqlFilterConditions.find((c) => c.value === value)?.value ?? value;
 
@@ -39,7 +43,7 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
   const currentConnection = useCurrentConnection();
   const selectedRows = useDataStore((state) => state.selectedRows);
   const editedRows = useDataStore((state) => state.editedRows);
-  const columns = useDataStore((state) => state.columns ?? []);
+  const columns = useDataStore((state) => state.columns ?? NO_COLUMNS);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
   const updateColumns = useDataStore((state) => state.updateColumns);

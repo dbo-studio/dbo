@@ -17,6 +17,10 @@ type User struct {
 	PermCreateConnection bool       `gorm:"column:perm_create_connection;not null;default:false"`
 	PermAiSettings       bool       `gorm:"column:perm_ai_settings;not null;default:false"`
 	PermMcpSettings      bool       `gorm:"column:perm_mcp_settings;not null;default:false"`
+	PermCli              bool       `gorm:"column:perm_cli;not null;default:false"`
+	PermImport           bool       `gorm:"column:perm_import;not null;default:true"`
+	PermExport           bool       `gorm:"column:perm_export;not null;default:true"`
+	PermAiUse            bool       `gorm:"column:perm_ai_use;not null;default:true"`
 	MustChangePassword   bool       `gorm:"column:must_change_password"`
 	TotpSecretCiphertext *string    `gorm:"column:totp_secret_ciphertext"`
 	TotpEnabledAt        *time.Time `gorm:"column:totp_enabled_at"`

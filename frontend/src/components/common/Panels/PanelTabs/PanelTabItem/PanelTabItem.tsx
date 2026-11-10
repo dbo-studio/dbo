@@ -29,13 +29,20 @@ const TAB_MODE_ICON: Record<TabMode, keyof typeof IconTypes> = {
   [TabMode.Object]: 'pen',
   [TabMode.ObjectDetail]: 'pen',
   [TabMode.Diagram]: 'layout',
-  [TabMode.Settings]: 'settings'
+  [TabMode.Dashboard]: 'layout',
+  [TabMode.Question]: 'chart',
+  [TabMode.Settings]: 'settings',
+  [TabMode.Backup]: 'backup',
+  [TabMode.Browse]: 'key',
+  [TabMode.Tool]: 'terminal'
 };
+
+const TOOL_ICON: Record<string, keyof typeof IconTypes> = { pubsub: 'send' };
 
 export default function PanelTabItem({ tab, overlay = false }: { tab: TabType; overlay?: boolean }): JSX.Element {
   const selectedTabId = useTabStore((state) => state.selectedTabId);
   const tabRef = useRef<HTMLDivElement | null>(null);
-  const isSettings = tab.mode === TabMode.Settings;
+  const isSettings = tab.mode === TabMode.Settings || tab.mode === TabMode.Backup;
   const selected = selectedTabId === tab.id;
 
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
@@ -88,7 +95,11 @@ export default function PanelTabItem({ tab, overlay = false }: { tab: TabType; o
       >
         <PanelTabContentStyled>
           <PanelTabIconStyled data-testid={`workspace-tab-icon-${tab.mode}`}>
-            <CustomIcon type={TAB_MODE_ICON[tab.mode]} size='xs' color='currentColor' />
+            <CustomIcon
+              type={(tab.mode === TabMode.Tool && 'toolId' in tab && TOOL_ICON[tab.toolId]) || TAB_MODE_ICON[tab.mode]}
+              size='xs'
+              color='currentColor'
+            />
           </PanelTabIconStyled>
           <Tooltip title={tab.name} placement={'bottom'}>
             <PanelTabNameStyled component={'span'} variant='subtitle2'>

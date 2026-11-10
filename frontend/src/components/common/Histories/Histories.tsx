@@ -5,7 +5,18 @@ import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
 import VirtualList from '@/components/base/VirtualList/VirtualList';
-import { Box, Button, ClickAwayListener, IconButton, LinearProgress } from '@mui/material';
+import EmptyState from '@/components/base/EmptyState/EmptyState';
+import {
+  Box,
+  Button,
+  ClickAwayListener,
+  IconButton,
+  LinearProgress,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography
+} from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
@@ -17,6 +28,21 @@ import {
   HistoriesToolbarStyled
 } from './Histories.styled';
 import HistoryItem from './HistoryItem/HistoryItem';
+import { groupByDay, statementKind, statementVerb } from './historyUtils';
+
+type HistoryFilter = 'all' | 'read' | 'write';
+
+const FILTERS: { id: HistoryFilter; label: string }[] = [
+  { id: 'all', label: locales.history_filter_all },
+  { id: 'read', label: locales.history_filter_read },
+  { id: 'write', label: locales.history_filter_write }
+];
+
+const matchesFilter = (query: string, filter: HistoryFilter): boolean => {
+  if (filter === 'all') return true;
+  const isRead = statementKind(statementVerb(query)) === 'read';
+  return filter === 'read' ? isRead : !isRead;
+};
 
 type HistoryResponse = HistoryType[];
 
@@ -24,6 +50,7 @@ export default function Histories(): JSX.Element {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<HistoryType | null>(null);
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<HistoryFilter>('all');
   const currentConnection = useCurrentConnection();
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -71,46 +98,79 @@ export default function Histories(): JSX.Element {
   };
 
   const allHistories = data?.pages.flat() ?? [];
-  const filteredHistories = allHistories.filter((f) =>
-    f.query.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+  const needle = search.toLocaleLowerCase();
+  const filteredHistories = allHistories.filter(
+    (f) => f.query.toLocaleLowerCase().includes(needle) && matchesFilter(f.query, filter)
   );
+  const rows = groupByDay(filteredHistories);
 
   return (
     <ClickAwayListener onClickAway={(): void => setSelected(null)}>
-      <HistoriesContainerStyled>
-        <Box>
-          <HistoriesToolbarStyled spacing={1} direction={'row'}>
-            <Box
-              sx={{
-                flex: 1
-              }}
-            >
-              <Search onChange={(name): void => setSearch(name)} />
-            </Box>
-            <DeleteHistoryIcon />
-            <IconButton onClick={() => void handleRefresh()}>
+      <HistoriesContainerStyled data-testid='history-panel'>
+        <HistoriesToolbarStyled spacing={1} direction={'row'}>
+          <Box sx={{ flex: 1, maxWidth: 420 }}>
+            <Search onChange={(name): void => setSearch(name)} />
+          </Box>
+          <ToggleButtonGroup
+            exclusive
+            size='small'
+            value={filter}
+            onChange={(_, value: HistoryFilter | null): void => {
+              if (value) setFilter(value);
+            }}
+            aria-label={locales.history}
+          >
+            {FILTERS.map((f) => (
+              <ToggleButton key={f.id} value={f.id} sx={{ px: 1.25, py: 0.25, textTransform: 'none' }}>
+                {f.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          <Typography variant='caption' color='textSubdued' sx={{ flex: 1 }}>
+            {locales.history_count.replace('{count}', String(filteredHistories.length))}
+          </Typography>
+          <Tooltip title={locales.refresh}>
+            <IconButton size='small' aria-label={locales.refresh} onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
-          </HistoriesToolbarStyled>
-        </Box>
+          </Tooltip>
+          <DeleteHistoryIcon />
+        </HistoriesToolbarStyled>
 
         <HistoriesListStyled ref={listRef}>
           {status === 'pending' ? (
             <LinearProgress data-testid='linear-progress' style={{ marginTop: '8px' }} />
+          ) : rows.length === 0 ? (
+            <EmptyState
+              icon='history'
+              title={allHistories.length === 0 ? locales.history_empty_title : locales.history_no_results}
+              description={allHistories.length === 0 ? locales.history_empty_hint : undefined}
+            />
           ) : (
             <VirtualList
-              items={filteredHistories}
-              estimateSize={36}
+              items={rows}
+              estimateSize={32}
+              gap={2}
               scrollElementRef={listRef}
-              getItemKey={(query) => String(query.id)}
-              renderItem={(query) => (
-                <HistoryItem
-                  context={handleContextMenu}
-                  onClick={(): void => setSelected(query)}
-                  history={query}
-                  selected={selected?.id === query.id}
-                />
-              )}
+              getItemKey={(row) => row.key}
+              renderItem={(row) =>
+                row.kind === 'day' ? (
+                  <Typography
+                    variant='overline'
+                    color='textSubdued'
+                    sx={{ display: 'block', px: 1, pt: 1, lineHeight: 1.8 }}
+                  >
+                    {row.label} · {row.count}
+                  </Typography>
+                ) : (
+                  <HistoryItem
+                    context={handleContextMenu}
+                    onClick={(): void => setSelected(row.history)}
+                    history={row.history}
+                    selected={selected?.id === row.history.id}
+                  />
+                )
+              }
             />
           )}
 
@@ -121,8 +181,8 @@ export default function Histories(): JSX.Element {
                 disabled={isFetchingNextPage}
                 loading={isFetchingNextPage}
                 onClick={() => void handleLoadMore()}
-                fullWidth
-                variant='contained'
+                size='small'
+                variant='outlined'
               >
                 <span>{locales.load_more}</span>
               </Button>

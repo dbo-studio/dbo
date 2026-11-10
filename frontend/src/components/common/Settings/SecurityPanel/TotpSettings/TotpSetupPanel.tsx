@@ -17,6 +17,7 @@ import {
   TotpSetupSecretRowStyled
 } from './TotpSettings.styled';
 import { TotpSetupQr } from './TotpSetupQr';
+import { variables } from '@/core/theme/variables';
 
 type TotpSetupPanelProps = {
   variant?: 'panel' | 'modal';
@@ -28,6 +29,30 @@ type TotpSetupPanelProps = {
   onCancel: () => void;
   onEnable: () => void;
 };
+
+export function TotpSetupActions({
+  enableCode,
+  isEnabling,
+  onCancel,
+  onEnable
+}: Pick<TotpSetupPanelProps, 'enableCode' | 'isEnabling' | 'onCancel' | 'onEnable'>): JSX.Element {
+  return (
+    <>
+      <Button size='small' onClick={onCancel}>
+        {locales.cancel}
+      </Button>
+      <Button
+        variant='contained'
+        size='small'
+        disabled={isEnabling || enableCode.length < 6}
+        data-testid='auth-totp-enable-submit'
+        onClick={onEnable}
+      >
+        {locales.auth_totp_enable}
+      </Button>
+    </>
+  );
+}
 
 export function TotpSetupPanel({
   variant = 'panel',
@@ -93,7 +118,7 @@ export function TotpSetupPanel({
               flex: 1,
               minWidth: 0,
               fontFamily: 'ui-monospace, monospace',
-              fontSize: '0.8125rem',
+              fontSize: variables.fontSize.md,
               letterSpacing: '0.04em',
               wordBreak: 'break-all'
             }}
@@ -135,20 +160,11 @@ export function TotpSetupPanel({
         {enableError ? <FormError mb={0} errors={[enableError]} /> : null}
       </Stack>
 
-      <TotpSetupActionsStyled>
-        <Button size='small' onClick={onCancel}>
-          {locales.cancel}
-        </Button>
-        <Button
-          variant='contained'
-          size='small'
-          disabled={isEnabling || enableCode.length < 6}
-          data-testid='auth-totp-enable-submit'
-          onClick={onEnable}
-        >
-          {locales.auth_totp_enable}
-        </Button>
-      </TotpSetupActionsStyled>
+      {variant === 'panel' && (
+        <TotpSetupActionsStyled>
+          <TotpSetupActions enableCode={enableCode} isEnabling={isEnabling} onCancel={onCancel} onEnable={onEnable} />
+        </TotpSetupActionsStyled>
+      )}
     </Container>
   );
 }

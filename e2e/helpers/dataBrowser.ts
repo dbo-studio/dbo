@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
+import { HOST_SQL } from "./hostSql";
 import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
@@ -22,7 +23,18 @@ export interface DataBrowserSeed {
   sqliteDbPath?: string;
 }
 
+const SEED_ROWS = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
+
 function createTableSql(engine: DbEngine, tableName: string): string {
+  if (engine === "mssql" || engine === "clickhouse") {
+    // ClickHouse has no auto-increment, so both engines get explicit ids.
+    const rows = SEED_ROWS.map((n, i) => `(${i + 1}, '${n}', ${(i + 1) * 10})`).join(", ");
+    const create =
+      engine === "mssql"
+        ? `CREATE TABLE ${tableName} (id INT NOT NULL PRIMARY KEY, name VARCHAR(100) NOT NULL, score INT NOT NULL)`
+        : `CREATE TABLE ${tableName} (id UInt32, name String, score Int32) ENGINE = MergeTree ORDER BY id`;
+    return `DROP TABLE IF EXISTS ${tableName};\n${create};\nINSERT INTO ${tableName} (id, name, score) VALUES ${rows};`;
+  }
   if (engine === "postgresql") {
     return `
 DROP TABLE IF EXISTS ${tableName};
@@ -91,6 +103,9 @@ export function dataBrowserTreePath(
   }
   if (engine === "mysql") {
     return [connectionName, "default"];
+  }
+  if (engine === "mssql" || engine === "clickhouse") {
+    return [connectionName, HOST_SQL[engine].namespace];
   }
   return [connectionName];
 }

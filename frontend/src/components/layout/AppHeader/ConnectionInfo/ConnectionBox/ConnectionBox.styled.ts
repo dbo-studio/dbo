@@ -3,13 +3,16 @@ import { Box, styled } from '@mui/material';
 import type { ConnectionBoxStyledProps } from '../types.ts';
 
 export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ theme, status }) => ({
-  minHeight: '24px',
+  height: 26,
+  maxWidth: 520,
+  margin: '0 auto',
   width: '100%',
   textAlign: 'center',
   borderRadius: variables.radius.medium,
   display: 'flex',
   alignItems: 'center',
   padding: `0 ${theme.spacing(2)}`,
+  boxSizing: 'border-box',
   border: `1px solid ${theme.palette.divider}`,
   justifyContent: 'space-between',
   overflow: 'hidden',
@@ -22,9 +25,10 @@ export const ConnectionBoxStyled = styled(Box)<ConnectionBoxStyledProps>(({ them
       (status === 'loading' && theme.palette.text.warning) ||
       (status === 'error' && theme.palette.text.danger) ||
       theme.palette.text.text,
-    fontFamily: theme.editorFontFamily,
-    fontWeight: 'bold',
-    fontSize: 12,
+    // Monospace only for the real connection string; messages use the UI font.
+    ...(status === 'finished' && { fontFamily: theme.editorFontFamily }),
+    fontWeight: 500,
+    fontSize: variables.fontSize.sm,
     flex: 1,
     minWidth: 0,
     overflow: 'hidden',

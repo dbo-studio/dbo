@@ -16,7 +16,10 @@ export default function QueryEditorActionBar({
   onFormat,
   onRunQuery,
   onAiExplain,
-  loading
+  loading,
+  formatQuery,
+  onExport,
+  onStop
 }: QueryEditorActionBarProps): JSX.Element {
   const isCompact = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
 
@@ -26,7 +29,15 @@ export default function QueryEditorActionBar({
         <QueryEditorLeading databases={databases} schemas={schemas} />
       </QueryEditorActionBarBoxStyled>
       <QueryEditorActionBarActionsBoxStyled isCompact={isCompact}>
-        <QueryEditorActions loading={loading} onFormat={onFormat} onRunQuery={onRunQuery} onAiExplain={onAiExplain} />
+        <QueryEditorActions
+          loading={loading}
+          onFormat={onFormat}
+          onRunQuery={onRunQuery}
+          onAiExplain={onAiExplain}
+          formatQuery={formatQuery}
+          onExport={onExport}
+          onStop={onStop}
+        />
       </QueryEditorActionBarActionsBoxStyled>
     </QueryEditorActionBarStackStyled>
   );

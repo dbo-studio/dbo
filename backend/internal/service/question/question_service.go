@@ -1,0 +1,272 @@
+package serviceQuestion
+
+import (
+	"context"
+	"errors"
+
+	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
+	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/internal/repository"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
+	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/goccy/go-json"
+	"github.com/samber/lo"
+)
+
+var (
+	errQuestionNotFound = errors.New("report not found")
+	errFieldFormat      = errors.New("a field filter names its column as table.column")
+)
+
+type IQuestionService interface {
+	Index(ctx context.Context, req *dto.QuestionListRequest) ([]dto.QuestionResponse, error)
+	Create(ctx context.Context, req *dto.QuestionCreateRequest) (*dto.QuestionResponse, error)
+	Update(ctx context.Context, id uint, req *dto.QuestionUpdateRequest) (*dto.QuestionResponse, error)
+	Delete(ctx context.Context, id uint) error
+	// Run executes the report's query read-only, its {{name}} filters filled from params, and returns the rows as the execute_sql tool does.
+	Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error)
+	// FieldValues lists the distinct values of a field filter's column, for its dropdown.
+	FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error)
+	// Preview runs unsaved SQL the same way, for the editor.
+	Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error)
+}
+
+var _ IQuestionService = (*IQuestionServiceImpl)(nil)
+
+type IQuestionServiceImpl struct {
+	questionRepo   repository.IQuestionRepo
+	connectionRepo repository.IConnectionRepo
+	toolRegistry   *serviceDbtools.Registry
+}
+
+func NewQuestionService(
+	questionRepo repository.IQuestionRepo,
+	connectionRepo repository.IConnectionRepo,
+	toolRegistry *serviceDbtools.Registry,
+) IQuestionService {
+	return &IQuestionServiceImpl{questionRepo: questionRepo, connectionRepo: connectionRepo, toolRegistry: toolRegistry}
+}
+
+func (s IQuestionServiceImpl) requireConnection(ctx context.Context, connectionID int32) error {
+	if _, err := s.connectionRepo.Find(ctx, connectionID); err != nil {
+		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	return nil
+}
+
+func (s IQuestionServiceImpl) find(ctx context.Context, id uint) (*model.Question, error) {
+	question, err := s.questionRepo.Find(ctx, id)
+	if err != nil {
+		return nil, apperror.NotFound(errQuestionNotFound)
+	}
+
+	if err := s.requireConnection(ctx, int32(question.ConnectionID)); err != nil {
+		return nil, apperror.NotFound(errQuestionNotFound)
+	}
+
+	return question, nil
+}
+
+func (s IQuestionServiceImpl) Index(ctx context.Context, req *dto.QuestionListRequest) ([]dto.QuestionResponse, error) {
+	if err := s.requireConnection(ctx, req.ConnectionID); err != nil {
+		return nil, err
+	}
+
+	questions, err := s.questionRepo.List(ctx, uint(req.ConnectionID))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	return lo.Map(questions, func(question model.Question, _ int) dto.QuestionResponse { return ToResponse(&question) }), nil
+}
+
+func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreateRequest) (*dto.QuestionResponse, error) {
+	if err := s.requireConnection(ctx, req.ConnectionID); err != nil {
+		return nil, err
+	}
+
+	// A report only ever reads; a write saved here would run on every refresh.
+	if _, err := serviceDbtools.GuardReadOnlySQL(req.SQL); err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	chart, err := json.Marshal(req.Chart)
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	params, err := json.Marshal(lo.CoalesceMapOrEmpty(req.Params))
+	if err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	question := &model.Question{
+		ConnectionID: uint(req.ConnectionID),
+		Database:     lo.FromPtr(req.Database),
+		Schema:       lo.FromPtr(req.Schema),
+		Name:         req.Name,
+		SQL:          req.SQL,
+		ChartJSON:    string(chart),
+		ParamsJSON:   string(params),
+	}
+
+	if err := s.questionRepo.Create(ctx, question); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	response := ToResponse(question)
+
+	return &response, nil
+}
+
+func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.QuestionUpdateRequest) (*dto.QuestionResponse, error) {
+	question, err := s.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.SQL != nil {
+		if _, err := serviceDbtools.GuardReadOnlySQL(*req.SQL); err != nil {
+			return nil, apperror.BadRequest(err)
+		}
+
+		question.SQL = *req.SQL
+	}
+
+	if req.Name != nil {
+		question.Name = *req.Name
+	}
+
+	if req.Chart != nil {
+		chart, err := json.Marshal(req.Chart)
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		question.ChartJSON = string(chart)
+	}
+
+	if req.Params != nil {
+		params, err := json.Marshal(lo.CoalesceMapOrEmpty(*req.Params))
+		if err != nil {
+			return nil, apperror.InternalServerError(err)
+		}
+
+		question.ParamsJSON = string(params)
+	}
+
+	if err := s.questionRepo.Save(ctx, question); err != nil {
+		return nil, apperror.InternalServerError(err)
+	}
+
+	response := ToResponse(question)
+
+	return &response, nil
+}
+
+func (s IQuestionServiceImpl) Delete(ctx context.Context, id uint) error {
+	question, err := s.find(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.questionRepo.Delete(ctx, question); err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	return nil
+}
+
+func (s IQuestionServiceImpl) Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error) {
+	question, err := s.find(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.run(ctx, serviceDbtools.ToolContext{
+		ConnectionID: int32(question.ConnectionID),
+		Database:     lo.EmptyableToPtr(question.Database),
+		Schema:       lo.EmptyableToPtr(question.Schema),
+	}, question.SQL, params)
+}
+
+func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error) {
+	return s.run(ctx, serviceDbtools.ToolContext{
+		ConnectionID: req.ConnectionID,
+		Database:     req.Database,
+		Schema:       req.Schema,
+	}, req.SQL, req.Params)
+}
+
+func (s IQuestionServiceImpl) FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error) {
+	parts := FieldPattern.FindStringSubmatch(req.Field)
+	if parts == nil {
+		return nil, apperror.BadRequest(errFieldFormat)
+	}
+
+	table, column := parts[1], parts[2]
+
+	return s.run(ctx, serviceDbtools.ToolContext{
+		ConnectionID: req.ConnectionID,
+		Database:     req.Database,
+		Schema:       req.Schema,
+	}, "SELECT DISTINCT "+column+" AS value FROM "+table+" WHERE "+column+" IS NOT NULL ORDER BY 1", nil)
+}
+
+// placeholderPrefix is how the driver numbers bound values: $1 on PostgreSQL, @p1 on SQL Server, ? elsewhere.
+func placeholderPrefix(connectionType string) string {
+	switch {
+	case databaseContract.IsPostgresFamily(connectionType):
+		return "$"
+	case connectionType == databaseContract.SQLServer:
+		return "@p"
+	}
+
+	return ""
+}
+
+func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.ToolContext, sql string, params map[string]string) (json.RawMessage, error) {
+	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
+	if err != nil {
+		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	rendered, args, err := RenderParams(sql, params, placeholderPrefix(conn.ConnectionType))
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	toolCtx.Args = args
+
+	result, err := s.toolRegistry.Execute(ctx, serviceDbtools.ToolExecuteSQL, map[string]any{"sql": rendered}, toolCtx)
+	if err != nil {
+		return nil, apperror.BadRequest(err)
+	}
+
+	return json.RawMessage(result), nil
+}
+
+// ToResponse maps a stored report; boards reuse it for their cards.
+func ToResponse(question *model.Question) dto.QuestionResponse {
+	var (
+		chart  dto.QuestionChart
+		params map[string]string
+	)
+
+	_ = json.Unmarshal([]byte(question.ChartJSON), &chart)
+	_ = json.Unmarshal([]byte(question.ParamsJSON), &params)
+
+	return dto.QuestionResponse{
+		ID:           question.ID,
+		ConnectionID: question.ConnectionID,
+		Database:     question.Database,
+		Schema:       question.Schema,
+		Name:         question.Name,
+		SQL:          question.SQL,
+		Chart:        chart,
+		Params:       lo.CoalesceMapOrEmpty(params),
+		UpdatedAt:    lo.FromPtr(question.UpdatedAt),
+	}
+}

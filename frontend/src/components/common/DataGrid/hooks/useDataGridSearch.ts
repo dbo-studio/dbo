@@ -31,7 +31,6 @@ export function useDataGridSearch({ rows, columns }: UseDataGridSearchProps): Us
   const [searchTerm, setSearchTerm] = useState('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
-  // Find all matches in the data
   const matches = useMemo(() => {
     if (!searchTerm.trim()) {
       return [];

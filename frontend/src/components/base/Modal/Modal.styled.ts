@@ -1,16 +1,26 @@
 import { variables } from '@/core/theme/variables';
 import { Box, Modal, styled } from '@mui/material';
-import type { ModalSize } from './types';
 
 export const ModalStyled = styled(Modal)(() => ({})) as typeof Modal;
 
-export const ModalWrapperStyled = styled(Box)<{ padding?: string; size?: ModalSize }>(({ theme, padding, size = 'md' }) => ({
-  width: variables.modal[size],
+export const ModalBodyStyled = styled(Box)(() => ({
+  flex: 1,
+  minHeight: 0,
+  overflow: 'auto',
+  display: 'flex',
+  flexDirection: 'column'
+}));
+
+export const ModalWrapperStyled = styled(Box, { shouldForwardProp: (prop) => prop !== 'compact' })<{
+  padding?: string;
+  compact?: boolean;
+}>(({ theme, padding, compact }) => ({
+  minHeight: compact ? undefined : 'min(400px, 90dvh)',
+  minWidth: 'min(400px, calc(100vw - 32px))',
   maxWidth: 'calc(100vw - 32px)',
   maxHeight: '90dvh',
-  borderRadius: variables.radius.large,
+  borderRadius: variables.radius.medium,
   border: `1px solid ${theme.palette.divider}`,
-  boxShadow: variables.shadow.modal,
   background: theme.palette.background.default,
   position: 'absolute',
   top: '50%',

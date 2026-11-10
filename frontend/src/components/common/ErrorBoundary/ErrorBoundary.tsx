@@ -3,9 +3,17 @@ import CrashScreen from './CrashScreen';
 
 const TABLE_DATA_DB_PREFIX = 'table-data-db';
 
+// Session and onboarding are not UI state: wiping them would log the user out and replay the intro.
+const KEEP_KEYS = ['dbo:account'];
+
 const clearPersistedFrontend = (): void => {
   try {
+    const kept = KEEP_KEYS.flatMap((key) => {
+      const value = localStorage.getItem(key);
+      return value === null ? [] : [[key, value] as const];
+    });
     localStorage.clear();
+    kept.forEach(([key, value]) => localStorage.setItem(key, value));
   } catch {
     // ignore quota / private mode
   }

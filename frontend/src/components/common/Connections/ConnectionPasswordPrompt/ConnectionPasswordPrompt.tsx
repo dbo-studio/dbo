@@ -1,187 +1,99 @@
-import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import Modal from '@/components/base/Modal/Modal';
+import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import { EventFor } from '@/types';
 import { Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { formatPingFailureMessage, formatPingSuccessMessage } from '@/components/common/AddConnection/pingDiagnostics';
-import * as v from 'valibot';
+import { type JSX, useEffect } from 'react';
+import { useUnlockConnection } from '../useUnlockConnection';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled,
-  ConnectionFormFooterStyled
+  ConnectionFormContainerStyled
 } from './ConnectionPasswordPrompt.styled';
 
-const formSchema = v.object({
-  password: v.pipe(v.string(), v.minLength(1, 'Password is required')),
-  rememberPassword: v.boolean()
-});
-
-export default function ConnectionPasswordPromptModal(): JSX.Element {
+/**
+ * The password dialog for layouts without the explorer sidebar (phone, tablet). On desktop the same
+ * entry is inline (UnlockPanel) and nothing is cleared while the connection waits.
+ */
+export default function ConnectionPasswordPromptModal(): JSX.Element | null {
+  const { showConnectionsRail } = useLayoutMode();
   const show = useSettingStore((s) => s.ui.showConnectionPasswordPrompt);
-  const connectionId = useSettingStore((s) => s.ui.passwordPromptConnectionId);
-  const connections = useConnectionStore((state) => state.connections);
-  const updateUI = useSettingStore((s) => s.updateUI);
   const resetTree = useTreeStore((state) => state.reset);
-  const queryClient = useQueryClient();
   const clearCurrentConnection = useConnectionStore((state) => state.clearCurrentConnection);
-
-  const [password, setPassword] = useState('');
-  const [rememberPassword, setRememberPassword] = useState(false);
-
-  const validationErrors = useMemo(() => {
-    const result = v.safeParse(formSchema, { password, rememberPassword });
-    return result.success ? [] : result.issues.map((i) => i.message);
-  }, [password, rememberPassword]);
-
-  const { mutateAsync: setPasswordMutation, isPending } = useMutation({
-    mutationFn: api.connection.setConnectionCredentials
-  });
-
-  const { mutateAsync: pingConnectionMutation, isPending: pingConnectionPending } = useMutation({
-    mutationFn: api.connection.pingConnection
-  });
+  const unlock = useUnlockConnection(resetTree);
 
   useEffect(() => {
-    if (!show) return;
-    clearCurrentConnection();
-  }, [show, clearCurrentConnection]);
+    if (show && !showConnectionsRail) clearCurrentConnection();
+  }, [show, showConnectionsRail, clearCurrentConnection]);
 
-  const handleClose = (): void => {
-    setPassword('');
-    setRememberPassword(false);
-    updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
-  };
-
-  const pingWithPassword = async () => {
-    const currentConnection = connections?.find((c) => c.id === connectionId);
-    if (!currentConnection || !connectionId) {
-      return null;
-    }
-
-    return pingConnectionMutation({
-      id: connectionId,
-      type: currentConnection.type,
-      options: {
-        ...currentConnection.options,
-        password
-      }
-    });
-  };
-
-  const handleSubmit = async (e: EventFor<'form', 'onSubmit'> | EventFor<'button', 'onClick'>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!connectionId) return;
-
-    try {
-      await pingWithPassword();
-      await setPasswordMutation({ id: connectionId, password, rememberPassword });
-      setPassword('');
-      setRememberPassword(false);
-      updateUI({ showConnectionPasswordPrompt: false, passwordPromptConnectionId: undefined });
-      resetTree();
-      await queryClient.invalidateQueries({
-        queryKey: ['connections']
-      });
-    } catch (e) {
-      const message = formatPingFailureMessage(e);
-      if (message) {
-        toast.error(message);
-      }
-    }
-  };
-
-  const handlePing = async (e: EventFor<'button', 'onClick'>) => {
-    if (!connectionId) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const diagnostics = await pingWithPassword();
-      if (!diagnostics) return;
-
-      toast.success(locales.connection_test_success, {
-        description: formatPingSuccessMessage(diagnostics)
-      });
-    } catch (e) {
-      const message = formatPingFailureMessage(e);
-      if (message) {
-        toast.error(message);
-      }
-    }
-  };
+  if (showConnectionsRail) return null;
 
   return (
-    <Modal open={show} title={locales.password} onClose={handleClose}>
+    <Modal open={show} title={locales.password} onClose={unlock.close}>
       <ConnectionFormContainerStyled
         component='form'
         onSubmit={(e): void => {
-          void handleSubmit(e);
+          e.preventDefault();
+          e.stopPropagation();
+          void unlock.submit();
         }}
       >
         <ConnectionFormBodyStyled>
           <FieldInput
             name='password'
-            value={password}
+            value={unlock.password}
             label={locales.password}
-            error={validationErrors.length > 0}
-            onChange={(e): void => setPassword(e.target.value)}
+            error={unlock.errors.length > 0}
+            onChange={(e): void => unlock.setPassword(e.target.value)}
           />
-          <FormError mb={0} errors={validationErrors} />
-
+          <FormError mb={0} errors={unlock.errors} />
           <ConnectionFormCheckboxRowStyled>
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={rememberPassword}
-                  size={'small'}
-                  onChange={(e): void => setRememberPassword(e.target.checked)}
+                  checked={unlock.rememberPassword}
+                  size='small'
+                  onChange={(e): void => unlock.setRememberPassword(e.target.checked)}
                 />
               }
               label={locales.remember_password}
             />
           </ConnectionFormCheckboxRowStyled>
         </ConnectionFormBodyStyled>
-        <ConnectionFormFooterStyled>
-          <Button type='button' size='small' onClick={handleClose}>
-            {locales.cancel}
+        <ModalFooter spread>
+          <Button
+            type='button'
+            data-testid='test-connection'
+            loadingPosition='start'
+            loading={unlock.testing}
+            onClick={() => void unlock.test()}
+            disabled={unlock.pending || unlock.errors.length > 0 || !unlock.connectionId}
+            size='small'
+            variant='outlined'
+          >
+            {locales.test}
           </Button>
-          <Stack spacing={1} direction={'row'}>
-            <Button
-              type='button'
-              data-testid='test-connection'
-              loadingPosition='start'
-              loading={pingConnectionPending}
-              onClick={(e) => void handlePing(e)}
-              disabled={pingConnectionPending || isPending || validationErrors.length > 0 || !connectionId}
-              size='small'
-              variant='contained'
-              color='secondary'
-            >
-              {locales.test}
+          <Stack spacing={1} direction='row'>
+            <Button type='button' size='small' onClick={unlock.close}>
+              {locales.cancel}
             </Button>
             <Button
               type='submit'
               size='small'
               variant='contained'
-              loading={isPending || pingConnectionPending}
+              loading={unlock.pending}
               loadingPosition='start'
-              disabled={isPending || pingConnectionPending || validationErrors.length > 0 || !connectionId}
+              disabled={unlock.pending || unlock.errors.length > 0 || !unlock.connectionId}
             >
               {locales.save}
             </Button>
           </Stack>
-        </ConnectionFormFooterStyled>
+        </ModalFooter>
       </ConnectionFormContainerStyled>
     </Modal>
   );

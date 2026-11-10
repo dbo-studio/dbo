@@ -7,7 +7,7 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box } from '@mui/material';
 import { useCallback, useRef, useState } from 'react';
-import { InlineQueryStackStyled, SubmitButtonStyled } from './InlineQuery.styled';
+import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 
 export default function InlineQuery() {
   const selectedTab = useSelectedTab<DataTabType>();

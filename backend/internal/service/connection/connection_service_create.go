@@ -50,16 +50,18 @@ func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConne
 		return apperror.InternalServerError(err)
 	}
 
-	if password != "" {
+	// Redis and MongoDB are commonly passwordless; an empty stored secret keeps hydration from asking for one.
+	if password != "" || databaseContract.IsRedisFamily(req.Type) || databaseContract.IsMongo(req.Type) {
 		ownerID := helper.CtxOwnerID(ctx)
 
-		remember := lo.FromPtrOr(req.RememberPassword, false)
+		// An empty Redis password is no secret: keep it so a restart or timeout never asks for one.
+		remember := lo.FromPtrOr(req.RememberPassword, false) || password == ""
 		if err := s.secrets.SetConnectionPassword(ctx, ownerID, connection.ID, password, remember); err != nil {
 			return apperror.InternalServerError(err)
 		}
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, s.cm)
+	repo, err := database.NewTreeRepository(ctx, connection, s.cm)
 	if err != nil {
 		return err
 	}
@@ -87,8 +89,13 @@ func (s IConnectionServiceImpl) createConnectionDto(req *dto.CreateConnectionReq
 		options, err = databaseConnection.CreatePostgresqlConnection(req.Options)
 	case req.Type == string(databaseContract.Sqlite):
 		options, err = databaseConnection.CreateSQLiteConnection(req.Options)
-	case databaseContract.IsMysqlFamily(req.Type):
+	case databaseContract.IsMysqlFamily(req.Type), databaseContract.IsHostSQL(req.Type):
+		// SQL Server and ClickHouse take the same host/port/user/database/SSL/SSH fields as MySQL.
 		options, err = databaseConnection.CreateMysqlConnection(req.Options)
+	case databaseContract.IsRedisFamily(req.Type):
+		options, err = databaseConnection.CreateRedisConnection(req.Options)
+	case databaseContract.IsMongo(req.Type):
+		options, err = databaseConnection.CreateMongoConnection(req.Options)
 	}
 
 	if err != nil {

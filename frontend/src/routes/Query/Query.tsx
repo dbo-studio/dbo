@@ -11,7 +11,9 @@ import { useEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { useSelectedTab } from '@/hooks/useSelectedTab';
 import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import locales from '@/locales';
-import { useDataStore } from '@/store/dataStore/data.store';
+import BackgroundQueryNotice from '@/components/common/BackgroundQueryNotice/BackgroundQueryNotice';
+import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
+import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { Tab, Tabs } from '@mui/material';
@@ -22,6 +24,7 @@ import { toast } from 'sonner';
 import { QueryContainerStyled, QueryEditorBoxStyled } from './Query.styled';
 import QueryEditorActionBar from './QueryEditorActionBar/QueryEditorActionBar';
 import QueryResultGrid from './QueryResultGrid/QueryResultGrid';
+import SqlKeyBar from './SqlKeyBar/SqlKeyBar';
 
 type QueryMobileView = 'editor' | 'results';
 
@@ -40,6 +43,7 @@ export default function Query(): JSX.Element {
 
   const getQuery = useTabStore((state) => state.getQuery);
   const updateQuery = useTabStore((state) => state.updateQuery);
+  const dataStoreApi = useDataStoreApi();
   const runRawQuery = useDataStore((state) => state.runRawQuery);
   const loadDataFromIndexedDB = useDataStore((state) => state.loadDataFromIndexedDB);
   const pendingEditorQueryRun = useDataStore((state) => state.pendingEditorQueryRun);
@@ -100,13 +104,20 @@ export default function Query(): JSX.Element {
       return;
     }
 
-    const pending = useDataStore.getState().pendingEditorQueryRun;
+    const pending = dataStoreApi.getState().pendingEditorQueryRun;
     if (pending?.tabId === selectedTab.id) {
       return;
     }
 
     void loadData().catch(() => undefined);
-  }, [selectedTab?.id, loadData]);
+  }, [selectedTab?.id, loadData, dataStoreApi]);
+
+  // A query that ran in the background hands its rows over here when it ends.
+  const waitingOnBackground = useBackgroundQueryStore((state) => (selectedTab ? !!state.byTab[selectedTab.id] : false));
+  const delivered = useBackgroundQueryStore((state) => (selectedTab ? (state.delivered[selectedTab.id] ?? 0) : 0));
+  useEffect(() => {
+    if (delivered > 0) void loadData();
+  }, [delivered, loadData]);
 
   const applyQueryResult = useCallback(
     (res: RunQueryResponseType | undefined): void => {
@@ -142,12 +153,13 @@ export default function Query(): JSX.Element {
       return;
     }
 
-    const { query } = pendingEditorQueryRun;
+    const { query, run } = pendingEditorQueryRun;
     clearPendingEditorQueryRun();
 
     const runPending = async (): Promise<void> => {
       setValue(query);
-      updateQuery(query);
+      updateQuery(query, selectedTab?.id);
+      if (!run) return;
       const res = await executeRawQuery(query);
       if (res) {
         toast.success(locales.run_query);
@@ -159,7 +171,7 @@ export default function Query(): JSX.Element {
 
   const handleUpdateState = (query: string): void => {
     setValue(query);
-    updateQuery(query);
+    updateQuery(query, selectedTab?.id);
   };
 
   const runQuery = async (): Promise<void> => {
@@ -224,8 +236,11 @@ export default function Query(): JSX.Element {
             />
           </QueryEditorBoxStyled>
         )}
+        {isMobile && mobileView === 'editor' && <SqlKeyBar editorRef={sqlEditorRef} />}
 
-        {hasResults ? (
+        {waitingOnBackground && selectedTab ? (
+          <BackgroundQueryNotice tabId={selectedTab.id} />
+        ) : hasResults ? (
           isMobile ? (
             mobileView === 'results' && (
               <QueryResultGrid loading={isDataFetching} rows={displayRows} columns={displayColumns} />

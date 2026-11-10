@@ -20,4 +20,5 @@ export interface ContextMenuProps {
     mouseY: number;
   } | null;
   onClose: () => void;
+  focusFirstItem?: boolean;
 }

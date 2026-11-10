@@ -24,7 +24,7 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
     objectFit: 'contain'
   },
   p: {
-    color: selected ? theme.palette.text.primary : theme.palette.text.text
+    color: selected ? theme.palette.text.link : theme.palette.text.text
   }
 }));
 

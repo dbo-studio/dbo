@@ -20,8 +20,47 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         expandedNodes: {},
         loadedParentIds: {},
         focusedNodeId: {},
+        pinnedNodes: {},
         isLoading: false,
         treeError: undefined,
+
+        pinNodes: (nodes: TreeNodeType[]): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection) return;
+          set((state) => {
+            const current = state.pinnedNodes[connection] ?? [];
+            const added = nodes
+              .filter((node) => !current.some((p) => p.id === node.id))
+              .map((node) => ({ ...node, children: [] }));
+            return { pinnedNodes: { ...state.pinnedNodes, [connection]: [...current, ...added] } };
+          });
+        },
+
+        unpinNodes: (nodeIds: string[]): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection) return;
+          set((state) => ({
+            pinnedNodes: {
+              ...state.pinnedNodes,
+              [connection]: (state.pinnedNodes[connection] ?? []).filter((n) => !nodeIds.includes(n.id))
+            }
+          }));
+        },
+
+        // Node ids end with the object name, so a rename keeps the pin by rewriting that suffix.
+        renamePinned: (nodeId: string, oldName: string, newName: string): void => {
+          const connection = getCurrentConnectionId();
+          if (!connection || !nodeId.endsWith(oldName)) return;
+          const newId = nodeId.slice(0, -oldName.length) + newName;
+          set((state) => ({
+            pinnedNodes: {
+              ...state.pinnedNodes,
+              [connection]: (state.pinnedNodes[connection] ?? []).map((n) =>
+                n.id === nodeId ? { ...n, id: newId, name: newName } : n
+              )
+            }
+          }));
+        },
 
         setTree: (tree: TreeNodeType | null): void => {
           const currentConnection = getCurrentConnectionId();
@@ -53,61 +92,22 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           );
         },
 
+        // Collapsing only hides the node: descendants keep their expanded state (restored on re-expand, like VS Code)
+        // and stay registered for reload, so a tree refresh never silently drops already-opened folders.
         collapseNode: (nodeId: string): void => {
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => {
-            const currentExpandedNodes = state.expandedNodes[currentConnection] || [];
-            const currentLoadedParents = state.loadedParentIds[currentConnection] || [];
-
-            // Function to recursively find all child node IDs
-            const getAllChildIds = (node: TreeNodeType): string[] => {
-              let childIds: string[] = [];
-              if (node.children?.length) {
-                for (const child of node.children) {
-                  childIds.push(child.id);
-                  childIds = [...childIds, ...getAllChildIds(child)];
-                }
-              }
-              return childIds;
-            };
-
-            // Get the tree to find all children of the collapsed node
-            const tree = state.tree[currentConnection];
-            if (!tree) return state;
-
-            // Find the node being collapsed
-            const findNode = (node: TreeNodeType): TreeNodeType | null => {
-              if (node.id === nodeId) return node;
-              for (const child of node.children || []) {
-                const found = findNode(child);
-                if (found) return found;
-              }
-              return null;
-            };
-
-            const nodeToCollapse = findNode(tree);
-            if (!nodeToCollapse) return state;
-
-            // Get all child IDs to remove
-            const childIdsToRemove = getAllChildIds(nodeToCollapse);
-
-            return {
+          set(
+            (state) => ({
               expandedNodes: {
                 ...state.expandedNodes,
-                [currentConnection]: currentExpandedNodes.filter(
-                  (id) => id !== nodeId && !childIdsToRemove.includes(id)
-                )
-              },
-              loadedParentIds: {
-                ...state.loadedParentIds,
-                [currentConnection]: currentLoadedParents.filter(
-                  (id) => id !== nodeId && !childIdsToRemove.includes(id)
-                )
+                [currentConnection]: (state.expandedNodes[currentConnection] || []).filter((id) => id !== nodeId)
               }
-            };
-          });
+            }),
+            undefined,
+            'collapseNode'
+          );
         },
 
         isNodeExpanded: (nodeId: string): boolean => {
@@ -153,12 +153,17 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set((state) => ({
-            loadedParentIds: {
-              ...state.loadedParentIds,
-              [currentConnection]: [...(state.loadedParentIds[currentConnection] || []), parentId]
-            }
-          }));
+          set((state) => {
+            const loaded = state.loadedParentIds[currentConnection] || [];
+            if (loaded.includes(parentId)) return state;
+
+            return {
+              loadedParentIds: {
+                ...state.loadedParentIds,
+                [currentConnection]: [...loaded, parentId]
+              }
+            };
+          });
         },
 
         getLoadedParentIds: (): string[] => {
@@ -270,7 +275,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         partialize: (state) => ({
           expandedNodes: state.expandedNodes,
           loadedParentIds: state.loadedParentIds,
-          focusedNodeId: state.focusedNodeId
+          focusedNodeId: state.focusedNodeId,
+          pinnedNodes: state.pinnedNodes
         })
       }
     ),

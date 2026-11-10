@@ -67,5 +67,19 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 	plan = append(plan, indexStatements(input.Database, tableName, indexRows(input), contract.CreateTableAction)...)
 	plan = append(plan, foreignKeyStatements(input.Database, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
 
+	triggerPlan, err := triggerStatements(input.Database, tableName, triggerRows(input), contract.CreateTableAction)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, triggerPlan...)
+
+	checkPlan, err := checkStatements(input, tableName)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan = append(plan, checkPlan...)
+
 	return plan, tableName, nil
 }

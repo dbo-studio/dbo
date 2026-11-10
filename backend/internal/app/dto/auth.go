@@ -7,12 +7,14 @@ import (
 )
 
 type AuthStatusResponse struct {
-	Mode               string            `json:"mode"`
-	Authenticated      bool              `json:"authenticated"`
-	MustChangePassword bool              `json:"mustChangePassword"`
-	TotpEnabled        bool              `json:"totpEnabled"`
-	Permissions        *UserPermissions  `json:"permissions,omitempty"`
-	User               *AuthUserIdentity `json:"user,omitempty"`
+	Mode               string `json:"mode"`
+	Authenticated      bool   `json:"authenticated"`
+	MustChangePassword bool   `json:"mustChangePassword"`
+	// SetupRequired: login is on but no user exists yet; show the first-admin screen.
+	SetupRequired bool              `json:"setupRequired"`
+	TotpEnabled   bool              `json:"totpEnabled"`
+	Permissions   *UserPermissions  `json:"permissions,omitempty"`
+	User          *AuthUserIdentity `json:"user,omitempty"`
 }
 
 type AuthLoginResponse struct {
@@ -42,6 +44,32 @@ func (r AuthLoginRequest) Validate() error {
 		validation.Field(&r.Email, validation.Required, is.EmailFormat),
 		validation.Field(&r.Password, validation.Required, validation.Length(1, passwordpolicy.MaxLen)),
 	)
+}
+
+type AuthSetupRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Confirm  string `json:"confirm"`
+	// Token is the one-time setup token printed in the server log.
+	Token string `json:"token"`
+}
+
+func (r AuthSetupRequest) Validate() error {
+	err := validation.ValidateStruct(&r,
+		validation.Field(&r.Token, validation.Required, validation.Length(1, 128)),
+		validation.Field(&r.Email, validation.Required, is.EmailFormat),
+		validation.Field(&r.Password, validation.Required, passwordpolicy.Rule()),
+		validation.Field(&r.Confirm, validation.Required),
+	)
+	if err != nil {
+		return err
+	}
+
+	if r.Password != r.Confirm {
+		return validation.NewError("validation_password_mismatch", "password and confirm must match")
+	}
+
+	return nil
 }
 
 type AuthChangePasswordRequest struct {
