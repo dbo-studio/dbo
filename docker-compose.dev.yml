@@ -53,13 +53,15 @@ services:
     ports:
       - "${MONGO_TEST_PORT-47017}:27017"
     volumes:
-      # Runs once on first start (databases shop, analytics, blog); re-seed: rm -sfv sample-mongo, then up
+      - "./docker/data/mongo:/data/db"
+      # Runs once on first start (databases shop, analytics, blog); re-seed: rm -rf docker/data/mongo, then up
       - "./docs/sample_db/mongo-seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
 
   sample-mssql:
     container_name: dbo-studio-sample-mssql
     image: mcr.microsoft.com/mssql/server:2022-latest
-    # Starts SQL Server, then applies docs/sample_db/shop_mssql.sql (database `shop`); data is not persisted.
+    # Starts SQL Server, then applies docs/sample_db/shop_mssql.sql (database `shop`;
+    # the seed drops/recreates shop on every start, so a persisted volume is safe).
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
     platform: "linux/amd64"
     ports:
@@ -68,6 +70,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Secret_pass1"
     volumes:
+      - "./docker/data/mssql:/var/lib/mssql"
       - "./docs/sample_db/mssql-entrypoint.sh:/entrypoint.sh:ro"
       - "./docs/sample_db/shop_mssql.sql:/seed.sql:ro"
     healthcheck:
@@ -89,6 +92,8 @@ services:
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
     volumes:
+      # Seeds once on first start of a fresh data dir (database `shop`); re-seed: rm -rf docker/data/clickhouse, then up
+      - "./docker/data/clickhouse:/var/lib/clickhouse"
       - "./docs/sample_db/shop_clickhouse.sql:/docker-entrypoint-initdb.d/shop.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --password secret -q 'SELECT count() FROM shop.page_views' | grep -q 40000"]
@@ -118,6 +123,7 @@ services:
     ports:
       - "${PGSQL_SSL_TEST_PORT-45433}:5432"
     volumes:
+      - "./docker/data/pgsql-ssl:/var/lib/postgresql/data"
       - "./docs/sample_db/certs:/certs:ro"
       - "./docs/sample_db/pgsql-ssl-entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
     entrypoint: ["/bin/bash", "/usr/local/bin/dbo-ssl-entrypoint.sh"]
@@ -152,6 +158,7 @@ services:
     ports:
       - "${MYSQL_TEST_PORT-43306}:3306"
     volumes:
+      - "./docker/data/mysql:/var/lib/mysql"
       - "./docs/sample_db/mysql.sql:/docker-entrypoint-initdb.d/01-product.sql:ro"
       - "./docs/sample_db/shop_mysql.sql:/docker-entrypoint-initdb.d/02-shop.sql:ro"
     restart: always
