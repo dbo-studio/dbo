@@ -1,5 +1,14 @@
 /docker/*
+# Sample-DB scripts referenced by docker-compose.dev.yml volumes must be tracked;
+# generated data (database files, TLS keys) stays ignored.
 !/docker/sshd/
+!/docker/mongo/
+!/docker/mssql/
+!/docker/redis/
+!/docker/pgsql-ssl/
+!/docker/pgsql-ssl/entrypoint.sh
+!/docker/pgsql-ssl/certs/
+docker/data/
 .idea
 logs/*
 build
