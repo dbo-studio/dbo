@@ -1,3 +1,4 @@
+import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../../pages";
@@ -72,8 +73,7 @@ test.describe("NoSQL engine (fixture driver)", () => {
     });
 
     await test.step("pattern filter narrows the list; delimiter builds a folder tree", async () => {
-      await page.getByLabel("browse-pattern").fill("user:*");
-      await page.getByLabel("browse-pattern").press("Enter");
+      await applyBrowseFilter(page, "user:*");
       await expect(page.getByTestId("browse-footer")).toContainText(
         "2 loaded",
       );
@@ -146,8 +146,7 @@ test.describe("NoSQL engine (fixture driver)", () => {
 
   test("query containers run the raw query", async ({ page }) => {
     await openContainer(page, "query");
-    await page.getByLabel("browse-query").fill("bob");
-    await page.getByRole("button", { name: "Run" }).click();
+    await applyBrowseFilter(page, "bob");
     await expect(page.getByTestId("browse-footer")).toContainText("1 loaded");
   });
 

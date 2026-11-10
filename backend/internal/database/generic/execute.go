@@ -28,6 +28,14 @@ func (r *Repository) PreviewExecute(ctx context.Context, nodeID string, action c
 		}
 	}
 
+	if isMaterializedViewAction(action) && r.hasMaterializedViews() {
+		return r.materializedViewStatements(nodeID, action, params)
+	}
+
+	if isSequenceAction(action) && r.hasSequences() {
+		return r.sequenceStatements(nodeID, action, params)
+	}
+
 	switch action {
 	case contract.ExecuteSQLAction:
 		return databaseCore.SQLFromParams(params)
@@ -111,8 +119,13 @@ func (r *Repository) tableStatements(ctx context.Context, ns, name string, actio
 
 	queries := []string{}
 
+	oldStorage, newStorage, err := storageValues(params)
+	if err != nil {
+		return nil, err
+	}
+
 	if create {
-		if queries, err = r.createTable(ns, newName, columns); err != nil {
+		if queries, err = r.createTable(ns, newName, columns, newStorage); err != nil {
 			return nil, err
 		}
 	} else if newName != "" && newName != oldName {
@@ -155,8 +168,18 @@ func (r *Repository) tableStatements(ctx context.Context, ns, name string, actio
 	}
 
 	queries = append(queries, keyAdds...)
+	queries = append(queries, adds...)
 
-	return append(queries, adds...), nil
+	if sd, ok := r.storageDialect(); ok && !create && newStorage != nil {
+		statements, err := sd.AlterStorage(ns, current, oldStorage, newStorage)
+		if err != nil {
+			return nil, apperror.Validation(err)
+		}
+
+		queries = append(queries, statements...)
+	}
+
+	return queries, nil
 }
 
 // primaryKeyFromColumns turns the Primary Key checkboxes of the Columns tab into a key replacement on an existing table.
@@ -223,7 +246,7 @@ func (r *Repository) primaryKeyFromColumns(ctx context.Context, ns, table string
 	return statements, nil
 }
 
-func (r *Repository) createTable(ns, name string, rows []dto.MysqlTableColumn) ([]string, error) {
+func (r *Repository) createTable(ns, name string, rows []dto.MysqlTableColumn, storage map[string]string) ([]string, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, apperror.Validation(errors.New("missing table name"))
 	}
@@ -245,6 +268,15 @@ func (r *Repository) createTable(ns, name string, rows []dto.MysqlTableColumn) (
 
 	if len(specs) == 0 {
 		return nil, apperror.Validation(errors.New("missing column definitions"))
+	}
+
+	if sd, ok := r.storageDialect(); ok && len(storage) > 0 {
+		query, err := sd.CreateTableWith(ns, name, specs, storage)
+		if err != nil {
+			return nil, apperror.Validation(err)
+		}
+
+		return []string{query}, nil
 	}
 
 	return []string{r.d.CreateTable(ns, name, specs)}, nil

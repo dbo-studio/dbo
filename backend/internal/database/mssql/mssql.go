@@ -82,6 +82,7 @@ func (mssql) Columns(_ context.Context, db *gorm.DB, namespace, table string) ([
 		Length   *int64
 		IsPk     int
 		IsIdent  int
+		Computed *string
 	}
 
 	var rows []row
@@ -100,7 +101,8 @@ SELECT c.COLUMN_NAME AS name,
          JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS t ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME AND t.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA
          WHERE t.CONSTRAINT_TYPE = 'PRIMARY KEY' AND k.TABLE_SCHEMA = c.TABLE_SCHEMA AND k.TABLE_NAME = c.TABLE_NAME AND k.COLUMN_NAME = c.COLUMN_NAME
        ) THEN 1 ELSE 0 END AS is_pk,
-       COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsIdentity') AS is_ident
+       COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsIdentity') AS is_ident,
+       (SELECT cc.definition FROM sys.computed_columns cc WHERE cc.object_id = OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)) AND cc.name = c.COLUMN_NAME) AS computed
 FROM INFORMATION_SCHEMA.COLUMNS c
 WHERE c.TABLE_SCHEMA = ? AND c.TABLE_NAME = ?
 ORDER BY c.ORDINAL_POSITION`, namespace, table).Scan(&rows).Error
@@ -109,7 +111,12 @@ ORDER BY c.ORDINAL_POSITION`, namespace, table).Scan(&rows).Error
 	}
 
 	return lo.Map(rows, func(r row, _ int) generic.ColumnInfo {
-		return generic.ColumnInfo{Name: r.Name, DataType: r.DataType, NotNull: r.NotNull == 1, Default: r.Dflt, Length: r.Length, IsPrimaryKey: r.IsPk == 1, IsIdentity: r.IsIdent == 1}
+		col := generic.ColumnInfo{Name: r.Name, DataType: r.DataType, NotNull: r.NotNull == 1, Default: r.Dflt, Length: r.Length, IsPrimaryKey: r.IsPk == 1, IsIdentity: r.IsIdent == 1}
+		if r.Computed != nil {
+			col.Generated, col.Default = true, r.Computed
+		}
+
+		return col
 	}), nil
 }
 

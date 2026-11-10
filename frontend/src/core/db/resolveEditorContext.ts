@@ -1,3 +1,4 @@
+import { connectionDriver } from './connectionAliases';
 import { getEngineCapabilities } from './engineCapabilities';
 import { parseObjectNodeId } from './parseObjectNodeId';
 
@@ -52,10 +53,12 @@ const dropStale = (values: EditorContextValues, catalog: ResolveEditorContextInp
   };
 };
 
-const fromNodeId = (nodeId: string | undefined): EditorContextValues | null => {
+const fromNodeId = (engine: string | undefined, nodeId: string | undefined): EditorContextValues | null => {
   if (!nodeId) return null;
   const parsed = parseObjectNodeId(nodeId);
   if (!parsed.database && !parsed.schema) return null;
+  // SQL Server ids are `<schema>.<object>`: the leading part is a schema, not a database.
+  if (connectionDriver(engine) === 'sqlserver') return { database: '', schema: parsed.schema ?? parsed.database ?? '' };
   return {
     database: parsed.database ?? '',
     schema: parsed.schema ?? ''
@@ -147,10 +150,10 @@ export const resolveEditorContext = (input: ResolveEditorContextInput): ResolveE
     }
   };
 
-  applyCandidate(fromNodeId(input.focusedNodeId), 'tree');
+  applyCandidate(fromNodeId(input.engine, input.focusedNodeId), 'tree');
 
   for (const nodeId of input.siblingNodeIds ?? []) {
-    applyCandidate(fromNodeId(nodeId), 'sibling-tab');
+    applyCandidate(fromNodeId(input.engine, nodeId), 'sibling-tab');
   }
 
   if (input.connectionDatabase) {

@@ -20,6 +20,14 @@ func (r *Repository) GetFormTabs(_ context.Context, action contract.TreeNodeActi
 		}
 	}
 
+	if isMaterializedViewAction(action) && r.hasMaterializedViews() {
+		return []contract.FormTab{{ID: contract.MaterializedViewTab, Name: "Materialized view"}}
+	}
+
+	if isSequenceAction(action) && r.hasSequences() {
+		return []contract.FormTab{{ID: contract.SequenceTab, Name: "Sequence"}}
+	}
+
 	switch action {
 	case contract.CreateTableAction, contract.EditTableAction:
 		tabs := []contract.FormTab{{ID: contract.TableColumnsTab, Name: "Columns"}}
@@ -36,6 +44,10 @@ func (r *Repository) GetFormTabs(_ context.Context, action contract.TreeNodeActi
 					tabs = append(tabs, contract.FormTab{ID: tab, Name: names[tab]})
 				}
 			}
+		}
+
+		if _, ok := r.storageDialect(); ok {
+			tabs = append(tabs, contract.FormTab{ID: contract.TableStorageTab, Name: "Storage"})
 		}
 
 		return tabs

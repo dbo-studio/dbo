@@ -8,6 +8,7 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/samber/lo"
 )
 
@@ -22,6 +23,21 @@ func (r *Repository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*d
 	columns, err := r.d.Columns(ctx, db, namespace, table)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(columns) == 0 {
+		return nil, apperror.NotFound(fmt.Errorf("table or view %q not found in %q", table, namespace))
+	}
+
+	// A view lists the same columns as a table but is never editable from the grid.
+	editable := r.d.Editable()
+	if editable {
+		views, err := r.d.Views(ctx, db, namespace)
+		if err != nil {
+			return nil, apperror.DriverError(err)
+		}
+
+		editable = !lo.Contains(views, table)
 	}
 
 	query := r.selectQuery(req, namespace, table, columns)
@@ -43,7 +59,7 @@ func (r *Repository) RunQuery(ctx context.Context, req *dto.RunQueryRequest) (*d
 
 	return &dto.RunQueryResponse{
 		Query:   query,
-		Columns: r.columnsToResponse(ctx, namespace, table, columns, req.Columns, r.d.Editable()),
+		Columns: r.columnsToResponse(ctx, namespace, table, columns, req.Columns, editable),
 		Data:    rows,
 	}, nil
 }
@@ -112,7 +128,7 @@ func (r *Repository) columnsToResponse(ctx context.Context, namespace, table str
 			NotNull:      c.NotNull,
 			Default:      c.Default,
 			Length:       c.Length,
-			Editable:     editable,
+			Editable:     editable && !c.Generated,
 			IsActive:     len(active) == 0 || lo.Contains(active, c.Name),
 			IsPrimaryKey: c.IsPrimaryKey,
 		}

@@ -26,6 +26,7 @@ type tableWriter struct {
 	w              io.Writer
 	format         string
 	table          string
+	schema         string
 	connectionType string
 	quote          bool
 	skip           map[string]bool
@@ -52,6 +53,14 @@ func (t *tableWriter) ident(name string) string {
 	}
 
 	return databaseCore.QuoteIdent(t.connectionType, name)
+}
+
+func (t *tableWriter) qualifiedTable() string {
+	if t.schema == "" {
+		return t.ident(t.table)
+	}
+
+	return databaseCore.QuoteIdent(t.connectionType, t.schema) + "." + databaseCore.QuoteIdent(t.connectionType, t.table)
 }
 
 func (t *tableWriter) write(columns []dto.Column, rows []map[string]any) error {
@@ -139,7 +148,7 @@ func (t *tableWriter) writeSQL(names []string, rows []map[string]any) error {
 
 	var sql strings.Builder
 
-	fmt.Fprintf(&sql, "INSERT INTO %s (%s)%s VALUES\n", t.ident(t.table), strings.Join(lo.Map(names, func(n string, _ int) string { return t.ident(n) }), ", "), overriding)
+	fmt.Fprintf(&sql, "INSERT INTO %s (%s)%s VALUES\n", t.qualifiedTable(), strings.Join(lo.Map(names, func(n string, _ int) string { return t.ident(n) }), ", "), overriding)
 
 	for i, row := range rows {
 		values := make([]string, len(names))

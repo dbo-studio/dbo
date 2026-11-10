@@ -15,6 +15,7 @@ import {
 import {
   cleanupImportExportSqlite,
   dropTables,
+  engineLabel,
   setupImportExport,
 } from "./importExport";
 import {
@@ -24,14 +25,6 @@ import {
 import { withConnectionCleanup } from "./safeCleanup";
 
 const SAFE_MODE_PASSWORD = "e2e-safe-mode";
-
-function label(engine: DbEngine): string {
-  return engine === "postgresql"
-    ? "PostgreSQL"
-    : engine === "mysql"
-      ? "MySQL"
-      : "SQLite";
-}
 
 /** Parent + child tables with a foreign key, portable across all three engines. */
 async function createTables(
@@ -64,7 +57,7 @@ async function download(
 }
 
 export function defineBackupTests(engine: DbEngine): void {
-  test.describe(`Backup and restore ${label(engine)}`, () => {
+  test.describe(`Backup and restore ${engineLabel(engine)}`, () => {
     test("backup is recorded, checksummed and downloadable", async ({
       page,
     }, testInfo) => {
@@ -208,12 +201,16 @@ export function defineBackupTests(engine: DbEngine): void {
           return;
         }
 
-        const evil =
-          engine === "postgresql"
+        const hostSql = engine === "mssql" || engine === "clickhouse";
+        // Built-in dump engines replay statements through the driver, so there are no client commands to scan:
+        // a file that is not SQL must fail the restore visibly instead.
+        const evil = hostSql
+          ? "THIS IS NOT SQL;\n"
+          : engine === "postgresql"
             ? "SELECT 1;\n\\! touch /tmp/dbo-e2e-pwned\n"
             : "SELECT 1;\nsystem touch /tmp/dbo-e2e-pwned\n";
 
-        await test.step("A file with client commands is stored but never replayed", async () => {
+        await test.step(hostSql ? "A file that is not SQL is stored and fails the restore with a message" : "A file with client commands is stored but never replayed", async () => {
           const upload = await page.request.post("/api/backups/upload", {
             multipart: {
               connectionId: String(connectionId),
@@ -228,16 +225,18 @@ export function defineBackupTests(engine: DbEngine): void {
           const artifact = ((await upload.json()) as { data: Artifact }).data;
           expect(artifact.status).toBe("completed");
 
-          const target = scopeFor(engine).database!;
+          const target = scopeFor(engine).database ?? getDbConfig(engine, connectionName).database!;
           const jobId = await startJob(page, "/api/backups/restore", {
             connectionId,
             database: target,
             artifactId: artifact.id,
             confirmName: target,
+            ...(hostSql ? { safetyBackup: false } : {}),
           });
           const job = await waitForJob(page, jobId);
           expect(job.status).toBe("failed");
-          expect(job.error).toContain("not allowed");
+          if (hostSql) expect(job.error).toBeTruthy();
+          else expect(job.error).toContain("not allowed");
         });
       });
     });

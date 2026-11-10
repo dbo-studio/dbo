@@ -1,3 +1,4 @@
+import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
@@ -97,8 +98,7 @@ test.describe("MongoDB driver", () => {
     await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
 
     await test.step("a JSON filter narrows the list", async () => {
-      await page.getByLabel("browse-query").fill('{"age":{"$gt":35}}');
-      await page.getByRole("button", { name: "Run" }).click();
+      await applyBrowseFilter(page, '{"age":{"$gt":35}}');
       await expect(page.getByTestId("browse-footer")).toContainText("2 loaded");
     });
 
@@ -163,8 +163,7 @@ test.describe("MongoDB driver", () => {
     await page.request.post(`${apiUrl()}/nosql/item`, doc(connectionId, users, '{"kind":"keep"}'));
     await openUsers(page);
 
-    await page.getByLabel("browse-query").fill('{"kind":"junk"}');
-    await page.getByRole("button", { name: "Run" }).click();
+    await applyBrowseFilter(page, '{"kind":"junk"}');
     await page.getByLabel("More actions").click();
     await page.getByRole("menuitem", { name: "Delete matching…" }).click();
 
@@ -217,10 +216,19 @@ test.describe("MongoDB driver", () => {
     expect(await out('db.' + coll + '.deleteMany({"age":{"$gt":65}})')).toMatchObject({ deletedCount: 1 });
 
     await test.step("server-side JavaScript and writes outside the collection are refused", async () => {
-      for (const bad of ['db.' + coll + '.find({"$where":"1==1"})', 'db.' + coll + '.aggregate([{"$out":"copy"}])', "db." + coll + ".drop()", "rm -rf /"]) {
+      for (const bad of ['db.' + coll + '.find({"$where":"1==1"})', 'db.' + coll + '.aggregate([{"$out":"copy"}])', "rm -rf /"]) {
         const res = await run(bad);
         expect(res.status(), bad).toBe(403);
       }
+    });
+
+    await test.step("dropping the collection is destructive: refused without confirmation, allowed with it", async () => {
+      const refused = await run("db." + coll + ".drop()", false);
+      expect(refused.status()).toBe(403);
+      expect((await refused.json()).message).toBe("safe_mode_confirm_required");
+      expect(await out("show collections")).toContain(coll);
+      expect(await out("db." + coll + ".drop()")).toMatchObject({ ok: 1 });
+      expect(await out("show collections")).not.toContain(coll);
     });
 
     await test.step("a destructive statement needs explicit confirmation even without Safe Mode", async () => {

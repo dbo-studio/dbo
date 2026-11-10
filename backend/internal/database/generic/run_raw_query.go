@@ -2,22 +2,79 @@ package databaseGeneric
 
 import (
 	"context"
+	"database/sql/driver"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
+// session returns the connection pool, or one connection switched to the chosen database when the dialect's
+// namespace is a database (ClickHouse). A schema (SQL Server) cannot be switched per session.
+func (r *Repository) session(ctx context.Context, database *string) (*gorm.DB, func(), error) {
+	name := strings.TrimSpace(lo.FromPtr(database))
+	if name == "" || r.d.NamespaceIsSchema() {
+		return r.base.DB(), func() {}, nil
+	}
+
+	sqlDB, err := r.base.DB().DB()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn, err := sqlDB.Conn(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// USE outlives the query on a pooled connection, so remember the session database and restore it.
+	var original string
+	if err := conn.QueryRowContext(ctx, "SELECT currentDatabase()").Scan(&original); err != nil {
+		_ = conn.Close()
+
+		return nil, nil, err
+	}
+
+	cleanup := func() {
+		// A connection that cannot be restored is discarded instead of going back to the pool.
+		if _, err := conn.ExecContext(context.WithoutCancel(ctx), "USE "+r.d.Quote(original)); err != nil {
+			_ = conn.Raw(func(any) error { return driver.ErrBadConn })
+		}
+
+		_ = conn.Close()
+	}
+
+	if _, err := conn.ExecContext(ctx, "USE "+r.d.Quote(name)); err != nil {
+		cleanup()
+
+		return nil, nil, err
+	}
+
+	session := r.base.DB().Session(&gorm.Session{NewDB: true, Context: ctx})
+	session.Statement.ConnPool = conn
+	session.ConnPool = conn
+
+	return session, cleanup, nil
+}
+
 func (r *Repository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	db, cleanup, err := r.session(ctx, req.Database)
+	if err != nil {
+		return r.base.CommandResponseBuilder(&dto.RawQueryResponse{Query: req.Query}, 0, err), nil
+	}
+	defer cleanup()
+
 	if !r.d.ReturnsRows(req.Query) {
 		start := time.Now()
-		err := r.base.DB().WithContext(ctx).Exec(req.Query).Error
+		err := db.WithContext(ctx).Exec(req.Query).Error
 
 		return r.base.CommandResponseBuilder(&dto.RawQueryResponse{Query: req.Query}, time.Since(start), err), nil
 	}
 
-	resp, err := r.base.RunRawQuery(ctx, req)
+	resp, err := r.base.RunRawQueryOn(ctx, db, req)
 	if err != nil || resp == nil {
 		return resp, err
 	}
@@ -26,7 +83,13 @@ func (r *Repository) RunRawQuery(ctx context.Context, req *dto.RawQueryRequest) 
 }
 
 func (r *Repository) StreamRawQuery(ctx context.Context, req *dto.RawQueryRequest, chunkSize int, fn func(columns []dto.Column, rows []map[string]any) error) error {
-	return r.base.StreamRawQuery(ctx, req, chunkSize, fn)
+	db, cleanup, err := r.session(ctx, req.Database)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	return r.base.StreamRawQueryOn(ctx, db, req.Query, chunkSize, fn)
 }
 
 type rawResolver struct{ r *Repository }

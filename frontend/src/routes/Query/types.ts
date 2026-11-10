@@ -10,6 +10,12 @@ export type QueryEditorActionsProps = {
   onRunQuery: (query?: string) => void;
   onAiExplain: () => void;
   loading: boolean;
+  /** Replaces the SQL formatter and hides minify and export (for non-SQL editors). */
+  formatQuery?: () => void;
+  /** Replaces the SQL export dialog; receives the clicked button as the menu anchor. */
+  onExport?: (anchor: HTMLElement) => void;
+  /** Replaces the data-store cancel when the editor runs its own requests. */
+  onStop?: () => void;
 };
 
 export type QueryEditorActionBarProps = {
@@ -19,6 +25,10 @@ export type QueryEditorActionBarProps = {
   onRunQuery: (query?: string) => void;
   onAiExplain: () => void;
   loading: boolean;
+  /** Replaces the SQL formatter and hides minify and export (for non-SQL editors). */
+  formatQuery?: () => void;
+  onExport?: (anchor: HTMLElement) => void;
+  onStop?: () => void;
 };
 
 export type QueryEditorProps = {

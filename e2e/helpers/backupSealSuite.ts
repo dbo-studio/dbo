@@ -14,6 +14,7 @@ import {
 import {
   cleanupImportExportSqlite,
   dropTables,
+  engineLabel,
   setupImportExport,
 } from "./importExport";
 import {
@@ -27,16 +28,8 @@ interface Sealed extends Artifact {
   encrypted: boolean;
 }
 
-function label(engine: DbEngine): string {
-  return engine === "postgresql"
-    ? "PostgreSQL"
-    : engine === "mysql"
-      ? "MySQL"
-      : "SQLite";
-}
-
 export function defineBackupSealTests(engine: DbEngine): void {
-  test.describe(`Backup encryption and verify ${label(engine)}`, () => {
+  test.describe(`Backup encryption and verify ${engineLabel(engine)}`, () => {
     test("an encrypted, compressed schedule run verifies and restores only with the passphrase", async ({
       page,
     }, testInfo) => {

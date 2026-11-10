@@ -4,13 +4,17 @@ import type { RowType } from '@/types';
 import { useCallback, useRef } from 'react';
 import type { CellEditingReturn } from '../types';
 import { coerceFkCellValue } from './fkColumn';
+import type { ColumnType } from '@/types';
+
+// A fresh [] per call makes the selector's snapshot unstable and loops React when the store has no columns.
+const NO_COLUMNS: ColumnType[] = [];
 
 export const useCellEditing = (row: RowType, columnId: string): CellEditingReturn => {
   const inputRef = useRef<HTMLInputElement>(null);
   const dataStoreApi = useDataStoreApi();
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
   const updateRow = useDataStore((state) => state.updateRow);
-  const columns = useDataStore((state) => state.columns ?? []);
+  const columns = useDataStore((state) => state.columns ?? NO_COLUMNS);
 
   const commitFields = useCallback(
     (updates: Record<string, unknown>): void => {

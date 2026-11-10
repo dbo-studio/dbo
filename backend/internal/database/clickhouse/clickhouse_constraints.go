@@ -172,7 +172,9 @@ func (c clickhouse) DropIndex(ns, table, name string) string {
 	return "ALTER TABLE " + c.table(ns, table) + " DROP INDEX " + c.Quote(name)
 }
 
-func (clickhouse) AddForeignKey(string, string, generic.ForeignKey) string { return "" }
+func (clickhouse) AddForeignKey(string, string, generic.ForeignKey) (string, error) {
+	return "", errClickHouseNo("foreign keys")
+}
 
 func (clickhouse) DropForeignKey(string, string, string) string { return "" }
 

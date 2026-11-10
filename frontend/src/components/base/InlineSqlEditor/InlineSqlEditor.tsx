@@ -3,6 +3,7 @@ import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
 import { KeyCode } from 'monaco-editor';
 import { useEffect, type JSX } from 'react';
+import { registerMongoCompletions } from '../MongoEditor/mongoCompletions';
 import { setConditionContext } from './helpers/dbMetaProvider';
 import { inlineEditorConfig } from './helpers/editorConfig';
 import { setupLanguage } from './helpers/languageSetup';
@@ -11,6 +12,7 @@ import type { ConditionSqlEditorProps } from './types';
 
 export default function InlineSqlEditor({
   columns,
+  language = 'sql',
   placeholder,
   value,
   onChange,
@@ -21,6 +23,7 @@ export default function InlineSqlEditor({
   const theme = useSettingStore((state) => state.theme);
 
   useEffect(() => {
+    if (!columns) return;
     setConditionContext(columns);
 
     return () => {
@@ -30,6 +33,7 @@ export default function InlineSqlEditor({
 
   useEffect(() => {
     if (monaco) {
+      registerMongoCompletions(monaco);
       void (async () => {
         await setupLanguage(monaco, theme.editorTheme);
       })();
@@ -77,10 +81,12 @@ export default function InlineSqlEditor({
         height='100%'
         width='100%'
         theme={theme.editorTheme}
-        language='sql'
+        language={language}
         value={value}
         options={{
           ...inlineEditorConfig,
+          // The SQL bar suggests on demand; Mongo filters are short enough to suggest as you type.
+          ...(language === 'json' ? { quickSuggestions: true, suggestOnTriggerCharacters: true } : {}),
           placeholder: placeholder
         }}
         onMount={handleEditorDidMount}

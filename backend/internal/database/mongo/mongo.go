@@ -6,7 +6,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -257,7 +259,7 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 
 		root.Children = append(root.Children, contract.TreeNode{
 			ID: name, Name: name, Type: contract.DatabaseNodeType, HasChildren: true,
-			Children: []contract.TreeNode{}, ContextMenu: []contract.TreeNodeAction{refreshAction},
+			Children: []contract.TreeNode{}, ContextMenu: databaseMenu(name),
 		})
 	}
 
@@ -274,7 +276,7 @@ func (r *Repository) collectionsNode(ctx context.Context, c *mongo.Client, db st
 
 	node := &contract.TreeNode{
 		ID: db, Name: db, Type: contract.DatabaseNodeType, HasChildren: true,
-		Children: make([]contract.TreeNode, 0, len(names)), ContextMenu: []contract.TreeNodeAction{refreshAction},
+		Children: make([]contract.TreeNode, 0, len(names)), ContextMenu: databaseMenu(db),
 	}
 
 	for _, name := range names {
@@ -287,19 +289,133 @@ func (r *Repository) collectionsNode(ctx context.Context, c *mongo.Client, db st
 			Action: &contract.TreeNodeAction{
 				Title: "Browse", Name: contract.BrowseContainerAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "browse"},
 			},
-			ContextMenu: []contract.TreeNodeAction{refreshAction},
+			ContextMenu: collectionMenu(db, name),
 		})
 	}
 
 	return node, nil
 }
 
-func (r *Repository) Describe(_ context.Context, containerID string) (*contract.ContainerSpec, error) {
-	if _, _, err := splitContainer(containerID); err != nil {
+var plainName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// collRef is how the shell addresses a collection: db.users, or db.getCollection("a.b") when the name needs it.
+func collRef(name string) string {
+	if plainName.MatchString(name) {
+		return "db." + name
+	}
+
+	return "db.getCollection(" + strconv.Quote(name) + ")"
+}
+
+// openQuery opens the editor with a statement. Scripts name their database first, because the shell runs in
+// the one last selected. run is false for templates the user must finish.
+func openQuery(title, db, statement string, run bool) contract.TreeNodeAction {
+	return contract.TreeNodeAction{
+		Title: title, Name: contract.OpenQueryAction, Type: contract.TreeNodeActionTypeTab,
+		Params: map[string]any{"path": "query", "query": "use " + db + ";\n" + statement, "run": run},
+	}
+}
+
+func databaseMenu(db string) []contract.TreeNodeAction {
+	return []contract.TreeNodeAction{
+		openQuery("Create collection", db, `db.createCollection("new_collection")`, false),
+		refreshAction,
+	}
+}
+
+func collectionMenu(db, coll string) []contract.TreeNodeAction {
+	ref := collRef(coll)
+
+	return []contract.TreeNodeAction{
+		openQuery("Indexes", db, ref+".getIndexes()", true),
+		openQuery("Create index", db, ref+`.createIndex({ field: 1 }, { name: "field_1" })`, false),
+		openQuery("Drop collection", db, ref+".drop()", false),
+		refreshAction,
+	}
+}
+
+// sampleSize is how many documents Describe reads to learn a collection's field names.
+const sampleSize = 50
+
+// sampleFields lists the top-level fields of a sample of the collection with the value types seen for each.
+func (r *Repository) sampleFields(ctx context.Context, db, coll string) []contract.FieldInfo {
+	c, err := r.client()
+	if err != nil {
+		return nil
+	}
+	defer r.release(ctx, c)
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	cur, err := c.Database(db).Collection(coll).Aggregate(ctx, bson.A{bson.D{{Key: "$sample", Value: bson.D{{Key: "size", Value: sampleSize}}}}})
+	if err != nil {
+		return nil
+	}
+
+	var docs []bson.D
+	if err := cur.All(ctx, &docs); err != nil {
+		return nil
+	}
+
+	order := []string{}
+	types := map[string][]string{}
+
+	for _, doc := range docs {
+		for _, e := range doc {
+			if _, seen := types[e.Key]; !seen {
+				order = append(order, e.Key)
+			}
+
+			if t := valueType(e.Value); !slices.Contains(types[e.Key], t) {
+				types[e.Key] = append(types[e.Key], t)
+			}
+		}
+	}
+
+	slices.Sort(order)
+
+	fields := make([]contract.FieldInfo, 0, len(order))
+	for _, name := range order {
+		fields = append(fields, contract.FieldInfo{Name: name, Types: types[name]})
+	}
+
+	return fields
+}
+
+func valueType(v any) string {
+	switch v.(type) {
+	case nil:
+		return "null"
+	case string:
+		return "string"
+	case int32, int64:
+		return "int"
+	case float64:
+		return "double"
+	case bool:
+		return "bool"
+	case bson.ObjectID:
+		return "objectId"
+	case bson.DateTime, time.Time:
+		return "date"
+	case bson.A:
+		return "array"
+	case bson.D, bson.M:
+		return "object"
+	default:
+		return "other"
+	}
+}
+
+func (r *Repository) Describe(ctx context.Context, containerID string) (*contract.ContainerSpec, error) {
+	db, coll, err := splitContainer(containerID)
+	if err != nil {
 		return nil, err
 	}
 
 	return &contract.ContainerSpec{
+		Fields:    r.sampleFields(ctx, db, coll),
 		Filter:    contract.FilterQuery,
 		ListStyle: contract.ListFlat,
 		Capabilities: []contract.Capability{

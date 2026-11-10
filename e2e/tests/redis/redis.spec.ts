@@ -1,3 +1,4 @@
+import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../../pages";
@@ -96,15 +97,13 @@ test.describe("Redis driver", () => {
     await openDb0(page, name);
 
     await test.step("pattern filter uses SCAN and the delimiter builds a key tree", async () => {
-      await page.getByLabel("browse-pattern").fill(`${prefix}:*`);
-      await page.getByLabel("browse-pattern").press("Enter");
+      await applyBrowseFilter(page, `${prefix}:*`);
       await expect(page.getByTestId("browse-footer")).toContainText("5 loaded");
       await expect(page.getByTestId("browse-folder").first()).toBeVisible();
     });
 
     const open = async (key: string): Promise<void> => {
-      await page.getByLabel("browse-pattern").fill(key);
-      await page.getByLabel("browse-pattern").press("Enter");
+      await applyBrowseFilter(page, key);
       await expect(page.getByTestId("browse-footer")).toContainText("1 loaded");
       // Expand collapsed folders (marked ▸) until the key row is reachable.
       const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
@@ -334,8 +333,7 @@ test.describe("Redis driver", () => {
     await insert(page, connectionId, `${prefix}:keep`, "string", "text", "v");
 
     await openDb0(page, name);
-    await page.getByLabel("browse-pattern").fill(`${prefix}:bulk:*`);
-    await page.getByLabel("browse-pattern").press("Enter");
+    await applyBrowseFilter(page, `${prefix}:bulk:*`);
     await page.getByLabel("More actions").click();
     await page.getByRole("menuitem", { name: "Delete matching…" }).click();
 
@@ -547,8 +545,7 @@ test.describe("Redis driver", () => {
     for (let i = 0; i < 250; i++) fields[`f${String(i).padStart(3, "0")}`] = `v${i}`;
     await insert(page, connectionId, key, "hash", "fields", fields);
     await openDb0(page, name);
-    await page.getByLabel("browse-pattern").fill(key);
-    await page.getByLabel("browse-pattern").press("Enter");
+    await applyBrowseFilter(page, key);
     await expect(page.getByTestId("browse-folder").first()).toBeVisible();
     const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
     for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();
@@ -575,8 +572,7 @@ test.describe("Redis driver", () => {
     const key = `${prefix}:parity`;
     await insert(page, connectionId, key, "hash", "fields", { a: "1", b: "2", c: "3" });
     await openDb0(page, name);
-    await page.getByLabel("browse-pattern").fill(key);
-    await page.getByLabel("browse-pattern").press("Enter");
+    await applyBrowseFilter(page, key);
     await expect(page.getByTestId("browse-folder").first()).toBeVisible();
     const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
     for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();
@@ -628,8 +624,7 @@ test.describe("Redis driver", () => {
     await page.reload();
     await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
     await openDb0(page, name);
-    await page.getByLabel("browse-pattern").fill(key);
-    await page.getByLabel("browse-pattern").press("Enter");
+    await applyBrowseFilter(page, key);
     await expect(page.getByTestId("browse-folder").first()).toBeVisible();
     const collapsed = page.getByTestId("browse-folder").filter({ hasText: "▸" });
     for (let i = 0; i < 8 && (await collapsed.count()) > 0; i++) await collapsed.first().click();

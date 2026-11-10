@@ -17,7 +17,7 @@ func init() { generic.RegisterDialect(contract.ClickHouse, clickhouse{}) }
 // semantics the grid can rely on, and no transactions.
 type clickhouse struct{}
 
-func (clickhouse) Editable() bool { return false }
+func (clickhouse) Editable() bool { return true }
 
 func (clickhouse) NamespaceIsSchema() bool { return false }
 
@@ -107,12 +107,13 @@ func (clickhouse) Columns(_ context.Context, db *gorm.DB, namespace, table strin
 		Name     string
 		DataType string
 		Dflt     string
+		Kind     string
 		IsPk     int
 	}
 
 	var rows []row
 
-	err := db.Raw(`SELECT name, type AS data_type, default_expression AS dflt, toUInt8(is_in_primary_key) AS is_pk
+	err := db.Raw(`SELECT name, type AS data_type, default_expression AS dflt, default_kind AS kind, toUInt8(is_in_primary_key) AS is_pk
 FROM system.columns WHERE database = ? AND table = ? ORDER BY position`, namespace, table).Scan(&rows).Error
 	if err != nil {
 		return nil, err
@@ -125,6 +126,7 @@ FROM system.columns WHERE database = ? AND table = ? ORDER BY position`, namespa
 			NotNull:      !strings.Contains(r.DataType, "Nullable("),
 			Default:      lo.EmptyableToPtr(r.Dflt),
 			IsPrimaryKey: r.IsPk == 1,
+			Generated:    r.Kind == "MATERIALIZED" || r.Kind == "ALIAS",
 		}
 	}), nil
 }

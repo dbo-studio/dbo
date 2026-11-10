@@ -11,7 +11,7 @@ export const setupLanguage = async (monaco: typeof Monaco, theme: string) => {
     setupPromise = (async () => {
       const highlighter = await createHighlighter({
         themes: themes,
-        langs: ['sql']
+        langs: ['sql', 'json', 'javascript']
       });
 
       shikiToMonaco(highlighter, monaco);

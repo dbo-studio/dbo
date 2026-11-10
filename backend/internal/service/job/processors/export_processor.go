@@ -156,6 +156,8 @@ func (p *ExportProcessor) Process(ctx context.Context, job *model.Job) error {
 type exportTarget struct {
 	Name  string
 	Query string
+	// Schema qualifies INSERTs for SQL Server, whose restore has no schema context to fall back on.
+	Schema string
 }
 
 func exportTargets(ctx context.Context, appCache cache.Cache, repo databaseContract.DatabaseRepository, connection *model.Connection, req *dto.ExportJob) ([]exportTarget, error) {
@@ -197,11 +199,19 @@ func exportTargets(ctx context.Context, appCache cache.Cache, repo databaseContr
 
 	for _, name := range names {
 		qualified := databaseCore.QuoteIdent(connectionType, name)
-		if schema != nil && databaseContract.IsPostgresFamily(connectionType) {
+		switch {
+		case schema != nil && (databaseContract.IsPostgresFamily(connectionType) || connectionType == databaseContract.SQLServer):
 			qualified = databaseCore.QuoteIdent(connectionType, *schema) + "." + qualified
+		case database != nil && (databaseContract.IsMysqlFamily(connectionType) || connectionType == databaseContract.ClickHouse):
+			qualified = databaseCore.QuoteIdent(connectionType, *database) + "." + qualified
 		}
 
-		targets = append(targets, exportTarget{Name: name, Query: "SELECT * FROM " + qualified})
+		target := exportTarget{Name: name, Query: "SELECT * FROM " + qualified}
+		if schema != nil && connectionType == databaseContract.SQLServer {
+			target.Schema = *schema
+		}
+
+		targets = append(targets, target)
 	}
 
 	return targets, nil
@@ -303,6 +313,7 @@ func writeExport(ctx context.Context, repo databaseContract.DatabaseRepository, 
 		}
 
 		tw := newTableWriter(out, req.Format, target.Name, connectionType, req.IsMultiTable(), ddlFor(dump, target.Name))
+		tw.schema = target.Schema
 
 		err = repo.StreamRawQuery(ctx, &dto.RawQueryRequest{
 			ConnectionID: req.ConnectionID,

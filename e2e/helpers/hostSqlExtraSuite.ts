@@ -28,7 +28,7 @@ export function defineHostSqlExtraTests(engine: HostSqlEngine): void {
       await withConnectionCleanup(page, name, async () => {
         const cid = await createHostSqlConnection(page, engine, name);
         await raw(page, cid, `DROP TABLE IF EXISTS ${t}`);
-        await raw(page, cid, createTableSql(engine, t, ["id INT NOT NULL", "name VARCHAR(50)"], "id"));
+        await raw(page, cid, createTableSql(engine, t, ["id INT NOT NULL", engine === "mssql" ? "name NVARCHAR(50)" : "name VARCHAR(50)"], "id"));
         await raw(page, cid, `INSERT INTO ${t} (id, name) VALUES (1, 'one'), (2, 'two'), (3, 'three')`);
         try {
           await body({ id: cid, t, name });
@@ -195,8 +195,15 @@ export function defineHostSqlExtraTests(engine: HostSqlEngine): void {
       await withTables(page, testInfo, async ({ id: cid, t }) => {
         await raw(page, cid, `INSERT INTO ${t} (id, name) VALUES (50, ${engine === "mssql" ? "N" : ""}'日本語 "q" ''s'' 🚀')`);
         expect(await scalar(page, cid, `SELECT name FROM ${t} WHERE id = 50`)).toContain("日本語");
-        await raw(page, cid, `INSERT INTO ${t} (id, name) VALUES (51, NULL)`);
-        expect(await scalar(page, cid, `SELECT name FROM ${t} WHERE id = 51`)).toBeNull();
+        // ClickHouse VARCHAR/String is non-nullable and coerces NULL → ''; use Nullable(String) for the round-trip.
+        if (engine === "clickhouse") {
+          await raw(page, cid, `ALTER TABLE ${t} ADD COLUMN nullable_name Nullable(String)`);
+          await raw(page, cid, `INSERT INTO ${t} (id, name, nullable_name) VALUES (51, '', NULL)`);
+          expect(await scalar(page, cid, `SELECT nullable_name FROM ${t} WHERE id = 51`)).toBeNull();
+        } else {
+          await raw(page, cid, `INSERT INTO ${t} (id, name) VALUES (51, NULL)`);
+          expect(await scalar(page, cid, `SELECT name FROM ${t} WHERE id = 51`)).toBeNull();
+        }
       });
     });
 
@@ -299,13 +306,21 @@ export function defineHostSqlExtraTests(engine: HostSqlEngine): void {
       await withTables(page, testInfo, async ({ id: cid, t }) => {
         const jobId = await startJob(page, "/api/backups", { connectionId: cid, note: "drill", ...scope });
         expect((await waitForJob(page, jobId)).status).toBe("completed");
-        const history = (await (await page.request.get(`/api/backups/history?connectionId=${cid}`)).json()) as { data: { id: number; jobId: number }[] };
+        const history = (await (await page.request.get(`/api/backups/history?connectionId=${cid}`)).json()) as {
+          data: { id: number; jobId: number; drillStatus: string; drillMessage: string }[];
+        };
         const artifactId = history.data.find((a) => a.jobId === jobId)!.id;
         const drill = await page.request.post(`/api/backups/${artifactId}/drill`, { data: {} });
         expect(drill.ok(), await drill.text()).toBeTruthy();
         const job = await waitForJob(page, ((await drill.json()) as { data: { jobId: number } }).data.jobId);
         expect(job.status, job.error).toBe("completed");
-        expect(job.message).toMatch(/skipped/i);
+        // Job manager always sets message to "Job completed successfully"; skip reason lives on the artifact.
+        const after = (await (await page.request.get(`/api/backups/history?connectionId=${cid}`)).json()) as {
+          data: { id: number; drillStatus: string; drillMessage: string }[];
+        };
+        const drilled = after.data.find((a) => a.id === artifactId)!;
+        expect(drilled.drillStatus).toBe("skipped");
+        expect(drilled.drillMessage).toMatch(/not available|skipped/i);
         void t;
       });
     });

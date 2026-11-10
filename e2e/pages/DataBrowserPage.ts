@@ -431,7 +431,11 @@ export class DataBrowserPage extends BasePage {
     }
     // Wizard: file -> column mapping (guessed by name) -> options.
     if (options?.delimiter) {
-      await modal.getByLabel("Delimiter").fill(options.delimiter);
+      // FieldInput renders its label as a caption, not a <label>, so getByLabel cannot match.
+      await modal
+        .getByText("Delimiter", { exact: true })
+        .locator("xpath=following::input[1]")
+        .fill(options.delimiter);
     }
     await modal.getByRole("button", { name: "Next", exact: true }).click();
     await expect(modal.getByTestId("import-mapping")).toBeVisible({

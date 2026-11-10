@@ -1,24 +1,17 @@
 import { expect, test } from "@playwright/test";
-import type { DbEngine } from "../fixtures/dbConfigs";
+import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { BackupPage, ObjectTreePage } from "../pages";
 import {
   cleanupImportExportSqlite,
   dropTables,
+  engineLabel,
   setupImportExport,
 } from "./importExport";
 import { withConnectionCleanup } from "./safeCleanup";
 
-function label(engine: DbEngine): string {
-  return engine === "postgresql"
-    ? "PostgreSQL"
-    : engine === "mysql"
-      ? "MySQL"
-      : "SQLite";
-}
-
 export function defineBackupUiTests(engine: DbEngine): void {
-  test.describe(`Backup tab ${label(engine)}`, () => {
+  test.describe(`Backup tab ${engineLabel(engine)}`, () => {
     test("back up, list in history, and guard the restore", async ({
       page,
     }, testInfo) => {
@@ -26,7 +19,8 @@ export function defineBackupUiTests(engine: DbEngine): void {
       const connectionName = `bk-ui-${suffix}`;
       const table = `e2e_bk_ui_${suffix}`;
       // SQLite has no database name, so the dialog asks for the connection name.
-      const targetName = engine === "sqlite" ? connectionName : "default";
+      const dbName = getDbConfig(engine, connectionName).database;
+      const targetName = engine === "sqlite" ? connectionName : dbName;
 
       await withConnectionCleanup(page, connectionName, async () => {
         const pages = await setupImportExport(
@@ -87,8 +81,10 @@ export function defineBackupUiTests(engine: DbEngine): void {
           await test.step("Cancelling the confirmation queues no restore", async () => {
             await page.getByRole("button", { name: "Cancel" }).last().click();
             await expect(backup.restoreDialog).toBeHidden();
-            const response = await page.request.get("/api/jobs/2");
-            expect(response.status()).toBe(404);
+            const response = await page.request.get("/api/jobs/active");
+            expect(response.status()).toBe(200);
+            const active = (await response.json()) as { data: unknown[] | null };
+            expect(active.data ?? []).toHaveLength(0);
           });
 
           if (engine === "sqlite") {
@@ -111,7 +107,8 @@ export function defineBackupUiTests(engine: DbEngine): void {
       });
     });
 
-    if (engine !== "sqlite") {
+    // SQLite has no database node; SQL Server shows its schemas directly under the connection.
+    if (engine !== "sqlite" && engine !== "mssql") {
       test("database tree node opens the Backup tab on that database", async ({
         page,
       }, testInfo) => {
@@ -123,15 +120,25 @@ export function defineBackupUiTests(engine: DbEngine): void {
           const tree = new ObjectTreePage(page);
 
           await test.step("Right-click the database node and pick Backup & Restore", async () => {
-            await tree.openContextMenu("default");
+            await tree.openContextMenu(getDbConfig(engine, connectionName).database);
             await tree.clickContextMenuAction("Backup & Restore");
             await expect(backup.dialog).toBeVisible();
           });
 
           await test.step("The database field is prefilled from the node", async () => {
-            await expect(
-              page.locator('input[name="backup-database"]'),
-            ).toHaveValue("default");
+            const database = getDbConfig(engine, connectionName).database;
+            // PostgreSQL/MySQL show a database field; ClickHouse carries the scope silently,
+            // so the restore dialog is where the target database becomes visible.
+            if (engine === "clickhouse") {
+              await backup.startBackup("tree scope");
+              await backup.expectJobMessage("Backup completed successfully");
+              await backup.closeProgress();
+              await backup.openRestore();
+              await expect(page.getByText("Type the database name to confirm: " + database)).toBeVisible();
+              await page.getByRole("button", { name: "Cancel" }).last().click();
+            } else {
+              await expect(page.locator('input[name="backup-database"]')).toHaveValue(database!);
+            }
           });
 
           await backup.close();

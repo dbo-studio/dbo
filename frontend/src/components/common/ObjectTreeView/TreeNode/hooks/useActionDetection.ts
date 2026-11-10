@@ -6,6 +6,7 @@ import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
@@ -175,6 +176,14 @@ export const useActionDetection = (
             }
             case 'browse': {
               addBrowseTab(node.name, node.id);
+              break;
+            }
+            case 'query': {
+              // A server insight or a statement template: open the editor with it, and run it unless run is false.
+              const store = useDataStore.getState();
+              const query = node.action.params.query as string;
+              if (node.action.params.run === false) store.insertQueryInEditor(query);
+              else store.runQueryInEditor(query);
               break;
             }
             case 'data': {

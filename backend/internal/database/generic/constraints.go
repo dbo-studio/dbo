@@ -60,7 +60,7 @@ type Constraints interface {
 	DropKey(ns, table, name string) string
 	AddIndex(ns, table string, i IndexInfo) ([]string, error)
 	DropIndex(ns, table, name string) string
-	AddForeignKey(ns, table string, fk ForeignKey) string
+	AddForeignKey(ns, table string, fk ForeignKey) (string, error)
 	DropForeignKey(ns, table, name string) string
 	AddCheck(ns, table string, c CheckInfo) string
 	DropCheck(ns, table, name string) string
@@ -191,6 +191,15 @@ func (r *Repository) constraintStatements(ns, table string, params []byte) (drop
 		return nil, nil, false, err
 	}
 
+	// A dialect with CREATE OR ALTER replaces an edited trigger in one statement, so a failed edit keeps the old one.
+	if replacer, ok := r.d.(interface{ ReplacesTriggers() bool }); ok && replacer.ReplacesTriggers() {
+		for i := range triggers {
+			if triggers[i].Old != nil && triggers[i].New != nil && !lo.FromPtr(triggers[i].Added) && str(triggers[i].Old.Name) == str(triggers[i].New.Name) {
+				triggers[i].Old = nil
+			}
+		}
+	}
+
 	d, a, err := statements(triggers, func(t *triggerData) string { return str(t.Name) },
 		func(n string) string { return c.DropTrigger(ns, table, n) },
 		func(t *triggerData) ([]string, error) {
@@ -214,10 +223,15 @@ func (r *Repository) constraintStatements(ns, table string, params []byte) (drop
 				return nil, errors.New("a foreign key needs a name, a target table and matching source and target columns")
 			}
 
-			return []string{c.AddForeignKey(ns, table, ForeignKey{
+			sql, err := c.AddForeignKey(ns, table, ForeignKey{
 				Name: str(f.Name), Columns: f.SourceColumns, RefSchema: ns, RefTable: str(f.TargetTable), RefColumns: f.TargetColumns,
 				OnUpdate: referentialAction(f.OnUpdate), OnDelete: referentialAction(f.OnDelete),
-			})}, nil
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			return []string{sql}, nil
 		})
 	if err := collect(d, a, err); err != nil {
 		return nil, nil, false, err

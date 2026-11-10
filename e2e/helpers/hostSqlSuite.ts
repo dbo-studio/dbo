@@ -12,6 +12,7 @@ import {
   SEED,
   autocomplete,
   createHostSqlConnection,
+  expectClientError,
   diagram,
   ping,
   raw,
@@ -110,10 +111,15 @@ export function defineHostSqlTests(engine: HostSqlEngine): void {
           expect(roots.map((n) => n.id)).not.toContain("INFORMATION_SCHEMA");
 
           const containers = await tree(page, id, ns);
-          expect(containers.map((n) => n.type)).toEqual(["tableContainer", "viewContainer"]);
+          expect(containers.map((n) => n.type)).toEqual(
+            engine === "mssql"
+              ? ["tableContainer", "viewContainer", "procedureContainer", "functionContainer", "sequenceContainer"]
+              : ["tableContainer", "viewContainer", "materializedViewContainer"],
+          );
 
           const tables = await tree(page, id, `${ns}.tableContainer`);
-          expect(tables.map((n) => n.name)).toEqual(
+          // Sample shop is shared across specs; ignore leftover e2e_* tables from other runs.
+          expect(tables.map((n) => n.name).filter((n) => !n.startsWith("e2e_"))).toEqual(
             ["categories", "customers", "order_items", "orders", ...(engine === "clickhouse" ? ["page_views"] : []), "products"].sort(),
           );
           expect(tables.every((n) => n.type === "table")).toBe(true);
@@ -206,6 +212,10 @@ export function defineHostSqlTests(engine: HostSqlEngine): void {
           expect(result.data.data).toHaveLength(5);
           expect(result.data.columns.map((c) => c.name)).toEqual(["id", "full_name", "orders", "spent"]);
           expect(Number(result.data.data[0].orders)).toBeGreaterThan(0);
+          // A view is never editable, whatever the engine allows on tables.
+          for (const column of result.data.columns) expect(column.editable, `view column ${column.name}`).toBe(false);
+          const edit = await update(page, id, node("customer_totals"), { edited: [{ conditions: { id: 1 }, values: { full_name: "x" } }] });
+          expectClientError(edit);
         });
       });
 
@@ -214,6 +224,7 @@ export function defineHostSqlTests(engine: HostSqlEngine): void {
           const result = await run(page, id, node("does_not_exist"));
           expect(result.status).toBeGreaterThanOrEqual(400);
           expect(result.status).toBeLessThan(600);
+          expect(String(result.message), "error must name the problem").toMatch(/does_not_exist|invalid object|doesn't exist|does not exist|unknown table/i);
         });
       });
     });
@@ -343,26 +354,54 @@ export function defineHostSqlTests(engine: HostSqlEngine): void {
     });
 
     test.describe(meta.editable ? "row editing" : "read-only", () => {
-      if (!meta.editable) {
-        test("grid edits are rejected and nothing changes", async ({ page }, testInfo) => {
+      if (meta.mutations) {
+        test("insert, update and delete round trip through mutations", async ({ page }, testInfo) => {
           await withConnection(page, testInfo, async (id) => {
-            const before = await scalar(page, id, "SELECT COUNT(*) FROM categories");
-            const res = await update(page, id, node("categories"), { added: [{ id: 99, name: "nope" }] });
-            expect(res.status).toBeGreaterThanOrEqual(400);
-            expect(await scalar(page, id, "SELECT COUNT(*) FROM categories")).toBe(before);
+            const name = `Zürich o'neil \\ ${uniqueTestSuffix(testInfo)}`;
+            const newId = 900000 + Math.floor(Math.random() * 90000);
+            const inserted = await update(page, id, node("categories"), { added: [{ id: newId, name, parent_id: null }] });
+            expect(inserted.status, JSON.stringify(inserted.body)).toBe(200);
 
-            const edit = await update(page, id, node("categories"), { edited: [{ conditions: { id: 1 }, values: { name: "x" } }] });
-            expect(edit.status).toBeGreaterThanOrEqual(400);
-            const del = await update(page, id, node("categories"), { deleted: [{ id: 1 }] });
-            expect(del.status).toBeGreaterThanOrEqual(400);
+            const row = (await raw(page, id, `SELECT id, name, parent_id FROM categories WHERE id = ${newId}`)).data[0];
+            expect(row.name).toBe(name);
+            expect(row.parent_id).toBeNull();
+
+            // The row is matched on every column it was read with, so a stale read changes nothing.
+            const renamed = `${name} renamed`;
+            const edited = await update(page, id, node("categories"), {
+              edited: [{ conditions: { id: newId, name, parent_id: null }, values: { name: renamed, parent_id: 1 } }],
+            });
+            expect(edited.status, JSON.stringify(edited.body)).toBe(200);
+            const after = (await raw(page, id, `SELECT name, parent_id FROM categories WHERE id = ${newId}`)).data[0];
+            expect(after.name).toBe(renamed);
+            expect(Number(after.parent_id)).toBe(1);
+
+            const stale = await update(page, id, node("categories"), {
+              edited: [{ conditions: { id: newId, name: "not the current name", parent_id: 1 }, values: { name: "nope" } }],
+            });
+            expect(stale.status).toBe(200);
+            expect((await raw(page, id, `SELECT name FROM categories WHERE id = ${newId}`)).data[0].name).toBe(renamed);
+
+            const deleted = await update(page, id, node("categories"), { deleted: [{ id: newId, name: renamed, parent_id: 1 }] });
+            expect(deleted.status, JSON.stringify(deleted.body)).toBe(200);
+            expect(Number(await scalar(page, id, `SELECT COUNT(*) FROM categories WHERE id = ${newId}`))).toBe(0);
+            expect(Number(await scalar(page, id, "SELECT COUNT(*) FROM categories"))).toBe(SEED.categories);
+          });
+        });
+
+        test("editing a sorting-key column is refused and nothing changes", async ({ page }, testInfo) => {
+          await withConnection(page, testInfo, async (id) => {
+            const res = await update(page, id, node("categories"), {
+              edited: [{ conditions: { id: 1, name: "Electronics", parent_id: null }, values: { id: 5000 } }],
+            });
+            expectClientError(res);
             expect(await scalar(page, id, "SELECT name FROM categories WHERE id = 1")).toBe("Electronics");
           });
         });
 
-        test("query results are not inline-editable", async ({ page }, testInfo) => {
+        test("query results of a table are inline-editable, views are not", async ({ page }, testInfo) => {
           await withConnection(page, testInfo, async (id) => {
-            const result = await raw(page, id, "SELECT * FROM categories");
-            expect(result.editable).toBe(false);
+            expect((await raw(page, id, "SELECT * FROM categories")).editable).toBe(true);
           });
         });
         return;

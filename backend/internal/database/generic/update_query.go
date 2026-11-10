@@ -28,6 +28,15 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 		return nil, err
 	}
 
+	views, err := r.d.Views(ctx, r.base.DB().WithContext(ctx), namespace)
+	if err != nil {
+		return nil, apperror.DriverError(err)
+	}
+
+	if lo.Contains(views, table) {
+		return nil, apperror.Validation(fmt.Errorf("%q is a view and cannot be edited from the grid", table))
+	}
+
 	target := r.qualified(namespace, table)
 	keys := lo.FilterMap(columns, func(c ColumnInfo, _ int) (string, bool) { return c.Name, c.IsPrimaryKey })
 	queries := make([]string, 0)
@@ -40,7 +49,7 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 			continue
 		}
 
-		queries = append(queries, fmt.Sprintf("UPDATE %s SET %s WHERE %s", target, strings.Join(set, ", "), strings.Join(where, " AND ")))
+		queries = append(queries, r.updateStatement(target, set, where))
 	}
 
 	for _, item := range req.AddedItems {
@@ -58,12 +67,12 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 			continue
 		}
 
-		queries = append(queries, fmt.Sprintf("DELETE FROM %s WHERE %s", target, strings.Join(where, " AND ")))
+		queries = append(queries, r.deleteStatement(target, where))
 	}
 
 	rowsAffected := 0
 
-	err = r.base.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	run := func(tx *gorm.DB) error {
 		for _, q := range queries {
 			result := tx.Exec(q)
 			if result.Error != nil {
@@ -71,10 +80,20 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 			}
 
 			rowsAffected += int(result.RowsAffected)
+			// A mutation reports no row count: count the statement instead.
+			if _, ok := r.mutationDialect(); ok && result.RowsAffected == 0 {
+				rowsAffected++
+			}
 		}
 
 		return nil
-	})
+	}
+
+	if r.d.Transactional() {
+		err = r.base.DB().WithContext(ctx).Transaction(run)
+	} else {
+		err = run(r.base.DB().WithContext(ctx))
+	}
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
@@ -112,7 +131,7 @@ func (r *Repository) setClauses(values map[string]any) []string {
 			continue
 		}
 
-		value := lo.Ternary(values[name] == "@DEFAULT", "DEFAULT", literal(values[name]))
+		value := lo.Ternary(values[name] == "@DEFAULT", "DEFAULT", r.literal(values[name]))
 		clauses = append(clauses, fmt.Sprintf("%s = %s", r.d.Quote(name), value))
 	}
 
@@ -129,7 +148,7 @@ func (r *Repository) insertParts(item map[string]any) (names, values []string) {
 		}
 
 		names = append(names, r.d.Quote(key))
-		values = append(values, literal(item[key]))
+		values = append(values, r.literal(item[key]))
 	}
 
 	return names, values
@@ -145,7 +164,8 @@ func (r *Repository) whereClauses(keys []string, conditions map[string]any) []st
 		}
 	}
 
-	if len(match) == 0 {
+	// Without a row identity every column must match, or an edit could change rows that only share a key.
+	if _, ok := r.mutationDialect(); len(match) == 0 || ok {
 		match = conditions
 	}
 
@@ -161,6 +181,22 @@ func (r *Repository) whereClauses(keys []string, conditions map[string]any) []st
 			return r.d.Quote(name) + " IS NULL", true
 		}
 
-		return fmt.Sprintf("%s = %s", r.d.Quote(name), literal(match[name])), true
+		return fmt.Sprintf("%s = %s", r.d.Quote(name), r.literal(match[name])), true
 	})
+}
+
+func (r *Repository) updateStatement(target string, set, where []string) string {
+	if m, ok := r.mutationDialect(); ok {
+		return m.UpdateStatement(target, set, where)
+	}
+
+	return fmt.Sprintf("UPDATE %s SET %s WHERE %s", target, strings.Join(set, ", "), strings.Join(where, " AND "))
+}
+
+func (r *Repository) deleteStatement(target string, where []string) string {
+	if m, ok := r.mutationDialect(); ok {
+		return m.DeleteStatement(target, where)
+	}
+
+	return fmt.Sprintf("DELETE FROM %s WHERE %s", target, strings.Join(where, " AND "))
 }

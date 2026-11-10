@@ -1,7 +1,9 @@
 import type { ColumnType } from '@/types';
 
 export type ConditionSqlEditorProps = {
-  columns: ColumnType[];
+  /** SQL column names for completion; omit for languages that complete from their own context. */
+  columns?: ColumnType[];
+  language?: 'sql' | 'json' | 'plaintext';
   placeholder: string;
   value: string;
   onChange?: (value: string) => void;

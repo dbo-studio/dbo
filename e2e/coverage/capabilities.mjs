@@ -9,6 +9,11 @@ export const REQUIRED = {
   defineSavedHistoryTests: ["mssql", "clickhouse"],
   defineGeneratedColumnApiTests: ["mysql", "mssql", "clickhouse"],
   defineHostSqlExtraTests: ["mssql", "clickhouse"],
+  defineEditorContextTests: ["mssql", "clickhouse"],
+  defineClickhouseStorageTests: ["clickhouse"],
+  defineMssqlObjectsTests: ["mssql"],
+  defineHostSqlGeneratedColumnTests: ["mssql", "clickhouse"],
+  defineClickhouseObjectsTests: ["clickhouse"],
   defineBackgroundJobsTests: SQL,
   defineBackupConsoleTests: SQL,
   defineBackupScheduleTests: SQL,
@@ -34,54 +39,16 @@ export const EXEMPT = {
   "defineBackgroundJobsTests": {
     "sqlite": "TODO: not tested on this engine yet. Add the spec or replace with the reason it is unsupported",
   },
-  "defineBackupConsoleTests": {
-    "mssql": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)",
-    "clickhouse": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)"
-  },
-  "defineBackupScheduleTests": {
-    "mssql": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)",
-    "clickhouse": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)"
-  },
-  "defineBackupSealTests": {
-    "mssql": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)",
-    "clickhouse": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)"
-  },
-  "defineBackupTests": {
-    "mssql": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)",
-    "clickhouse": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)"
-  },
-  "defineBackupUiTests": {
-    "mssql": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)",
-    "clickhouse": "built-in dump and statement-replay restore, covered at API level by defineHostSqlExtraTests (native-tool UI suite does not apply)"
-  },
   "defineDashboardSharingTests": {
     "sqlite": "TODO: not tested on this engine yet. Add the spec or replace with the reason it is unsupported"
   },
-  "defineDataGridContextMenuTests": {
-    "clickhouse": "unsupported: ClickHouse grid is read-only (HOST_SQL.editable=false), menu edit actions do not apply"
-  },
-  "defineExportScopeTests": {
-    "mssql": "covered at API level by defineHostSqlExtraTests (no UI run yet)",
-    "clickhouse": "covered at API level by defineHostSqlExtraTests (no UI run yet)"
-  },
   "defineGeneratedColumnTests": {
     "mysql": "unsupported in the Object Form (no generated field outside PostgreSQL/SQLite); behaviour covered by defineGeneratedColumnApiTests",
-    "mssql": "unsupported in the Object Form (no generated field outside PostgreSQL/SQLite); behaviour covered by defineGeneratedColumnApiTests",
-    "clickhouse": "unsupported in the Object Form (no generated field outside PostgreSQL/SQLite); behaviour covered by defineGeneratedColumnApiTests"
-  },
-  "defineImportExportTests": {
-    "mssql": "covered at API level by defineHostSqlExtraTests (no UI run yet)",
-    "clickhouse": "covered at API level by defineHostSqlExtraTests (no UI run yet)"
+    "mssql": "covered by defineHostSqlGeneratedColumnTests (computed column through the Object Form) and defineGeneratedColumnApiTests",
+    "clickhouse": "covered by defineHostSqlGeneratedColumnTests (MATERIALIZED column through the Object Form) and defineGeneratedColumnApiTests"
   },
   "defineMultiColumnFkTests": {
     "mssql": "covered at API level by defineHostSqlExtraTests (Object Form, no UI run)",
     "clickhouse": "unsupported: ClickHouse has no foreign keys; refusal asserted in defineHostSqlExtraTests"
   },
-  "defineQueryStatusBarTests": {
-    "clickhouse": "TODO: not tested on this engine yet. Add the spec or replace with the reason it is unsupported"
-  },
-  "defineSafeModeTests": {
-    "mssql": "covered at API level by defineHostSqlExtraTests (no UI run yet)",
-    "clickhouse": "covered at API level by defineHostSqlExtraTests (no UI run yet)"
-  }
 };

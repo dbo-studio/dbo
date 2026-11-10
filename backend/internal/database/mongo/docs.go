@@ -89,6 +89,16 @@ func parseID(s string) any {
 	return s
 }
 
+// idFilter matches the _id for a UI id. A 24-hex id also matches the same text stored as a string _id.
+func idFilter(s string) bson.D {
+	v := parseID(s)
+	if _, ok := v.(bson.ObjectID); ok {
+		return bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: bson.A{v, s}}}}}
+	}
+
+	return bson.D{{Key: "_id", Value: v}}
+}
+
 // idString is the id shown in the UI. It always round-trips through parseID.
 func idString(v any) string {
 	switch x := v.(type) {
@@ -176,7 +186,7 @@ func (r *Repository) Get(ctx context.Context, containerID, itemID string) (*cont
 
 	var d bson.D
 
-	if err := coll.FindOne(ctx, bson.D{{Key: "_id", Value: parseID(itemID)}}).Decode(&d); err != nil {
+	if err := coll.FindOne(ctx, idFilter(itemID)).Decode(&d); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, contract.Invalid("document %q does not exist", itemID)
 		}

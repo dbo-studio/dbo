@@ -146,7 +146,7 @@ func (m mssql) DropIndex(ns, table, name string) string {
 	return "DROP INDEX " + m.Quote(name) + " ON " + m.table(ns, table)
 }
 
-func (m mssql) AddForeignKey(ns, table string, fk generic.ForeignKey) string {
+func (m mssql) AddForeignKey(ns, table string, fk generic.ForeignKey) (string, error) {
 	sql := "ALTER TABLE " + m.table(ns, table) + " ADD CONSTRAINT " + m.Quote(fk.Name) + " FOREIGN KEY (" + m.quoteAll(fk.Columns) + ") REFERENCES " +
 		m.table(fk.RefSchema, fk.RefTable) + " (" + m.quoteAll(fk.RefColumns) + ")"
 	if fk.OnDelete != "" {
@@ -157,7 +157,7 @@ func (m mssql) AddForeignKey(ns, table string, fk generic.ForeignKey) string {
 		sql += " ON UPDATE " + fk.OnUpdate
 	}
 
-	return sql
+	return sql, nil
 }
 
 func (m mssql) DropForeignKey(ns, table, name string) string {
@@ -175,8 +175,17 @@ func (m mssql) AddTrigger(ns, table string, t generic.TriggerInfo) (string, erro
 		return "", fmt.Errorf("a trigger needs a name, a timing (AFTER or INSTEAD OF), an event and a body")
 	}
 
-	return "CREATE TRIGGER " + m.table(ns, t.Name) + " ON " + m.table(ns, table) + " " + strings.ToUpper(t.Timing) + " " + strings.ToUpper(t.Event) + " AS " + t.Body, nil
+	if batchSeparator.MatchString(t.Body) {
+		return "", fmt.Errorf("a trigger body is one batch: remove the GO lines")
+	}
+
+	return "CREATE OR ALTER TRIGGER " + m.table(ns, t.Name) + " ON " + m.table(ns, table) + " " + strings.ToUpper(t.Timing) + " " + strings.ToUpper(t.Event) + " AS " + t.Body, nil
 }
+
+// ReplacesTriggers: CREATE OR ALTER TRIGGER edits a trigger in place.
+func (mssql) ReplacesTriggers() bool { return true }
+
+var batchSeparator = regexp.MustCompile(`(?im)^\s*GO\s*$`)
 
 func (m mssql) DropTrigger(ns, _, name string) string { return "DROP TRIGGER " + m.table(ns, name) }
 

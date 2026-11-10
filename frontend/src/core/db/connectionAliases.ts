@@ -102,6 +102,9 @@ export const isNoSQLType = (type: string | undefined): boolean =>
   getConnectionAlias(type)?.driver === 'redis' ||
   getConnectionAlias(type)?.driver === 'mongodb';
 
+/** SQL drivers and MongoDB have a query editor tab; Redis and the fixture do not. */
+export const hasEditorTab = (type: string | undefined): boolean => !isNoSQLType(type) || isMongoDriver(type);
+
 export const isRedisDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'redis';
 
 export const isMongoDriver = (type: string | undefined): boolean => getConnectionAlias(type)?.driver === 'mongodb';

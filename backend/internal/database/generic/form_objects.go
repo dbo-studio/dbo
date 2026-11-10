@@ -12,7 +12,8 @@ import (
 func object(nodeID string) (namespace, name string) {
 	namespace, name = node(nodeID)
 	if name == string(contract.TableContainerNodeType) || name == string(contract.ViewContainerNodeType) ||
-		name == string(contract.ProcedureContainerNodeType) || name == string(contract.FunctionContainerNodeType) {
+		name == string(contract.ProcedureContainerNodeType) || name == string(contract.FunctionContainerNodeType) ||
+		name == string(contract.SequenceContainerNodeType) || name == string(contract.MaterializedViewContainerNodeType) {
 		name = ""
 	}
 
@@ -28,6 +29,14 @@ func (r *Repository) Objects(ctx context.Context, nodeID string, tabID contract.
 		if _, supported := r.routineDialect(); supported {
 			return r.routineForm(ctx, nodeID, procedure)
 		}
+	}
+
+	if isMaterializedViewAction(action) && r.hasMaterializedViews() {
+		return r.materializedViewForm(ctx, nodeID)
+	}
+
+	if isSequenceAction(action) && r.hasSequences() {
+		return r.sequenceForm(ctx, nodeID)
 	}
 
 	ns, name := object(nodeID)
@@ -55,6 +64,23 @@ func (r *Repository) Objects(ctx context.Context, nodeID string, tabID contract.
 		}
 
 		return r.base.BuildHybridFormResponse(general, rows, r.d.ColumnFields())
+	case contract.TableStorageTab:
+		sd, ok := r.storageDialect()
+		if !ok {
+			return nil, errUnsupportedForm
+		}
+
+		// One row: the Columns tab owns the General section, so Storage is a single-row array form.
+		row := map[string]any{"engine": "MergeTree"}
+
+		if name != "" {
+			var err error
+			if row, err = sd.StorageRow(ctx, db, ns, name); err != nil {
+				return nil, apperror.DriverError(err)
+			}
+		}
+
+		return r.base.BuildArrayFormResponse([]map[string]any{row}, sd.StorageFields(name == ""))
 	case contract.ViewTab:
 		row := map[string]any{}
 

@@ -26,6 +26,7 @@ func (mssql) ColumnFields() []contract.FormField {
 		{ID: "character_maximum_length", Name: "Length / precision (number or max)", Type: contract.FormFieldTypeText},
 		{ID: "numeric_scale", Name: "Scale", Type: contract.FormFieldTypeText},
 		{ID: "is_identity", Name: "Identity", Type: contract.FormFieldTypeCheckBox},
+		{ID: "is_generated", Name: "Computed (Default holds the expression)", Type: contract.FormFieldTypeCheckBox},
 	}
 }
 
@@ -39,6 +40,7 @@ func (mssql) ColumnRow(c generic.ColumnInfo) map[string]any {
 		"not_null":       c.NotNull,
 		"column_default": lo.FromPtr(c.Default),
 		"is_identity":    c.IsIdentity,
+		"is_generated":   c.Generated,
 	}
 
 	if length != "" {
@@ -71,10 +73,17 @@ func (mssql) ColumnSpec(d *dto.MysqlTableColumnData) (generic.ColSpec, error) {
 		return generic.ColSpec{}, fmt.Errorf("invalid data type %q", typeText)
 	}
 
-	return generic.NewColSpec(d, typeText), nil
+	spec := generic.NewColSpec(d, typeText)
+
+	return spec, generic.CheckGenerated(spec)
 }
 
 func (m mssql) columnDefinition(c generic.ColSpec) string {
+	// A computed column takes its type from the expression.
+	if c.Generated {
+		return m.Quote(c.Name) + " AS (" + c.Default + ")"
+	}
+
 	def := m.Quote(c.Name) + " " + c.Type
 	if c.Identity {
 		def += " IDENTITY(1,1)"
@@ -114,6 +123,10 @@ func (m mssql) ChangeColumn(ns, table string, old, next generic.ColSpec) ([]stri
 		return nil, fmt.Errorf("SQL Server cannot turn identity on or off for an existing column; add a new identity column or rebuild the table")
 	}
 
+	if old.Generated != next.Generated {
+		return nil, fmt.Errorf("SQL Server cannot turn a column into a computed column or back; add a new column instead")
+	}
+
 	var statements []string
 
 	name := old.Name
@@ -122,6 +135,15 @@ func (m mssql) ChangeColumn(ns, table string, old, next generic.ColSpec) ([]stri
 		statements = append(statements, fmt.Sprintf("EXEC sp_rename N'%s', N'%s', N'COLUMN'",
 			strings.ReplaceAll(m.table(ns, table)+"."+m.Quote(old.Name), "'", "''"), strings.ReplaceAll(next.Name, "'", "''")))
 		name = next.Name
+	}
+
+	// A computed column holds no data, so a new expression is a drop and add.
+	if next.Generated {
+		if old.Default != next.Default {
+			statements = append(statements, m.DropColumn(ns, table, name), m.AddColumn(ns, table, generic.ColSpec{Name: name, Default: next.Default, Generated: true}))
+		}
+
+		return statements, nil
 	}
 
 	typeChanged := old.Type != next.Type || old.NotNull != next.NotNull

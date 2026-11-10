@@ -111,7 +111,7 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 	}
 
 	if databaseContract.IsHostSQL(connection.ConnectionType) {
-		return p.restoreHostSQL(ctx, job, connection, artifact)
+		return p.restoreHostSQL(ctx, job, connection, &jobData, artifact)
 	}
 
 	return p.restoreSQL(ctx, job, connection, &jobData, artifact)
@@ -121,9 +121,10 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 const maxHostRestoreBytes = 256 << 20
 
 // restoreHostSQL replays DBO's own dump into a SQL Server or ClickHouse connection, one statement at a time
-// in the connection's database. It is not atomic: it stops at the first failing statement, and the statements
-// before it stay applied (ClickHouse has no transactions, and a dump mixes DDL with data).
-func (p *RestoreProcessor) restoreHostSQL(ctx context.Context, job *model.Job, connection *model.Connection, artifact *model.BackupArtifact) error {
+// in the target database. Built-in dumps name tables without a database qualifier, so ClickHouse
+// must USE the restore target first. It is not atomic: it stops at the first failing statement, and
+// the statements before it stay applied (ClickHouse has no transactions, and a dump mixes DDL with data).
+func (p *RestoreProcessor) restoreHostSQL(ctx context.Context, job *model.Job, connection *model.Connection, jobData *dto.RestoreJob, artifact *model.BackupArtifact) error {
 	if !strings.HasSuffix(artifact.FileName, ".sql") {
 		return errors.New("this backup is not a SQL dump")
 	}
@@ -147,6 +148,13 @@ func (p *RestoreProcessor) restoreHostSQL(ctx context.Context, job *model.Job, c
 	db, err := p.cm.GetConnection(ctx, connection, false)
 	if err != nil {
 		return err
+	}
+
+	// Dump INSERTs are unqualified; without USE they land in the connection's default database.
+	if connection.ConnectionType == databaseContract.ClickHouse && jobData.Database != "" {
+		if err := db.WithContext(ctx).Exec("USE " + databaseCore.QuoteIdent(connection.ConnectionType, jobData.Database)).Error; err != nil {
+			return fmt.Errorf("switch to database %s: %w", jobData.Database, err)
+		}
 	}
 
 	for i, statement := range statements {

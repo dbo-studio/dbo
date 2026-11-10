@@ -13,6 +13,7 @@ import {
   ensureSqliteDbFile,
   removeSqliteDbFile,
 } from "./objectFormSqliteLifecycle";
+import { engineLabel } from "./importExport";
 import { withConnectionCleanup } from "./safeCleanup";
 import {
   ConnectionPage,
@@ -24,6 +25,12 @@ import {
 } from "../pages";
 
 function createTableSql(engine: DbEngine, tableName: string): string {
+  if (engine === "mssql") {
+    return `CREATE TABLE ${tableName} (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(100))`;
+  }
+  if (engine === "clickhouse") {
+    return `CREATE TABLE ${tableName} (id UInt32 DEFAULT 0, name String) ENGINE = MergeTree ORDER BY id`;
+  }
   if (engine === "mysql") {
     return `CREATE TABLE ${tableName} (id INT AUTO_INCREMENT PRIMARY KEY, name TEXT)`;
   }
@@ -42,12 +49,6 @@ async function selectEditorContext(
   } else if (engine === "mysql") {
     await sqlEditor.selectContext("default");
   }
-}
-
-function engineLabel(engine: DbEngine): string {
-  if (engine === "mysql") return "MySQL";
-  if (engine === "sqlite") return "SQLite";
-  return "PostgreSQL";
 }
 
 async function revealTable(

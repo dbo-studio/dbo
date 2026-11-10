@@ -14,11 +14,13 @@ export const HOST_SQL: Record<
     namespace: string;
     pageViews: number;
     editable: boolean;
+    /** Rows change through ALTER TABLE ... UPDATE/DELETE (no transactions, no row identity). */
+    mutations: boolean;
     foreignKeys: boolean;
   }
 > = {
-  mssql: { label: "SQL Server", namespace: "dbo", pageViews: 5000, editable: true, foreignKeys: true },
-  clickhouse: { label: "ClickHouse", namespace: "shop", pageViews: 40000, editable: false, foreignKeys: false },
+  mssql: { label: "SQL Server", namespace: "dbo", pageViews: 5000, editable: true, mutations: false, foreignKeys: true },
+  clickhouse: { label: "ClickHouse", namespace: "shop", pageViews: 40000, editable: true, mutations: true, foreignKeys: false },
 };
 
 /** Row counts both seeds produce. */
@@ -47,10 +49,11 @@ async function call<T>(page: Page, method: "get" | "post", path: string, data?: 
 type Rows = Record<string, unknown>[];
 type Column = { name: string; mappedType: string; editable: boolean; isPrimaryKey: boolean; isForeignKey: boolean; type: string };
 
-export async function raw(page: Page, connectionId: number, query: string) {
+export async function raw(page: Page, connectionId: number, query: string, extra: Record<string, unknown> = {}) {
   const { status, body } = await call<{ data: { data: Rows; columns: Column[]; editable?: boolean } }>(page, "post", "/query/raw", {
     connectionId,
     query,
+    ...extra,
   });
   expect(status, JSON.stringify(body)).toBe(200);
   return body.data;
@@ -99,12 +102,11 @@ export async function diagram(page: Page, connectionId: number, schema: string) 
   return body.data;
 }
 
-export async function autocomplete(page: Page, connectionId: number) {
-  const { body } = await call<{ data: { tables: string[]; views: string[]; columns: Record<string, string[]> } }>(
-    page,
-    "get",
-    `/query/autocomplete?connectionId=${connectionId}`,
-  );
+export async function autocomplete(page: Page, connectionId: number, scope: { database?: string; schema?: string } = {}) {
+  const qs = new URLSearchParams({ connectionId: String(connectionId), ...scope });
+  const { body } = await call<{
+    data: { databases: string[]; schemas: string[]; tables: string[]; views: string[]; columns: Record<string, string[]> };
+  }>(page, "get", `/query/autocomplete?${qs.toString()}`);
   return body.data;
 }
 
@@ -153,4 +155,14 @@ export async function rawError(page: Page, connectionId: number, query: string):
   const { data, columns } = await raw(page, connectionId, query);
   const isCommand = columns.map((c) => c.name).join() === "Query,Message,Duration";
   return isCommand && data[0]?.Message !== "OK" ? String(data[0].Message) : null;
+}
+
+/** A refused request: 4xx (not a crash) with a human-readable message, optionally matching `pattern`. */
+export function expectClientError(res: { status: number; body?: unknown; message?: string }, pattern?: RegExp): void {
+  const body = (res.body ?? res) as { message?: string };
+  const message = String(body.message ?? res.message ?? "");
+  expect(res.status, message).toBeGreaterThanOrEqual(400);
+  expect(res.status, message).toBeLessThan(500);
+  expect(message.trim().length, "error needs a message").toBeGreaterThan(0);
+  if (pattern) expect(message).toMatch(pattern);
 }

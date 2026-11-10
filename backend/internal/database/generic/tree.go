@@ -43,8 +43,12 @@ func (r *Repository) namespaceNode(name string, withContainers bool) *contract.T
 		for _, c := range []struct {
 			name string
 			id   contract.TreeNodeType
-		}{{"Tables", contract.TableContainerNodeType}, {"Views", contract.ViewContainerNodeType}, {"Procedures", contract.ProcedureContainerNodeType}, {"Functions", contract.FunctionContainerNodeType}} {
+		}{{"Tables", contract.TableContainerNodeType}, {"Views", contract.ViewContainerNodeType}, {"Procedures", contract.ProcedureContainerNodeType}, {"Functions", contract.FunctionContainerNodeType}, {"Sequences", contract.SequenceContainerNodeType}, {"Materialized views", contract.MaterializedViewContainerNodeType}} {
 			if _, routine := isRoutineContainer(c.id); routine && !r.hasRoutines() {
+				continue
+			}
+
+			if c.id == contract.SequenceContainerNodeType && !r.hasSequences() || c.id == contract.MaterializedViewContainerNodeType && !r.hasMaterializedViews() {
 				continue
 			}
 
@@ -110,7 +114,19 @@ func (r *Repository) buildContainer(ctx context.Context, namespace string, conta
 		nodeType = contract.TableNodeType
 	case contract.ViewContainerNodeType:
 		names, err = r.d.Views(ctx, db, namespace)
+		if err == nil {
+			names, err = r.withoutMaterialized(ctx, db, namespace, names)
+		}
+
 		nodeType = contract.ViewNodeType
+	case contract.MaterializedViewContainerNodeType:
+		d, ok := r.materializedViewDialect()
+		if !ok {
+			return nil, fmt.Errorf("unsupported container type: %s", container)
+		}
+
+		names, err = d.MaterializedViews(ctx, db, namespace)
+		nodeType = contract.MaterializedViewNodeType
 	case contract.ProcedureContainerNodeType, contract.FunctionContainerNodeType:
 		d, ok := r.routineDialect()
 		if !ok {
@@ -120,6 +136,14 @@ func (r *Repository) buildContainer(ctx context.Context, namespace string, conta
 		procedure := container == contract.ProcedureContainerNodeType
 		names, err = d.Routines(ctx, db, namespace, procedure)
 		nodeType = lo.Ternary(procedure, contract.ProcedureNodeType, contract.FunctionNodeType)
+	case contract.SequenceContainerNodeType:
+		d, ok := r.sequenceDialect()
+		if !ok {
+			return nil, fmt.Errorf("unsupported container type: %s", container)
+		}
+
+		names, err = d.Sequences(ctx, db, namespace)
+		nodeType = contract.SequenceNodeType
 	default:
 		return nil, fmt.Errorf("unsupported container type: %s", container)
 	}
@@ -138,7 +162,7 @@ func (r *Repository) buildContainer(ctx context.Context, namespace string, conta
 			},
 		}
 		// A routine has no rows to browse: opening it opens its definition.
-		if _, routine := isRoutineNode(nodeType); routine {
+		if _, routine := isRoutineNode(nodeType); routine || nodeType == contract.SequenceNodeType {
 			action = &r.ContextMenu(nodeType)[0]
 		}
 
@@ -180,6 +204,37 @@ func (r *Repository) ContextMenu(nodeType contract.TreeNodeType) []contract.Tree
 			contract.TreeNodeAction{Title: "Drop function", Name: contract.DropFunctionAction, Type: contract.TreeNodeActionTypeAction},
 			contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand},
 		)
+	}
+
+	switch nodeType {
+	case contract.MaterializedViewContainerNodeType:
+		actions = append(actions, contract.TreeNodeAction{Title: "Create materialized view", Name: contract.CreateMaterializedViewAction, Type: contract.TreeNodeActionTypeTab, Params: object})
+	case contract.MaterializedViewNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{Title: "Edit materialized view", Name: contract.EditMaterializedViewAction, Type: contract.TreeNodeActionTypeTab, Params: detail},
+			contract.TreeNodeAction{Title: "Drop materialized view", Name: contract.DropMaterializedViewAction, Type: contract.TreeNodeActionTypeAction},
+			contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand},
+		)
+	}
+
+	switch nodeType {
+	case contract.SequenceContainerNodeType:
+		actions = append(actions, contract.TreeNodeAction{Title: "Create sequence", Name: contract.CreateSequenceAction, Type: contract.TreeNodeActionTypeTab, Params: object})
+	case contract.SequenceNodeType:
+		actions = append(actions,
+			contract.TreeNodeAction{Title: "Edit sequence", Name: contract.EditSequenceAction, Type: contract.TreeNodeActionTypeTab, Params: detail},
+			contract.TreeNodeAction{Title: "Drop sequence", Name: contract.DropSequenceAction, Type: contract.TreeNodeActionTypeAction},
+			contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand},
+		)
+	}
+
+	if q, ok := r.d.(InsightDialect); ok && nodeType == r.namespaceType() {
+		for _, in := range q.Insights() {
+			actions = append(actions, contract.TreeNodeAction{
+				Title: in.Title, Name: contract.OpenQueryAction, Type: contract.TreeNodeActionTypeTab,
+				Params: map[string]any{"path": "query", "query": in.Query},
+			})
+		}
 	}
 
 	switch {

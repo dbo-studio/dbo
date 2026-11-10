@@ -56,7 +56,7 @@ func (r *Repository) Save(ctx context.Context, containerID, itemID string, chang
 		return err
 	}
 
-	res, err := coll.ReplaceOne(ctx, bson.D{{Key: "_id", Value: want}}, doc)
+	res, err := coll.ReplaceOne(ctx, idFilter(itemID), doc)
 	if err != nil {
 		return err
 	}
@@ -136,6 +136,9 @@ func deleteIDs(ctx context.Context, coll *mongo.Collection, itemIDs []string) er
 	ids := make(bson.A, 0, len(itemIDs))
 	for _, id := range itemIDs {
 		ids = append(ids, parseID(id))
+		if _, ok := ids[len(ids)-1].(bson.ObjectID); ok {
+			ids = append(ids, id)
+		}
 	}
 
 	if len(ids) == 0 {

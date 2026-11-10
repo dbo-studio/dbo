@@ -59,7 +59,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
     try {
       const [read, target] = await Promise.all([
         api.importExport.previewImport(file, format, format === 'csv' ? delimiter : undefined),
-        api.query.runRawQuery({ connectionId, query: `SELECT * FROM ${quote(engine, table)} LIMIT 0` })
+        api.query.runRawQuery({ connectionId, query: `SELECT * FROM ${quote(engine, table)} WHERE 1 = 0` })
       ]);
       const names = target.columns.map((c) => c.name);
       setPreview(read);

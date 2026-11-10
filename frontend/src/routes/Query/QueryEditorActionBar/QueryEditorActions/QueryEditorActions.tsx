@@ -16,7 +16,10 @@ export default function QueryEditorActions({
   onFormat,
   onRunQuery,
   onAiExplain,
-  loading
+  loading,
+  formatQuery,
+  onExport,
+  onStop
 }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
   const perms = useFeaturePermissions();
@@ -37,6 +40,10 @@ export default function QueryEditorActions({
   });
 
   const handleFormatSql = (): void => {
+    if (formatQuery) {
+      formatQuery();
+      return;
+    }
     updateQuery(tools.formatSql(getQuery(), 'postgresql'));
     onFormat();
   };
@@ -86,7 +93,7 @@ export default function QueryEditorActions({
 
   const handleRunOrStop = (): void => {
     if (loading) {
-      cancelRunningQuery();
+      (onStop ?? cancelRunningQuery)();
       return;
     }
     onRunQuery();
@@ -99,18 +106,24 @@ export default function QueryEditorActions({
           <CustomIcon type='save' />
         </IconButton>
       </Tooltip>
-      {perms.export && (
+      {(perms.export || onExport) && (
         <Tooltip title={locales.export}>
-          <IconButton aria-label={locales.export} color='default' onClick={handleExport}>
+          <IconButton
+            aria-label={locales.export}
+            color='default'
+            onClick={(e): void => (onExport ? onExport(e.currentTarget) : handleExport())}
+          >
             <CustomIcon type='export' />
           </IconButton>
         </Tooltip>
       )}
-      <Tooltip title={locales.minify}>
-        <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
-          <CustomIcon type='pickaxe' />
-        </IconButton>
-      </Tooltip>
+      {!formatQuery && (
+        <Tooltip title={locales.minify}>
+          <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
+            <CustomIcon type='pickaxe' />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title={`${locales.beatify} (${shortcuts.formatSql.command.join('+')})`}>
         <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
           <CustomIcon type='wand_sparkles' />

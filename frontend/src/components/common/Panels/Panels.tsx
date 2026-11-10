@@ -1,6 +1,6 @@
 'use no memo';
 
-import { isNoSQLType } from '@/core/db/connectionAliases';
+import { hasEditorTab } from '@/core/db/connectionAliases';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import ResizableXBox from '@/components/base/ResizableBox/ResizableXBox';
 import Pane from '@/components/common/Panels/Pane/Pane';
@@ -40,11 +40,11 @@ export default function Panels(): JSX.Element {
   const split = isSplitActive(tabs, currentConnectionId);
 
   const connection = useCurrentConnection();
-  const sqlOnly = isNoSQLType(connection?.type);
+  const editorAllowed = hasEditorTab(connection?.type);
 
   const addNewEmptyTab = useCallback((): void => {
-    if (!sqlOnly) addEditorTab();
-  }, [addEditorTab, sqlOnly]);
+    if (editorAllowed) addEditorTab();
+  }, [addEditorTab, editorAllowed]);
 
   useShortcut(shortcuts.newTab, addNewEmptyTab);
 

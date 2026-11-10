@@ -6,6 +6,7 @@ import {
   cleanupImportExportSqlite,
   createImportExportTmpDir,
   dropTables,
+  engineLabel,
   setupImportExport,
   treePathForEngine,
 } from "./importExport";
@@ -15,12 +16,7 @@ import { withConnectionCleanup } from "./safeCleanup";
  * Same depth as PostgreSQL import/export for every shipped engine.
  */
 export function defineImportExportTests(engine: DbEngine): void {
-  const label =
-    engine === "postgresql"
-      ? "PostgreSQL"
-      : engine === "mysql"
-        ? "MySQL"
-        : "SQLite";
+  const label = engineLabel(engine);
 
   test.describe(`Import Export ${label}`, () => {
   test("Export CSV and verify download", async ({ page }, testInfo) => {

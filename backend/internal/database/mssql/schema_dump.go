@@ -108,7 +108,12 @@ func (m mssql) DumpTable(ctx context.Context, db *gorm.DB, ns, table string) (co
 			fk.OnUpdate = ""
 		}
 
-		post = append(post, m.AddForeignKey(ns, table, fk)+";")
+		sql, err := m.AddForeignKey(ns, table, fk)
+		if err != nil {
+			return contract.TableDDL{}, err
+		}
+
+		post = append(post, sql+";")
 
 		parents = append(parents, fk.RefTable)
 	}

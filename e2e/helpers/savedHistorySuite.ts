@@ -14,7 +14,7 @@ export function defineSavedHistoryTests(engine: HostSqlEngine): void {
       await withConnectionCleanup(page, name, async () => body(await createHostSqlConnection(page, engine, name)));
     }
     const list = async (page: Page, path: string, id: number): Promise<Item[]> =>
-      ((await (await page.request.get(`/api/${path}?connectionId=${id}&page=1&count=100`)).json()) as { data: Item[] }).data;
+      ((await (await page.request.get(`/api/${path}?connectionId=${id}&page=1&count=100`)).json()) as { data: Item[] | null }).data ?? [];
 
     test("an executed query is recorded in the history of that connection only", async ({ page }, testInfo) => {
       await withConnection(page, testInfo, async (id) => {

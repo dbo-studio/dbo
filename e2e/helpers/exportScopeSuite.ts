@@ -11,17 +11,11 @@ import {
 import {
   cleanupImportExportSqlite,
   dropTables,
+  engineLabel,
   setupImportExport,
 } from "./importExport";
+import { createTableSql } from "./ddl";
 import { withConnectionCleanup } from "./safeCleanup";
-
-function label(engine: DbEngine): string {
-  return engine === "postgresql"
-    ? "PostgreSQL"
-    : engine === "mysql"
-      ? "MySQL"
-      : "SQLite";
-}
 
 async function exportBytes(
   page: import("@playwright/test").Page,
@@ -36,7 +30,7 @@ async function exportBytes(
 }
 
 export function defineExportScopeTests(engine: DbEngine): void {
-  test.describe(`Export scopes ${label(engine)}`, () => {
+  test.describe(`Export scopes ${engineLabel(engine)}`, () => {
     test("tables, schema and database exports with schema dump and zip", async ({
       page,
     }, testInfo) => {
@@ -59,10 +53,18 @@ export function defineExportScopeTests(engine: DbEngine): void {
             `DROP TABLE IF EXISTS ${parent};`,
             `DROP TABLE IF EXISTS ${big};`,
             // Child is created first on purpose: the dump must still order
-            // the parent before it.
-            `CREATE TABLE ${parent} (id INT PRIMARY KEY, name VARCHAR(50) NOT NULL);`,
-            `CREATE TABLE ${child} (id INT PRIMARY KEY, parent_id INT NOT NULL, FOREIGN KEY (parent_id) REFERENCES ${parent}(id));`,
-            `CREATE TABLE ${big} (id INT PRIMARY KEY);`,
+            // the parent before it. ClickHouse has no foreign keys, so no order is promised there.
+            ...(engine === "clickhouse"
+              ? [
+                  `${createTableSql(engine, parent, ["id Int32", "name String"], "id")};`,
+                  `${createTableSql(engine, child, ["id Int32", "parent_id Int32"], "id")};`,
+                  `${createTableSql(engine, big, ["id Int32"], "id")};`,
+                ]
+              : [
+                  `CREATE TABLE ${parent} (id INT PRIMARY KEY, name VARCHAR(50) NOT NULL);`,
+                  `CREATE TABLE ${child} (id INT PRIMARY KEY, parent_id INT NOT NULL, FOREIGN KEY (parent_id) REFERENCES ${parent}(id));`,
+                  `CREATE TABLE ${big} (id INT PRIMARY KEY);`,
+                ]),
             `INSERT INTO ${parent} (id, name) VALUES (1, 'one'), (2, 'two');`,
             `INSERT INTO ${child} (id, parent_id) VALUES (10, 1), (11, 2);`,
             `INSERT INTO ${big} (id) VALUES ${rows};`,
@@ -99,7 +101,8 @@ export function defineExportScopeTests(engine: DbEngine): void {
             );
             const childAt = sql.search(new RegExp(`CREATE TABLE[^;]*${child}`));
             expect(parentAt).toBeGreaterThanOrEqual(0);
-            expect(childAt).toBeGreaterThan(parentAt);
+            expect(childAt).toBeGreaterThanOrEqual(0);
+            if (engine !== "clickhouse") expect(childAt).toBeGreaterThan(parentAt);
             expect(sql).toContain("'two'");
           });
 

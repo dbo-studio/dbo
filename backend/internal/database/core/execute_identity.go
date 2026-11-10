@@ -30,7 +30,12 @@ func ResolveExecuteIdentity(
 	case databaseContract.CreateDatabaseAction, databaseContract.EditDatabaseAction:
 		return newExecuteResult(newName, action)
 	case databaseContract.CreateSchemaAction, databaseContract.EditSchemaAction:
-		node.Schema = newName
+		// Host SQL ids are `<namespace>.<object>`, so a schema (SQL Server) sits in the database slot.
+		if databaseContract.IsHostSQL(connectionType) {
+			node.Database = newName
+		} else {
+			node.Schema = newName
+		}
 	case databaseContract.CreateTableAction, databaseContract.EditTableAction,
 		databaseContract.CreateViewAction, databaseContract.EditViewAction,
 		databaseContract.CreateMaterializedViewAction, databaseContract.EditMaterializedViewAction,

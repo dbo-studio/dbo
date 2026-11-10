@@ -12,7 +12,7 @@ import (
 var errRollBack = errors.New("roll back the preview")
 
 func (r *Repository) PreviewWrite(ctx context.Context, statements []string, _, _ *string) ([]int64, error) {
-	if !r.d.Editable() {
+	if !r.d.Editable() || !r.d.Transactional() {
 		return nil, apperror.Validation(fmt.Errorf("%s has no transactions, so a write cannot be previewed", r.base.Connection().ConnectionType))
 	}
 

@@ -18,6 +18,7 @@ func (clickhouse) ColumnFields() []contract.FormField {
 		{ID: "data_type", Name: "Data Type (e.g. Nullable(String), Decimal(12, 2))", Type: contract.FormFieldTypeText, Required: true},
 		{ID: "primary", Name: "Sorting key", Type: contract.FormFieldTypeCheckBox},
 		{ID: "column_default", Name: "Default", Type: contract.FormFieldTypeText},
+		{ID: "is_generated", Name: "Materialized (Default holds the expression)", Type: contract.FormFieldTypeCheckBox},
 	}
 }
 
@@ -27,6 +28,7 @@ func (clickhouse) ColumnRow(c generic.ColumnInfo) map[string]any {
 		"data_type":      c.DataType,
 		"primary":        c.IsPrimaryKey,
 		"column_default": lo.FromPtr(c.Default),
+		"is_generated":   c.Generated,
 	}
 }
 
@@ -40,14 +42,16 @@ func (clickhouse) ColumnSpec(d *dto.MysqlTableColumnData) (generic.ColSpec, erro
 		return generic.ColSpec{}, fmt.Errorf("invalid data type %q", typeText)
 	}
 
-	return generic.NewColSpec(d, typeText), nil
+	spec := generic.NewColSpec(d, typeText)
+
+	return spec, generic.CheckGenerated(spec)
 }
 
 func (c clickhouse) table(ns, table string) string { return c.Quote(ns) + "." + c.Quote(table) }
 
 func (c clickhouse) CreateTable(ns, table string, cols []generic.ColSpec) string {
 	defs := lo.Map(cols, func(col generic.ColSpec, _ int) string {
-		return c.Quote(col.Name) + " " + col.Type + generic.SQLDefault(col.Default)
+		return c.Quote(col.Name) + " " + col.Type + columnDefault(col)
 	})
 
 	order := "tuple()"
@@ -59,7 +63,7 @@ func (c clickhouse) CreateTable(ns, table string, cols []generic.ColSpec) string
 }
 
 func (c clickhouse) AddColumn(ns, table string, col generic.ColSpec) string {
-	return "ALTER TABLE " + c.table(ns, table) + " ADD COLUMN " + c.Quote(col.Name) + " " + col.Type + generic.SQLDefault(col.Default)
+	return "ALTER TABLE " + c.table(ns, table) + " ADD COLUMN " + c.Quote(col.Name) + " " + col.Type + columnDefault(col)
 }
 
 func (c clickhouse) DropColumn(ns, table, column string) string {
@@ -76,8 +80,8 @@ func (c clickhouse) ChangeColumn(ns, table string, old, next generic.ColSpec) ([
 		name = next.Name
 	}
 
-	if old.Type != next.Type || old.Default != next.Default {
-		statements = append(statements, "ALTER TABLE "+c.table(ns, table)+" MODIFY COLUMN "+c.Quote(name)+" "+next.Type+generic.SQLDefault(next.Default))
+	if old.Type != next.Type || old.Default != next.Default || old.Generated != next.Generated {
+		statements = append(statements, "ALTER TABLE "+c.table(ns, table)+" MODIFY COLUMN "+c.Quote(name)+" "+next.Type+columnDefault(next))
 	}
 
 	return statements, nil
@@ -118,3 +122,12 @@ func (c clickhouse) ViewQuery(_ context.Context, db *gorm.DB, ns, view string) (
 // --- keys, indexes, checks ---
 // ClickHouse has no unique constraints, foreign keys or triggers. Its "primary key" is the sorting key,
 // which only a table rebuild can change.
+
+// columnDefault is the DEFAULT clause, or MATERIALIZED for a generated column.
+func columnDefault(c generic.ColSpec) string {
+	if c.Generated && c.Default != "" {
+		return " MATERIALIZED " + c.Default
+	}
+
+	return generic.SQLDefault(c.Default)
+}

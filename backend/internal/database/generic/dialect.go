@@ -17,6 +17,8 @@ type ColumnInfo struct {
 	IsPrimaryKey bool
 	IsIdentity   bool
 	Length       *int64
+	// Generated columns are computed by the server from Default, which then holds the expression.
+	Generated bool
 }
 
 // ColSpec is a column as the Object Form submits it, already validated.
@@ -27,6 +29,8 @@ type ColSpec struct {
 	Primary  bool
 	Identity bool
 	Default  string
+	// Generated: Default is the expression the server computes the column from.
+	Generated bool
 }
 
 // ForeignKey is one foreign key constraint of a table.

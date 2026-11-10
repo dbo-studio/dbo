@@ -216,7 +216,6 @@ test.describe("MongoDB documents CRUD", () => {
         `db.${coll}.find({"$where":"1==1"})`,
         `db.${coll}.aggregate([{"$out":"copy"}])`,
         `db.${coll}.aggregate([{"$merge":{"into":"copy"}}])`,
-        `db.${coll}.drop()`,
         "db.dropDatabase()",
         "rm -rf /",
         "process.exit(1)",

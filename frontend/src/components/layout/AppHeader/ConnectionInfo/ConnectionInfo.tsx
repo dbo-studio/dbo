@@ -1,7 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { canCreateConnection, canUseCli } from '@/core/auth/permissions';
 import { openBottomPanel } from '@/core/bottomPanel';
-import { isNoSQLType } from '@/core/db/connectionAliases';
+import { hasEditorTab } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { shortcuts } from '@/core/utils';
 import { useCurrentConnection, useShortcut } from '@/hooks';
@@ -149,7 +149,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
               <span>
                 <IconButton
                   aria-label={'sql'}
-                  disabled={!currentConnection || isNoSQLType(currentConnection.type)}
+                  disabled={!currentConnection || !hasEditorTab(currentConnection.type)}
                   onClick={handleAddEditorTab}
                 >
                   <CustomIcon type={'sql'} size={'m'} />

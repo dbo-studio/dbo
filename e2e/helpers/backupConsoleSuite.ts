@@ -5,20 +5,13 @@ import { BackupPage } from "../pages";
 import {
   cleanupImportExportSqlite,
   dropTables,
+  engineLabel,
   setupImportExport,
 } from "./importExport";
 import { withConnectionCleanup } from "./safeCleanup";
 
-function label(engine: DbEngine): string {
-  return engine === "postgresql"
-    ? "PostgreSQL"
-    : engine === "mysql"
-      ? "MySQL"
-      : "SQLite";
-}
-
 export function defineBackupConsoleTests(engine: DbEngine): void {
-  test.describe(`Backup console ${label(engine)}`, () => {
+  test.describe(`Backup console ${engineLabel(engine)}`, () => {
     test("create a job with the wizard, run it, inspect its runs, pause and delete", async ({
       page,
     }, testInfo) => {
@@ -67,7 +60,11 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
 
           await test.step("Run now completes and the row shows the result", async () => {
             await row.getByRole("button", { name: "Run now" }).click();
-            // A scheduled run has no progress dialog: the row status is the result.
+            // Built-in dump engines (SQL Server, ClickHouse) open a progress dialog; close it, then read the row.
+            if (engine === "mssql" || engine === "clickhouse") {
+              await expect(page.getByText("Backup completed successfully")).toBeVisible({ timeout: 60_000 });
+              await page.getByRole("button", { name: "Close", exact: true }).click();
+            }
             await expect(
               row.getByText("Completed", { exact: true }),
             ).toBeVisible({ timeout: 60_000 });

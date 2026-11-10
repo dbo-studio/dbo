@@ -1,12 +1,14 @@
 package databaseMongo
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/goccy/go-json"
@@ -153,7 +155,7 @@ func (r *Repository) Snapshot(ctx context.Context, containerID, itemID string) (
 
 	var d bson.D
 
-	err = coll.FindOne(ctx, bson.D{{Key: "_id", Value: parseID(itemID)}}).Decode(&d)
+	err = coll.FindOne(ctx, idFilter(itemID)).Decode(&d)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, 0, false, nil
 	}
@@ -288,17 +290,63 @@ func (r *Repository) cliDB() string {
 	return r.defaultDB()
 }
 
-var readMethods = map[string]bool{"find": true, "findOne": true, "count": true, "countDocuments": true, "aggregate": true, "distinct": true, "getIndexes": true}
-var writeMethods = map[string]bool{"insertOne": true, "insertMany": true, "updateOne": true, "updateMany": true, "replaceOne": true, "createIndex": true}
-var destructiveMethods = map[string]bool{"deleteOne": true, "deleteMany": true}
+var readMethods = map[string]bool{"find": true, "findOne": true, "count": true, "countDocuments": true, "estimatedDocumentCount": true, "aggregate": true, "distinct": true, "getIndexes": true}
+var writeMethods = map[string]bool{"insertOne": true, "insertMany": true, "updateOne": true, "updateMany": true, "replaceOne": true, "createIndex": true, "findOneAndUpdate": true, "findOneAndReplace": true, "createCollection": true}
+
+// destructive: they remove documents, indexes or the collection. bulkWrite may hold any of them, so it counts too.
+var destructiveMethods = map[string]bool{"deleteOne": true, "deleteMany": true, "findOneAndDelete": true, "drop": true, "dropIndex": true, "dropIndexes": true, "bulkWrite": true}
+
+var severity = map[contract.SafetyClass]int{contract.SafetyRead: 0, contract.SafetyWrite: 1, contract.SafetyDestructive: 2, contract.SafetyBlocked: 3}
+
+// statements normalizes the input and splits it into statements.
+func statements(input string) ([]string, error) {
+	if err := checkJSON(input); err != nil {
+		return nil, err
+	}
+
+	var out []string
+
+	for _, part := range splitStatements(input) {
+		text, err := normalizeShell(part)
+		if err != nil {
+			return nil, err
+		}
+
+		if text = strings.TrimSpace(text); text != "" {
+			if err := checkJSON(text); err != nil {
+				return nil, err
+			}
+
+			out = append(out, text)
+		}
+	}
+
+	if len(out) == 0 {
+		return nil, contract.Invalid("empty command")
+	}
+
+	return out, nil
+}
 
 func classifyCommand(raw string) contract.SafetyClass {
-	if checkJSON(raw) != nil {
+	parts, err := statements(raw)
+	if err != nil {
 		return contract.SafetyBlocked
 	}
 
-	t := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(raw), ";"))
-	if t == "show dbs" || t == "show databases" || t == "show collections" || strings.HasPrefix(t, "use ") {
+	worst := contract.SafetyRead
+
+	for _, t := range parts {
+		if class := classifyStatement(t); severity[class] > severity[worst] {
+			worst = class
+		}
+	}
+
+	return worst
+}
+
+func classifyStatement(t string) contract.SafetyClass {
+	if t == "db" || t == "show dbs" || t == "show databases" || t == "show collections" || strings.HasPrefix(t, "use ") {
 		return contract.SafetyRead
 	}
 
@@ -328,6 +376,12 @@ type call struct {
 }
 
 var callHead = regexp.MustCompile(`^db\.([^.(\s]+)\.(\w+)\(`)
+
+// getCollectionHead addresses a collection by name, which also covers names with dots: db.getCollection("a.b").find().
+var getCollectionHead = regexp.MustCompile(`^db\.getCollection\(\s*("(?:[^"\\]|\\.)*")\s*\)\.(\w+)\(`)
+
+// createCollectionHead is the one database-level call: db.createCollection("name").
+var createCollectionHead = regexp.MustCompile(`^db\.(createCollection)\(`)
 
 // closeParen returns the index of the ")" matching the "(" just before s[0], honoring JSON strings and nesting.
 func closeParen(s string) (int, error) {
@@ -396,19 +450,36 @@ func splitTop(s string) []string {
 var chainHead = regexp.MustCompile(`^\.(\w+)\(`)
 
 func parseCall(input string) (*call, error) {
-	m := callHead.FindStringSubmatch(input)
-	if m == nil {
+	var coll, method, head string
+
+	switch {
+	case getCollectionHead.MatchString(input):
+		m := getCollectionHead.FindStringSubmatch(input)
+
+		name, err := strconv.Unquote(m[1])
+		if err != nil || name == "" {
+			return nil, contract.Invalid("invalid collection name")
+		}
+
+		coll, method, head = name, m[2], m[0]
+	case createCollectionHead.MatchString(input):
+		m := createCollectionHead.FindStringSubmatch(input)
+		method, head = m[1], m[0]
+	case callHead.MatchString(input):
+		m := callHead.FindStringSubmatch(input)
+		coll, method, head = m[1], m[2], m[0]
+	default:
 		return nil, contract.Invalid(`expected db.<collection>.<method>(...); try: db.users.find({})`)
 	}
 
-	rest := input[len(m[0]):]
+	rest := input[len(head):]
 
 	end, err := closeParen(rest)
 	if err != nil {
 		return nil, err
 	}
 
-	c := &call{coll: m[1], method: m[2], args: splitTop(rest[:end])}
+	c := &call{coll: coll, method: method, args: splitTop(rest[:end])}
 	rest = strings.TrimSpace(rest[end+1:])
 
 	for rest != "" {
@@ -487,11 +558,12 @@ func chainInt(c *call, name string, def int64) (int64, error) {
 	return def, nil
 }
 
-// RunCommand runs one mongosh-style line. It is a parser, not a JavaScript engine: arguments are JSON only.
+// RunCommand runs mongosh-style statements. It is a parser, not a JavaScript engine: arguments are JSON, plus the
+// shell conveniences normalizeShell understands. One statement returns its output; several return one entry each.
 func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.CommandResult, error) {
-	t := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(input), ";"))
-	if t == "" {
-		return nil, contract.Invalid("empty command")
+	parts, err := statements(input)
+	if err != nil {
+		return nil, err
 	}
 
 	c, err := r.client()
@@ -500,7 +572,43 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 	}
 	defer r.release(ctx, c)
 
+	results := make([]any, 0, len(parts))
+
+	for _, t := range parts {
+		if classifyStatement(t) == contract.SafetyBlocked {
+			if cmd, perr := parseCall(t); perr == nil {
+				return nil, contract.Invalid("%s is not supported in the terminal", cmd.method)
+			}
+		}
+
+		res, err := r.runStatement(ctx, c, t)
+		if err != nil {
+			if len(parts) > 1 {
+				return nil, contract.Invalid("%s: %v", t, err)
+			}
+
+			return nil, err
+		}
+
+		results = append(results, res.Output)
+	}
+
+	if len(parts) == 1 {
+		return &contract.CommandResult{Output: results[0]}, nil
+	}
+
+	entries := make([]any, len(parts))
+	for i, t := range parts {
+		entries[i] = map[string]any{"statement": t, "output": results[i]}
+	}
+
+	return &contract.CommandResult{Output: entries}, nil
+}
+
+func (r *Repository) runStatement(ctx context.Context, c *mongo.Client, t string) (*contract.CommandResult, error) {
 	switch {
+	case t == "db":
+		return &contract.CommandResult{Output: r.cliDB()}, nil
 	case t == "show dbs" || t == "show databases":
 		names, err := c.ListDatabaseNames(ctx, bson.D{})
 
@@ -525,11 +633,25 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 		return nil, err
 	}
 
-	if classifyCommand(t) == contract.SafetyBlocked {
-		return nil, contract.Invalid("%s is not supported in the terminal", cmd.method)
+	if cmd.method == "createCollection" {
+		name, err := stringArg(cmd.args, 0)
+		if err != nil {
+			return nil, contract.Invalid("createCollection needs a collection name")
+		}
+
+		return &contract.CommandResult{Output: bson.D{{Key: "ok", Value: 1}}}, c.Database(r.cliDB()).CreateCollection(ctx, name)
 	}
 
 	return r.exec(ctx, c.Database(r.cliDB()).Collection(cmd.coll), cmd)
+}
+
+// stringArg reads a quoted string argument.
+func stringArg(args []string, i int) (string, error) {
+	if i >= len(args) {
+		return "", contract.Invalid("a string argument is required")
+	}
+
+	return strconv.Unquote(args[i])
 }
 
 func (r *Repository) exec(ctx context.Context, coll *mongo.Collection, cmd *call) (*contract.CommandResult, error) {
@@ -585,15 +707,46 @@ func (r *Repository) exec(ctx context.Context, coll *mongo.Collection, cmd *call
 			opts.SetProjection(proj)
 		}
 
+		var maxTime time.Duration
+
 		for _, ch := range cmd.chain {
-			if ch.name == "sort" {
+			switch ch.name {
+			case "sort":
 				sort, err := parseDoc(ch.arg)
 				if err != nil {
 					return nil, err
 				}
 
 				opts.SetSort(sort)
+			case "project":
+				proj, err := parseDoc(ch.arg)
+				if err != nil {
+					return nil, err
+				}
+
+				opts.SetProjection(proj)
+			case "hint":
+				hint, err := hintArg(ch.arg)
+				if err != nil {
+					return nil, err
+				}
+
+				opts.SetHint(hint)
+			case "maxTimeMS":
+				ms, err := strconv.ParseInt(ch.arg, 10, 64)
+				if err != nil || ms < 0 {
+					return nil, contract.Invalid("maxTimeMS needs a non-negative number")
+				}
+
+				maxTime = time.Duration(ms) * time.Millisecond
 			}
+		}
+
+		if maxTime > 0 {
+			var cancel context.CancelFunc
+
+			ctx, cancel = context.WithTimeout(ctx, maxTime)
+			defer cancel()
 		}
 
 		cur, err := coll.Find(ctx, filter, opts)
@@ -615,6 +768,10 @@ func (r *Repository) exec(ctx context.Context, coll *mongo.Collection, cmd *call
 		}
 
 		return wrap(docs, nil)
+	case "estimatedDocumentCount":
+		n, err := coll.EstimatedDocumentCount(ctx)
+
+		return wrap(n, err)
 	case "count", "countDocuments":
 		filter, err := argDoc(cmd.args, 0)
 		if err != nil {
@@ -734,17 +891,49 @@ func (r *Repository) exec(ctx context.Context, coll *mongo.Collection, cmd *call
 
 		model := mongo.IndexModel{Keys: keys}
 
-		if opts, err := argDoc(cmd.args, 1); err == nil {
-			for _, e := range opts {
-				if e.Key == "unique" {
-					model.Options = options.Index().SetUnique(e.Value == true)
-				}
+		if len(cmd.args) > 1 {
+			opts, err := indexOptions(cmd.args[1])
+			if err != nil {
+				return nil, err
 			}
+
+			model.Options = opts
 		}
 
 		name, err := coll.Indexes().CreateOne(ctx, model)
 
 		return wrap(name, err)
+	case "dropIndex":
+		if len(cmd.args) == 0 {
+			return nil, contract.Invalid("dropIndex needs an index name or a keys document")
+		}
+
+		name, err := strconv.Unquote(cmd.args[0])
+		if err != nil {
+			keys, kerr := parseDoc(cmd.args[0])
+			if kerr != nil || len(keys) == 0 {
+				return nil, contract.Invalid("dropIndex needs an index name or a keys document")
+			}
+
+			// A keys document is the index's spec: find its name.
+			if name, err = indexNameFor(ctx, coll, keys); err != nil {
+				return nil, err
+			}
+		}
+
+		if name == "_id_" {
+			return nil, contract.Invalid("the _id index cannot be dropped")
+		}
+
+		return wrap(bson.D{{Key: "ok", Value: 1}}, coll.Indexes().DropOne(ctx, name))
+	case "dropIndexes":
+		return wrap(bson.D{{Key: "ok", Value: 1}}, coll.Indexes().DropAll(ctx))
+	case "drop":
+		return wrap(bson.D{{Key: "ok", Value: 1}}, coll.Drop(ctx))
+	case "findOneAndUpdate", "findOneAndReplace", "findOneAndDelete":
+		return r.findOneAnd(ctx, coll, cmd)
+	case "bulkWrite":
+		return r.bulkWrite(ctx, coll, cmd)
 	default:
 		return nil, contract.Invalid("%s is not supported in the terminal", cmd.method)
 	}
@@ -773,20 +962,36 @@ func (r *Repository) update(ctx context.Context, coll *mongo.Collection, cmd *ca
 		return nil, err
 	}
 
+	upsert, filters, err := updateOptions(cmd.args, 2)
+	if err != nil {
+		return nil, err
+	}
+
 	var res *mongo.UpdateResult
 
 	if cmd.method == "replaceOne" {
-		res, err = coll.ReplaceOne(ctx, filter, doc)
+		opts := options.Replace().SetUpsert(upsert)
+		res, err = coll.ReplaceOne(ctx, filter, doc, opts)
 	} else {
 		// Without an operator the driver would reject it anyway; say why.
 		if len(doc) == 0 || !strings.HasPrefix(doc[0].Key, "$") {
 			return nil, contract.Invalid("%s needs update operators such as $set", cmd.method)
 		}
 
+		opts := options.UpdateOne().SetUpsert(upsert)
+		if filters != nil {
+			opts.SetArrayFilters(filters)
+		}
+
 		if cmd.method == "updateOne" {
-			res, err = coll.UpdateOne(ctx, filter, doc)
+			res, err = coll.UpdateOne(ctx, filter, doc, opts)
 		} else {
-			res, err = coll.UpdateMany(ctx, filter, doc)
+			many := options.UpdateMany().SetUpsert(upsert)
+			if filters != nil {
+				many.SetArrayFilters(filters)
+			}
+
+			res, err = coll.UpdateMany(ctx, filter, doc, many)
 		}
 	}
 
@@ -794,7 +999,322 @@ func (r *Repository) update(ctx context.Context, coll *mongo.Collection, cmd *ca
 		return nil, err
 	}
 
-	out, err := generic(bson.D{{Key: "matchedCount", Value: res.MatchedCount}, {Key: "modifiedCount", Value: res.ModifiedCount}})
+	out := bson.D{{Key: "matchedCount", Value: res.MatchedCount}, {Key: "modifiedCount", Value: res.ModifiedCount}}
+	if res.UpsertedID != nil {
+		out = append(out, bson.E{Key: "upsertedId", Value: res.UpsertedID})
+	}
+
+	return wrapValue(out)
+}
+
+func wrapValue(v any) (*contract.CommandResult, error) {
+	out, err := generic(v)
 
 	return &contract.CommandResult{Output: out}, err
+}
+
+// updateOptions reads {upsert, arrayFilters} from args[i].
+func updateOptions(args []string, i int) (upsert bool, filters []any, err error) {
+	if i >= len(args) {
+		return false, nil, nil
+	}
+
+	opts, err := parseDoc(args[i])
+	if err != nil {
+		return false, nil, err
+	}
+
+	for _, e := range opts {
+		switch e.Key {
+		case "upsert":
+			upsert = e.Value == true
+		case "arrayFilters":
+			arr, ok := e.Value.(bson.A)
+			if !ok {
+				return false, nil, contract.Invalid("arrayFilters must be an array of documents")
+			}
+
+			filters = []any(arr)
+		}
+	}
+
+	return upsert, filters, nil
+}
+
+// indexOptions reads {unique, name, expireAfterSeconds, sparse, partialFilterExpression}.
+func indexOptions(text string) (*options.IndexOptionsBuilder, error) {
+	doc, err := parseDoc(text)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Index()
+
+	for _, e := range doc {
+		switch e.Key {
+		case "unique":
+			opts.SetUnique(e.Value == true)
+		case "sparse":
+			opts.SetSparse(e.Value == true)
+		case "name":
+			if name, ok := e.Value.(string); ok && name != "" {
+				opts.SetName(name)
+			}
+		case "expireAfterSeconds":
+			n, ok := intOf(e.Value)
+			if !ok || n < 0 {
+				return nil, contract.Invalid("expireAfterSeconds needs a non-negative number")
+			}
+
+			opts.SetExpireAfterSeconds(int32(n))
+		case "partialFilterExpression":
+			opts.SetPartialFilterExpression(e.Value)
+		case "background":
+		default:
+			return nil, contract.Invalid("createIndex option %q is not supported", e.Key)
+		}
+	}
+
+	return opts, nil
+}
+
+func intOf(v any) (int64, bool) {
+	switch n := v.(type) {
+	case int32:
+		return int64(n), true
+	case int64:
+		return n, true
+	case float64:
+		return int64(n), n == float64(int64(n))
+	}
+
+	return 0, false
+}
+
+// hintArg reads an index name or a keys document.
+func hintArg(text string) (any, error) {
+	if name, err := strconv.Unquote(text); err == nil {
+		return name, nil
+	}
+
+	doc, err := parseDoc(text)
+	if err != nil || len(doc) == 0 {
+		return nil, contract.Invalid("hint needs an index name or a keys document")
+	}
+
+	return doc, nil
+}
+
+// indexNameFor finds the index whose key spec equals keys.
+func indexNameFor(ctx context.Context, coll *mongo.Collection, keys bson.D) (string, error) {
+	cur, err := coll.Indexes().List(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	var specs []struct {
+		Name string `bson:"name"`
+		Key  bson.D `bson:"key"`
+	}
+
+	if err := cur.All(ctx, &specs); err != nil {
+		return "", err
+	}
+
+	want, _ := bson.MarshalExtJSON(keys, true, false)
+
+	for _, s := range specs {
+		if got, _ := bson.MarshalExtJSON(s.Key, true, false); bytes.Equal(got, want) {
+			return s.Name, nil
+		}
+	}
+
+	return "", contract.Invalid("no index with those keys")
+}
+
+// findOneAnd runs findOneAndUpdate, findOneAndReplace and findOneAndDelete.
+func (r *Repository) findOneAnd(ctx context.Context, coll *mongo.Collection, cmd *call) (*contract.CommandResult, error) {
+	filter, err := argDoc(cmd.args, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	optIndex := 2
+	if cmd.method == "findOneAndDelete" {
+		optIndex = 1
+	}
+
+	var opts bson.D
+
+	if optIndex < len(cmd.args) {
+		if opts, err = parseDoc(cmd.args[optIndex]); err != nil {
+			return nil, err
+		}
+	}
+
+	var (
+		sort, proj any
+		upsert     bool
+		after      bool
+	)
+
+	for _, e := range opts {
+		switch e.Key {
+		case "sort":
+			sort = e.Value
+		case "projection":
+			proj = e.Value
+		case "upsert":
+			upsert = e.Value == true
+		case "returnDocument":
+			after = e.Value == "after"
+		case "returnNewDocument":
+			after = e.Value == true
+		}
+	}
+
+	var res *mongo.SingleResult
+
+	switch cmd.method {
+	case "findOneAndDelete":
+		o := options.FindOneAndDelete()
+		if sort != nil {
+			o.SetSort(sort)
+		}
+
+		if proj != nil {
+			o.SetProjection(proj)
+		}
+
+		res = coll.FindOneAndDelete(ctx, filter, o)
+	case "findOneAndReplace":
+		doc, err := parseDoc(cmd.args[1:2][0])
+		if err != nil {
+			return nil, err
+		}
+
+		o := options.FindOneAndReplace().SetUpsert(upsert)
+		if sort != nil {
+			o.SetSort(sort)
+		}
+
+		if proj != nil {
+			o.SetProjection(proj)
+		}
+
+		if after {
+			o.SetReturnDocument(options.After)
+		}
+
+		res = coll.FindOneAndReplace(ctx, filter, doc, o)
+	default:
+		if len(cmd.args) < 2 {
+			return nil, contract.Invalid("findOneAndUpdate needs a filter and an update")
+		}
+
+		update, err := parseDoc(cmd.args[1])
+		if err != nil {
+			return nil, err
+		}
+
+		if len(update) == 0 || !strings.HasPrefix(update[0].Key, "$") {
+			return nil, contract.Invalid("findOneAndUpdate needs update operators such as $set")
+		}
+
+		o := options.FindOneAndUpdate().SetUpsert(upsert)
+		if sort != nil {
+			o.SetSort(sort)
+		}
+
+		if proj != nil {
+			o.SetProjection(proj)
+		}
+
+		if after {
+			o.SetReturnDocument(options.After)
+		}
+
+		res = coll.FindOneAndUpdate(ctx, filter, update, o)
+	}
+
+	var doc bson.D
+	if err := res.Decode(&doc); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return &contract.CommandResult{Output: nil}, nil
+		}
+
+		return nil, err
+	}
+
+	return wrapValue(doc)
+}
+
+// bulkWrite runs [{insertOne: {document}}, {updateOne: {filter, update, upsert}}, {deleteMany: {filter}}, ...].
+func (r *Repository) bulkWrite(ctx context.Context, coll *mongo.Collection, cmd *call) (*contract.CommandResult, error) {
+	if len(cmd.args) == 0 {
+		return nil, contract.Invalid("bulkWrite needs an array of operations")
+	}
+
+	ops, err := argArray(cmd.args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ops) == 0 || len(ops) > maxInsertMany {
+		return nil, contract.Invalid("bulkWrite takes 1 to %d operations", maxInsertMany)
+	}
+
+	models := make([]mongo.WriteModel, 0, len(ops))
+
+	for _, raw := range ops {
+		op, ok := raw.(bson.D)
+		if !ok || len(op) != 1 {
+			return nil, contract.Invalid("each bulkWrite operation is one object, e.g. {insertOne: {document: {}}}")
+		}
+
+		body, _ := op[0].Value.(bson.D)
+		get := func(key string) any {
+			for _, e := range body {
+				if e.Key == key {
+					return e.Value
+				}
+			}
+
+			return nil
+		}
+
+		switch op[0].Key {
+		case "insertOne":
+			models = append(models, mongo.NewInsertOneModel().SetDocument(get("document")))
+		case "deleteOne":
+			models = append(models, mongo.NewDeleteOneModel().SetFilter(get("filter")))
+		case "deleteMany":
+			models = append(models, mongo.NewDeleteManyModel().SetFilter(get("filter")))
+		case "replaceOne":
+			models = append(models, mongo.NewReplaceOneModel().SetFilter(get("filter")).SetReplacement(get("replacement")).SetUpsert(get("upsert") == true))
+		case "updateOne", "updateMany":
+			update, _ := get("update").(bson.D)
+			if len(update) == 0 || !strings.HasPrefix(update[0].Key, "$") {
+				return nil, contract.Invalid("%s needs update operators such as $set", op[0].Key)
+			}
+
+			if op[0].Key == "updateOne" {
+				models = append(models, mongo.NewUpdateOneModel().SetFilter(get("filter")).SetUpdate(update).SetUpsert(get("upsert") == true))
+			} else {
+				models = append(models, mongo.NewUpdateManyModel().SetFilter(get("filter")).SetUpdate(update).SetUpsert(get("upsert") == true))
+			}
+		default:
+			return nil, contract.Invalid("bulkWrite operation %q is not supported", op[0].Key)
+		}
+	}
+
+	res, err := coll.BulkWrite(ctx, models)
+	if err != nil {
+		return nil, err
+	}
+
+	return wrapValue(bson.D{
+		{Key: "insertedCount", Value: res.InsertedCount}, {Key: "matchedCount", Value: res.MatchedCount},
+		{Key: "modifiedCount", Value: res.ModifiedCount}, {Key: "deletedCount", Value: res.DeletedCount}, {Key: "upsertedCount", Value: res.UpsertedCount},
+	})
 }

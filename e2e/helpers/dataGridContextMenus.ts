@@ -18,6 +18,14 @@ import {
 } from "../pages";
 
 function contextMenuSeedSql(engine: DbEngine, tableName: string): string {
+  if (engine === "clickhouse") {
+    // No auto-increment: explicit ids. Nullable note covers the IS NULL filter.
+    const names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
+    const rows = names.map((n, i) => `(${i + 1}, '${n}', ${(i + 1) * 10}, ${i === 0 ? "NULL" : "'keep'"})`).join(", ");
+    return `DROP TABLE IF EXISTS ${tableName};
+CREATE TABLE ${tableName} (id UInt32, name String, score Int32, note Nullable(String)) ENGINE = MergeTree ORDER BY id;
+INSERT INTO ${tableName} (id, name, score, note) VALUES ${rows};`;
+  }
   if (engine === "mssql") {
     return `
 DROP TABLE IF EXISTS ${tableName};

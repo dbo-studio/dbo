@@ -18,6 +18,9 @@ import {
 } from '../hooks/fkColumn';
 import { NULL_OPTION_VALUE, useFkLookup } from '../hooks/useFkLookup';
 
+// A fresh [] per call makes the selector's snapshot unstable and loops React when the store has no columns.
+const NO_COLUMNS: ColumnType[] = [];
+
 type FkCellEditorProps = {
   column: ColumnType;
   value: unknown;
@@ -27,7 +30,7 @@ type FkCellEditorProps = {
 
 export function FkCellEditor({ column, value, onCommitFields, onCancel }: FkCellEditorProps): JSX.Element {
   const theme = useTheme();
-  const allColumns = useDataStore((state) => state.columns ?? []);
+  const allColumns = useDataStore((state) => state.columns ?? NO_COLUMNS);
   const { options, loading, search } = useFkLookup({ column, enabled: true });
   const committedRef = useRef(false);
   const inputValueRef = useRef('');

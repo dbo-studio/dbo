@@ -11,18 +11,23 @@ import (
 
 const autocompleteConcurrency = 6
 
-func (r *Repository) AutoComplete(ctx context.Context, _ *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
-	tables, err := r.ListTableNames(ctx, nil, nil)
+func (r *Repository) AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {
+	tables, err := r.ListTableNames(ctx, req.Database, req.Schema)
 	if err != nil {
 		return nil, err
 	}
 
-	views, err := r.ListViewNames(ctx, nil, nil)
+	views, err := r.ListViewNames(ctx, req.Database, req.Schema)
 	if err != nil {
 		return nil, err
 	}
 
-	ns, err := r.resolveNamespace(ctx, nil, nil)
+	ns, err := r.resolveNamespace(ctx, req.Database, req.Schema)
+	if err != nil {
+		return nil, err
+	}
+
+	namespaces, err := r.d.Namespaces(ctx, r.base.DB().WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -54,5 +59,13 @@ func (r *Repository) AutoComplete(ctx context.Context, _ *dto.AutoCompleteReques
 		return nil, err
 	}
 
-	return &dto.AutoCompleteResponse{Databases: []string{}, Schemas: []string{}, Views: views, Tables: tables, Columns: columns}, nil
+	// A namespace is a schema (SQL Server) or a database (ClickHouse); the editor shows the matching picker.
+	resp := &dto.AutoCompleteResponse{Databases: []string{}, Schemas: []string{}, Views: views, Tables: tables, Columns: columns}
+	if r.d.NamespaceIsSchema() {
+		resp.Schemas = namespaces
+	} else {
+		resp.Databases = namespaces
+	}
+
+	return resp, nil
 }

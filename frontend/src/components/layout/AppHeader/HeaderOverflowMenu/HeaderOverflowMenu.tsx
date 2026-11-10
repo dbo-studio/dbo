@@ -2,7 +2,7 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
 import { canCreateConnection, canManageMcpSettings } from '@/core/auth/permissions';
-import { isNoSQLType } from '@/core/db/connectionAliases';
+import { hasEditorTab } from '@/core/db/connectionAliases';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
@@ -133,7 +133,7 @@ export default function HeaderOverflowMenu(): JSX.Element {
           </ListItemIcon>
           <ListItemText>{locales.refresh}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleAddEditorTab} disabled={!currentConnection || isNoSQLType(currentConnection.type)}>
+        <MenuItem onClick={handleAddEditorTab} disabled={!currentConnection || !hasEditorTab(currentConnection.type)}>
           <ListItemIcon>
             <CustomIcon type='sql' size='s' />
           </ListItemIcon>

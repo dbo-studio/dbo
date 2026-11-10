@@ -43,9 +43,11 @@ const (
 	EditSequenceAction         TreeNodeActionName = "editSequence"
 	DropSequenceAction         TreeNodeActionName = "dropSequence"
 	CopyNameAction             TreeNodeActionName = "copyName"
-	RefreshAction              TreeNodeActionName = "refresh"
-	BrowseContainerAction      TreeNodeActionName = "browseContainer"
-	OpenToolAction             TreeNodeActionName = "openTool"
+	// OpenQueryAction opens the SQL editor with params.query and runs it (server insight views).
+	OpenQueryAction       TreeNodeActionName = "openQuery"
+	RefreshAction         TreeNodeActionName = "refresh"
+	BrowseContainerAction TreeNodeActionName = "browseContainer"
+	OpenToolAction        TreeNodeActionName = "openTool"
 )
 
 func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {

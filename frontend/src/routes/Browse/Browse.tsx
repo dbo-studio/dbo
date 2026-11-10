@@ -23,10 +23,13 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import type { BrowseTabType, FilterType } from '@/types/Tab';
 import type { ColumnType } from '@/types/Data';
-import { Box, Button, IconButton, Menu, MenuItem, Popover, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Menu, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import InlineSqlEditor from '@/components/base/InlineSqlEditor/InlineSqlEditor';
+import { setMongoContext } from '@/components/base/MongoEditor/mongoCompletions';
+import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import BulkDeleteDialog from './BulkDeleteDialog';
 import ItemHeader from './ItemHeader';
@@ -120,6 +123,17 @@ export default function Browse(): JSX.Element {
     queryFn: () => api.nosql.describe(connectionId, containerId),
     enabled: !!tab
   });
+
+  // The Mongo filter bar completes this collection's field names.
+  useEffect(() => {
+    if (spec?.filter !== 'query') return;
+    setMongoContext({
+      collections: [],
+      fields: () => Promise.resolve([]),
+      filterFields: (spec.fields ?? []).map((f) => f.name)
+    });
+    return () => setMongoContext(undefined);
+  }, [spec]);
 
   const page = useInfiniteQuery({
     queryKey: ['nosql', 'browse', connectionId, containerId, applied],
@@ -233,40 +247,34 @@ export default function Browse(): JSX.Element {
 
   if (!tab) return <></>;
 
+  const applyText = (text: string): void => setApplied({ ...NO_FILTER, filter: text });
+
   const applyFields = (): void => setApplied(toApplied(useTabStore.getState().selectedTab<BrowseTabType>() ?? tab));
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid='browse-tab'>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', p: 1, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
         <Box sx={{ flex: 1 }}>
-          {spec?.filter === 'pattern' && (
-            <TextField
-              size='small'
-              fullWidth
-              placeholder={locales.nosql_filter_pattern}
-              value={pattern}
-              onChange={(e): void => setPattern(e.target.value)}
-              onKeyDown={(e): void => {
-                if (e.key === 'Enter') setApplied({ ...NO_FILTER, filter: pattern });
-              }}
-              slotProps={{ htmlInput: { 'aria-label': 'browse-pattern' } }}
-            />
-          )}
-          {spec?.filter === 'query' && (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                size='small'
-                fullWidth
-                multiline
-                placeholder={locales.nosql_filter_query}
-                value={query}
-                onChange={(e): void => setQuery(e.target.value)}
-                slotProps={{ htmlInput: { 'aria-label': 'browse-query' } }}
-              />
-              <Button variant='contained' onClick={(): void => setApplied({ ...NO_FILTER, filter: query })}>
-                {locales.nosql_run}
-              </Button>
-            </Box>
+          {(spec?.filter === 'pattern' || spec?.filter === 'query') && (
+            <InlineQueryStackStyled direction='row' data-testid='browse-filter-bar'>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <InlineSqlEditor
+                  language={spec.filter === 'query' ? 'json' : 'plaintext'}
+                  placeholder={spec.filter === 'query' ? locales.nosql_filter_query : locales.nosql_filter_pattern}
+                  value={spec.filter === 'query' ? query : pattern}
+                  onChange={spec.filter === 'query' ? setQuery : setPattern}
+                  onEnter={applyText}
+                />
+              </Box>
+              <SubmitButtonStyled
+                variant='contained'
+                aria-label={locales.nosql_run}
+                data-testid='browse-filter-run'
+                onClick={(): void => applyText(spec.filter === 'query' ? query : pattern)}
+              >
+                <CustomIcon type='check' size='s' />
+              </SubmitButtonStyled>
+            </InlineQueryStackStyled>
           )}
           {spec?.filter === 'fields' && (
             <Box data-testid='browse-fields-filter'>
