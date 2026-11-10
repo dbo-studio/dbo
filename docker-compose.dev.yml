@@ -1,52 +1,51 @@
 services:
-  backend:
-    container_name: dbo-studio-dev-api
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./backend:/back/
-    environment:
-      APP_PORT: "8080"
-      APP_ENV: "docker"
-      # Public URL when accessed outside localhost — see docs/deployment/configuration.md
-      # APP_PUBLIC_URL: "https://dbo.example.com"
-    ports:
-      - "8080:8080"
-    depends_on:
-      - sample-pgsql
-      - sample-mysql
+  # backend:
+  #   container_name: dbo-studio-dev-api
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./backend:/back/
+  #   environment:
+  #     APP_PORT: "8080"
+  #     APP_ENV: "docker"
+  #     # Public URL when accessed outside localhost — see docs/deployment/configuration.md
+  #     # APP_PUBLIC_URL: "https://dbo.example.com"
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - sample-pgsql
+  #     - sample-mysql
 
-  frontend:
-    container_name: dbo-studio-dev-frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/index.html:/index.html
-      - ./frontend/package.json:/package.json
-    environment:
-      VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
-      NODE_ENV: "development"
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-      - sample-pgsql
-      - sample-mysql
+  # frontend:
+  #   container_name: dbo-studio-dev-frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   volumes:
+  #     - ./frontend/src:/app/src
+  #     - ./frontend/public:/app/public
+  #     - ./frontend/index.html:/index.html
+  #     - ./frontend/package.json:/package.json
+  #   environment:
+  #     VITE_PUBLIC_SERVER_URL: "http://localhost:8080/api"
+  #     NODE_ENV: "development"
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #     - sample-pgsql
+  #     - sample-mysql
 
   sample-redis:
     container_name: dbo-studio-sample-redis
     image: redis:7
-    # Starts redis, then loads docker/redis/seed.sh (every key type, TTLs, >1000-member collections)
     entrypoint: ["sh", "/entrypoint.sh"]
     ports:
       - "${REDIS_TEST_PORT-46379}:6379"
     volumes:
-      - "./docker/redis/entrypoint.sh:/entrypoint.sh:ro"
-      - "./docker/redis/seed.sh:/seed.sh:ro"
+      - "./docs/sample_db/redis-entrypoint.sh:/entrypoint.sh:ro"
+      - "./docs/sample_db/redis-seed.sh:/seed.sh:ro"
 
   sample-mongo:
     container_name: dbo-studio-sample-mongo
@@ -54,13 +53,12 @@ services:
     ports:
       - "${MONGO_TEST_PORT-47017}:27017"
     volumes:
-      # Runs once on first start (databases shop, analytics, blog); re-seed: rm -sfv sample-mongo, then up
-      - "./docker/mongo/seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
+      - "./docker/data/mongo:/data/db"
+      - "./docs/sample_db/mongo-seed.js:/docker-entrypoint-initdb.d/seed.js:ro"
 
   sample-mssql:
     container_name: dbo-studio-sample-mssql
     image: mcr.microsoft.com/mssql/server:2022-latest
-    # Starts SQL Server, then applies docs/sample_db/shop_mssql.sql (database `shop`); data is not persisted.
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
     platform: "linux/amd64"
     ports:
@@ -69,7 +67,8 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Secret_pass1"
     volumes:
-      - "./docker/mssql/entrypoint.sh:/entrypoint.sh:ro"
+      - "./docker/data/mssql:/var/lib/mssql"
+      - "./docs/sample_db/mssql-entrypoint.sh:/entrypoint.sh:ro"
       - "./docs/sample_db/shop_mssql.sql:/seed.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/seeded"]
@@ -90,7 +89,7 @@ services:
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
     volumes:
-      # Runs once on first start (database `shop`); re-seed: rm -sfv sample-clickhouse, then up
+      - "./docker/data/clickhouse:/var/lib/clickhouse"
       - "./docs/sample_db/shop_clickhouse.sql:/docker-entrypoint-initdb.d/shop.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "clickhouse-client --password secret -q 'SELECT count() FROM shop.page_views' | grep -q 40000"]
@@ -120,8 +119,9 @@ services:
     ports:
       - "${PGSQL_SSL_TEST_PORT-45433}:5432"
     volumes:
-      - "./docker/pgsql-ssl/certs:/certs:ro"
-      - "./docker/pgsql-ssl/entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
+      - "./docker/data/pgsql-ssl:/var/lib/postgresql/data"
+      - "./docs/sample_db/certs:/certs:ro"
+      - "./docs/sample_db/pgsql-ssl-entrypoint.sh:/usr/local/bin/dbo-ssl-entrypoint.sh:ro"
     entrypoint: ["/bin/bash", "/usr/local/bin/dbo-ssl-entrypoint.sh"]
     restart: always
     platform: "linux/amd64"
@@ -130,7 +130,6 @@ services:
       POSTGRES_USER: default
       POSTGRES_PASSWORD: secret
 
-  # SSH bastion for tunnel e2e: reaches sample-pgsql / sample-mysql by service name.
   sample-sshd:
     container_name: dbo-studio-sample-sshd
     image: lscr.io/linuxserver/openssh-server:latest
@@ -138,7 +137,7 @@ services:
       - "${SSH_TEST_PORT-42222}:2222"
     volumes:
       - "./e2e/fixtures/ssh/id_ed25519.pub:/keys/id_ed25519.pub:ro"
-      - "./docker/sshd/10-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
+      - "./docs/sample_db/sshd-enable-forwarding.sh:/custom-cont-init.d/10-enable-forwarding.sh:ro"
     restart: always
     environment:
       PUID: 1000
@@ -154,6 +153,7 @@ services:
     ports:
       - "${MYSQL_TEST_PORT-43306}:3306"
     volumes:
+      - "./docker/data/mysql:/var/lib/mysql"
       - "./docs/sample_db/mysql.sql:/docker-entrypoint-initdb.d/01-product.sql:ro"
       - "./docs/sample_db/shop_mysql.sql:/docker-entrypoint-initdb.d/02-shop.sql:ro"
     restart: always

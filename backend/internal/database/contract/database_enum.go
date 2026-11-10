@@ -37,7 +37,6 @@ const (
 	CloudSQLMysql = "cloudsql_mysql"
 	AzureMysql    = "azure_mysql"
 	Percona       = "percona"
-	HeatWave      = "heatwave"
 )
 
 // PostgresFamily connection types that use the PostgreSQL wire stack.
@@ -62,7 +61,6 @@ var MysqlFamily = []string{
 	CloudSQLMysql,
 	AzureMysql,
 	Percona,
-	HeatWave,
 }
 
 // RedisFamily lists the connection types served by the Redis driver.

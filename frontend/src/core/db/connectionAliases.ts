@@ -22,7 +22,6 @@ export type ConnectionEngine =
   | 'cloudsql_mysql'
   | 'azure_mysql'
   | 'percona'
-  | 'heatwave'
   | 'redis'
   | 'valkey'
   | 'keydb'
@@ -57,7 +56,6 @@ export const CONNECTION_ALIASES: ConnectionAliasDef[] = [
   { name: 'Azure Database (PostgreSQL)', logo: 'azure', type: 'azure_postgresql', driver: 'postgresql' },
   { name: 'Cloud SQL (MySQL)', logo: 'google_cloud_sql', type: 'cloudsql_mysql', driver: 'mysql' },
   { name: 'Cloud SQL (PostgreSQL)', logo: 'google_cloud_sql', type: 'cloudsql_postgresql', driver: 'postgresql' },
-  { name: 'HeatWave', logo: 'heatwave', type: 'heatwave', driver: 'mysql' },
   { name: 'Neon', logo: 'neon', type: 'neon', driver: 'postgresql' },
   { name: 'Percona', logo: 'percona', type: 'percona', driver: 'mysql' },
   { name: 'Supabase', logo: 'supabase', type: 'supabase', driver: 'postgresql' },

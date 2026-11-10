@@ -88,7 +88,7 @@ If you run the API/UI on the host but want Docker sample DBs:
 docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql
 ```
 
-Seed SQL lives in `docs/sample_db/`. Data persists under `docker/data/pgsql/`.
+Seed SQL lives in `docs/sample_db/`. Data persists under `docker/data/` (one subdir per sample DB).
 
 ## Desktop development
 

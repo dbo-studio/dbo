@@ -1,5 +1,6 @@
-/docker/*
-!/docker/sshd/
+# Runtime-only: docker compose bind-mounts ./docker/data/pgsql for sample-pgsql;
+# tracked container scripts/certs live in docs/sample_db/.
+/docker/
 .idea
 logs/*
 build

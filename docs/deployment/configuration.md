@@ -192,7 +192,7 @@ Init SQL: `docs/sample_db/public.sql`. Data volume: `docker/data/pgsql/`.
 | `MYSQL_PASSWORD` | `secret` |
 | `MYSQL_ROOT_PASSWORD` | `secret` |
 
-**`sample-pgsql-ssl`** — same credentials as `sample-pgsql`, TLS certs from `docker/pgsql-ssl/certs/`.
+**`sample-pgsql-ssl`** — same credentials as `sample-pgsql`, TLS certs from `docs/sample_db/certs/`.
 
 Connection strings for manual testing match the e2e defaults in the table below when using default host ports.
 

@@ -26,7 +26,19 @@ docker compose -f docker-compose.dev.yml exec -T sample-pgsql psql -U default -d
 docker compose -f docker-compose.dev.yml exec -T sample-mysql mysql -uroot -psecret < docs/sample_db/shop_mysql.sql
 ```
 
-`sample-mssql` re-applies its seed on every start (`docker/mssql/entrypoint.sh`); `sample-clickhouse` seeds on first start of a fresh container (`rm -sfv sample-clickhouse`, then `up`).
+`sample-mssql` re-applies its seed on every start (`docs/sample_db/mssql-entrypoint.sh`); `sample-clickhouse` seeds on first start of a fresh container (`rm -sfv sample-clickhouse`, then `up`).
+
+## Container helper scripts
+
+Entrypoints and seeds bind-mounted by `docker-compose.dev.yml` (the `docker/` directory itself is runtime-only and git-ignored):
+
+| File | Mounted into |
+|------|--------------|
+| `redis-entrypoint.sh`, `redis-seed.sh` | `sample-redis` |
+| `mongo-seed.js` | `sample-mongo` |
+| `mssql-entrypoint.sh` | `sample-mssql` |
+| `pgsql-ssl-entrypoint.sh`, `certs/server.crt`, `certs/server.key` | `sample-pgsql-ssl` |
+| `sshd-enable-forwarding.sh` | `sample-sshd` |
 
 ## Refresh `product` on an existing volume
 
