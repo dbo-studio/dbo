@@ -102,10 +102,7 @@ services:
     ports:
       - "${PGSQL_TEST_PORT-45432}:5432"
     volumes:
-      # Named volume: postgres initdb refuses a data dir it does not own, which
-      # breaks on host filesystems without POSIX ownership (NTFS/exFAT).
-      # Seeds run on first start; re-seed: docker volume rm dbo_pgsql-data.
-      - "pgsql-data:/var/lib/postgresql/data"
+      - "./docker/data/pgsql:/var/lib/postgresql/data"
       - "./docs/sample_db/public.sql:/docker-entrypoint-initdb.d/public.sql"
       - "./docs/sample_db/shop_pg.sql:/docker-entrypoint-initdb.d/shop.sql"
     restart: always
@@ -164,6 +161,3 @@ services:
       MYSQL_USER: default
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: secret
-
-volumes:
-  pgsql-data:
