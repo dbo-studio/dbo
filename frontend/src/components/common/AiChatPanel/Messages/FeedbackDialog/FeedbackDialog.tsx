@@ -55,7 +55,6 @@ export default function FeedbackDialog({
             {preview(answer)}
           </Typography>
           <TextField
-            size='small'
             multiline
             minRows={2}
             value={comment}

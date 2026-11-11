@@ -126,7 +126,6 @@ export default function SavedQueries(): JSX.Element {
                 loading={isFetchingNextPage}
                 onClick={() => void handleLoadMore()}
                 fullWidth
-                size='small'
                 variant='outlined'
               >
                 <span>{locales.load_more}</span>

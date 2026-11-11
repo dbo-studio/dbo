@@ -105,7 +105,6 @@ export default function AiSetupPopover({ open, anchorEl, onClose, onReady }: AiS
     <AiSetupFormStyled data-testid='ai-setup-form'>
       <Typography variant='subtitle2'>{locales.ai_setup_title}</Typography>
       <SelectInput
-        size='small'
         label={locales.provider}
         testId='ai-setup-provider'
         value={selected?.id.toString()}
@@ -154,7 +153,6 @@ export default function AiSetupPopover({ open, anchorEl, onClose, onReady }: AiS
           {locales.ai_advanced_settings}
         </Link>
         <Button
-          size='small'
           variant='contained'
           disabled={isPending || !selected}
           loading={isPending}

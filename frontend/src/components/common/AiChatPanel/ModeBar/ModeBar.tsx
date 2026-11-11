@@ -80,7 +80,6 @@ export function SafeModeBadge(): JSX.Element | null {
   return (
     <Tooltip title={locales.ai_safe_mode_badge_desc} enterDelay={700}>
       <Chip
-        size='small'
         data-testid='ai-safe-mode-badge'
         icon={
           <CustomIcon type='lock' size='xs' color={guarded ? theme.palette.error.main : theme.palette.warning.main} />

@@ -91,7 +91,7 @@ export default function ConnectWait({ start, onSession, onCancel }: ConnectWaitP
           {locales.account_connect_submit}
         </Button>
       </ConnectWaitBody>
-      <Button size='small' onClick={onCancel} sx={{ alignSelf: 'flex-start' }} data-testid='account-connect-cancel'>
+      <Button onClick={onCancel} sx={{ alignSelf: 'flex-start' }} data-testid='account-connect-cancel'>
         {locales.account_connect_cancel}
       </Button>
     </Box>

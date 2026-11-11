@@ -47,7 +47,7 @@ export default function ToolsSection(): JSX.Element {
     <>
       <Box sx={{ display: 'flex' }}>
         <SectionActionsStyled sx={{ ml: 0 }}>
-          <Button size='small' variant='outlined' onClick={refresh} data-testid='backup-tools-detect'>
+          <Button variant='outlined' onClick={refresh} data-testid='backup-tools-detect'>
             {locales.backup_tool_detect}
           </Button>
         </SectionActionsStyled>
@@ -141,20 +141,11 @@ function DriverCard({
           )}
         </CardRowMainStyled>
         {offer && !installing && (
-          <Button
-            size='small'
-            variant='contained'
-            onClick={() => void startInstall()}
-            data-testid={`backup-tool-install-${driver}`}
-          >
+          <Button variant='contained' onClick={() => void startInstall()} data-testid={`backup-tool-install-${driver}`}>
             {locales.backup_tool_download}
           </Button>
         )}
-        {installing && (
-          <Button size='small' onClick={cancelInstall}>
-            {locales.cancel}
-          </Button>
-        )}
+        {installing && <Button onClick={cancelInstall}>{locales.cancel}</Button>}
       </CardRowStyled>
       {installing && (
         <CardRowStyled>
@@ -251,10 +242,10 @@ function ToolRow({ tool, onChanged }: { tool: BackupToolType; onChanged: () => v
             <Typography variant='body2' color='textTitle'>
               {tool.name}
             </Typography>
-            {usable && <Chip size='small' color='success' label={tool.version} />}
-            {tool.found && tool.source && <Chip size='small' label={SOURCE_LABEL[tool.source] ?? tool.source} />}
-            {!tool.found && <Chip size='small' label={locales.backup_tool_missing} />}
-            {tool.found && tool.error && <Chip size='small' color='error' label={tool.error} />}
+            {usable && <Chip color='success' label={tool.version} />}
+            {tool.found && tool.source && <Chip label={SOURCE_LABEL[tool.source] ?? tool.source} />}
+            {!tool.found && <Chip label={locales.backup_tool_missing} />}
+            {tool.found && tool.error && <Chip color='error' label={tool.error} />}
           </Box>
           {tool.path && (
             <Typography variant='caption' color='textSecondary' noWrap component='p'>
@@ -262,16 +253,10 @@ function ToolRow({ tool, onChanged }: { tool: BackupToolType; onChanged: () => v
             </Typography>
           )}
         </CardRowMainStyled>
-        <Button size='small' onClick={() => setEditing((v) => !v)}>
-          {locales.backup_tool_set_path}
-        </Button>
-        {tool.source === 'configured' && (
-          <Button size='small' onClick={() => void reset()}>
-            {locales.backup_tool_reset}
-          </Button>
-        )}
+        <Button onClick={() => setEditing((v) => !v)}>{locales.backup_tool_set_path}</Button>
+        {tool.source === 'configured' && <Button onClick={() => void reset()}>{locales.backup_tool_reset}</Button>}
         {tool.found && tool.source === 'managed' && (
-          <Button size='small' color='error' onClick={() => void remove()}>
+          <Button color='error' onClick={() => void remove()}>
             {locales.backup_tool_remove}
           </Button>
         )}
@@ -295,14 +280,14 @@ function ToolRow({ tool, onChanged }: { tool: BackupToolType; onChanged: () => v
             />
           </Box>
           {isTauri && (
-            <Button size='small' variant='outlined' onClick={() => void browse()}>
+            <Button variant='outlined' onClick={() => void browse()}>
               {locales.backup_tool_browse}
             </Button>
           )}
-          <Button size='small' variant='outlined' onClick={() => void test()} disabled={!path.trim()}>
+          <Button variant='outlined' onClick={() => void test()} disabled={!path.trim()}>
             {locales.backup_tool_test}
           </Button>
-          <Button size='small' variant='contained' onClick={() => void save()} disabled={!path.trim()}>
+          <Button variant='contained' onClick={() => void save()} disabled={!path.trim()}>
             {locales.save}
           </Button>
         </CardRowStyled>

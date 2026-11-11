@@ -68,16 +68,10 @@ export default function ConfirmModal(): JSX.Element {
           </Box>
         </Box>
         <ModalFooter>
-          <Button variant='text' size='small' autoFocus={mode === 'danger'} onClick={handleCancel}>
+          <Button variant='text' autoFocus={mode === 'danger'} onClick={handleCancel}>
             {locales.cancel}
           </Button>
-          <Button
-            color={confirmColor}
-            onClick={handleConfirm}
-            size='small'
-            variant='contained'
-            autoFocus={mode !== 'danger'}
-          >
+          <Button color={confirmColor} onClick={handleConfirm} variant='contained' autoFocus={mode !== 'danger'}>
             {resolvedConfirmLabel}
           </Button>
         </ModalFooter>

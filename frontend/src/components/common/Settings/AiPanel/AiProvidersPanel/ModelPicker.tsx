@@ -41,7 +41,6 @@ export default function ModelPicker({
         selectOnFocus
         clearOnBlur
         handleHomeEndKeys
-        size='small'
         disabled={disabled}
         value={value}
         options={options}
@@ -65,7 +64,6 @@ export default function ModelPicker({
               </Typography>
               {!custom && removable.includes(option) && onRemove ? (
                 <IconButton
-                  size='small'
                   aria-label={locales.ai_model_remove}
                   data-testid='ai-model-remove'
                   onMouseDown={(e) => e.preventDefault()}
@@ -79,7 +77,6 @@ export default function ModelPicker({
               ) : null}
               {!custom && caps.tools ? (
                 <Chip
-                  size='small'
                   variant='outlined'
                   label={
                     caps.contextWindow

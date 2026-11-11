@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
+    },
+    "improve-animations": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/improve-animations/SKILL.md",
+      "computedHash": "f6652a3bb94950baa33c684cc0966c838eb65cf22ebb5769a4f51ea205c254fe"
+    },
+    "improve-react": {
+      "source": "millionco/react-doctor",
+      "sourceType": "github",
+      "skillPath": "skills/improve-react/SKILL.md",
+      "computedHash": "ee6095448a511e2507528caae7ba91c5dc462464b603196c5b1931d4924a371a"
+    },
+    "improve-ui": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/improve-ui/SKILL.md",
+      "computedHash": "5bd7689c5508c6bd8166f796b3d1bd32255077447595b14b60fac9847dce63f1"
+    },
+    "ui-skills-root": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-skills-root/SKILL.md",
+      "computedHash": "e3120361faa5a0ef5fba9b67d91e00c90002f3c9ca092c5325d2391dab8c619e"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "411316b5893571bda59f1517b1fd639682cbbc26f8c804c08a071f2b7b864992"
+    }
+  }
+}

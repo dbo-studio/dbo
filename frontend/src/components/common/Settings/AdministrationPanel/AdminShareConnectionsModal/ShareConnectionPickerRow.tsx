@@ -83,7 +83,7 @@ export default function ShareConnectionPickerRow({
               {connection.name}
             </Typography>
             {connection.shared ? (
-              <Chip size='small' variant='outlined' label={locales.connections_shared} sx={{ height: 20 }} />
+              <Chip variant='outlined' label={locales.connections_shared} sx={{ height: 20 }} />
             ) : null}
           </Box>
           {connection.info ? (
@@ -104,7 +104,6 @@ export default function ShareConnectionPickerRow({
           <Box sx={{ minWidth: 120 }}>
             <SelectInput
               value={role}
-              size='small'
               disabled={pending}
               options={roleOptions}
               testId={`admin-share-existing-role-${connection.name}`}
@@ -116,7 +115,7 @@ export default function ShareConnectionPickerRow({
               }}
             />
           </Box>
-          <Button size='small' color='error' disabled={pending} onClick={(): void => onRevoke?.(Number(connection.id))}>
+          <Button color='error' disabled={pending} onClick={(): void => onRevoke?.(Number(connection.id))}>
             {locales.share_revoke}
           </Button>
         </ShareModalExistingActionsStyled>

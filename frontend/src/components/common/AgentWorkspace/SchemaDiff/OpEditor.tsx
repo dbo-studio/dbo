@@ -60,7 +60,6 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
     <Stack spacing={1} sx={{ py: 0.5 }} data-testid='ai-diff-editor'>
       {(draft.op === 'create_database' || draft.op === 'create_schema') && (
         <TextField
-          size='small'
           label={locales.ai_changes_edit_name}
           value={draft.name ?? ''}
           onChange={(event) => setDraft({ ...draft, name: event.target.value })}
@@ -80,7 +79,6 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
             >
               <ColumnFields column={column} canChangeName withPrimary onChange={(next) => setColumn(index, next)} />
               <IconButton
-                size='small'
                 onClick={() => setDraft({ ...draft, columns: columns.filter((_, i) => i !== index) })}
                 data-testid='ai-diff-edit-remove-column'
               >
@@ -89,7 +87,6 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
             </Stack>
           ))}
           <Button
-            size='small'
             variant='text'
             onClick={() => setDraft({ ...draft, columns: [...columns, NEW_COLUMN] })}
             data-testid='ai-diff-edit-add-column'
@@ -110,7 +107,6 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
       {draft.op === 'add_index' && (
         <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
           <TextField
-            size='small'
             label={locales.ai_changes_edit_columns}
             value={(draft.indexColumns ?? []).join(', ')}
             onChange={(event) => setDraft({ ...draft, indexColumns: toList(event.target.value) })}
@@ -133,21 +129,18 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
       {draft.op === 'add_foreign_key' && (
         <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap' }}>
           <TextField
-            size='small'
             label={locales.ai_changes_edit_columns}
             value={(draft.fkColumns ?? []).join(', ')}
             onChange={(event) => setDraft({ ...draft, fkColumns: toList(event.target.value) })}
             slotProps={{ htmlInput: { 'data-testid': 'ai-diff-edit-fk-columns' } }}
           />
           <TextField
-            size='small'
             label={locales.ai_changes_edit_ref_table}
             value={draft.refTable ?? ''}
             onChange={(event) => setDraft({ ...draft, refTable: event.target.value })}
             slotProps={{ htmlInput: { 'data-testid': 'ai-diff-edit-ref-table' } }}
           />
           <TextField
-            size='small'
             label={locales.ai_changes_edit_ref_columns}
             value={(draft.refColumns ?? []).join(', ')}
             onChange={(event) => setDraft({ ...draft, refColumns: toList(event.target.value) })}
@@ -155,7 +148,6 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
           />
           <TextField
             select
-            size='small'
             label={locales.ai_changes_edit_on_delete}
             value={draft.onDelete ?? ''}
             onChange={(event) => setDraft({ ...draft, onDelete: event.target.value || undefined })}
@@ -172,16 +164,10 @@ export default function OpEditor({ op, onSave, onCancel }: OpEditorProps): JSX.E
       )}
 
       <Stack direction='row' spacing={1} sx={{ justifyContent: 'flex-end' }}>
-        <Button size='small' variant='text' onClick={onCancel}>
+        <Button variant='text' onClick={onCancel}>
           {locales.cancel}
         </Button>
-        <Button
-          size='small'
-          variant='contained'
-          disabled={!complete}
-          onClick={() => onSave(draft)}
-          data-testid='ai-diff-edit-save'
-        >
+        <Button variant='contained' disabled={!complete} onClick={() => onSave(draft)} data-testid='ai-diff-edit-save'>
           {locales.save}
         </Button>
       </Stack>

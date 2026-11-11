@@ -20,11 +20,10 @@ export default function ChatErrorMessage({ message, onRetry }: ChatErrorMessageP
           {message}
         </Typography>
         <Stack direction='row' spacing={1}>
-          <Button size='small' variant='outlined' onClick={onRetry}>
+          <Button variant='outlined' onClick={onRetry}>
             {locales.retry}
           </Button>
           <Button
-            size='small'
             variant='text'
             data-testid='ai-error-copy'
             onClick={() => void copy(message).then((ok) => ok && toast.success(locales.copied))}

@@ -47,7 +47,7 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
       <UserMessageRowStyled $isNew={message.isNew}>
         <UserMessageActionsStyled className='user-message-actions'>
           <Tooltip title={locales.edit}>
-            <IconButton size='small' onClick={handleEditButton}>
+            <IconButton onClick={handleEditButton}>
               <CustomIcon size='xs' type='pen' />
             </IconButton>
           </Tooltip>

@@ -35,7 +35,6 @@ export default function QueryPreview({ query, onBeforeOpen }: QueryPreviewProps)
         <Tooltip title={locales.open_editor}>
           <span>
             <IconButton
-              size='small'
               onClick={handleOpenInEditor}
               disabled={!query.trim()}
               aria-label={locales.open_editor}

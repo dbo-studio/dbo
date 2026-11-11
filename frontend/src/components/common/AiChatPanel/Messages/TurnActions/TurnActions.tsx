@@ -52,13 +52,13 @@ export default function TurnActions({
   return (
     <Stack direction='row' spacing={0.25} sx={{ mt: -0.5 }} data-testid='ai-turn-actions'>
       <Tooltip title={locales.ai_copy_answer}>
-        <IconButton size='small' onClick={() => void copy(text).then((ok) => ok && toast.success(locales.copied))}>
+        <IconButton onClick={() => void copy(text).then((ok) => ok && toast.success(locales.copied))}>
           <CustomIcon type='copy' size='xs' />
         </IconButton>
       </Tooltip>
       {onRegenerate && (
         <Tooltip title={locales.ai_regenerate}>
-          <IconButton size='small' onClick={onRegenerate} data-testid='ai-regenerate'>
+          <IconButton onClick={onRegenerate} data-testid='ai-regenerate'>
             <CustomIcon type='refresh' size='xs' />
           </IconButton>
         </Tooltip>
@@ -68,7 +68,6 @@ export default function TurnActions({
           <Tooltip title={locales.ai_feedback_good}>
             <span>
               <IconButton
-                size='small'
                 color={rating === 'up' ? 'primary' : 'default'}
                 aria-pressed={rating === 'up'}
                 disabled={rating !== undefined}
@@ -82,7 +81,6 @@ export default function TurnActions({
           <Tooltip title={locales.ai_feedback_bad}>
             <span>
               <IconButton
-                size='small'
                 color={rating === 'down' ? 'primary' : 'default'}
                 aria-pressed={rating === 'down'}
                 disabled={rating !== undefined}
@@ -98,7 +96,7 @@ export default function TurnActions({
       {onCompare && options.length > 0 && (
         <>
           <Tooltip title={locales.ai_compare_model}>
-            <IconButton size='small' onClick={(event) => setAnchorEl(event.currentTarget)} data-testid='ai-compare'>
+            <IconButton onClick={(event) => setAnchorEl(event.currentTarget)} data-testid='ai-compare'>
               <CustomIcon type='compare' size='xs' />
             </IconButton>
           </Tooltip>

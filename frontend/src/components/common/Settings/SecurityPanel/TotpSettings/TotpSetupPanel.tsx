@@ -38,12 +38,9 @@ export function TotpSetupActions({
 }: Pick<TotpSetupPanelProps, 'enableCode' | 'isEnabling' | 'onCancel' | 'onEnable'>): JSX.Element {
   return (
     <>
-      <Button size='small' onClick={onCancel}>
-        {locales.cancel}
-      </Button>
+      <Button onClick={onCancel}>{locales.cancel}</Button>
       <Button
         variant='contained'
-        size='small'
         disabled={isEnabling || enableCode.length < 6}
         data-testid='auth-totp-enable-submit'
         onClick={onEnable}
@@ -126,12 +123,7 @@ export function TotpSetupPanel({
             {setup.secret}
           </Typography>
           <Tooltip title={locales.copy}>
-            <IconButton
-              size='small'
-              onClick={handleCopySecret}
-              aria-label={locales.copy}
-              data-testid='auth-totp-secret-copy'
-            >
+            <IconButton onClick={handleCopySecret} aria-label={locales.copy} data-testid='auth-totp-secret-copy'>
               <CustomIcon type='copy' size='xs' />
             </IconButton>
           </Tooltip>
@@ -146,7 +138,6 @@ export function TotpSetupPanel({
           type='text'
           label={locales.auth_totp_code}
           value={enableCode}
-          size='small'
           fullWidth={variant === 'modal'}
           onChange={(e): void => onEnableCodeChange(e.target.value)}
           inputProps={{

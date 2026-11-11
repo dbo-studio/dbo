@@ -24,7 +24,7 @@ export default function LockedBanner(): JSX.Element | null {
       <Typography variant='caption' color='textText' sx={{ flex: 1 }}>
         {locales.connection_locked_banner.replace('{name}', connection?.name ?? '')}
       </Typography>
-      <Button size='small' onClick={(event) => setAnchor(event.currentTarget)} data-testid='connection-locked-unlock'>
+      <Button onClick={(event) => setAnchor(event.currentTarget)} data-testid='connection-locked-unlock'>
         {locales.connection_unlock}
       </Button>
       <Popover

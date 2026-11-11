@@ -114,7 +114,6 @@ export default function ConnectionSwitcherMenu({
           <SwitcherFooterStyled>
             <Button
               fullWidth
-              size='small'
               onClick={() => {
                 close();
                 updateUI({ showAddConnection: true, duplicateConnectionId: undefined });

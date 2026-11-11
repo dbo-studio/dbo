@@ -62,7 +62,6 @@ export function DBFieldItem({ row, column }: DBFieldItemProps): JSX.Element {
         </Box>
         <TextField
           select
-          size='small'
           fullWidth
           value={
             cellValue == null
@@ -107,7 +106,6 @@ export function DBFieldItem({ row, column }: DBFieldItemProps): JSX.Element {
 
   return (
     <FieldInput
-      size='small'
       value={String(value)}
       fullWidth={true}
       label={column.name}

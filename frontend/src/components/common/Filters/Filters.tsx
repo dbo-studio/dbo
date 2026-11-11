@@ -70,7 +70,6 @@ export default function Filters({ columns: columnsProp, onApply }: FiltersProps 
         <FiltersApplyBoxStyled>
           <Button
             onClick={(): void => handleApplyFilters()}
-            size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}
           >

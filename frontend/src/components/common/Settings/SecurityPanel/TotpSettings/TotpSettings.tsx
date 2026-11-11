@@ -110,7 +110,6 @@ export function TotpSettings(): JSX.Element | null {
                   label={locales.auth_current_password}
                   value={disablePassword}
                   fullWidth
-                  size='small'
                   onChange={(e): void => {
                     setDisablePassword(e.target.value);
                     setDisableError(null);
@@ -122,7 +121,6 @@ export function TotpSettings(): JSX.Element | null {
                   label={locales.auth_totp_code}
                   value={disableCode}
                   fullWidth
-                  size='small'
                   onChange={(e): void => {
                     setDisableCode(e.target.value);
                     setDisableError(null);
@@ -131,12 +129,9 @@ export function TotpSettings(): JSX.Element | null {
                 />
                 {disableError ? <FormError mb={0} errors={[disableError]} /> : null}
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button size='small' onClick={(): void => setDisableOpen(false)}>
-                    {locales.cancel}
-                  </Button>
+                  <Button onClick={(): void => setDisableOpen(false)}>{locales.cancel}</Button>
                   <Button
                     variant='contained'
-                    size='small'
                     color='error'
                     disabled={disableMutation.isPending}
                     data-testid='auth-totp-disable-submit'
@@ -151,7 +146,6 @@ export function TotpSettings(): JSX.Element | null {
             ) : (
               <Button
                 variant='outlined'
-                size='small'
                 color='error'
                 data-testid='auth-totp-disable-open'
                 onClick={(): void => setDisableOpen(true)}
@@ -162,7 +156,6 @@ export function TotpSettings(): JSX.Element | null {
           ) : (
             <Button
               variant='outlined'
-              size='small'
               loading={setupOpen && setupMutation.isPending}
               data-testid='auth-totp-setup'
               onClick={handleOpenSetup}

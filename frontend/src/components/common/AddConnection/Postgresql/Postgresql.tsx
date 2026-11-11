@@ -12,7 +12,8 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled
+  ConnectionFormContainerStyled,
+  ConnectionFormRowStyled
 } from '../AddConnection.styled';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSHFields from '../ConnectionSSHFields';
@@ -214,7 +215,7 @@ export default function PostgreSQL({
               <form.Subscribe selector={(state) => state.values.useUri}>
                 {(useUri): JSX.Element => (
                   <>
-                    <Stack direction='row' spacing={2}>
+                    <ConnectionFormRowStyled>
                       <form.Field name='host'>
                         {(field): JSX.Element => (
                           <Box>
@@ -249,8 +250,8 @@ export default function PostgreSQL({
                           </Box>
                         )}
                       </form.Field>
-                    </Stack>
-                    <Stack direction='row' spacing={2}>
+                    </ConnectionFormRowStyled>
+                    <ConnectionFormRowStyled>
                       <form.Field name='username'>
                         {(field): JSX.Element => (
                           <Box>
@@ -282,7 +283,7 @@ export default function PostgreSQL({
                           </Box>
                         )}
                       </form.Field>
-                    </Stack>
+                    </ConnectionFormRowStyled>
 
                     <form.Field name='database'>
                       {(field): JSX.Element => (
@@ -357,7 +358,6 @@ export default function PostgreSQL({
                   </form.Field>
                   <Button
                     data-testid='copy-connection-uri'
-                    size='small'
                     onClick={(): void => {
                       void copyRedactedUri();
                     }}
@@ -465,13 +465,12 @@ export default function PostgreSQL({
             form.state.values.isPing = true;
             void form.handleSubmit();
           }}
-          size='small'
           variant='outlined'
         >
           {locales.test}
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <Button type='button' size='small' onClick={onClose}>
+          <Button type='button' onClick={onClose}>
             {locales.cancel}
           </Button>
           <Button
@@ -479,7 +478,6 @@ export default function PostgreSQL({
             data-testid='create-connection'
             loadingPosition='start'
             loading={submitLoading}
-            size='small'
             variant='contained'
           >
             {submitLabel ?? (connection ? locales.update : locales.create)}

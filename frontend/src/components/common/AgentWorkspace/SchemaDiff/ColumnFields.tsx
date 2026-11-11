@@ -17,7 +17,6 @@ export default function ColumnFields({ column, onChange, canChangeName, withPrim
   return (
     <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
       <TextField
-        size='small'
         label={locales.ai_changes_edit_name}
         value={column.name}
         disabled={!canChangeName}
@@ -25,14 +24,12 @@ export default function ColumnFields({ column, onChange, canChangeName, withPrim
         slotProps={{ htmlInput: { 'data-testid': 'ai-diff-edit-name' } }}
       />
       <TextField
-        size='small'
         label={locales.ai_changes_edit_type}
         value={column.type}
         onChange={(event) => onChange({ ...column, type: event.target.value })}
         slotProps={{ htmlInput: { 'data-testid': 'ai-diff-edit-type' } }}
       />
       <TextField
-        size='small'
         label={locales.ai_changes_edit_default}
         value={column.default ?? ''}
         onChange={(event) => onChange({ ...column, default: event.target.value || undefined })}

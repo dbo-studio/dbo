@@ -65,14 +65,14 @@ function TextView({ item, editable, onSave }: ItemViewProps): JSX.Element {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ display: 'flex', gap: 1, p: 1, alignItems: 'center' }}>
-        <Select size='small' value={mode} onChange={(e): void => setMode(e.target.value)} aria-label='text-mode'>
+        <Select value={mode} onChange={(e): void => setMode(e.target.value)} aria-label='text-mode'>
           <MenuItem value='raw'>{locales.nosql_view_raw}</MenuItem>
           <MenuItem value='json'>{locales.nosql_view_json}</MenuItem>
           <MenuItem value='hex'>{locales.nosql_view_hex}</MenuItem>
           <MenuItem value='base64'>{locales.nosql_view_base64}</MenuItem>
         </Select>
         {canEdit && (
-          <Button size='small' variant='contained' onClick={(): void => onSave(draft ?? source)}>
+          <Button variant='contained' onClick={(): void => onSave(draft ?? source)}>
             {locales.nosql_save}
           </Button>
         )}
@@ -96,7 +96,7 @@ function DocumentView({ item, editable, onSave }: ItemViewProps): JSX.Element {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {editable && (
         <Box sx={{ p: 1 }}>
-          <Button size='small' variant='contained' onClick={(): void => onSave(draft ?? asText(item.value))}>
+          <Button variant='contained' onClick={(): void => onSave(draft ?? asText(item.value))}>
             {locales.nosql_save}
           </Button>
         </Box>
@@ -170,7 +170,6 @@ function RowsView({
                 <TableCell>
                   <IconButton
                     aria-label={locales.nosql_remove_row}
-                    size='small'
                     onClick={(): void => setDraft(draft.filter((_, idx) => idx !== i))}
                   >
                     <CustomIcon type='close' size='s' />
@@ -183,10 +182,8 @@ function RowsView({
       </Table>
       {editable && (
         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-          <Button size='small' onClick={(): void => setDraft([...draft, ['', '']])}>
-            {locales.nosql_add_row}
-          </Button>
-          <Button size='small' variant='contained' onClick={(): void => onSave(draft)}>
+          <Button onClick={(): void => setDraft([...draft, ['', '']])}>{locales.nosql_add_row}</Button>
+          <Button variant='contained' onClick={(): void => onSave(draft)}>
             {locales.nosql_save}
           </Button>
         </Box>
@@ -205,13 +202,7 @@ function Cell({
   onChange: (v: string) => void;
 }): JSX.Element {
   return editable ? (
-    <TextField
-      size='small'
-      variant='standard'
-      value={value}
-      onChange={(e): void => onChange(e.target.value)}
-      fullWidth
-    />
+    <TextField variant='standard' value={value} onChange={(e): void => onChange(e.target.value)} fullWidth />
   ) : (
     <>{value}</>
   );

@@ -14,7 +14,8 @@ export default function Input(theme: Theme): Components {
       styleOverrides: {
         root: {
           background: theme.palette.background.default,
-          height: variables.control.md,
+          height: variables.control,
+          fontSize: theme.typography.caption.fontSize,
           border: `1px solid ${theme.palette.divider}`,
           color: theme.palette.text.text,
           borderRadius: variables.radius.medium,
@@ -36,29 +37,21 @@ export default function Input(theme: Theme): Components {
             borderBottom: 'none !important'
           },
           input: {
+            padding: 0,
             '&::placeholder': {
               color: theme.palette.text.placeholder,
               opacity: 1
             }
           },
 
-          '&.MuiInputBase-sizeSmall': {
-            height: variables.control.sm,
-            fontSize: theme.typography.caption.fontSize,
-            select: {
-              padding: 0
-            },
-            input: {
-              padding: 0
-            }
-          },
           select: {
+            padding: 0,
             ':focus': {
               background: 'transparent'
             }
           },
           // The fixed height suits one line; a multiline field grows with its text instead of spilling out.
-          '&.MuiInputBase-multiline, &.MuiInputBase-multiline.MuiInputBase-sizeSmall': {
+          '&.MuiInputBase-multiline': {
             height: 'auto',
             padding: '6px 8px'
           }
@@ -72,9 +65,8 @@ export default function Input(theme: Theme): Components {
           // OutlinedInput's own radius and padding come later in the cascade than the InputBase ones; restate them.
           borderRadius: variables.radius.medium,
           padding: '0 8px',
-          fontSize: 'inherit',
+          fontSize: theme.typography.caption.fontSize,
           fontFamily: 'inherit',
-          '&.MuiInputBase-sizeSmall': { padding: '0 8px', fontSize: theme.typography.caption.fontSize },
           '&.Mui-error': { border: `1px solid ${theme.palette.error.main}` },
           '& .MuiOutlinedInput-notchedOutline': { display: 'none' },
           '& .MuiOutlinedInput-input': { padding: 0, height: '100%' },
@@ -109,7 +101,7 @@ export default function Input(theme: Theme): Components {
         root: {
           color: theme.palette.text.text,
           '& .MuiTypography-root': {
-            fontSize: '13px'
+            fontSize: theme.typography.caption.fontSize
           }
         }
       }

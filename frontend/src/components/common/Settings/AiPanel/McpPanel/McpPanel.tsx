@@ -130,7 +130,6 @@ export default function McpPanel() {
         <McpSectionStyled>
           <McpStatusRow label={locales.mcp_status_label}>
             <Chip
-              size='small'
               color={status.running ? 'success' : 'default'}
               variant={status.running ? 'filled' : 'outlined'}
               label={status.running ? locales.mcp_status_running : locales.mcp_status_stopped}
@@ -140,7 +139,6 @@ export default function McpPanel() {
           {status.enabled && (
             <McpStatusRow label={locales.mcp_health_label}>
               <Chip
-                size='small'
                 color={status.healthy ? 'success' : 'warning'}
                 variant='outlined'
                 label={status.healthy ? locales.mcp_healthy : locales.mcp_unhealthy}
@@ -149,12 +147,12 @@ export default function McpPanel() {
           )}
 
           <McpStatusRow label={locales.mcp_proxy_label}>
-            <Chip size='small' variant='outlined' label={status.proxyUrl} sx={monoChipSx} />
+            <Chip variant='outlined' label={status.proxyUrl} sx={monoChipSx} />
           </McpStatusRow>
 
           {status.tokenMasked && (
             <McpStatusRow label={locales.mcp_token_label}>
-              <Chip size='small' variant='outlined' label={status.tokenMasked} sx={monoChipSx} />
+              <Chip variant='outlined' label={status.tokenMasked} sx={monoChipSx} />
             </McpStatusRow>
           )}
 
@@ -185,11 +183,7 @@ export default function McpPanel() {
           <McpConfigSectionStyled>
             <McpConfigHeaderStyled>
               <Box></Box>
-              <IconButton
-                size='small'
-                onClick={() => handleCopyConfig(selectedConfig.value)}
-                aria-label={locales.copied}
-              >
+              <IconButton onClick={() => handleCopyConfig(selectedConfig.value)} aria-label={locales.copied}>
                 <CustomIcon type='copy' size='xs' />
               </IconButton>
             </McpConfigHeaderStyled>

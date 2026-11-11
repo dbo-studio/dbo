@@ -52,13 +52,12 @@ export function CheckUpdate() {
             loading={isCheckUpdatePending}
             loadingPosition='start'
             variant='outlined'
-            size='small'
             onClick={() => void handleCheckUpdate()}
           >
             {buttonText}
           </Button>
         ) : (
-          <Button variant='outlined' size='small' onClick={() => void handleUpdate()}>
+          <Button variant='outlined' onClick={() => void handleUpdate()}>
             {buttonText}
           </Button>
         )

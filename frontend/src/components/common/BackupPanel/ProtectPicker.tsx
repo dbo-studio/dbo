@@ -68,10 +68,8 @@ export default function ProtectPicker({
         />
         {alreadyEncrypted && !rekey && (
           <>
-            <Chip size='small' color='success' label={locales.backup_encrypted} />
-            <Button size='small' onClick={() => setRekey(true)}>
-              {locales.backup_protect_change}
-            </Button>
+            <Chip color='success' label={locales.backup_encrypted} />
+            <Button onClick={() => setRekey(true)}>{locales.backup_protect_change}</Button>
           </>
         )}
       </Box>

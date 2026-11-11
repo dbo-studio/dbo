@@ -60,7 +60,6 @@ export default function ParamInput({
     id: string;
   }): JSX.Element => (
     <InputBase
-      size='small'
       type={props.type}
       placeholder={props.label}
       value={props.current}
@@ -104,7 +103,6 @@ export default function ParamInput({
       // A date picks a whole value, so it applies like a pick.
       return (
         <InputBase
-          size='small'
           type='date'
           value={value}
           onChange={(event) => {

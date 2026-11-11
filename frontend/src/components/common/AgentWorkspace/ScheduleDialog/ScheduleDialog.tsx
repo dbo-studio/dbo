@@ -112,12 +112,11 @@ function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.
       data-state={state}
     >
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
-        <Chip size='small' label={sub.kind === 'email' ? locales.schedule_email : locales.schedule_webhook} />
+        <Chip label={sub.kind === 'email' ? locales.schedule_email : locales.schedule_webhook} />
         <Typography variant='body2' noWrap sx={{ flex: 1, minWidth: 120 }}>
           {sub.target}
         </Typography>
         <Chip
-          size='small'
           label={locales[`schedule_state_${state}`]}
           color={state === 'active' ? 'success' : state === 'paused' ? 'default' : 'error'}
           data-testid='schedule-state'
@@ -133,16 +132,16 @@ function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.
         </Typography>
       )}
       <Stack direction='row' spacing={0.5} sx={{ mt: 0.5 }}>
-        <Button size='small' disabled={running} onClick={() => runNow()} data-testid='schedule-run-now'>
+        <Button disabled={running} onClick={() => runNow()} data-testid='schedule-run-now'>
           {locales.schedule_send_now}
         </Button>
-        <Button size='small' onClick={() => toggle()} data-testid='schedule-toggle'>
+        <Button onClick={() => toggle()} data-testid='schedule-toggle'>
           {sub.enabled ? locales.schedule_pause : locales.schedule_resume}
         </Button>
-        <Button size='small' onClick={() => setShowHistory(!showHistory)} data-testid='schedule-history-toggle'>
+        <Button onClick={() => setShowHistory(!showHistory)} data-testid='schedule-history-toggle'>
           {locales.schedule_history}
         </Button>
-        <Button size='small' color='error' onClick={() => remove()} data-testid='schedule-delete'>
+        <Button color='error' onClick={() => remove()} data-testid='schedule-delete'>
           {locales.dashboard_delete}
         </Button>
       </Stack>
@@ -201,11 +200,8 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
       title={locales.schedule_title}
       footer={
         <>
-          <Button size='small' onClick={onClose}>
-            {locales.close}
-          </Button>
+          <Button onClick={onClose}>{locales.close}</Button>
           <Button
-            size='small'
             variant='contained'
             disabled={!data || isPending || !target.trim()}
             onClick={() => create()}
@@ -232,7 +228,7 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
             >
               {data.emailConfigured ? locales.schedule_email_ready : locales.schedule_email_missing}
             </Typography>
-            <Button size='small' onClick={() => setShowSmtp(!showSmtp)} data-testid='schedule-smtp-toggle'>
+            <Button onClick={() => setShowSmtp(!showSmtp)} data-testid='schedule-smtp-toggle'>
               {locales.schedule_email_settings}
             </Button>
           </Stack>
@@ -257,7 +253,6 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
               </ToggleButton>
             </ToggleButtonGroup>
             <InputBase
-              size='small'
               placeholder={kind === 'email' ? locales.schedule_target_email : locales.schedule_target_webhook}
               value={target}
               onChange={(event) => setTarget(event.target.value)}
@@ -265,7 +260,6 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
             />
             {kind === 'webhook' && (
               <FieldInput
-                size='small'
                 type='password'
                 placeholder={locales.schedule_secret}
                 value={secret}
@@ -299,7 +293,6 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
               )}
               {frequency === 'hourly' ? (
                 <InputBase
-                  size='small'
                   type='number'
                   value={minute}
                   onChange={(event) => setMinute(event.target.value)}
@@ -313,7 +306,6 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
                 />
               ) : (
                 <InputBase
-                  size='small'
                   type='time'
                   value={time}
                   onChange={(event) => setTime(event.target.value)}

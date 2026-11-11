@@ -66,7 +66,6 @@ export default function PassphraseInput({ name, value, onChange }: Props): JSX.E
           margin='none'
         />
         <Button
-          size='small'
           onClick={() => {
             onChange(generatePassphrase());
             setRevealed(true);
@@ -74,11 +73,7 @@ export default function PassphraseInput({ name, value, onChange }: Props): JSX.E
         >
           {locales.backup_passphrase_generate}
         </Button>
-        {value !== '' && (
-          <Button size='small' onClick={() => void copy()}>
-            {locales.copy}
-          </Button>
-        )}
+        {value !== '' && <Button onClick={() => void copy()}>{locales.copy}</Button>}
       </Box>
       {value !== '' && (
         <Typography variant='caption' sx={{ color: strength.color }} data-testid={`${name}-strength`}>

@@ -27,16 +27,10 @@ export default function ChangesetPanel({ changesetId }: { changesetId: number })
           </Typography>
         </Stack>
         <Stack direction='row' spacing={1} sx={{ flexShrink: 0 }}>
-          <Button
-            size='small'
-            variant='text'
-            onClick={() => void review.review('rejected')}
-            data-testid='diagram-changeset-reject'
-          >
+          <Button variant='text' onClick={() => void review.review('rejected')} data-testid='diagram-changeset-reject'>
             {locales.ai_reject}
           </Button>
           <Button
-            size='small'
             variant='contained'
             disabled={review.isPreviewing}
             onClick={() => void review.openPreview()}

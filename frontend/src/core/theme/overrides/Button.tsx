@@ -9,7 +9,9 @@ export default function Button(theme: Theme): Components {
         root: {
           textTransform: 'none',
           fontWeight: 500,
-          height: variables.control.md,
+          height: variables.control,
+          fontSize: theme.typography.caption.fontSize,
+          lineHeight: theme.typography.caption.lineHeight,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.MuiButton-textPrimary, &.MuiButton-outlinedPrimary': {
@@ -28,18 +30,6 @@ export default function Button(theme: Theme): Components {
           },
           ':after': {
             borderBottom: 'none !important'
-          },
-          '&.MuiButton-sizeSmall': {
-            minHeight: variables.control.sm,
-            height: variables.control.sm,
-            padding: '0 8px',
-            fontSize: theme.typography.caption.fontSize,
-            lineHeight: theme.typography.caption.lineHeight
-          },
-          '&.MuiButton-sizeLarge': {
-            height: 40,
-            padding: '0 16px',
-            fontSize: theme.typography.body2.fontSize
           },
           '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
             visibility: 'hidden'

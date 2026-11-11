@@ -22,7 +22,6 @@ export default function WorkspaceTopBar({ onBack, onToggleSessions }: WorkspaceT
   return (
     <WorkspaceTopBarStyled>
       <Button
-        size='small'
         color='inherit'
         startIcon={<CustomIcon type='arrowLeft' size='s' />}
         onClick={onBack}
@@ -31,13 +30,12 @@ export default function WorkspaceTopBar({ onBack, onToggleSessions }: WorkspaceT
         {locales.ai_back_to_dbo}
       </Button>
       <Tooltip title={locales.ai_workspace_toggle_sessions}>
-        <IconButton size='small' onClick={onToggleSessions} data-testid='ai-workspace-toggle-sessions'>
+        <IconButton onClick={onToggleSessions} data-testid='ai-workspace-toggle-sessions'>
           <CustomIcon type='sideLeft' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.ai_workspace_switch_connection}>
         <Button
-          size='small'
           variant='outlined'
           color='inherit'
           disabled={isSwitching}

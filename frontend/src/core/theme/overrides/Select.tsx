@@ -7,7 +7,7 @@ export default function Select(theme: Theme): Components {
       styleOverrides: {
         root: {
           background: theme.palette.background.default,
-          height: variables.control.md
+          height: variables.control
         },
         select: {
           padding: 0

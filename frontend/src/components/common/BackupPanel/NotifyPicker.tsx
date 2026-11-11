@@ -43,7 +43,7 @@ export default function NotifyPicker({
             onClick={() => toggle(c.id)}
           />
         ))}
-        <Button size='small' onClick={() => setAdding(true)} data-testid='channel-add'>
+        <Button onClick={() => setAdding(true)} data-testid='channel-add'>
           {locales.backup_notify_add_channel}
         </Button>
       </Box>

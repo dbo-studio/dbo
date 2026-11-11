@@ -104,7 +104,7 @@ export default function BottomPanel(): JSX.Element | null {
                 </Typography>
               </Box>
               <Tooltip title={locales.clear}>
-                <IconButton size='small' aria-label={locales.clear} onClick={(): void => setClearKey((k) => k + 1)}>
+                <IconButton aria-label={locales.clear} onClick={(): void => setClearKey((k) => k + 1)}>
                   <CustomIcon type='delete' size='s' />
                 </IconButton>
               </Tooltip>
@@ -112,7 +112,6 @@ export default function BottomPanel(): JSX.Element | null {
           )}
           <Tooltip title={maximized ? locales.bottom_panel_restore : locales.bottom_panel_maximize}>
             <IconButton
-              size='small'
               aria-label={maximized ? locales.bottom_panel_restore : locales.bottom_panel_maximize}
               onClick={toggleMaximize}
             >
@@ -120,7 +119,7 @@ export default function BottomPanel(): JSX.Element | null {
             </IconButton>
           </Tooltip>
           <Tooltip title={locales.bottom_panel_close}>
-            <IconButton size='small' aria-label={locales.bottom_panel_close} onClick={closeBottomPanel}>
+            <IconButton aria-label={locales.bottom_panel_close} onClick={closeBottomPanel}>
               <CustomIcon type='close' size='s' />
             </IconButton>
           </Tooltip>

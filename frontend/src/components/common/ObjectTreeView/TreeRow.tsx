@@ -108,7 +108,6 @@ function RenameField({
         }}
       />
       <IconButton
-        size='small'
         aria-label={locales.cancel}
         sx={RENAME_BUTTON_SX}
         onMouseDown={keepFocus}
@@ -120,7 +119,6 @@ function RenameField({
         <CustomIcon type='close' size='xs' />
       </IconButton>
       <IconButton
-        size='small'
         aria-label={locales.save}
         disabled={unchanged}
         sx={RENAME_BUTTON_SX}

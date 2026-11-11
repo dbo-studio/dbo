@@ -104,18 +104,13 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
         (job?.status === 'running' || finished) && (
           <>
             {job?.status === 'running' && (
-              <Button size='small' variant='outlined' onClick={() => void cancelJob()}>
+              <Button variant='outlined' onClick={() => void cancelJob()}>
                 {locales.cancel_job}
               </Button>
             )}
-            {finished && (
-              <Button size='small' onClick={onClose}>
-                {locales.close}
-              </Button>
-            )}
+            {finished && <Button onClick={onClose}>{locales.close}</Button>}
             {onRetry && job && job.type !== 'query' && (job.status === 'failed' || job.status === 'canceled') && (
               <Button
-                size='small'
                 variant='contained'
                 data-testid='job-retry'
                 onClick={() =>
@@ -129,7 +124,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
               </Button>
             )}
             {canDownload && (
-              <Button size='small' variant='contained' onClick={() => void handleDownload()}>
+              <Button variant='contained' onClick={() => void handleDownload()}>
                 {locales.download_file}
               </Button>
             )}

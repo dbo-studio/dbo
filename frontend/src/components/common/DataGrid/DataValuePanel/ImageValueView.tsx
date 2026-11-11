@@ -191,7 +191,7 @@ export default function ImageValueView({
       <DataValuePanelFooterStyled data-testid='value-panel-image-footer'>
         <DataValuePanelFooterActionsStyled>
           {onCancel && (
-            <Button size='small' variant='text' onClick={onCancel} data-testid='value-panel-cancel'>
+            <Button variant='text' onClick={onCancel} data-testid='value-panel-cancel'>
               {locales.cancel}
             </Button>
           )}
@@ -206,7 +206,6 @@ export default function ImageValueView({
         <DataValuePanelFooterActionsStyled>
           {displayBinary?.base64 && (
             <Button
-              size='small'
               variant='outlined'
               data-testid='value-panel-image-download'
               onClick={(): void => downloadBinaryCell(displayBinary, column?.name)}
@@ -216,7 +215,6 @@ export default function ImageValueView({
           )}
           {canClearNull && (
             <Button
-              size='small'
               variant='text'
               color='warning'
               data-testid='value-panel-image-clear'
@@ -230,7 +228,7 @@ export default function ImageValueView({
             </Button>
           )}
           {showApply && onApply && canEditImage && (
-            <Button size='small' variant='contained' onClick={handleApply} data-testid='value-panel-apply'>
+            <Button variant='contained' onClick={handleApply} data-testid='value-panel-apply'>
               {locales.apply}
             </Button>
           )}

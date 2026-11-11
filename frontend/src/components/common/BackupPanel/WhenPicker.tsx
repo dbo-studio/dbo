@@ -102,7 +102,7 @@ export default function WhenPicker({
             />
           </Box>
           {QUIET_TIMES.map((t) => (
-            <Button key={t} size='small' variant={t === time ? 'contained' : 'text'} onClick={() => setTime(t)}>
+            <Button key={t} variant={t === time ? 'contained' : 'text'} onClick={() => setTime(t)}>
               {t}
             </Button>
           ))}

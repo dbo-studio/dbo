@@ -137,7 +137,6 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
           {/* A sign-in destination needs a saved, approved record, so it can only be tested after that. */}
           {(!spec.oauth || connector?.secretsSet.refreshToken) && (
             <Button
-              size='small'
               onClick={() => test()}
               disabled={!name.trim() || missing || isTesting || isPending}
               data-testid='connector-test'
@@ -145,11 +144,8 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
               {locales.connector_test}
             </Button>
           )}
-          <Button size='small' onClick={onClose}>
-            {locales.cancel}
-          </Button>
+          <Button onClick={onClose}>{locales.cancel}</Button>
           <Button
-            size='small'
             variant='contained'
             type='submit'
             form={FORM_ID}
@@ -198,7 +194,6 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
         {spec.fields.some((f) => f.advanced) && (
           <>
             <Button
-              size='small'
               sx={{ alignSelf: 'flex-start' }}
               onClick={() => setShowAdvanced((v) => !v)}
               data-testid='connector-advanced'

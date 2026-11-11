@@ -81,7 +81,6 @@ export default function SavedQueryItem({
             }}
           >
             <InputBase
-              size='small'
               fullWidth={true}
               type='text'
               value={name}

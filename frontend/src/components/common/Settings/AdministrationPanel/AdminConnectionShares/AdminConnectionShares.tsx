@@ -89,11 +89,10 @@ export default function AdminConnectionShares(): JSX.Element {
                 </Typography>
               </TableCell>
               <TableCell>
-                <Chip size='small' variant='outlined' label={shareRoleLabel(member.role)} />
+                <Chip variant='outlined' label={shareRoleLabel(member.role)} />
               </TableCell>
               <TableCell>
                 <Chip
-                  size='small'
                   variant='outlined'
                   color={share.passwordShared ? 'warning' : 'default'}
                   label={share.passwordShared ? locales.admin_on : locales.admin_off}
@@ -101,7 +100,6 @@ export default function AdminConnectionShares(): JSX.Element {
               </TableCell>
               <TableCell align='right'>
                 <Button
-                  size='small'
                   color='error'
                   disabled={revokeMutation.isPending}
                   data-testid={`admin-share-revoke-${share.connectionName}-${member.email}`}

@@ -25,11 +25,10 @@ export default function AccountModal({ open, onClose }: AccountModalProps): JSX.
 
   const footer = start ? (
     <>
-      <Button size='small' onClick={cancel} data-testid='account-connect-cancel'>
+      <Button onClick={cancel} data-testid='account-connect-cancel'>
         {locales.account_connect_cancel}
       </Button>
       <Button
-        size='small'
         variant='contained'
         disabled={wait.manual.trim().length === 0}
         onClick={(): void => void wait.submitManual()}
@@ -40,10 +39,8 @@ export default function AccountModal({ open, onClose }: AccountModalProps): JSX.
     </>
   ) : (
     <>
-      <Button size='small' onClick={handleClose}>
-        {locales.account_connect_cancel}
-      </Button>
-      <Button size='small' variant='contained' onClick={(): void => void connect()} data-testid='account-connect'>
+      <Button onClick={handleClose}>{locales.account_connect_cancel}</Button>
+      <Button variant='contained' onClick={(): void => void connect()} data-testid='account-connect'>
         {locales.account_connect_button}
       </Button>
     </>

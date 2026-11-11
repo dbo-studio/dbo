@@ -21,10 +21,10 @@ export default function QueuedMessage({
       <Typography variant='caption' noWrap sx={{ flex: 1, minWidth: 0 }}>
         {message}
       </Typography>
-      <Button size='small' color='inherit' onClick={onCancel} data-testid='ai-queued-cancel'>
+      <Button color='inherit' onClick={onCancel} data-testid='ai-queued-cancel'>
         {locales.cancel}
       </Button>
-      <Button size='small' onClick={onSendNow} data-testid='ai-queued-send-now'>
+      <Button onClick={onSendNow} data-testid='ai-queued-send-now'>
         {locales.ai_queued_send_now}
       </Button>
     </PinnedPlanStyled>

@@ -99,7 +99,6 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
             emptylabel={locales.database}
             value={localDatabase}
             disabled={databases?.length === 0}
-            size='small'
             options={databases.map((s) => ({ value: s, label: s }))}
             onChange={(e): void => handleDatabaseChange((e as SelectInputOption)?.value as string)}
             testId='editor-context-database'
@@ -121,7 +120,6 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
             emptylabel={locales.schema}
             value={localSchema}
             disabled={schemas?.length === 0}
-            size='small'
             options={schemas.map((s) => ({ value: s, label: s }))}
             onChange={(e): void => handleSchemaChange((e as SelectInputOption)?.value as string)}
             testId='editor-context-schema'

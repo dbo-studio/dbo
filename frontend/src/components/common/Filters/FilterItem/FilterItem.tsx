@@ -99,7 +99,6 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           emptylabel={locales.no_column_found}
           value={currentFilter.column}
           disabled={columns.length === 0}
-          size='small'
           options={columns.map((c) => ({ value: c.name, label: c.name }))}
           onChange={(e): void =>
             upsertFilters(handleChange('column', (e as unknown as SelectInputOption).value as string))
@@ -116,7 +115,6 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <SelectInput
           classNamePrefix='filter-select'
           value={currentFilter.operator}
-          size='small'
           style={{
             minWidth: '120px'
           }}
@@ -137,7 +135,6 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <InputBase
           margin='none'
           fullWidth
-          size='small'
           disabled={!requiresValue}
           value={requiresValue ? currentFilter.value : ''}
           onBlur={(e: EventFor<'input', 'onBlur'>): void => {
@@ -153,7 +150,6 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         <SelectInput
           classNamePrefix='filter-select'
           value={currentFilter.next}
-          size='small'
           options={PgsqlFilterNext.map((c) => ({ value: c, label: c }))}
           onChange={(e): void =>
             upsertFilters(handleChange('next', (e as unknown as SelectInputOption).value as string))

@@ -201,15 +201,15 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             )}
           </ImportModalBodyStyled>
           <ModalFooter>
-            <Button type='button' size='small' onClick={onClose}>
+            <Button type='button' onClick={onClose}>
               {locales.cancel}
             </Button>
             {step > 0 && (
-              <Button type='button' size='small' onClick={() => setStep(step - 1)}>
+              <Button type='button' onClick={() => setStep(step - 1)}>
                 {locales.back}
               </Button>
             )}
-            <Button type='submit' variant='contained' size='small' disabled={!canNext || isPending}>
+            <Button type='submit' variant='contained' disabled={!canNext || isPending}>
               {step === 2 ? locales.import : locales.next}
             </Button>
           </ModalFooter>

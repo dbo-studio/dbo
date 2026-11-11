@@ -7,7 +7,9 @@ export default function IconButton(theme: Theme): Components {
       styleOverrides: {
         root: {
           borderRadius: variables.radius.medium,
-          padding: '2px 8px',
+          height: variables.control,
+          minWidth: variables.control,
+          padding: '0 6px',
           '&.Mui-disabled': {
             color: `${theme.palette.text.disabled} !important`,
             '& svg': { color: `${theme.palette.text.disabled} !important` }

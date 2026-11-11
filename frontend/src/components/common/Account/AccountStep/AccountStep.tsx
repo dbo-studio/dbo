@@ -23,7 +23,7 @@ export default function AccountStep({ onDone }: AccountStepProps): JSX.Element {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }} data-testid='account-step'>
       <AccountIntro
         action={
-          <Button variant='contained' size='large' onClick={(): void => void connect()} data-testid='account-connect'>
+          <Button variant='contained' onClick={(): void => void connect()} data-testid='account-connect'>
             {locales.account_connect_button}
           </Button>
         }

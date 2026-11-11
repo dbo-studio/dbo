@@ -91,7 +91,6 @@ export default function RestoreSection(): JSX.Element {
           onChange={(e) => void handleUpload(e.target.files?.[0])}
         />
         <Button
-          size='small'
           variant='outlined'
           disabled={intoId === null}
           onClick={() => fileInput.current?.click()}
@@ -123,12 +122,9 @@ export default function RestoreSection(): JSX.Element {
                   {a.note ? ` · ${a.note}` : ''}
                 </Typography>
               </CardRowMainStyled>
-              {a.encrypted && <Chip size='small' label={locales.backup_encrypted} />}
-              {a.remoteStatus === 'uploaded' && (
-                <Chip size='small' color='success' label={locales.backup_remote_uploaded} />
-              )}
+              {a.encrypted && <Chip label={locales.backup_encrypted} />}
+              {a.remoteStatus === 'uploaded' && <Chip color='success' label={locales.backup_remote_uploaded} />}
               <Button
-                size='small'
                 variant='outlined'
                 color='error'
                 onClick={() => setTarget(a)}

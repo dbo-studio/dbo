@@ -188,7 +188,6 @@ export default function AdministrationPanel(): JSX.Element {
               <Button
                 type='submit'
                 variant='contained'
-                size='small'
                 data-testid='admin-create-submit'
                 disabled={!ready || createMutation.isPending}
               >

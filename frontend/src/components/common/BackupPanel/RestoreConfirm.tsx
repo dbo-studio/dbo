@@ -153,16 +153,8 @@ export default function RestoreConfirm({
           label={locales.backup_restore_safety}
         />
         <ModalFooter>
-          <Button size='small' onClick={onCancel}>
-            {locales.cancel}
-          </Button>
-          <Button
-            size='small'
-            variant='contained'
-            color='error'
-            disabled={!matches || busy}
-            onClick={() => void handleRestore()}
-          >
+          <Button onClick={onCancel}>{locales.cancel}</Button>
+          <Button variant='contained' color='error' disabled={!matches || busy} onClick={() => void handleRestore()}>
             {locales.backup_restore_action}
           </Button>
         </ModalFooter>

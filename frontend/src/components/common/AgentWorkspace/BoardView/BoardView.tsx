@@ -112,7 +112,6 @@ function BoardCard({
       <Stack direction='row' spacing={0.5} sx={{ alignItems: 'center', mb: 0.5 }}>
         {editing && (
           <IconButton
-            size='small'
             aria-label={locales.dashboard_card_move}
             sx={{ cursor: 'grab', touchAction: 'none' }}
             data-testid='ai-board-card-drag'
@@ -133,7 +132,6 @@ function BoardCard({
             </Typography>
             <Tooltip title={locales.dashboard_card_csv}>
               <IconButton
-                size='small'
                 onClick={() =>
                   tools.fileDownload(
                     new Blob([toCsv(columns, data.rows)], { type: 'text/csv' }),
@@ -146,26 +144,26 @@ function BoardCard({
               </IconButton>
             </Tooltip>
             <Tooltip title={locales.dashboard_card_png}>
-              <IconButton size='small' onClick={() => void exportPng()} data-testid='ai-board-card-png'>
+              <IconButton onClick={() => void exportPng()} data-testid='ai-board-card-png'>
                 <CustomIcon type='download' size='xs' />
               </IconButton>
             </Tooltip>
           </>
         )}
         <Tooltip title={locales.dashboard_card_refresh}>
-          <IconButton size='small' onClick={() => void refetch()} data-testid='ai-board-card-refresh'>
+          <IconButton onClick={() => void refetch()} data-testid='ai-board-card-refresh'>
             <CustomIcon type='refresh' size='xs' />
           </IconButton>
         </Tooltip>
         {editing && (
           <>
             <Tooltip title={card.width === 2 ? locales.ai_board_narrow : locales.ai_board_wide}>
-              <IconButton size='small' onClick={() => resize()} data-testid='ai-board-card-resize'>
+              <IconButton onClick={() => resize()} data-testid='ai-board-card-resize'>
                 <CustomIcon type={card.width === 2 ? 'collapse' : 'expand'} size='xs' />
               </IconButton>
             </Tooltip>
             <Tooltip title={locales.ai_board_unpin}>
-              <IconButton size='small' onClick={() => unpin()} data-testid='ai-board-card-unpin'>
+              <IconButton onClick={() => unpin()} data-testid='ai-board-card-unpin'>
                 <CustomIcon type='close' size='xs' />
               </IconButton>
             </Tooltip>
@@ -210,7 +208,6 @@ function AddCard({ board }: { board: DashboardType }): JSX.Element {
   return (
     <Box sx={{ width: 260 }}>
       <SelectInput
-        size='small'
         testId='dashboard-add-card'
         label={locales.dashboard_add_card}
         // Shown only when the list is empty, where the select is disabled.
@@ -269,7 +266,6 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
     <Stack sx={{ height: '100%', minHeight: 0 }} data-testid='ai-board' data-board={board.name} data-editing={editing}>
       <ToolbarStyled>
         <SelectInput
-          size='small'
           testId='dashboard-auto-refresh'
           value={refreshMs as unknown as string}
           options={REFRESH_OPTIONS}

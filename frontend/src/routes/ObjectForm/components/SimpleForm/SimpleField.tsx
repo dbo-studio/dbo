@@ -51,7 +51,6 @@ export default function SimpleField({
           }}
         >
           <FieldInput
-            size={isArrayForm ? 'small' : 'medium'}
             value={localValue || ''}
             onChange={(e): void => setLocalValue(e.target.value)}
             onBlur={(): void => onChange(localValue)}
@@ -95,7 +94,6 @@ export default function SimpleField({
             isMulti={field.type === 'multi-select'}
             label={isArrayForm ? undefined : field.name}
             value={localValue as string | string[] | null}
-            size={isArrayForm ? 'small' : 'medium'}
             options={fieldOptions.map((opt) => ({
               value: opt.value,
               label: opt.label

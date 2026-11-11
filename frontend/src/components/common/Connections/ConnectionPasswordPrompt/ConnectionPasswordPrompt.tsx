@@ -73,18 +73,16 @@ export default function ConnectionPasswordPromptModal(): JSX.Element | null {
             loading={unlock.testing}
             onClick={() => void unlock.test()}
             disabled={unlock.pending || unlock.errors.length > 0 || !unlock.connectionId}
-            size='small'
             variant='outlined'
           >
             {locales.test}
           </Button>
           <Stack spacing={1} direction='row'>
-            <Button type='button' size='small' onClick={unlock.close}>
+            <Button type='button' onClick={unlock.close}>
               {locales.cancel}
             </Button>
             <Button
               type='submit'
-              size='small'
               variant='contained'
               loading={unlock.pending}
               loadingPosition='start'

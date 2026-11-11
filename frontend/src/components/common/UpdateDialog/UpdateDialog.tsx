@@ -50,13 +50,13 @@ export default function UpdateDialog() {
       onClose={() => {}}
       footer={
         <>
-          <Button disabled={release.isMinimum} onClick={handleOnClose} size='small' color='info' variant='outlined'>
+          <Button disabled={release.isMinimum} onClick={handleOnClose} color='info' variant='outlined'>
             {locales.cancel}
           </Button>
-          <Button size='small' disabled={release.isMinimum} onClick={handleOnIgnore} variant='outlined'>
+          <Button disabled={release.isMinimum} onClick={handleOnIgnore} variant='outlined'>
             {locales.ignore_this_update}
           </Button>
-          <Button size='small' color='primary' variant='contained' onClick={() => void handleOnUpdate()}>
+          <Button color='primary' variant='contained' onClick={() => void handleOnUpdate()}>
             {locales.update}
           </Button>
         </>

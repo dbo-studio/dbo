@@ -1,12 +1,9 @@
 /**
- * UI baseline contract. Every control and icon takes its size from here
- * (directly, or through the MUI `size` prop wired up in `overrides/`).
+ * UI baseline contract. Every control and icon takes its size from here.
  *
- * Controls (Button, Input, Select, Tab):
- *   default (`size="medium"`) → control.md — use for forms, dialogs, toolbars.
- *   `size="small"`            → control.sm — only inside dense surfaces
- *                               (data grid cells, tree rows, inline filters).
- * Never hardcode a control height; never use `large`.
+ * There is ONE control height (`control`) for Button, Input, Select and IconButton — in forms,
+ * dialogs, toolbars and grids alike. Do not pass a MUI `size` prop (lint forbids it) and never
+ * hardcode a control height.
  */
 export const variables = {
   radius: {
@@ -14,10 +11,7 @@ export const variables = {
     medium: '5px',
     large: '12px'
   },
-  control: {
-    sm: 24,
-    md: 28
-  },
+  control: 24,
   icon: {
     xs: 12,
     s: 16,

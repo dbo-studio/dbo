@@ -12,7 +12,8 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled
+  ConnectionFormContainerStyled,
+  ConnectionFormRowStyled
 } from '../AddConnection.styled';
 import type { ConnectionEnv } from '@/types';
 import type { ConnectionSettingsProps } from '../types';
@@ -189,18 +190,18 @@ export default function Redis({
         </Section>
 
         <Section title={locales.connection_section_server}>
-          <Stack direction='row' spacing={2}>
+          <ConnectionFormRowStyled>
             <Box sx={{ flex: 1, minWidth: 0 }}>{text('host', locales.host, { placeholder: 'localhost' })}</Box>
             <Box sx={{ width: 120 }}>{text('port', locales.port, { placeholder: '6379', type: 'number' })}</Box>
-          </Stack>
+          </ConnectionFormRowStyled>
           {text('database', locales.database, { type: 'number' })}
         </Section>
 
         <Section title={locales.connection_section_auth}>
-          <Stack direction='row' spacing={2}>
+          <ConnectionFormRowStyled>
             <Box sx={{ flex: 1, minWidth: 0 }}>{text('username', locales.username)}</Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>{text('password', locales.password, { type: 'password' })}</Box>
-          </Stack>
+          </ConnectionFormRowStyled>
           <ConnectionFormCheckboxRowStyled>
             {check('rememberPassword', locales.remember_password)}
           </ConnectionFormCheckboxRowStyled>
@@ -228,13 +229,12 @@ export default function Redis({
             form.state.values.isPing = true;
             void form.handleSubmit().then();
           }}
-          size='small'
           variant='outlined'
         >
           {locales.test}
         </Button>
         <Stack spacing={1} direction='row'>
-          <Button type='button' size='small' onClick={onClose}>
+          <Button type='button' onClick={onClose}>
             {locales.cancel}
           </Button>
           <Button
@@ -243,7 +243,6 @@ export default function Redis({
             loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
-            size='small'
             variant='contained'
           >
             {submitLabel ?? (connection ? locales.update : locales.create)}

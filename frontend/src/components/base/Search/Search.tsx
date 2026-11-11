@@ -34,7 +34,6 @@ export default function Search({ onChange, placeholder, value, inputRef, onKeyDo
         autoCapitalize='off'
         autoCorrect='off'
         spellCheck={false}
-        size='small'
         value={current}
         onChange={onChangeHandler}
         inputRef={inputRef}
