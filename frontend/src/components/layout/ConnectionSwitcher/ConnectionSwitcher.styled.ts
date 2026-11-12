@@ -42,7 +42,10 @@ export const SwitcherListStyled = styled(Box)({
   flex: 1,
   minHeight: 0,
   overflow: 'auto',
-  padding: 4
+  padding: 4,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 2
 });
 
 export const SwitcherRowStyled = styled(Box, {
@@ -55,7 +58,9 @@ export const SwitcherRowStyled = styled(Box, {
   borderRadius: variables.radius.medium,
   cursor: 'pointer',
   background: selected ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
-  '&:hover': { background: selected ? alpha(theme.palette.primary.main, 0.16) : theme.palette.action.hover },
+  '&:hover': {
+    background: selected ? alpha(theme.palette.primary.main, 0.16) : alpha(theme.palette.action.active, 0.08)
+  },
   '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: -2 }
 }));
 

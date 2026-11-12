@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox';
 import DbTerminal from '@/components/common/DbTerminal/DbTerminal';
@@ -81,11 +82,12 @@ export default function BottomPanel(): JSX.Element | null {
               sx={{
                 px: 1.25,
                 py: 0.5,
-                borderRadius: 1,
+                borderRadius: `${variables.radius.small}`,
+                transition: `color ${variables.motion.fast} ${variables.motion.easing}, background-color ${variables.motion.fast} ${variables.motion.easing}`,
                 cursor: 'pointer',
                 userSelect: 'none',
                 typography: 'body2',
-                color: tab === t.id ? 'text.primary' : 'text.secondary',
+                color: tab === t.id ? 'text.link' : 'text.secondary',
                 bgcolor: tab === t.id ? 'action.selected' : 'transparent',
                 '&:hover': { color: 'text.primary', bgcolor: tab === t.id ? 'action.selected' : 'action.hover' },
                 '&:focus-visible': { outline: 2, outlineStyle: 'solid', outlineColor: 'primary.main' }

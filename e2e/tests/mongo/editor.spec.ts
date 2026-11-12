@@ -28,7 +28,7 @@ test.describe("MongoDB editor tab", () => {
     await expect(page.getByRole("button", { name: "sql", exact: true })).toBeEnabled();
     await openEditor(page);
 
-    for (const name of ["Save", "Export", "Beatify", "AI Explain"]) {
+    for (const name of ["Save", "Export", "Beautify", "AI Explain"]) {
       await expect(page.getByRole("button", { name })).toBeVisible();
     }
     await expect(page.getByRole("button", { name: /minify/i })).toHaveCount(0);
@@ -133,7 +133,7 @@ test.describe("MongoDB editor tab", () => {
     await seed(page);
     const editor = await openEditor(page);
     await editor.typeQuery(`${find("{name:'alice'}")}`);
-    await page.getByRole("button", { name: "Beatify" }).click();
+    await page.getByRole("button", { name: "Beautify" }).click();
     await expect.poll(() => editor.getMonacoValue()).toContain("{ name: 'alice' }");
 
     await editor.focus();

@@ -6,7 +6,8 @@ import { useCurrentConnection, useFeaturePermissions, useShortcut } from '@/hook
 import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import { Box, IconButton, Stack, Tooltip } from '@mui/material';
+import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,6 +24,7 @@ export default function QueryEditorActions({
 }: QueryEditorActionsProps): JSX.Element {
   const queryClient = useQueryClient();
   const perms = useFeaturePermissions();
+  const { isMobile } = useLayoutMode();
   const [showExport, setShowExport] = useState({
     show: false,
     connectionId: 0,
@@ -146,14 +148,27 @@ export default function QueryEditorActions({
               : shortcuts.runQuery.command.join('+')
           }
         >
-          <IconButton
-            aria-label={loading ? locales.stop_query : locales.run_query}
-            data-testid={loading ? 'stop-query' : 'run-query'}
-            color={loading ? 'error' : 'primary'}
-            onClick={handleRunOrStop}
-          >
-            <CustomIcon type={loading ? 'stop' : 'play'} />
-          </IconButton>
+          {isMobile ? (
+            <IconButton
+              aria-label={loading ? locales.stop_query : locales.run_query}
+              data-testid={loading ? 'stop-query' : 'run-query'}
+              color={loading ? 'error' : 'primary'}
+              onClick={handleRunOrStop}
+            >
+              <CustomIcon type={loading ? 'stop' : 'play'} />
+            </IconButton>
+          ) : (
+            <Button
+              variant='contained'
+              color={loading ? 'error' : 'primary'}
+              aria-label={loading ? locales.stop_query : locales.run_query}
+              data-testid={loading ? 'stop-query' : 'run-query'}
+              startIcon={<CustomIcon type={loading ? 'stop' : 'play'} size='s' color='currentColor' />}
+              onClick={handleRunOrStop}
+            >
+              {loading ? locales.stop : locales.run}
+            </Button>
+          )}
         </Tooltip>
       </Box>
 

@@ -28,7 +28,7 @@ async function setupSqliteUsersTable(
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(config);
-  await expect(connectionPage.getConnectionItem(connectionName)).toBeVisible();
+  await connectionPage.expectConnectionActive(connectionName);
   await sqlEditor.open();
 
   const values = rows.map((r) => `('${r.name}', '${r.email}')`).join(",\n  ");

@@ -1,7 +1,7 @@
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
 import { Box, CircularProgress } from '@mui/material';
-import { KeyCode } from 'monaco-editor';
+import { KeyCode, KeyMod } from 'monaco-editor';
 import { useEffect, type JSX } from 'react';
 import { registerMongoCompletions } from '../MongoEditor/mongoCompletions';
 import { setConditionContext } from './helpers/dbMetaProvider';
@@ -48,6 +48,10 @@ export default function InlineSqlEditor({
       },
       '!suggestWidgetVisible'
     );
+
+    // A one-line filter has no use for Monaco's command palette (F1, Cmd/Ctrl+Shift+P).
+    editorInstance.addCommand(KeyCode.F1, () => undefined);
+    editorInstance.addCommand(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyP, () => undefined);
 
     // Single line only. A newline can still arrive (paste, Shift+Enter, or Enter
     // when the command above does not fire): flatten it, and treat a typed newline

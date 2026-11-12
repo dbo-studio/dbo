@@ -20,7 +20,7 @@ export class SqlEditorPage extends BasePage {
     this.openEditorButton = page.getByRole("button", { name: /open editor/i });
     this.saveButton = page.getByRole("button", { name: "Save", exact: true });
     this.runButton = page.getByRole("button", { name: "Run query" });
-    this.formatButton = page.getByRole("button", { name: "Beatify", exact: true });
+    this.formatButton = page.getByRole("button", { name: "Beautify", exact: true });
     this.minifyButton = page.getByRole("button", { name: /minify/i });
   }
 

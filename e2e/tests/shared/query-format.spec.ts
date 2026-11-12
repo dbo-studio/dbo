@@ -5,10 +5,10 @@ import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SqlEditorPage } from "../../pages";
 
 /**
- * SQL Format / Beautify (Beatify) in the Query editor.
+ * SQL Format / Beautify (Beautify) in the Query editor.
  */
 test.describe("Query format PostgreSQL", () => {
-  test("Beatify reformats messy SQL", async ({ page }, testInfo) => {
+  test("Beautify reformats messy SQL", async ({ page }, testInfo) => {
     const connectionPage = new ConnectionPage(page);
     const sqlEditor = new SqlEditorPage(page);
 
@@ -38,7 +38,7 @@ test.describe("Query format PostgreSQL", () => {
         const formatted = await sqlEditor.getMonacoValue();
         expect(formatted.toLowerCase()).toContain("select");
         expect(formatted).toMatch(/select[\s\S]+from[\s\S]+where/i);
-        // Beatify should introduce line breaks / indentation vs one-liner.
+        // Beautify should introduce line breaks / indentation vs one-liner.
         expect(formatted.includes("\n") || /\s{2,}/.test(formatted)).toBe(true);
       });
     });

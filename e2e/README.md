@@ -89,7 +89,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Query CRUD               | `pg/query-crud.spec.ts`                       | split: select / inline edit / discard+remove / SQL update+delete / JOIN |
 | Query CRUD MySQL         | `mysql/query-crud-mysql.spec.ts`              | same split + JOIN + editor `USE` database               |
 | Query CRUD SQLite        | `sqlite/query-crud-sqlite.spec.ts`            | same split + JOIN                                       |
-| Query format             | `shared/query-format.spec.ts`                 | Beatify / format messy SQL                              |
+| Query format             | `shared/query-format.spec.ts`                 | Beautify / format messy SQL                              |
 | SQL editor context       | `shared/editor-context.spec.ts`               | PG/MySQL/SQLite: select visibility + autofill           |
 | Data browser             | `pg\|mysql\|sqlite/data-browser.spec.ts`      | filter/sort/page/columns/inline/preview + Ctrl+A stays in preview |
 | Import / Export          | `pg\|mysql\|sqlite/import-export.spec.ts`     | CSV/JSON/SQL export+import, round-trip, continue-on-error |

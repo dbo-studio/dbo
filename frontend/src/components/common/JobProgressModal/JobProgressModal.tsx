@@ -41,7 +41,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
     if (!jobId) return;
 
     try {
-      const backupResult = job?.result as { artifactId?: number; fileName?: string } | undefined;
+      const backupResult = job?.result;
       const artifactId = backupResult?.artifactId;
       if (job?.type === 'backup' && artifactId) {
         const blob = await api.backup.download(artifactId);
