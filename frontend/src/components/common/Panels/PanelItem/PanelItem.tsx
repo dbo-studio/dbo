@@ -2,14 +2,13 @@
 
 import ConnectionStarter from '@/components/common/Connections/ConnectionStarter';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
+import WorkspaceEmpty from '../WorkspaceEmpty/WorkspaceEmpty';
 import Backup from '@/routes/Backup/Backup';
 import Settings from '@/components/common/Settings/Settings';
-import { hasEditorTab, isMongoDriver } from '@/core/db/connectionAliases';
+import { isMongoDriver } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
-import { useTabStore } from '@/store/tabStore/tab.store';
-import { Button } from '@mui/material';
 import Question from '@/routes/Question/Question';
 import Dashboard from '@/routes/Dashboard/Dashboard';
 import Browse from '@/routes/Browse/Browse';
@@ -27,7 +26,6 @@ const Diagram = lazy(() => import('@/routes/Diagram/Diagram'));
 export default function PanelItem(): JSX.Element {
   const selectedTab = useSelectedTab();
   const connection = useCurrentConnection();
-  const addEditorTab = useTabStore((state) => state.addEditorTab);
 
   if (!selectedTab && !connection) {
     return (
@@ -45,18 +43,7 @@ export default function PanelItem(): JSX.Element {
   if (!selectedTab) {
     return (
       <PanelItemStyled>
-        <EmptyState
-          icon='code'
-          title={locales.workspace_empty_title}
-          description={locales.workspace_empty_description}
-          action={
-            !hasEditorTab(connection?.type) ? undefined : (
-              <Button variant='contained' onClick={(): void => void addEditorTab()}>
-                {locales.open_editor}
-              </Button>
-            )
-          }
-        />
+        <WorkspaceEmpty />
       </PanelItemStyled>
     );
   }
