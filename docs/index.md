@@ -11,6 +11,7 @@ DBO Studio is an open-source database GUI (PostgreSQL, MySQL, SQLite) with a Go 
 | [Getting started](development/getting-started.md) | Prerequisites, local web stack, sample databases, desktop dev |
 | [Building](development/building.md) | Release scripts, backend binary, Tauri desktop, CI publish |
 | [Testing](development/testing.md) | Playwright e2e layout, running tests, feature matrix |
+| [Frontend performance](development/frontend-performance.md) | Current state, fixes, benchmark plan, regression gates |
 
 ### Deployment
 

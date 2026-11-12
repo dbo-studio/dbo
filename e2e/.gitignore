@@ -8,3 +8,5 @@ node_modules/
 .run-env
 .env
 
+perf-results*.jsonl
+perf-after*.jsonl

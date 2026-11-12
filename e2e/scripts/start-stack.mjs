@@ -197,7 +197,7 @@ export async function startStack() {
 
   frontend = spawnLogged(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['vite', '--host', '127.0.0.1', '--port', String(fePort), '--strictPort'],
+    ['vite', ...(process.env.E2E_PREVIEW === '1' ? ['preview', '--outDir', process.env.E2E_PREVIEW_DIR ?? 'dist'] : []), '--host', '127.0.0.1', '--port', String(fePort), '--strictPort'],
     {
       cwd: FRONTEND_ROOT,
       env: frontendEnv,

@@ -107,6 +107,10 @@ export default defineConfig(({ mode }) => {
       port,
       proxy: apiProxyTarget ? { '/api': { target: apiProxyTarget, changeOrigin: true } } : undefined
     },
+    // E2E_PREVIEW=1 serves the production build for perf runs.
+    preview: {
+      proxy: apiProxyTarget ? { '/api': { target: apiProxyTarget, changeOrigin: true } } : undefined
+    },
     build: {
       target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
       minify: !process.env.TAURI_ENV_DEBUG ? 'oxc' : false,
