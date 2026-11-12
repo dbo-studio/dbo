@@ -69,6 +69,8 @@ interface TableDataDB extends DBSchema {
 
 const TAB_QUERIES_STORAGE_KEY = 'dbo_tab_queries';
 
+const TAB_QUERY_SAVE_DELAY_MS = 300;
+
 class IndexedDBService {
   private dbPromise: Promise<IDBPDatabase<TableDataDB>> | null = null;
   private dbName = tableDataDbName();
@@ -438,7 +440,12 @@ class IndexedDBService {
   }
 
   private async persistMigratedTabQueries(queries: Record<string, string>): Promise<void> {
-    await Promise.all(Object.entries(queries).map(([tabId, query]) => this.saveTabQuery(tabId, query)));
+    await Promise.all(
+      Object.entries(queries).map(async ([tabId, query]) => {
+        this.saveTabQuery(tabId, query);
+        await this.flushTabQuery(tabId);
+      })
+    );
     localStorage.removeItem(TAB_QUERIES_STORAGE_KEY);
   }
 
@@ -476,17 +483,41 @@ class IndexedDBService {
     return this.tabQueryCache[tabId] ?? '';
   }
 
-  async saveTabQuery(tabId: string, query: string): Promise<void> {
+  // Cache updates at once (reads stay consistent); the IndexedDB write is coalesced per tab.
+  private tabQueryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  saveTabQuery(tabId: string, query: string): void {
     this.tabQueryCache[tabId] = query;
+
+    const pending = this.tabQueryTimers.get(tabId);
+    if (pending) clearTimeout(pending);
+    this.tabQueryTimers.set(
+      tabId,
+      setTimeout(() => void this.flushTabQuery(tabId), TAB_QUERY_SAVE_DELAY_MS)
+    );
+  }
+
+  async flushTabQuery(tabId: string): Promise<void> {
+    const pending = this.tabQueryTimers.get(tabId);
+    if (pending) clearTimeout(pending);
+    this.tabQueryTimers.delete(tabId);
+    if (!(tabId in this.tabQueryCache)) return;
 
     const db = await this.initDB();
     const tx = db.transaction('tabQueries', 'readwrite');
-    await tx.store.put({ tabId, query });
+    await tx.store.put({ tabId, query: this.tabQueryCache[tabId] });
     await tx.done;
+  }
+
+  async flushAllTabQueries(): Promise<void> {
+    await Promise.all([...this.tabQueryTimers.keys()].map((tabId) => this.flushTabQuery(tabId)));
   }
 
   async removeTabQuery(tabId: string): Promise<void> {
     delete this.tabQueryCache[tabId];
+    const pending = this.tabQueryTimers.get(tabId);
+    if (pending) clearTimeout(pending);
+    this.tabQueryTimers.delete(tabId);
 
     const db = await this.initDB();
     const tx = db.transaction('tabQueries', 'readwrite');
@@ -496,6 +527,8 @@ class IndexedDBService {
 
   async clearTabQueries(): Promise<void> {
     this.tabQueryCache = {};
+    this.tabQueryTimers.forEach(clearTimeout);
+    this.tabQueryTimers.clear();
 
     const db = await this.initDB();
     const tx = db.transaction('tabQueries', 'readwrite');
@@ -505,3 +538,11 @@ class IndexedDBService {
 }
 
 export const indexedDBService = new IndexedDBService();
+
+// Persist pending typing when the page goes away.
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => void indexedDBService.flushAllTabQueries());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void indexedDBService.flushAllTabQueries();
+  });
+}

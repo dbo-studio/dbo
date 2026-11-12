@@ -28,7 +28,7 @@ export const createTabQuerySlice: StateCreator<TabStore & TabQuerySlice, [], [],
     const targetTabId = tabId ?? get().selectedTabId;
     if (!targetTabId) return;
 
-    void indexedDBService.saveTabQuery(targetTabId, query);
+    indexedDBService.saveTabQuery(targetTabId, query);
   },
   removeQuery: (tabId: string): void => {
     void indexedDBService.removeTabQuery(tabId);
