@@ -2,7 +2,6 @@ import api from '@/api';
 import type { ConnectorKind, ConnectorType } from '@/api/backup/types';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { variables } from '@/core/theme/variables';
 import { Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
@@ -17,6 +16,7 @@ import {
 import { authorizeConnector } from './authorize';
 import ConnectorForm from './ConnectorForm';
 import ConnectorIcon from './ConnectorIcon';
+import ConnectorTypeTile from './ConnectorTypeTile';
 import { CONNECTOR_TYPES, specOf } from './connectorTypes';
 
 type Editing = { connector?: ConnectorType; type?: string } | null;
@@ -78,32 +78,15 @@ export default function ConnectorsSection({
       <Typography color='textSecondary' variant='caption' component='p' sx={{ mb: 1 }}>
         {isDestination ? locales.connector_add_destination : locales.connector_add_channel}
       </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 1 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1 }}>
         {CONNECTOR_TYPES.filter((t) => t.kind === kind).map((t) => (
-          <Box
+          <ConnectorTypeTile
             key={t.type}
-            role='button'
-            tabIndex={0}
-            data-testid={`connector-quick-${t.type}`}
-            onClick={() => setEditing({ type: t.type })}
-            onKeyDown={(e) => e.key === 'Enter' && setEditing({ type: t.type })}
-            sx={(theme) => ({
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              p: 1,
-              cursor: 'pointer',
-              borderRadius: variables.radius.medium,
-              border: `1px solid ${theme.palette.divider}`,
-              '&:hover': { borderColor: theme.palette.primary.main, background: theme.palette.action.hover },
-              '&:focus-visible': { outline: `1px solid ${theme.palette.primary.main}` }
-            })}
-          >
-            <ConnectorIcon type={t.type} size={28} />
-            <Typography variant='body2' color='textTitle' noWrap>
-              {t.label}
-            </Typography>
-          </Box>
+            type={t.type}
+            label={t.label}
+            testId={`connector-quick-${t.type}`}
+            onSelect={() => setEditing({ type: t.type })}
+          />
         ))}
       </Box>
     </Box>

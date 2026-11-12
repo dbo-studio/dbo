@@ -8,7 +8,7 @@ import { Box, Button, Checkbox, Collapse, FormControlLabel, Typography } from '@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
-import ConnectorIcon from './ConnectorIcon';
+import ConnectorTypeTile from './ConnectorTypeTile';
 import { CONNECTOR_TYPES, type ConnectorTypeSpec, type FieldSpec, specOf } from './connectorTypes';
 
 type Props = {
@@ -165,37 +165,17 @@ export default function ConnectorForm({ kind, connector, initialType, onClose, o
         <Box
           role='radiogroup'
           aria-label={locales.connector_type}
-          sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 1 }}
+          sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1 }}
         >
           {types.map((t) => (
-            <Box
+            <ConnectorTypeTile
               key={t.type}
-              role='radio'
-              tabIndex={0}
-              aria-checked={t.type === spec.type}
-              data-testid={`connector-type-${t.type}`}
-              onClick={() => pick(t)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pick(t))}
-              sx={(theme) => ({
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 0.75,
-                p: 1,
-                cursor: 'pointer',
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: t.type === spec.type ? theme.palette.primary.main : theme.palette.divider,
-                background: t.type === spec.type ? theme.palette.action.selected : 'transparent',
-                '&:hover': { borderColor: theme.palette.primary.main },
-                '&:focus-visible': { outline: `1px solid ${theme.palette.primary.main}` }
-              })}
-            >
-              <ConnectorIcon type={t.type} />
-              <Typography variant='caption' color='textText' align='center' sx={{ lineHeight: 1.25 }}>
-                {t.label}
-              </Typography>
-            </Box>
+              type={t.type}
+              label={t.label}
+              testId={`connector-type-${t.type}`}
+              selected={t.type === spec.type}
+              onSelect={() => pick(t)}
+            />
           ))}
         </Box>
       )}
