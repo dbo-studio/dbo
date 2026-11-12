@@ -43,13 +43,13 @@ const createDataStore = (paneId: PaneId | 'scoped'): StoreApi<DataState> =>
             'clearGridMetaBeforeLoad'
           );
 
-          await Promise.all([
-            get().updateRows([]),
-            get().updateColumns([]),
-            get().updateEditedRows([]),
-            get().updateRemovedRows([]),
-            get().updateUnsavedRows([])
-          ]);
+          // Clear in memory only: updateRows/updateColumns/... also write to IndexedDB, which
+          // would wipe this tab's cache before it is read below.
+          set(
+            { rows: [], columns: [], editedRows: [], removedRows: [], unSavedRows: [] },
+            undefined,
+            'clearBeforeLoad'
+          );
           get().updateSelectedRows([], true);
 
           try {
@@ -67,9 +67,9 @@ const createDataStore = (paneId: PaneId | 'scoped'): StoreApi<DataState> =>
             const hasStoredGrid = dbRows.length > 0 && dbColumns.length > 0;
 
             if (hasStoredGrid) {
+              // Rows and columns are already stored; only memory needs them.
+              set({ rows: dbRows, columns: dbColumns }, undefined, 'restoreFromIndexedDB');
               await Promise.all([
-                get().updateRows(dbRows),
-                get().updateColumns(dbColumns),
                 get().updateEditedRows(dbEditedRows),
                 get().updateRemovedRows(dbRemovedRows),
                 get().updateUnsavedRows(dbUnsavedRows)

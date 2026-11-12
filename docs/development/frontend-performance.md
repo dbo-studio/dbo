@@ -47,9 +47,9 @@ Priority is impact on the three load cases first. Each item lists the owner file
 Deletes every row of the tab with a cursor, then awaits one `put` per row in a serial loop. The `debouncedSave*` helpers in `core/utils/indexedDbHelper.ts` are not debounced. `updateRow` rewrites the whole result set per cell edit. A query run writes the rows twice (`updateRows` in `dataRow.slice.ts`, then `debouncedSaveToIndexedDB` at `dataQuery.slice.ts:196`).
 Fix: issue puts without awaiting each one and await `tx.done` once; write only the changed row in `updateRow`; remove the duplicate save; debounce for real. Apply the same to the edited, removed, unsaved and selected row savers.
 
-**P2. Grid cache wiped on restore (CONFIRMED by e2e).**
-`frontend/src/store/dataStore/data.store.ts:47`. `loadDataFromIndexedDB` calls `updateRows([])` first, which persists an empty set and wipes the stored rows, and then reads IndexedDB. Confirmed by `e2e/tests/sqlite/grid-persistence.spec.ts`: after a reload the grid shows "No results yet", rows and unsaved edits are gone. Restore never finds rows. This is a behavior change when fixed (grid comes back after reload), so it needs a product decision first.
-Fix: read IndexedDB first, clear in-memory state without persisting.
+**P2. Tab switch wiped the tab cache and refetched (FIXED).**
+`frontend/src/store/dataStore/data.store.ts`. `loadDataFromIndexedDB` cleared state with `updateRows([])` and friends, which also write to IndexedDB. That emptied the tab's own cache before it was read, so every tab switch found nothing: data tabs re-ran their query on the server, and editor tabs lost their results. Fix: clear in memory only, and restore rows and columns into memory without writing them back. Verified by `e2e/tests/sqlite/grid-persistence.spec.ts` ("Switching tabs restores the result without querying the server again" fails on the old code, passes now).
+Not a bug, by design: `useStartup` calls `clearAllTableData()` on app start, so a page reload refetches and drops unsaved edits. The cache is session-scoped. Tests pin that too.
 
 **P3. Every SQL editor keystroke writes to IndexedDB and fires `onChange` twice.**
 `frontend/src/routes/Query/Query.tsx:173` and `frontend/src/components/base/SqlEditor/SqlEditor.tsx:81,171`.
@@ -97,7 +97,7 @@ Fix: dynamic-measure virtualization with the last turn always mounted; `content-
 
 1. One fix per commit. Each commit leaves the app working and all affected e2e specs green.
 2. Measure before and after with the same fixtures, same machine, same build mode. No change is declared a win without a number.
-3. No behavior change unless the item says so (P2 is the only item that may change behavior, and only after confirmation by test).
+3. No behavior change unless the item says so (P2 is the only item that changes behavior: tab switches now keep results).
 4. Keep the layering rules in `frontend/AGENTS.md` (base / common / layout / routes / store).
 5. Frontend tests are e2e only (`frontend/AGENTS.md`). Benchmarks are Playwright specs under `e2e/`, not Vitest.
 

@@ -25,7 +25,9 @@ async function setup(
   ensureSqliteDbFile(dbPath);
   await connectionPage.goto();
   await connectionPage.waitForReady();
-  await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+  await connectionPage.setupConnection(
+    getDbConfig("sqlite", connectionName, dbPath),
+  );
   await connectionPage.expectConnectionActive(connectionName);
   await sqlEditor.open();
   await sqlEditor.typeAndRun(
@@ -41,10 +43,10 @@ INSERT INTO ${tableName} (name) VALUES ('alpha_row'), ('beta_row'), ('gamma_row'
 }
 
 test.describe("Grid persistence SQLite", () => {
-  // P2 confirmed: loadDataFromIndexedDB writes empty rows before reading, so the cache is wiped
-  // and the grid is empty after reload. Pins current behavior; flip to the three commented
-  // assertions once P2 is fixed.
-  test("Query result after a page reload (P2: currently dropped)", async ({ page }, testInfo) => {
+  // By design: useStartup clears the table cache on app start, so a reload refetches. Tab switches keep it (last test).
+  test("Query result is dropped on a page reload (cache is session-scoped)", async ({
+    page,
+  }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `grid-persist-${suffix}`;
     const tableName = `e2e_persist_${suffix}`;
@@ -52,13 +54,19 @@ test.describe("Grid persistence SQLite", () => {
 
     await withConnectionCleanup(page, connectionName, async () => {
       try {
-        const { connectionPage, dataGrid } = await setup(page, connectionName, tableName, dbPath);
+        const { connectionPage, dataGrid } = await setup(
+          page,
+          connectionName,
+          tableName,
+          dbPath,
+        );
 
         await page.reload();
         await connectionPage.waitForReady();
 
-        await expect(page.getByText("No results yet")).toBeVisible({ timeout: 15000 });
-        // After the P2 fix: waitForData("gamma_row"); expectDataRowCount(3);
+        await expect(page.getByText("No results yet")).toBeVisible({
+          timeout: 15000,
+        });
       } finally {
         removeSqliteDbFile(dbPath);
       }
@@ -73,7 +81,12 @@ test.describe("Grid persistence SQLite", () => {
 
     await withConnectionCleanup(page, connectionName, async () => {
       try {
-        const { dataGrid } = await setup(page, connectionName, tableName, dbPath);
+        const { dataGrid } = await setup(
+          page,
+          connectionName,
+          tableName,
+          dbPath,
+        );
 
         await dataGrid.editCell("beta_row", "beta_edited");
         await dataGrid.expectCellVisible("beta_edited");
@@ -86,7 +99,9 @@ test.describe("Grid persistence SQLite", () => {
     });
   });
 
-  test("Edit then save persists across a reload", async ({ page }, testInfo) => {
+  test("Edit then save persists across a reload", async ({
+    page,
+  }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `grid-save-${suffix}`;
     const tableName = `e2e_save_${suffix}`;
@@ -94,7 +109,12 @@ test.describe("Grid persistence SQLite", () => {
 
     await withConnectionCleanup(page, connectionName, async () => {
       try {
-        const { connectionPage, sqlEditor, dataGrid } = await setup(page, connectionName, tableName, dbPath);
+        const { connectionPage, sqlEditor, dataGrid } = await setup(
+          page,
+          connectionName,
+          tableName,
+          dbPath,
+        );
 
         await dataGrid.editCell("beta_row", "beta_saved");
         await dataGrid.saveChanges();
@@ -112,7 +132,9 @@ test.describe("Grid persistence SQLite", () => {
     });
   });
 
-  test("Unsaved edit across reload (P2 probe)", async ({ page }, testInfo) => {
+  test("Unsaved edit is dropped on a page reload (cache is session-scoped)", async ({
+    page,
+  }, testInfo) => {
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `grid-unsaved-${suffix}`;
     const tableName = `e2e_unsaved_${suffix}`;
@@ -120,16 +142,73 @@ test.describe("Grid persistence SQLite", () => {
 
     await withConnectionCleanup(page, connectionName, async () => {
       try {
-        const { connectionPage, dataGrid } = await setup(page, connectionName, tableName, dbPath);
+        const { connectionPage, dataGrid } = await setup(
+          page,
+          connectionName,
+          tableName,
+          dbPath,
+        );
 
         await dataGrid.editCell("beta_row", "beta_unsaved");
         await dataGrid.expectCellVisible("beta_unsaved");
 
         await page.reload();
         await connectionPage.waitForReady();
-        // P2: the unsaved edit and the rows are dropped on reload. Pins current behavior.
-        await expect(page.getByText("No results yet")).toBeVisible({ timeout: 15000 });
-        await expect(dataGrid.grid.getByText("beta_unsaved", { exact: true })).toHaveCount(0);
+        await expect(page.getByText("No results yet")).toBeVisible({
+          timeout: 15000,
+        });
+        await expect(
+          dataGrid.grid.getByText("beta_unsaved", { exact: true }),
+        ).toHaveCount(0);
+      } finally {
+        removeSqliteDbFile(dbPath);
+      }
+    });
+  });
+
+  test("Switching tabs restores the result without querying the server again", async ({
+    page,
+  }, testInfo) => {
+    const suffix = uniqueTestSuffix(testInfo);
+    const connectionName = `grid-switch-${suffix}`;
+    const tableName = `e2e_switch_${suffix}`;
+    const dbPath = `/tmp/dbo-e2e-grid-switch-${suffix}.db`;
+
+    await withConnectionCleanup(page, connectionName, async () => {
+      try {
+        const { sqlEditor, dataGrid } = await setup(
+          page,
+          connectionName,
+          tableName,
+          dbPath,
+        );
+
+        const firstTab = page.locator("[data-tab-id]").first();
+        const tabId = await firstTab.getAttribute("data-tab-id");
+        expect(tabId).toBeTruthy();
+
+        // Second editor tab (first one holds a query, so Alt+T opens a new one).
+        await firstTab.click();
+        await page.keyboard.press("Alt+T");
+        await expect(page.locator("[data-tab-id]")).toHaveCount(2);
+
+        const queryCalls: string[] = [];
+        page.on("request", (r) => {
+          if (
+            r.method() === "POST" &&
+            /\/query(\/|$)/.test(
+              new URL(r.url()).pathname.replace(/^\/api/, ""),
+            )
+          )
+            queryCalls.push(r.url());
+        });
+
+        await page.locator(`[data-tab-id="${tabId}"]`).click();
+        await dataGrid.waitForData("gamma_row");
+        await dataGrid.expectDataRowCount(3);
+        await page.waitForTimeout(500);
+        expect(queryCalls).toHaveLength(0);
+        void sqlEditor;
       } finally {
         removeSqliteDbFile(dbPath);
       }
