@@ -174,7 +174,7 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | B9 | long frames: frames over 50 ms / long-task ms / frame p95 | 0 / 0 / 17 ms (1x CPU); 9 / 422 / 33 ms (6x CPU slowdown) | n/a |
 | B10 | cold start (ms) | | |
 | B10 | entry gzip (KB) | 877 | n/a |
-| B11 | heap growth (MB) | | |
+| B11 | heap after closing 12 tabs, 3 cycles (MB); IndexedDB records left | 31.4, 32.4, 33.1 (about +0.85 per cycle, +70 KB per tab); 0 rows/columns/tabQueries left | n/a |
 
 ### 4.5 Results (after) - to fill per change
 
@@ -230,7 +230,7 @@ These cover behavior that is currently untested and that the fixes touch. Write 
 | Tree search shows hits from unopened folders and restores state when cleared | P5 |
 | Chat: stream a mock answer with prose, a code block and a table; final render equals pre-change render; cancel mid-stream leaves no live block | P7-P10 |
 | Chat: switch chats during a stream; the other chat keeps streaming | P7 |
-| Open 30 tabs, close all, IndexedDB `rows` store is empty for them | P14, B11 |
+| Open tabs, close all, IndexedDB stores are empty for them (DONE: `e2e/tests/sqlite/perf-tabs.spec.ts`, 12 tabs because the tab strip stops creating tabs past about 15 in headless; passes, no IndexedDB leak found) | P14, B11 |
 
 ### 5.4 Manual smoke checklist (web and desktop)
 
