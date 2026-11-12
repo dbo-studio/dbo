@@ -177,7 +177,7 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 
 | Change | IDs | Before | After | Delta | Commit |
 | --- | --- | --- | --- | --- | --- |
-| P1 | B1, B3 | | | | |
+| P1 | IndexedDB write of N rows (in-browser microbench, Chromium, 20 columns) | 10k rows 291 ms, 50k rows 1514 ms (await per put) | 10k rows 95 ms, 50k rows 487 ms (queued puts) | -67% | rows saved once per query instead of twice. At the default 100-row page the gain is under 5 ms; it matters when the page limit is raised |
 | P3 | B4 (IndexedDB transactions for 200 chars) | 400 | 1 | -99.8% | see git log |
 | P4 | B10 | | | | |
 | P5 | B5, B6, B7 | | | | |

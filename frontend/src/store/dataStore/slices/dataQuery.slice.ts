@@ -193,7 +193,10 @@ export const createDataQuerySlice: StateCreator<
         await Promise.all([
           get().updateRows(res.data),
           get().updateColumns(res.columns),
-          debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
+          // updateRows/updateColumns already persist for the selected tab; only a switched tab needs this.
+          selectPaneSelectedTabId(get().paneId) === tab.id
+            ? Promise.resolve()
+            : debouncedSaveToIndexedDB(tab.id, res.data, res.columns)
         ]);
 
         const summary = summarizeQueryResult(res);

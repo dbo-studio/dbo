@@ -158,18 +158,20 @@ class IndexedDBService {
       cursor = await cursor.continue();
     }
 
+    // Queue every put without awaiting each one; tx.done resolves when all have committed.
+    const puts: Promise<unknown>[] = [];
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
-      await tx.store.put({
+      puts.push(tx.store.put({
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         key,
         tabId,
         rowIndex: row.dbo_index,
         data: row
-      });
+      }));
     }
-    await tx.done;
+    await Promise.all([...puts, tx.done]);
   }
 
   async getRows(tabId: string): Promise<RowType[]> {
