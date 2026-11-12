@@ -67,14 +67,6 @@ function Section({
 export default function BackupSidebar(): JSX.Element {
   const tab = useTabStore(selectTabs).find((t): t is BackupTabType => t.mode === TabMode.Backup);
   const { data: schedules = [] } = useQuery({ queryKey: ['backup-schedules'], queryFn: api.backup.schedules });
-  const { data: destinations = [] } = useQuery({
-    queryKey: ['backup-connectors', 'destination'],
-    queryFn: () => api.backup.connectors('destination')
-  });
-  const { data: channels = [] } = useQuery({
-    queryKey: ['backup-connectors', 'channel'],
-    queryFn: () => api.backup.connectors('channel')
-  });
 
   const section = tab?.section;
 
@@ -105,6 +97,7 @@ export default function BackupSidebar(): JSX.Element {
       <Section title={locales.backup_sidebar_data}>
         {page('backups', locales.backup_nav_backups, 'backup')}
         {page('restore', locales.backup_nav_restore, 'undo')}
+        {page('tools', locales.backup_tools, 'wrench')}
       </Section>
 
       <Section
@@ -138,12 +131,6 @@ export default function BackupSidebar(): JSX.Element {
             )}
           </SidebarItemStyled>
         ))}
-      </Section>
-
-      <Section title={locales.backup_sidebar_setup}>
-        {page('destinations', locales.backup_nav_destinations, 'cloud', destinations.length)}
-        {page('notifications', locales.backup_nav_notifications, 'bell', channels.length)}
-        {page('tools', locales.backup_tools, 'wrench')}
       </Section>
     </SidebarListStyled>
   );

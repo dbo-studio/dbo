@@ -23,6 +23,7 @@ import {
 import AboutPanel from './AboutPanel/AboutPanel';
 import AdministrationPanel from './AdministrationPanel/AdministrationPanel';
 import AiPanel from './AiPanel/AiPanel';
+import BackupSettingsPanel from './BackupSettingsPanel/BackupSettingsPanel';
 import AppearancePanel from './AppearancePanel/AppearancePanel';
 import MenuPanel from './MenuPanel/MenuPanel';
 import SecurityPanel from './SecurityPanel/SecurityPanel';
@@ -55,7 +56,8 @@ const SECTION_CONTENT: Record<number, JSX.Element> = {
       <AdministrationPanel />
     </Box>
   ),
-  7: <NotificationsPanel />
+  7: <NotificationsPanel />,
+  8: <BackupSettingsPanel />
 };
 
 function highlightTarget(highlightId: string): void {
@@ -325,9 +327,7 @@ export default function Settings(): JSX.Element {
         )}
       </Box>
       {activeTab.id === 3 ? (
-        <Box data-settings-id='ai.providers'>
-          <AiPanel key={settingsTab?.aiTab ?? 'providers'} initialTab={settingsTab?.aiTab ?? 'providers'} />
-        </Box>
+        <AiPanel key={settingsTab?.aiTab ?? 'providers'} initialTab={settingsTab?.aiTab ?? 'providers'} />
       ) : (
         activeTab.content
       )}

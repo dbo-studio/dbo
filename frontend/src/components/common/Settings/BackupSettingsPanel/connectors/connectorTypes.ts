@@ -215,4 +215,33 @@ export const CONNECTOR_TYPES: ConnectorTypeSpec[] = [
   }
 ];
 
+/** Brand colour behind each connector's icon, so a list of them can be told apart at a glance. */
+/* eslint-disable no-restricted-syntax -- third-party brand colours are not theme tokens */
+export const CONNECTOR_COLORS: Record<string, string> = {
+  folder: '#F59E0B',
+  s3: '#E8590C',
+  webdav: '#0EA5A4',
+  sftp: '#475569',
+  ftp: '#64748B',
+  gdrive: '#1FA463',
+  dropbox: '#0061FF',
+  onedrive: '#0078D4',
+  email: '#EA4335',
+  slack: '#4A154B',
+  discord: '#5865F2',
+  telegram: '#229ED9',
+  webhook: '#7C3AED'
+};
+/* eslint-enable no-restricted-syntax */
+
+/** Types with a real logo in public/icons (brand_<name>.svg). */
+export const CONNECTOR_BRAND_LOGOS: Record<string, string> = {
+  s3: 'amazons3',
+  gdrive: 'googledrive',
+  dropbox: 'dropbox',
+  slack: 'slack',
+  discord: 'discord',
+  telegram: 'telegram'
+};
+
 export const specOf = (type: string): ConnectorTypeSpec | undefined => CONNECTOR_TYPES.find((t) => t.type === type);

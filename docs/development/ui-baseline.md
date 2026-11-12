@@ -143,6 +143,9 @@ Motion in the workspace is functional feedback, not decoration. `variables.motio
 | Empty "No active connection" screen shows the command-palette hint; bottom-panel tabs use panel tokens | `common/Connections/ConnectionsEmptyState.tsx`, `layout/BottomPanel` |
 | Literal `borderRadius` swapped for `variables.radius.*` where the value matched exactly; ESLint rule flags literal 3–12 | `eslint.config.mts` |
 | Removed unused `TypewriterEffectText` after an import scan | `base/` |
+| Empty workspace (connection open, no tab) shows the next step, six shortcuts and three feature tips instead of a bare icon | `common/Panels/WorkspaceEmpty` |
+| Control-height audit: removed `height: 32` overrides on Pub/Sub buttons. The other literal heights (22/28/32/36/40) were reviewed and are shell geometry, list rows, chips or mobile rules, so they stay | `routes/Tool/PubSubTool.tsx` |
+| History rows use the same lighter hover as the connection switcher | `common/Histories/HistoryItem` |
 
 The data grid was not changed beyond removing redundant `size` props; its rendering and behaviour are outside this review's proposed changes.
 
@@ -202,7 +205,7 @@ Do not redesign Settings, the activity rail, application status bar, or DataGrid
 ## Implementation sequence
 
 1. **Foundation fixes (done):** resolve the verified findings (P0/P1 first, then the P2 experience gaps). Keep the default palette byte-for-byte unchanged and capture before/after screenshots.
-2. **Token drift audit (radius done; font size and control height remain):** map real violations to existing tokens and add the radius lint guard. Do not bulk-replace raw search matches.
+2. **Token drift audit (radius, font size and control height done; the lint rules guard font size and radius):** map real violations to existing tokens and add the radius lint guard. Do not bulk-replace raw search matches.
 3. **Approved feature work:** implement only the selected modernization candidates, one surface at a time, with responsive and keyboard checks. Experience polish (onboarding, empty states, help) comes after the foundation fixes so it lands on stable contracts.
 4. **Dead-code cleanup (`TypewriterEffectText` removed; the review-per-surface components remain):** remove only confirmed unused components/exports after the UI contracts are stable.
 

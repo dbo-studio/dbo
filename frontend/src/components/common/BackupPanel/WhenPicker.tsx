@@ -2,7 +2,7 @@ import type { BackupCadenceType } from '@/api/backup/types';
 import locales from '@/locales';
 import { Box, Button, InputBase, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import type { JSX } from 'react';
-import Segmented from './Segmented';
+import Segmented from '@/components/base/Segmented/Segmented';
 
 export type When = { cadence: BackupCadenceType; hour: number; minute: number; weekday: number; monthDay: number };
 

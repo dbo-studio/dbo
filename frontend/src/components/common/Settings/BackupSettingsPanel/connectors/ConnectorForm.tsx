@@ -1,7 +1,6 @@
 import api from '@/api';
 import type { ConnectorKind, ConnectorRequestType, ConnectorType } from '@/api/backup/types';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
-import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
@@ -9,21 +8,22 @@ import { Box, Button, Checkbox, Collapse, FormControlLabel, Typography } from '@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
+import ConnectorIcon from './ConnectorIcon';
 import { CONNECTOR_TYPES, type ConnectorTypeSpec, type FieldSpec, specOf } from './connectorTypes';
-
-const FORM_ID = 'connector-form';
 
 type Props = {
   kind: ConnectorKind;
   /** Set to edit; omit to create. */
   connector?: ConnectorType;
+  /** Create only: the type tile selected first. */
+  initialType?: string;
   onClose: () => void;
   onSaved: (saved: ConnectorType) => void;
 };
 
-export default function ConnectorDialog({ kind, connector, onClose, onSaved }: Props): JSX.Element {
+export default function ConnectorForm({ kind, connector, initialType, onClose, onSaved }: Props): JSX.Element {
   const types = CONNECTOR_TYPES.filter((t) => t.kind === kind);
-  const [spec, setSpec] = useState<ConnectorTypeSpec>(specOf(connector?.type ?? '') ?? types[0]);
+  const [spec, setSpec] = useState<ConnectorTypeSpec>(specOf(connector?.type ?? initialType ?? '') ?? types[0]);
   const [name, setName] = useState(connector?.name ?? '');
   const [config, setConfig] = useState<Record<string, string | number | boolean>>(connector?.config ?? {});
   const [secrets, setSecrets] = useState<Record<string, string>>({});
@@ -60,6 +60,12 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
     },
     onSuccess: onSaved
   });
+
+  const pick = (t: ConnectorTypeSpec): void => {
+    setSpec(t);
+    setConfig({});
+    setSecrets({});
+  };
 
   const setConfigValue = (key: string, value: string | number | boolean): void =>
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -121,103 +127,116 @@ export default function ConnectorDialog({ kind, connector, onClose, onSaved }: P
     );
   };
 
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      title={
-        connector
-          ? locales.connector_edit
-          : kind === 'destination'
-            ? locales.connector_add_destination
-            : locales.connector_add_channel
-      }
-      footer={
-        <>
-          {/* A sign-in destination needs a saved, approved record, so it can only be tested after that. */}
-          {(!spec.oauth || connector?.secretsSet.refreshToken) && (
-            <Button
-              onClick={() => test()}
-              disabled={!name.trim() || missing || isTesting || isPending}
-              data-testid='connector-test'
-            >
-              {locales.connector_test}
-            </Button>
-          )}
-          <Button onClick={onClose}>{locales.cancel}</Button>
-          <Button
-            variant='contained'
-            type='submit'
-            form={FORM_ID}
-            disabled={!name.trim() || missing || isPending}
-            data-testid='connector-save'
-          >
-            {locales.save}
-          </Button>
-        </>
-      }
-    >
-      <Box
-        component='form'
-        id={FORM_ID}
-        sx={{ width: 'min(460px, calc(100vw - 64px))', display: 'flex', flexDirection: 'column', gap: 1.5 }}
-        onSubmit={(event) => {
-          event.preventDefault();
-          mutate();
-        }}
+  const footer = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+      <Button
+        variant='contained'
+        type='submit'
+        disabled={!name.trim() || missing || isPending}
+        data-testid='connector-save'
       >
-        {!connector && (
-          <SelectInput
-            emptylabel=''
-            label={locales.connector_type}
-            value={spec.type}
-            onChange={(e) => {
-              setSpec(specOf((e as SelectInputOption).value as string) ?? spec);
-              setConfig({});
-              setSecrets({});
-            }}
-            options={types.map((t) => ({ label: t.label, value: t.type }))}
-            testId='connector-type'
-          />
-        )}
-        <Typography variant='caption' color='textSecondary'>
-          {spec.description}
-        </Typography>
-        <FieldInput
-          name='connector-name'
-          label={locales.connector_name}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          margin='none'
-        />
-        {spec.fields.filter((f) => !f.advanced).map(renderField)}
-        {spec.fields.some((f) => f.advanced) && (
-          <>
-            <Button
-              sx={{ alignSelf: 'flex-start' }}
-              onClick={() => setShowAdvanced((v) => !v)}
-              data-testid='connector-advanced'
+        {locales.save}
+      </Button>
+      {/* A sign-in destination needs a saved, approved record, so it can only be tested after that. */}
+      {(!spec.oauth || connector?.secretsSet.refreshToken) && (
+        <Button
+          variant='outlined'
+          onClick={() => test()}
+          disabled={!name.trim() || missing || isTesting || isPending}
+          data-testid='connector-test'
+        >
+          {locales.connector_test}
+        </Button>
+      )}
+      <Button onClick={onClose}>{locales.cancel}</Button>
+    </Box>
+  );
+
+  return (
+    <Box
+      component='form'
+      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1 }}
+      onSubmit={(event) => {
+        event.preventDefault();
+        mutate();
+      }}
+    >
+      {!connector && (
+        <Box
+          role='radiogroup'
+          aria-label={locales.connector_type}
+          sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 1 }}
+        >
+          {types.map((t) => (
+            <Box
+              key={t.type}
+              role='radio'
+              tabIndex={0}
+              aria-checked={t.type === spec.type}
+              data-testid={`connector-type-${t.type}`}
+              onClick={() => pick(t)}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pick(t))}
+              sx={(theme) => ({
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.75,
+                p: 1,
+                cursor: 'pointer',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: t.type === spec.type ? theme.palette.primary.main : theme.palette.divider,
+                background: t.type === spec.type ? theme.palette.action.selected : 'transparent',
+                '&:hover': { borderColor: theme.palette.primary.main },
+                '&:focus-visible': { outline: `1px solid ${theme.palette.primary.main}` }
+              })}
             >
-              {locales.connector_advanced}
-            </Button>
-            <Collapse in={showAdvanced || needsOwnApp} unmountOnExit>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {needsOwnApp && (
-                  <Typography variant='caption' color='error'>
-                    {locales.connector_advanced_required}
-                  </Typography>
-                )}
-                {spec.fields.filter((f) => f.advanced).map(renderField)}
-              </Box>
-            </Collapse>
-          </>
-        )}
-        {spec.oauth && !connector && (
-          <Typography variant='caption' color='textSecondary'>
-            {locales.connector_authorize_hint}
-          </Typography>
-        )}
-      </Box>
-    </Modal>
+              <ConnectorIcon type={t.type} />
+              <Typography variant='caption' color='textText' align='center' sx={{ lineHeight: 1.25 }}>
+                {t.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+      <Typography variant='caption' color='textSecondary'>
+        {spec.description}
+      </Typography>
+      <FieldInput
+        name='connector-name'
+        label={locales.connector_name}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        margin='none'
+      />
+      {spec.fields.filter((f) => !f.advanced).map(renderField)}
+      {spec.fields.some((f) => f.advanced) && (
+        <>
+          <Button
+            sx={{ alignSelf: 'flex-start' }}
+            onClick={() => setShowAdvanced((v) => !v)}
+            data-testid='connector-advanced'
+          >
+            {locales.connector_advanced}
+          </Button>
+          <Collapse in={showAdvanced || needsOwnApp} unmountOnExit>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {needsOwnApp && (
+                <Typography variant='caption' color='error'>
+                  {locales.connector_advanced_required}
+                </Typography>
+              )}
+              {spec.fields.filter((f) => f.advanced).map(renderField)}
+            </Box>
+          </Collapse>
+        </>
+      )}
+      {spec.oauth && !connector && (
+        <Typography variant='caption' color='textSecondary'>
+          {locales.connector_authorize_hint}
+        </Typography>
+      )}
+      {footer}
+    </Box>
   );
 }

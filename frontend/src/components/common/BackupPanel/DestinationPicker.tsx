@@ -4,9 +4,9 @@ import locales from '@/locales';
 import { Box, ButtonBase, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, type ReactNode, useState } from 'react';
-import ConnectorDialog from './connectors/ConnectorDialog';
-import { authorizeConnector } from './connectors/authorize';
-import { specOf } from './connectors/connectorTypes';
+import ConnectorDialog from '@/components/common/Settings/BackupSettingsPanel/connectors/ConnectorDialog';
+import { authorizeConnector } from '@/components/common/Settings/BackupSettingsPanel/connectors/authorize';
+import { specOf } from '@/components/common/Settings/BackupSettingsPanel/connectors/connectorTypes';
 
 function Tile({
   selected,

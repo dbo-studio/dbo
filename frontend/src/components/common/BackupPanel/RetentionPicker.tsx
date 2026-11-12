@@ -3,7 +3,7 @@ import { HORIZON_DAYS, keptAges, type PlanCadence } from '@/core/backup/schedule
 import { Box, InputBase, Typography } from '@mui/material';
 import { type JSX, useMemo } from 'react';
 import { formatSize } from './format';
-import Segmented from './Segmented';
+import Segmented from '@/components/base/Segmented/Segmented';
 
 export type Retention = { keepSmart: boolean; keepLast: number; keepDays: number };
 

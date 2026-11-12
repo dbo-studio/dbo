@@ -1,10 +1,9 @@
 import api from '@/api';
 import type { ConnectorKind, ConnectorType } from '@/api/backup/types';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import EmptyState from '@/components/base/EmptyState/EmptyState';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { Button, Chip, Typography } from '@mui/material';
+import { variables } from '@/core/theme/variables';
+import { Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
@@ -13,16 +12,24 @@ import {
   CardRowMainStyled,
   CardRowStyled,
   CardStyled,
-  SectionActionsStyled,
   SectionHeadStyled
-} from '../BackupPanel.styled';
+} from '@/components/common/BackupPanel/BackupPanel.styled';
 import { authorizeConnector } from './authorize';
-import ConnectorDialog from './ConnectorDialog';
-import { specOf } from './connectorTypes';
+import ConnectorForm from './ConnectorForm';
+import ConnectorIcon from './ConnectorIcon';
+import { CONNECTOR_TYPES, specOf } from './connectorTypes';
 
-type Editing = { connector?: ConnectorType } | null;
+type Editing = { connector?: ConnectorType; type?: string } | null;
 
-export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JSX.Element {
+export default function ConnectorsSection({
+  kind,
+  title,
+  description
+}: {
+  kind: ConnectorKind;
+  title: string;
+  description: string;
+}): JSX.Element {
   const queryClient = useQueryClient();
   const confirm = useConfirmModalStore((s) => s.danger);
   const queryKey = ['backup-connectors', kind];
@@ -50,36 +57,89 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
         .catch(() => undefined);
     });
 
+  const form = editing ? (
+    <ConnectorForm
+      key={editing.connector?.id ?? 'new'}
+      kind={kind}
+      connector={editing.connector}
+      initialType={editing.type}
+      onClose={() => setEditing(null)}
+      onSaved={(saved) => {
+        setEditing(null);
+        refresh();
+        // A new sign-in destination is useless until approved, so take the user straight there.
+        if (specOf(saved.type)?.oauth && !saved.secretsSet.refreshToken) void authorizeConnector(saved);
+      }}
+    />
+  ) : null;
+
+  const addGrid = (
+    <Box>
+      <Typography color='textSecondary' variant='caption' component='p' sx={{ mb: 1 }}>
+        {isDestination ? locales.connector_add_destination : locales.connector_add_channel}
+      </Typography>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 1 }}>
+        {CONNECTOR_TYPES.filter((t) => t.kind === kind).map((t) => (
+          <Box
+            key={t.type}
+            role='button'
+            tabIndex={0}
+            data-testid={`connector-quick-${t.type}`}
+            onClick={() => setEditing({ type: t.type })}
+            onKeyDown={(e) => e.key === 'Enter' && setEditing({ type: t.type })}
+            sx={(theme) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              p: 1,
+              cursor: 'pointer',
+              borderRadius: variables.radius.medium,
+              border: `1px solid ${theme.palette.divider}`,
+              '&:hover': { borderColor: theme.palette.primary.main, background: theme.palette.action.hover },
+              '&:focus-visible': { outline: `1px solid ${theme.palette.primary.main}` }
+            })}
+          >
+            <ConnectorIcon type={t.type} size={28} />
+            <Typography variant='body2' color='textTitle' noWrap>
+              {t.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+
   return (
     <>
       <SectionHeadStyled>
-        <SectionActionsStyled sx={{ ml: 0 }}>
-          <Button variant='contained' onClick={() => setEditing({})} data-testid={`connector-add-${kind}`}>
-            {isDestination ? locales.connector_add_destination : locales.connector_add_channel}
-          </Button>
-        </SectionActionsStyled>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography color='textTitle' variant='subtitle2' sx={{ fontWeight: 600 }}>
+            {title}
+          </Typography>
+          <Typography color='textText' variant='body2'>
+            {description}
+          </Typography>
+        </Box>
       </SectionHeadStyled>
 
-      {items.length === 0 ? (
-        <CardStyled>
-          <EmptyState
-            icon={isDestination ? 'cloud' : 'bell'}
-            title={isDestination ? locales.connector_empty_destinations : locales.connector_empty_channels}
-            description={
-              isDestination ? locales.connector_empty_destinations_hint : locales.connector_empty_channels_hint
-            }
-          />
-        </CardStyled>
-      ) : (
+      {items.length > 0 && (
         <CardStyled>
           {items.map((item) => {
             const spec = specOf(item.type);
             const needsAuth = spec?.oauth === true && !item.secretsSet.refreshToken;
 
+            if (editing?.connector?.id === item.id) {
+              return (
+                <Box key={item.id} sx={{ py: 1.5, borderBottom: 1, borderColor: 'divider' }}>
+                  {form}
+                </Box>
+              );
+            }
+
             return (
               <CardRowStyled key={item.id} data-testid={`connector-${item.id}`}>
                 <CardRowIconStyled>
-                  <CustomIcon type={spec?.icon ?? 'cloud'} size='s' />
+                  <ConnectorIcon type={item.type} />
                 </CardRowIconStyled>
                 <CardRowMainStyled>
                   <Typography variant='body2' color='textTitle' noWrap>
@@ -114,20 +174,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
         </CardStyled>
       )}
 
-      {editing && (
-        <ConnectorDialog
-          key={editing.connector?.id ?? 'new'}
-          kind={kind}
-          connector={editing.connector}
-          onClose={() => setEditing(null)}
-          onSaved={(saved) => {
-            setEditing(null);
-            refresh();
-            // A new sign-in destination is useless until approved, so take the user straight there.
-            if (specOf(saved.type)?.oauth && !saved.secretsSet.refreshToken) void authorizeConnector(saved);
-          }}
-        />
-      )}
+      {editing && !editing.connector ? form : addGrid}
     </>
   );
 }

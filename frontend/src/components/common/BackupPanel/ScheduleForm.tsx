@@ -16,7 +16,7 @@ import PlanSummary, { type PlanRow } from './PlanSummary';
 import ProtectPicker from './ProtectPicker';
 import RetentionPicker, { type Retention } from './RetentionPicker';
 import ScopePicker, { type Scope, scopeFor } from './ScopePicker';
-import Segmented from './Segmented';
+import Segmented from '@/components/base/Segmented/Segmented';
 import WhenPicker, { type When } from './WhenPicker';
 
 const RETRY_CHOICES = [0, 1, 2, 3, 5];

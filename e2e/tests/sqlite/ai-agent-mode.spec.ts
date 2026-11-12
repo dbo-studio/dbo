@@ -215,6 +215,7 @@ test.describe("AI Agent Mode", () => {
           const settings = new SettingsPage(page);
           await settings.open();
           await settings.navigateTo("AI");
+          await page.getByTestId("settings-tab-chat").click();
           await page.getByTestId("ai-tool-density").click();
           await page.getByRole("option", { name: "Compact" }).click();
           await settings.close();
@@ -225,6 +226,7 @@ test.describe("AI Agent Mode", () => {
 
           await settings.open();
           await settings.navigateTo("AI");
+          await page.getByTestId("settings-tab-chat").click();
           await page.getByTestId("ai-tool-density").click();
           await page.getByRole("option", { name: "Balanced" }).click();
           await settings.close();

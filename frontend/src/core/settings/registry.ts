@@ -72,6 +72,14 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     group: 'prefs'
   },
   {
+    id: 8,
+    name: locales.backup,
+    description: locales.backup_settings_description,
+    icon: 'backup',
+    keywords: ['backup', 'restore', 'destination', 'destinations', 'channel', 'notification', 's3', 'slack', 'email', 'drive'],
+    group: 'prefs'
+  },
+  {
     id: 5,
     name: locales.about,
     icon: 'about',
@@ -151,6 +159,18 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     sectionId: 7,
     label: locales.notification_settings_keep_running,
     keywords: ['tray', 'background', 'close', 'quit']
+  },
+  {
+    id: 'backup.destinations',
+    sectionId: 8,
+    label: locales.backup_nav_destinations,
+    keywords: ['backup', 'destination', 's3', 'folder', 'drive', 'dropbox', 'sftp', 'ftp', 'webdav']
+  },
+  {
+    id: 'backup.channels',
+    sectionId: 8,
+    label: locales.backup_nav_notifications,
+    keywords: ['backup', 'channel', 'email', 'slack', 'discord', 'telegram', 'webhook']
   },
   {
     id: 'appearance.theme',

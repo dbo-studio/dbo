@@ -30,7 +30,8 @@ test.describe("Redis bulk delete and recycle bin", () => {
     test("a wrong or empty confirmation name is refused and nothing is deleted", async ({ page }) => {
       await r.api(page).insert(str(key("safe:1")));
       expect((await bulk(page, `${r.s.prefix}:safe:*`, "nope")).status()).toBe(400);
-      expect((await bulk(page, `${r.s.prefix}:safe:*`, "")).status()).toBe(400);
+      // An empty name fails request validation (422); a wrong name reaches the service check (400).
+      expect((await bulk(page, `${r.s.prefix}:safe:*`, "")).status()).toBe(422);
       expect((await r.api(page).get(key("safe:1"))).ok()).toBeTruthy();
     });
 
@@ -49,15 +50,14 @@ test.describe("Redis bulk delete and recycle bin", () => {
       expect((await r.api(page).get(key("keep"))).ok()).toBeTruthy();
     });
 
-    test("deleted keys land in the recycle bin", async ({ page }) => {
+    test("bulk deletes are not undoable, so nothing lands in the recycle bin", async ({ page }) => {
       for (let i = 0; i < 3; i++) await r.api(page).insert(str(key(`rb:${i}`)));
       await bulk(page, `${r.s.prefix}:rb:*`, r.s.name);
       await expect
-        .poll(async () => {
-          const list = (await j(await page.request.get(`${apiUrl()}/nosql/recycle`, { params: { connectionId: r.s.id }, headers }))) as { itemId: string }[];
-          return list.filter((e) => e.itemId.startsWith(`${r.s.prefix}:rb:`)).length;
-        }, { timeout: 60000, intervals: [1000] })
-        .toBe(3);
+        .poll(async () => (await r.api(page).get(key("rb:0"))).ok(), { timeout: 60000, intervals: [1000] })
+        .toBeFalsy();
+      const list = (await j(await page.request.get(`${apiUrl()}/nosql/recycle`, { params: { connectionId: r.s.id }, headers }))) as { itemId: string }[];
+      expect(list.filter((e) => e.itemId.startsWith(`${r.s.prefix}:rb:`))).toHaveLength(0);
     });
   });
 

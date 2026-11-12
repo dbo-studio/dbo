@@ -5,8 +5,6 @@ import { Typography } from '@mui/material';
 import { type JSX, type ReactNode } from 'react';
 import { BackupContentInnerStyled, BackupContentPaneStyled, BackupRootStyled } from './BackupPanel.styled';
 import BackupsSection from './sections/BackupsSection';
-import DestinationsSection from './sections/DestinationsSection';
-import NotificationsSection from './sections/NotificationsSection';
 import RestoreSection from './sections/RestoreSection';
 import SchedulesSection from './sections/SchedulesSection';
 import ToolsSection from './sections/ToolsSection';
@@ -32,16 +30,6 @@ export default function BackupPanel(): JSX.Element {
       label: locales.backup_jobs,
       description: locales.backup_nav_schedules_hint,
       content: <SchedulesSection tab={tab} />
-    },
-    destinations: {
-      label: locales.backup_nav_destinations,
-      description: locales.backup_nav_destinations_hint,
-      content: <DestinationsSection />
-    },
-    notifications: {
-      label: locales.backup_nav_notifications,
-      description: locales.backup_nav_notifications_hint,
-      content: <NotificationsSection />
     },
     tools: { label: locales.backup_tools, description: locales.backup_tools_hint, content: <ToolsSection /> }
   };

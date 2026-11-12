@@ -212,11 +212,11 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
           />
         </Box>
         {running ? (
-          <Button variant='outlined' color='error' sx={{ height: 32 }} onClick={stop}>
+          <Button variant='outlined' color='error' onClick={stop}>
             {locales.nosql_stop}
           </Button>
         ) : (
-          <Button variant='contained' sx={{ height: 32 }} disabled={!channel.trim()} onClick={start}>
+          <Button variant='contained' disabled={!channel.trim()} onClick={start}>
             {locales.nosql_subscribe}
           </Button>
         )}
@@ -318,7 +318,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         </Box>
         <Button
           variant='contained'
-          sx={{ height: 32 }}
+
           disabled={!pubChannel.trim()}
           onClick={(): void => void publish()}
         >

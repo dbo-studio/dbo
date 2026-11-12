@@ -2,7 +2,7 @@ import locales from '@/locales';
 import { Box, Button, Chip, Switch, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import PassphraseInput from './PassphraseInput';
-import Segmented from './Segmented';
+import Segmented from '@/components/base/Segmented/Segmented';
 
 /** Compression and encryption. Turning encryption on asks for the passphrase right there. */
 export default function ProtectPicker({

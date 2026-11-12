@@ -4,8 +4,8 @@ import locales from '@/locales';
 import { Box, Button, Chip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
-import ConnectorDialog from './connectors/ConnectorDialog';
-import Segmented from './Segmented';
+import ConnectorDialog from '@/components/common/Settings/BackupSettingsPanel/connectors/ConnectorDialog';
+import Segmented from '@/components/base/Segmented/Segmented';
 
 /** Pick the channels to tell and when; a channel can be added without leaving the form. */
 export default function NotifyPicker({
