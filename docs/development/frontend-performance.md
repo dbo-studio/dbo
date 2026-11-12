@@ -180,6 +180,7 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | --- | --- | --- | --- | --- | --- |
 | P1 | IndexedDB write of N rows (in-browser microbench, Chromium, 20 columns) | 10k rows 291 ms, 50k rows 1514 ms (await per put) | 10k rows 95 ms, 50k rows 487 ms (queued puts) | -67% | rows saved once per query instead of twice. At the default 100-row page the gain is under 5 ms; it matters when the page limit is raised |
 | P3 | B4 (IndexedDB transactions for 200 chars) | 400 | 1 | -99.8% | see git log |
+| P4 (precache) | PWA install download | 335 entries, 26.2 MB | 296 entries, 15.8 MB | -40% | Monaco workers and diagram chunks are cached on first use (`CacheFirst`) instead of precached |
 | P4 (icons only) | B10 bundle | `CustomIcon` shared chunk 1,300 KB raw / 346 KB gzip | 650 KB raw / 190 KB gzip | -50% raw, -156 KB gzip | `CustomIcon` imports 85 named lucide icons instead of the whole `icons` map. Cold-start time not measured yet; Monaco eager import, PWA precache and lazy routes are still open |
 | P5 | B5, B6, B7 | no change | no change | n/a | not needed at measured sizes |
 | P6 | B1, B2 | first rows 862 ms, heap 94.6 MB, 24,812 DOM nodes, scroll p95 17 ms | 154 ms, 39.3 MB, 3,484 nodes, 17 ms | -82% time, -58% heap, -86% DOM | column virtualization for grids over 30 columns |

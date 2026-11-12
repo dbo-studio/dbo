@@ -72,8 +72,19 @@ export default defineConfig(({ mode }) => {
               workbox: {
                 maximumFileSizeToCacheInBytes: 8000000,
                 navigateFallbackDenylist: [/^\/api/],
-                globIgnores: ['**/fonts/**'],
+                // Monaco workers (ts/css/html/json, ~9 MB) and diagram chunks are huge and rarely used:
+                // cache them on first use instead of downloading them all on install.
+                globIgnores: ['**/fonts/**', '**/*worker*.js', '**/*Diagram-*.js'],
                 runtimeCaching: [
+                  {
+                    urlPattern: ({ url }): boolean => /\/assets\/.*(worker|Diagram-).*\.js$/i.test(url.pathname),
+                    handler: 'CacheFirst',
+                    options: {
+                      cacheName: 'dbo-lazy-assets',
+                      expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 90 },
+                      cacheableResponse: { statuses: [0, 200] }
+                    }
+                  },
                   {
                     urlPattern: ({ url }): boolean => /\/fonts\/.+\.woff2$/i.test(url.pathname),
                     handler: 'CacheFirst',
