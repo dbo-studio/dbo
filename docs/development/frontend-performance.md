@@ -60,7 +60,8 @@ Fix: one change path; debounce the IndexedDB write (about 300 ms); hold the edit
 `CustomIcon.tsx:4` imports the whole lucide `icons` map. `main.tsx` does `import * as monaco from 'monaco-editor'` eagerly. Unused Monaco workers (ts, css, html) are precached. Recharts symbols appear in the entry chunk. Only 5 `lazy()` calls exist; Settings, Backup, Dashboard, Question and others are eager in `PanelItem.tsx`.
 Fix: named or generated icon imports; import only `editor.api` plus sql/json languages; exclude unused workers from the PWA precache; find the eager recharts importer; lazy-load heavy routes.
 
-**P5. Tree store does O(total nodes) work per action.**
+**P5. Tree store does O(total nodes) work per action (MEASURED: not a bottleneck, no change made).**
+Measured with `e2e/tests/sqlite/perf-tree.spec.ts` (one folder, flat children, production build): 5,000 tables expand in 328 ms, reload in 118 ms, 0 long tasks, keyboard frames p95 17 ms; 30,000 tables expand in 547 ms, reload in 309 ms, one 57 ms long task, frames p95 17 ms. The O(n) code paths exist but cost is small at these sizes. Revisit only if a deep tree with many loaded folders shows a regression (not tested: needs an engine with schema/database nesting, i.e. Postgres).
 `frontend/src/store/treeStore/tree.store.ts`, `ObjectTreeView/ObjectTreeView.tsx`, `ObjectTreeView/flattenTree.ts`.
 `setNodeChildren` rebuilds the whole tree recursively on each expand. `expandedNodes` is an array (`includes`, spread). `flattenTree`, the `contentWidth` reduce and `rowIndex` (`findIndex`) are O(n) and re-run per change. `reloadTree` refetches loaded parents serially. A folder with thousands of children has only a cap, no paging.
 Fix: normalized `Map<id, node>` plus `childIds`; `expanded` as a `Set`; `Map<id, index>` built once per flatten; parallel reload with a concurrency cap (about 6); paged children from the server for large folders.
@@ -162,9 +163,9 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | B3 | IndexedDB write (ms, 4 transactions) | 26 | n/a |
 | B4 | React commits | not measured | |
 | B4 | IndexedDB transactions (200 chars) | 400 (2 per keystroke) | n/a |
-| B5 | expand latency (ms) | | |
-| B6 | expand + reload latency (ms) | | |
-| B7 | frame p95 (ms) | | |
+| B5 | expand latency (ms), 5,000 / 30,000 children | 328 / 547 | n/a |
+| B6 | reload latency (ms), 5,000 / 30,000 children (one folder loaded) | 118 / 309 | n/a |
+| B7 | frame p95 (ms), 150 ArrowDown presses | 17 | 17 |
 | B8 | DOM nodes | | |
 | B8 | JS heap (MB) | | |
 | B9 | commits per second | | |
@@ -180,7 +181,7 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | P1 | IndexedDB write of N rows (in-browser microbench, Chromium, 20 columns) | 10k rows 291 ms, 50k rows 1514 ms (await per put) | 10k rows 95 ms, 50k rows 487 ms (queued puts) | -67% | rows saved once per query instead of twice. At the default 100-row page the gain is under 5 ms; it matters when the page limit is raised |
 | P3 | B4 (IndexedDB transactions for 200 chars) | 400 | 1 | -99.8% | see git log |
 | P4 | B10 | | | | |
-| P5 | B5, B6, B7 | | | | |
+| P5 | B5, B6, B7 | no change | no change | n/a | not needed at measured sizes |
 | P6 | B1, B2 | first rows 862 ms, heap 94.6 MB, 24,812 DOM nodes, scroll p95 17 ms | 154 ms, 39.3 MB, 3,484 nodes, 17 ms | -82% time, -58% heap, -86% DOM | column virtualization for grids over 30 columns |
 | P7, P8 | B9 | | | | |
 | P9 | B8 | | | | |
@@ -247,7 +248,7 @@ Each fix is its own commit. If a gate fails and the cause is not clear within on
 1. Add the fixtures, the perf harness and the section 5.3 regression tests. Record the baseline (section 4.4). P2 confirmed; first test file `e2e/tests/sqlite/grid-persistence.spec.ts` (4 tests, green on current code, pins P2 behavior).
 2. P1 and P6 overscan (largest table gain, small diffs).
 3. P3 and P4 (typing path and startup).
-4. P5 (tree store normalization), then P11.
+4. P5 measured fine, skipped. Next: P11 (selector subscriptions), then P4 and the chat items.
 5. P7, P8, P10, then P9 (chat).
 6. Low items, then fill section 4.5 and publish the summary.
 
