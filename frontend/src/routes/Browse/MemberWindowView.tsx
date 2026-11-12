@@ -29,11 +29,11 @@ import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import PaginationControls from '@/components/common/DataGridStatusBar/PaginationControls';
 import { useBrowseStatusStore } from '@/store/browseStatus/browseStatus.store';
-import { StatusBarStyled } from '@/components/common/DataGridStatusBar/StatusBar.styled';
 import { StatusBarActionsStackStyled } from '@/components/common/DataGridStatusBar/StatusBarActions.styled';
 import { shortcuts } from '@/core/utils';
 import { useShortcut } from '@/hooks';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { createPortal } from 'react-dom';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColumnType } from '@/types';
 import { type JSX, useEffect, useRef, useState } from 'react';
@@ -46,7 +46,14 @@ const GRID_COLUMNS = [{ name: 'key' }, { name: 'value' }] as ColumnType[];
 
 const chordLabel = (label: string, command: string[]): string => `${label} (${command.join('+')})`;
 
-type Props = { item: NoSQLItem; connectionId: number; containerId: string; editable: boolean };
+type Props = {
+  item: NoSQLItem;
+  connectionId: number;
+  containerId: string;
+  editable: boolean;
+  /** Where the member actions render: the browse status bar, so one bar serves the whole tab. */
+  statusSlot: HTMLElement | null;
+};
 
 type Layout = {
   type: string;
@@ -78,7 +85,13 @@ function layoutOf(item: NoSQLItem): Layout {
  * edit a cell in place, add or remove rows from the bottom bar. Members load a window at a time and every
  * change is one member operation, so a key with millions of members is neither loaded nor rewritten whole.
  */
-export default function MemberWindowView({ item, connectionId, containerId, editable }: Props): JSX.Element {
+export default function MemberWindowView({
+  item,
+  connectionId,
+  containerId,
+  editable,
+  statusSlot
+}: Props): JSX.Element {
   const qc = useQueryClient();
   const l = layoutOf(item);
   const queryKey = ['nosql', 'window', connectionId, containerId, item.id];
@@ -539,73 +552,84 @@ export default function MemberWindowView({ item, connectionId, containerId, edit
         </StyledTable>
       </TableContainer>
 
-      <StatusBarStyled direction='row' data-testid='member-status-bar'>
-        <StatusBarActionsStackStyled>
-          {editable && (
-            <>
-              <Tooltip title={chordLabel(locales.add_row, shortcuts.addRow.command)}>
-                <IconButton aria-label={locales.add_row} onClick={addRow}>
-                  <CustomIcon type='plus' size='s' />
+      {statusSlot &&
+        createPortal(
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, gap: 1 }}
+            data-testid='member-status-bar'
+          >
+            <StatusBarActionsStackStyled>
+              {editable && (
+                <>
+                  <Tooltip title={chordLabel(locales.add_row, shortcuts.addRow.command)}>
+                    <IconButton aria-label={locales.add_row} onClick={addRow}>
+                      <CustomIcon type='plus' size='s' />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={locales.remove_row}>
+                    <span>
+                      <IconButton
+                        aria-label={locales.remove_row}
+                        disabled={selected.size === 0}
+                        onClick={removeSelected}
+                      >
+                        <CustomIcon type='mines' size='s' />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={chordLabel(locales.save, shortcuts.saveGrid.command)}>
+                    <span>
+                      <IconButton
+                        aria-label={locales.save}
+                        data-testid='member-save'
+                        disabled={pending === 0}
+                        onClick={save}
+                      >
+                        <CustomIcon type='check' size='s' />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={chordLabel(locales.discard_changes, shortcuts.discardChanges.command)}>
+                    <span>
+                      <IconButton
+                        aria-label={locales.discard_changes}
+                        disabled={pending === 0 && removed.size === 0}
+                        onClick={discard}
+                      >
+                        <CustomIcon type='close' size='s' />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </>
+              )}
+              <Tooltip title={chordLabel(locales.refresh, shortcuts.reloadTab.command)}>
+                <IconButton aria-label={locales.refresh} onClick={refresh}>
+                  <CustomIcon type='refresh' size='s' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={locales.remove_row}>
-                <span>
-                  <IconButton aria-label={locales.remove_row} disabled={selected.size === 0} onClick={removeSelected}>
-                    <CustomIcon type='mines' size='s' />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={chordLabel(locales.save, shortcuts.saveGrid.command)}>
-                <span>
-                  <IconButton
-                    aria-label={locales.save}
-                    data-testid='member-save'
-                    disabled={pending === 0}
-                    onClick={save}
-                  >
-                    <CustomIcon type='check' size='s' />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={chordLabel(locales.discard_changes, shortcuts.discardChanges.command)}>
-                <span>
-                  <IconButton
-                    aria-label={locales.discard_changes}
-                    disabled={pending === 0 && removed.size === 0}
-                    onClick={discard}
-                  >
-                    <CustomIcon type='close' size='s' />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </>
-          )}
-          <Tooltip title={chordLabel(locales.refresh, shortcuts.reloadTab.command)}>
-            <IconButton aria-label={locales.refresh} onClick={refresh}>
-              <CustomIcon type='refresh' size='s' />
-            </IconButton>
-          </Tooltip>
-        </StatusBarActionsStackStyled>
-        {pending > 0 && (
-          <Typography variant='caption' color='textSubdued' data-testid='member-pending'>
-            {locales.nosql_pending_changes.replace('{count}', String(pending))}
-          </Typography>
+            </StatusBarActionsStackStyled>
+            {pending > 0 && (
+              <Typography variant='caption' color='textSubdued' data-testid='member-pending'>
+                {locales.nosql_pending_changes.replace('{count}', String(pending))}
+              </Typography>
+            )}
+            <PaginationControls
+              page={pageIdx + 1}
+              limit={limit}
+              disabled={q.isFetching}
+              canNext={!!nextCursor}
+              onPrev={(): void => goTo(pageIdx - 1)}
+              onNext={(): void => goTo(pageIdx + 1)}
+              onLimit={(next): void => {
+                setLimit(next);
+                setCursors(['']);
+                setPageIdx(0);
+                discard();
+              }}
+            />
+          </Box>,
+          statusSlot
         )}
-        <PaginationControls
-          page={pageIdx + 1}
-          limit={limit}
-          disabled={q.isFetching}
-          canNext={!!nextCursor}
-          onPrev={(): void => goTo(pageIdx - 1)}
-          onNext={(): void => goTo(pageIdx + 1)}
-          onLimit={(next): void => {
-            setLimit(next);
-            setCursors(['']);
-            setPageIdx(0);
-            discard();
-          }}
-        />
-      </StatusBarStyled>
     </Box>
   );
 }

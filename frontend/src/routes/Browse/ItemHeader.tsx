@@ -8,10 +8,8 @@ type Props = {
   item: NoSQLItem;
   canRename: boolean;
   canTtl: boolean;
-  canDelete: boolean;
   onRename: (to: string) => void;
   onTtl: (seconds: number) => void;
-  onDelete: () => void;
 };
 
 /** 3600 -> "Expires in 1h", 90 -> "Expires in 1m 30s": a TTL read at a glance. */
@@ -40,15 +38,7 @@ export function formatTtl(seconds: number): string {
 type Editor = { anchor: HTMLElement; kind: 'rename' | 'ttl' };
 
 /** Key header: id, type and expiry chips, and one small icon button per action; edits open in a popover. */
-export default function ItemHeader({
-  item,
-  canRename,
-  canTtl,
-  canDelete,
-  onRename,
-  onTtl,
-  onDelete
-}: Props): JSX.Element {
+export default function ItemHeader({ item, canRename, canTtl, onRename, onTtl }: Props): JSX.Element {
   const [editor, setEditor] = useState<Editor | null>(null);
   const [value, setValue] = useState('');
 
@@ -91,13 +81,6 @@ export default function ItemHeader({
         <Tooltip title={locales.nosql_rename}>
           <IconButton aria-label='rename-key' onClick={open('rename')}>
             <CustomIcon type='edit' size='s' />
-          </IconButton>
-        </Tooltip>
-      )}
-      {canDelete && (
-        <Tooltip title={locales.nosql_delete_item}>
-          <IconButton color='error' aria-label={locales.nosql_delete_item} onClick={onDelete}>
-            <CustomIcon type='delete' size='s' />
           </IconButton>
         </Tooltip>
       )}

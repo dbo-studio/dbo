@@ -42,6 +42,11 @@ import StatsDialog from './StatsDialog';
 import RecycleDialog from './RecycleDialog';
 import MemberWindowView from './MemberWindowView';
 import ItemView from './ItemView';
+import { StatusBarStyled } from '@/components/common/DataGridStatusBar/StatusBar.styled';
+import { StatusBarActionsStackStyled } from '@/components/common/DataGridStatusBar/StatusBarActions.styled';
+import { shortcuts } from '@/core/utils';
+
+const chordLabel = (label: string, command: string[]): string => `${label} (${command.join('+')})`;
 
 const PAGE_SIZE = 100;
 const DEFAULT_LIST_WIDTH = 320;
@@ -117,6 +122,7 @@ export default function Browse(): JSX.Element {
   const [statsOpen, setStatsOpen] = useState(false);
   const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null);
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
+  const [statusSlot, setStatusSlot] = useState<HTMLElement | null>(null);
 
   const { data: spec } = useQuery({
     queryKey: ['nosql', 'describe', connectionId, containerId],
@@ -218,6 +224,8 @@ export default function Browse(): JSX.Element {
   const idOptional =
     (spec?.createKinds ?? []).find((k) => k.id === (newKind || spec?.createKinds?.[0]?.id))?.view === 'document';
 
+  const memberView = has(spec, 'window') && ['hash', 'list', 'set', 'zset'].includes(String(item?.meta?.type));
+
   const columns = useMemo(
     () => (spec?.fields ?? []).map((f) => ({ name: f.name, type: f.types.join(' | ') }) as ColumnType),
     [spec]
@@ -288,16 +296,6 @@ export default function Browse(): JSX.Element {
             </Box>
           )}
         </Box>
-        {spec && has(spec, 'insert') && (
-          <Button
-            variant='outlined'
-            startIcon={<CustomIcon type='plus' size='s' />}
-            onClick={(e): void => setCreateAnchor(e.currentTarget)}
-            data-testid='new-key-button'
-          >
-            {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
-          </Button>
-        )}
         {moreItems.length > 0 && (
           <Tooltip title={locales.nosql_more_actions}>
             <IconButton aria-label={locales.nosql_more_actions} onClick={(e): void => setMoreAnchor(e.currentTarget)}>
@@ -323,8 +321,8 @@ export default function Browse(): JSX.Element {
           open={!!createAnchor}
           anchorEl={createAnchor}
           onClose={(): void => setCreateAnchor(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         >
           <Box
             sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }}
@@ -429,21 +427,20 @@ export default function Browse(): JSX.Element {
                 item={item}
                 canRename={has(spec, 'rename')}
                 canTtl={has(spec, 'ttl')}
-                canDelete={has(spec, 'delete')}
                 onRename={(to): void => {
                   void save({ newId: to }).then(() => setSelectedId(to));
                 }}
                 onTtl={(seconds): void => void save({ ttlSecs: seconds })}
-                onDelete={remove}
               />
               <Box sx={{ flex: 1, minHeight: 0 }}>
-                {has(spec, 'window') && ['hash', 'list', 'set', 'zset'].includes(String(item.meta?.type)) ? (
+                {memberView ? (
                   <MemberWindowView
                     key={item.id}
                     item={item}
                     connectionId={connectionId}
                     containerId={containerId}
                     editable={has(spec, 'edit') && !item.meta?.readonly}
+                    statusSlot={statusSlot}
                   />
                 ) : (
                   <ItemView
@@ -463,17 +460,63 @@ export default function Browse(): JSX.Element {
         </Box>
       </Box>
 
-      <Box
-        sx={{ borderTop: 1, borderColor: 'divider', px: 1, py: 0.5, display: 'flex', gap: 2 }}
-        data-testid='browse-footer'
-      >
-        <Typography variant='caption'>{locales.nosql_loaded_count.replace('{count}', String(items.length))}</Typography>
-        {itemFacts(item).map((fact) => (
-          <Typography key={fact} variant='caption' color='text.secondary'>
-            {fact}
+      <StatusBarStyled direction='row' data-testid='browse-footer'>
+        <StatusBarActionsStackStyled sx={{ width: 'auto', gap: 0.5 }}>
+          {has(spec, 'insert') && (
+            <Tooltip title={isMongo ? locales.nosql_new_document : locales.nosql_new_key}>
+              <IconButton
+                aria-label={isMongo ? locales.nosql_new_document : locales.nosql_new_key}
+                data-testid='new-key-button'
+                onClick={(e): void => setCreateAnchor(e.currentTarget)}
+              >
+                <CustomIcon type='plus' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
+          {has(spec, 'delete') && (
+            <Tooltip title={locales.nosql_delete_item}>
+              <span>
+                <IconButton aria-label={locales.nosql_delete_item} disabled={!item} onClick={remove}>
+                  <CustomIcon type='mines' size='s' />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          {!memberView && (
+            <Tooltip title={chordLabel(locales.refresh, shortcuts.reloadTab.command)}>
+              <IconButton
+                aria-label={locales.refresh}
+                data-testid='browse-refresh'
+                onClick={(): void => void refresh()}
+              >
+                <CustomIcon type='refresh' size='s' />
+              </IconButton>
+            </Tooltip>
+          )}
+        </StatusBarActionsStackStyled>
+        <Box
+          ref={setStatusSlot}
+          sx={{
+            display: 'flex',
+            flex: 1,
+            minWidth: 0,
+            pl: 1,
+            ml: 1,
+            borderLeft: memberView ? 1 : 0,
+            borderColor: 'divider'
+          }}
+        />
+        <Box sx={{ display: 'flex', gap: 2, minWidth: 0 }}>
+          {itemFacts(item).map((fact) => (
+            <Typography key={fact} variant='caption' color='text.secondary' noWrap>
+              {fact}
+            </Typography>
+          ))}
+          <Typography variant='caption'>
+            {locales.nosql_loaded_count.replace('{count}', String(items.length))}
           </Typography>
-        ))}
-      </Box>
+        </Box>
+      </StatusBarStyled>
     </Box>
   );
 }

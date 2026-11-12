@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import type { NoSQLItem } from '@/api/nosql/types';
 import locales from '@/locales';
 import { alpha, Box, Tooltip, Typography, useTheme } from '@mui/material';
@@ -92,7 +93,7 @@ export default function KeyList({ rows, expanded, selectedId, loading, onSelect,
                 alignItems: 'center',
                 gap: 0.75,
                 cursor: 'pointer',
-                borderRadius: 1,
+                borderRadius: variables.radius.small,
                 bgcolor: selected ? 'action.selected' : undefined,
                 '&:hover': { bgcolor: selected ? 'action.selected' : 'action.hover' },
                 '&:focus-visible': {
