@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import { useAnalyticsSetting } from '@/hooks/useAnalyticsSetting';
 import locales from '@/locales';
 import { Box, Stack, Switch, Typography } from '@mui/material';
@@ -41,14 +42,14 @@ export default function PrivacyStep(): JSX.Element {
   const [enabled, setEnabled] = useAnalyticsSetting();
 
   return (
-    <Stack spacing={3.5} sx={{ width: '100%', maxWidth: 480 }} data-testid='onboarding-privacy'>
+    <Stack spacing={2} sx={{ width: '100%' }} data-testid='onboarding-privacy'>
       <Stack
         direction='row'
         sx={{
           alignItems: 'center',
           justifyContent: 'space-between',
-          p: 2.5,
-          borderRadius: 3,
+          p: 1.5,
+          borderRadius: variables.radius.medium,
           border: 1,
           borderColor: enabled ? 'primary.main' : 'divider',
           bgcolor: 'background.paper'

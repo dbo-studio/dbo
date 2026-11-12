@@ -1,12 +1,11 @@
 import { useRemoveTab } from '@/components/common/Panels/hooks/useRemoveTab';
-import { constants } from '@/core/constants';
+import { openDocs } from '@/core/help/openDocs';
 import { openSettings } from '@/core/settings/openSettings';
 import { streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
-import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect } from 'react';
 import { pickAndOpenSqlFile } from './useDesktopOpenFiles';
 
@@ -62,7 +61,7 @@ export const useDesktopMenu = (): void => {
             void reloadTree(false).catch(() => undefined);
             break;
           case 'openDocumentation':
-            void openUrl(constants.docsUrl).catch(() => undefined);
+            void openDocs();
             break;
           default:
             break;

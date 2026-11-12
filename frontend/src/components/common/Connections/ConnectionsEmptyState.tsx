@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { canCreateConnection } from '@/core/auth/permissions';
+import { shortcuts } from '@/core/utils';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -30,6 +31,9 @@ export default function ConnectionsEmptyState(): JSX.Element {
           {locales.new_connection}
         </Button>
       ) : null}
+      <Typography variant='caption' color='textSubdued' data-testid='empty-palette-hint'>
+        {locales.command_palette} ({shortcuts.commandPalette.command.join('+')})
+      </Typography>
     </EmptyConnectionsStyled>
   );
 }

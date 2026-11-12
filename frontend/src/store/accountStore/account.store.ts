@@ -9,6 +9,7 @@ type AccountStore = {
   signIn: (session: AccountSession) => void;
   signOut: () => void;
   finishOnboarding: () => void;
+  showOnboarding: () => void;
 };
 
 export const useAccountStore: UseBoundStore<StoreApi<AccountStore>> = create<AccountStore>()(
@@ -25,6 +26,9 @@ export const useAccountStore: UseBoundStore<StoreApi<AccountStore>> = create<Acc
       },
       finishOnboarding: (): void => {
         set({ onboarded: true });
+      },
+      showOnboarding: (): void => {
+        set({ onboarded: false });
       }
     }),
     {

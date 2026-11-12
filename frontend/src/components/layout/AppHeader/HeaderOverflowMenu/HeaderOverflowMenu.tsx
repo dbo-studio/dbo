@@ -3,6 +3,7 @@ import { constants } from '@/core/constants';
 import { TabMode } from '@/core/enums';
 import { canCreateConnection, canManageMcpSettings } from '@/core/auth/permissions';
 import { hasEditorTab } from '@/core/db/connectionAliases';
+import { openDocs } from '@/core/help/openDocs';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import locales from '@/locales';
@@ -73,6 +74,11 @@ export default function HeaderOverflowMenu(): JSX.Element {
 
   const openMcpSettings = (): void => {
     openSettings({ section: AI_SETTINGS_TAB, aiTab: 'mcp' });
+    handleClose();
+  };
+
+  const handleOpenDocs = (): void => {
+    void openDocs();
     handleClose();
   };
 
@@ -176,6 +182,12 @@ export default function HeaderOverflowMenu(): JSX.Element {
             )}
           </ListItemIcon>
           <ListItemText>{release ? locales.new_version_available : locales.settings}</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleOpenDocs}>
+          <ListItemIcon>
+            <CustomIcon type='externalLink' size='s' />
+          </ListItemIcon>
+          <ListItemText>{locales.documentation}</ListItemText>
         </MenuItem>
         {canManageMcp ? (
           <MenuItem onClick={openMcpSettings}>

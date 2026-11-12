@@ -9,7 +9,7 @@ async function openAccountStep(page: Page) {
   });
   await page.goto("/");
   await expect(page.getByTestId("onboarding")).toBeVisible();
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 3; i++) {
     await page.getByTestId("onboarding-next").click();
   }
   await expect(page.getByTestId("account-step")).toBeVisible();
@@ -93,7 +93,7 @@ test("the code from the browser page connects when polling does not", async ({
 
 test("the privacy step turns analytics off for good", async ({ page }) => {
   await page.goto("/");
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 2; i++) {
     await page.getByTestId("onboarding-next").click();
   }
   await expect(page.getByTestId("onboarding-analytics-state")).toContainText(
@@ -111,7 +111,7 @@ test("the privacy step turns analytics off for good", async ({ page }) => {
 
 test("the theme step switches the look right away", async ({ page }) => {
   await page.goto("/");
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 1; i++) {
     await page.getByTestId("onboarding-next").click();
   }
   const root = page.getByTestId("onboarding");
@@ -123,4 +123,19 @@ test("the theme step switches the look right away", async ({ page }) => {
   await expect
     .poll(() => root.evaluate((el) => getComputedStyle(el).backgroundColor))
     .not.toBe(before);
+});
+
+test("help commands stay reachable after the tour is skipped", async ({ page }) => {
+  await openAccountStep(page);
+  await page.getByTestId("onboarding-finish").click();
+  await expect(page.getByTestId("onboarding")).toBeHidden();
+
+  await page.keyboard.press("Alt+K");
+  const palette = page.getByTestId("command-palette");
+  await expect(palette).toBeVisible();
+  await expect(palette.getByRole("option", { name: "Documentation" })).toBeVisible();
+  await expect(palette.getByRole("option", { name: "Keyboard shortcuts" })).toBeVisible();
+
+  await palette.getByRole("option", { name: "Show welcome" }).click();
+  await expect(page.getByTestId("onboarding")).toBeVisible();
 });

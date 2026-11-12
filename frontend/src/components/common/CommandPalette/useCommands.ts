@@ -2,10 +2,12 @@ import api from '@/api';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import { openBottomPanel } from '@/core/bottomPanel';
 import { openBackup } from '@/core/backup/openBackup';
+import { openDocs } from '@/core/help/openDocs';
 import { openSettings } from '@/core/settings/openSettings';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import locales from '@/locales';
+import { useAccountStore } from '@/store/accountStore/account.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -58,6 +60,13 @@ export function useCommands(query: string): Command[] {
         run: () => openSettings()
       },
       {
+        id: 'new-connection',
+        group: locales.command_group_actions,
+        label: locales.command_new_connection,
+        icon: 'plus',
+        run: () => useSettingStore.getState().updateUI({ showAddConnection: true, duplicateConnectionId: undefined })
+      },
+      {
         id: 'bottom-panel',
         group: locales.command_group_actions,
         label: locales.toggle_bottom_panel,
@@ -77,6 +86,27 @@ export function useCommands(query: string): Command[] {
         label: locales.command_toggle_right,
         icon: 'sideRight',
         run: () => toggleSidebar('showRight')
+      },
+      {
+        id: 'docs',
+        group: locales.command_group_help,
+        label: locales.command_documentation,
+        icon: 'externalLink',
+        run: () => void openDocs()
+      },
+      {
+        id: 'shortcuts',
+        group: locales.command_group_help,
+        label: locales.keyboard_shortcuts,
+        icon: 'settings',
+        run: () => openSettings({ section: 2 })
+      },
+      {
+        id: 'welcome',
+        group: locales.command_group_help,
+        label: locales.command_show_welcome,
+        icon: 'about',
+        run: () => useAccountStore.getState().showOnboarding()
       },
       {
         id: 'backup',
