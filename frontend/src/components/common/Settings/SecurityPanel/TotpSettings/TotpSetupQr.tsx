@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import locales from '@/locales';
 import { Box } from '@mui/material';
 import QRCode from 'qrcode';
@@ -44,7 +45,7 @@ export function TotpSetupQr({ otpauthUrl }: TotpSetupQrProps): JSX.Element | nul
         width: 160,
         height: 160,
         flexShrink: 0,
-        borderRadius: 1,
+        borderRadius: variables.radius.small,
         bgcolor: 'background.paper'
       }}
     />

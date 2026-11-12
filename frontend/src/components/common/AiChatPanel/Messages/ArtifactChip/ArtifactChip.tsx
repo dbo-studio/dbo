@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconProps } from '@/components/base/CustomIcon/types';
 import locales from '@/locales';
@@ -33,7 +34,7 @@ export default function ArtifactChip({ icon, label, detail, testId, onOpen }: Ar
         py: 0.5,
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: variables.radius.small,
         bgcolor: 'background.paper',
         '&:hover': { bgcolor: 'action.hover' }
       }}

@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { QuestionType } from '@/api/question/types';
@@ -119,7 +120,7 @@ function ListRow({
         alignItems: 'center',
         gap: 0.75,
         px: 0.5,
-        borderRadius: 1,
+        borderRadius: variables.radius.small,
         cursor: 'pointer',
         '&:hover': { backgroundColor: 'action.hover' },
         '&:hover .row-delete': { visibility: 'visible' }

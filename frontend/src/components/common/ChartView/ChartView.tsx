@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import {
   formatAxisNumber,
   formatNumber,
@@ -72,7 +73,7 @@ export default function ChartView({ rows, columns, spec, height = 220 }: ChartVi
       contentStyle={{
         background: theme.palette.background.paper,
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 8,
+        borderRadius: variables.radius.medium,
         boxShadow: theme.shadows[4],
         fontSize: theme.typography.caption.fontSize
       }}

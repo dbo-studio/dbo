@@ -37,7 +37,7 @@ export const AuthShellPanelStyled = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: 400,
   padding: theme.spacing(4),
-  borderRadius: 12,
+  borderRadius: variables.radius.large,
   border: `1px solid ${theme.palette.divider}`,
   backgroundColor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.96),
   boxShadow:

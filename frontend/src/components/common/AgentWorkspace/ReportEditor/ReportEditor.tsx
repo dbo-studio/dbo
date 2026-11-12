@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
@@ -229,7 +230,14 @@ export default function ReportEditor({
       <ChartView rows={edited.rows} columns={edited.columns} spec={edited.spec} height={320} />
       <Box
         data-testid='ai-report-sql'
-        sx={{ display: 'flex', height: 160, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}
+        sx={{
+          display: 'flex',
+          height: 160,
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: variables.radius.small,
+          overflow: 'hidden'
+        }}
       >
         <SqlEditor
           editorHeight={160}

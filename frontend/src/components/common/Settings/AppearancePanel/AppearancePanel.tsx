@@ -10,7 +10,7 @@ import { variables } from '@/core/theme/variables';
 
 const PreviewCardStyled = styled(Box)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 4,
+  borderRadius: variables.radius.small,
   overflow: 'hidden',
   marginBottom: theme.spacing(2),
   background: theme.palette.background.subdued

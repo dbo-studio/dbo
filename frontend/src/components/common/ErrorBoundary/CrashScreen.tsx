@@ -55,7 +55,7 @@ export default function CrashScreen({ onReload }: CrashScreenProps): JSX.Element
           marginTop: 8,
           padding: '8px 16px',
           border: 'none',
-          borderRadius: 6,
+          borderRadius: variables.radius.medium,
           background: colors.accent,
           color: colors.onAccent,
           fontSize: variables.fontSize.lg,

@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import { alpha, Box, styled } from '@mui/material';
 
 export const NavRailStyled = styled(Box, {
@@ -39,7 +40,7 @@ export const NavRailItemStyled = styled(Box, {
   padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
   marginBottom: theme.spacing(0.25),
   cursor: 'pointer',
-  borderRadius: 4,
+  borderRadius: variables.radius.small,
   borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
   background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
   color: selected ? theme.palette.text.link : theme.palette.text.text,

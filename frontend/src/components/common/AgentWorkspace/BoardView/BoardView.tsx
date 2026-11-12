@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import type { DashboardCardType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -103,7 +104,7 @@ function BoardCard({
         border: 1,
         borderColor: editing ? 'primary.main' : 'divider',
         borderStyle: editing ? 'dashed' : 'solid',
-        borderRadius: 1,
+        borderRadius: variables.radius.small,
         p: 1,
         minWidth: 0,
         bgcolor: 'background.paper'

@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import type { PublicCardType } from '@/api/dashboard/types';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
@@ -25,7 +26,7 @@ function SharedCard({ card }: { card: PublicCardType }): JSX.Element {
         gridColumn: card.width === 2 ? 'span 2' : 'span 1',
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: variables.radius.small,
         p: 1,
         minWidth: 0,
         bgcolor: 'background.paper'

@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import type { DashboardShareType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -373,7 +374,7 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
           {created && (
             <Stack
               spacing={1}
-              sx={{ border: 1, borderColor: 'primary.main', borderRadius: 1, p: 1.5 }}
+              sx={{ border: 1, borderColor: 'primary.main', borderRadius: variables.radius.small, p: 1.5 }}
               data-testid='share-created'
             >
               <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
@@ -410,7 +411,7 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
                 sx={{
                   border: 1,
                   borderColor: 'divider',
-                  borderRadius: 1,
+                  borderRadius: variables.radius.small,
                   '& > :not(:last-child)': { borderBottom: 1, borderColor: 'divider' }
                 }}
               >

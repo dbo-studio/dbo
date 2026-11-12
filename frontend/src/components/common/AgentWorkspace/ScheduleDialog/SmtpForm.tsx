@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
@@ -68,7 +69,11 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
   );
 
   return (
-    <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }} data-testid='smtp-form'>
+    <Stack
+      spacing={1}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: variables.radius.small, p: 1 }}
+      data-testid='smtp-form'
+    >
       <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
         {field('host', locales.smtp_host)}
         {field('port', locales.smtp_port, 'number')}

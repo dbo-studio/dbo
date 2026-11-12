@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import type {
   DashboardType,
@@ -107,7 +108,7 @@ function Row({ boardId, sub }: { boardId: number; sub: SubscriptionType }): JSX.
 
   return (
     <Box
-      sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: variables.radius.small, p: 1 }}
       data-testid='schedule-row'
       data-state={state}
     >
@@ -238,7 +239,7 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
             />
           )}
 
-          <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+          <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: variables.radius.small, p: 1 }}>
             <ToggleButtonGroup
               exclusive
               size='small'

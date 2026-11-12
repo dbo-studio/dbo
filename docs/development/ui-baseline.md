@@ -2,7 +2,7 @@
 
 Direction: minimal, flat, neutral, and content-first (VSCode / Zed feel). One accent colour; status colours only for status. The goal is a dependable desktop tool, not a marketing dashboard or a card-based admin template.
 
-This document is both the contributor contract and the current review record. Product source was not changed during this review.
+This document is both the contributor contract and the review record. The verified findings and the approved modernization items below have been implemented; the table in [Done so far](#done-so-far) lists what changed.
 
 ## Review scope and recommendation
 
@@ -98,7 +98,7 @@ Do not merge these implementations merely to reduce file count. Share visual dec
 - Use base `Modal` with actions in its `footer`: scrollable body, pinned right-aligned actions, Cancel/Close as text, primary contained action last.
 - `ModalFooter spread` is reserved for forms that already embed it, such as connection Test + Cancel/Create.
 - Short prompts and short forms should be content-sized using the existing `compact` capability. Reserve the 400px minimum height for the connection picker, complex forms, and resizable content that benefits from it.
-- Overlay radius should follow `variables.radius.large`; `ResizableModal` and `Toaster` are the current exemplars.
+- Dialogs (Modal, MUI Dialog), `ResizableModal` and `Toaster` use `variables.radius.large`. Menus and popovers stay at `variables.radius.medium`: their inner items are 4px, and a 12px outer radius looks mismatched around them.
 - Menus and popovers use a hairline border and restrained shadow. Workspace regions do not use floating-card shadows.
 - Toasts stay flat; status appears as the icon tint, not a fully tinted card.
 
@@ -132,8 +132,28 @@ Motion in the workspace is functional feedback, not decoration. `variables.motio
 | Connection forms: equal side-by-side fields, tighter checkbox rows, 12px labels | `common/AddConnection` |
 | Connection General/SSL/SSH tabs now use the flat underline-only direction | `common/AddConnection/AddConnection.styled.ts` |
 | Palette redesign tried and rolled back; default DBO colours are preserved | `core/theme/palettes/dbo.ts` |
+| P0: failed connection submit keeps entered values (the forms no longer reset after `onSubmit`; success closes the modal); e2e added | `common/AddConnection/*`, `e2e/tests/sqlite/connection-form-failure.spec.ts` |
+| P1: short dialogs are content-sized with `compact` (SQLite connection, password prompts, restore confirm); Modal and MUI Dialog use the 12px `large` radius | `base/Modal`, `core/theme/overrides/Dialog.tsx` |
+| Menus and popovers stay at `medium` (5px): a 12px outer radius looked mismatched around the 4px items | `core/theme/overrides/Menu.tsx` |
+| Onboarding rebuilt as a fixed-size two-pane dialog (step rail plus one step, four steps); see [Onboarding](#onboarding) | `common/Onboarding/*`, `common/Account/AccountStep/AccountIntro.tsx` |
+| Help is in the command palette (Documentation, Keyboard shortcuts, Show welcome, New connection) and the header menu; documentation opens on web too | `common/CommandPalette/useCommands.ts`, `layout/AppHeader/HeaderOverflowMenu`, `core/help/openDocs.ts` |
+| NoSQL browse has a status bar again: New key, Delete, Refresh, key facts and the loaded count. Member grids (hash, list, set, zset) render their actions into the same bar | `routes/Browse/*` |
+| Query toolbar: labelled Run/Stop button on desktop, "Beautify" spelling | `routes/Query/QueryEditorActionBar` |
+| Connection picker: selected outline, double-click or Enter to continue, full names instead of two-line clamp | `common/AddConnection/ConnectionSelection` |
+| Empty "No active connection" screen shows the command-palette hint; bottom-panel tabs use panel tokens | `common/Connections/ConnectionsEmptyState.tsx`, `layout/BottomPanel` |
+| Literal `borderRadius` swapped for `variables.radius.*` where the value matched exactly; ESLint rule flags literal 3–12 | `eslint.config.mts` |
+| Removed unused `TypewriterEffectText` after an import scan | `base/` |
 
 The data grid was not changed beyond removing redundant `size` props; its rendering and behaviour are outside this review's proposed changes.
+
+## Onboarding
+
+Onboarding is the one deliberate exception to "flat and quiet": it is a rare, intentional moment and may carry a little more personality. It still uses theme tokens only.
+
+- Fixed-size dialog (`OnboardingShellStyled`, 860×560) so it never changes size between steps. The step rail sits on the left, one step on the right; the step content scrolls inside the frame.
+- Steps: Welcome, Look (mode plus palettes drawn as miniature apps), Privacy, Account. Every step can be skipped, and Back, arrow keys and Enter work.
+- Decoration is limited to a tinted rail with faint rings and a short fade-in per step and per logo tile. No infinite animation; reduced motion turns the fade-ins off.
+- Reopen it from the command palette ("Show welcome").
 
 ## Audit of `components/base/`
 
@@ -152,21 +172,21 @@ An early plan to replace most wrappers with raw MUI was dropped. These component
 
 ## Verified findings
 
-These are reproducible issues, not aesthetic preferences. They are ordered by user impact and system reach.
+**Status: all five are resolved** (see [Done so far](#done-so-far)). They stay here as the record of the evidence. They were reproducible issues, not aesthetic preferences, ordered by user impact and system reach.
 
 | Priority | Problem and evidence | Required correction | Scope | Confidence |
 | --- | --- | --- | --- | --- |
 | P0 — UX correctness | **Connection submission clears user input on failure.** A rejected SQLite create returned 400 and the Name/File fields visibly cleared. `SQLite.tsx:58-59` calls `onSubmit(data)` and immediately resets; PostgreSQL, MySQL, HostSql, Mongo, and Redis repeat the same pattern. | Make submission awaitable and reset only after resolved success, or rely on the successful modal close to unmount the form. Preserve values on rejection; keep Test independent from Create/Update. | `common/AddConnection/types.ts`, `AddConnection.tsx`, `EditConnection.tsx`, all six engine forms; add failure-preservation e2e coverage. | High |
 | P1 — Dialog density | **Short connection forms reserve a large empty region.** Base `ModalWrapperStyled` enforces `min-height: min(400px, 90dvh)` (`Modal.styled.ts:18`); the two-field SQLite form rendered with a large blank gap. The existing `compact` prop is documented but has no Modal caller. | Apply content-driven/compact sizing to SQLite and other genuinely short prompts; retain the minimum height for the picker and complex forms. | `base/Modal`, Add/Edit Connection, existing short confirmation/prompt dialogs. | High |
-| P1 — Overlay consistency | **The documented 12px overlay radius is not the runtime standard.** Base Modal and MUI Dialog use `medium` (5px), Menu/Popover also use `medium`, while ResizableModal and Toaster use `large` (12px). | Apply `variables.radius.large` consistently to Modal, MUI Dialog, Menu, and Popover, using ResizableModal/Toaster as exemplars. If 12px is no longer desired, revise the contract separately before implementation rather than preserving silent drift. | `base/Modal/Modal.styled.ts`, `core/theme/overrides/Dialog.tsx`, `core/theme/overrides/Menu.tsx`. | High |
+| P1 — Overlay consistency | **The documented 12px overlay radius is not the runtime standard.** Base Modal and MUI Dialog use `medium` (5px), Menu/Popover also use `medium`, while ResizableModal and Toaster use `large` (12px). | Applied `variables.radius.large` to Modal and MUI Dialog (done). Menu and Popover stay at `medium` after review: 12px looked mismatched around 4px items. If 12px is no longer desired, revise the contract separately before implementation rather than preserving silent drift. | `base/Modal/Modal.styled.ts`, `core/theme/overrides/Dialog.tsx`, `core/theme/overrides/Menu.tsx`. | High |
 | P2 — Onboarding visual mismatch | **First-run onboarding does not look like the product it introduces.** Rendered check: radial-gradient background, floating mock windows with an infinite `drift` loop, 420/520ms entrances, a 28px-radius panel, 48px pill buttons, and heavy shadows (`Onboarding.styled.ts`). The app behind it is flat, hairline-divided, and 100–120ms. | Keep the 7-step structure only if it earns its length; either way, restyle onboarding with the app's own surfaces: flat background, standard radius, standard contained buttons, and short entrances within the motion contract (it may remain the rare allowed longer entrance). Keep Skip, Back, and keyboard navigation, and keep reduced-motion handling. | `common/Onboarding/*`. | High |
 | P2 — Help is scattered and partly missing | **Help exists but has no single home, and some of it is unreachable.** Documentation opens only from the desktop (Tauri) menu (`useDesktopMenu.ts` `openDocumentation` → `constants.docsUrl`); the web build has no in-app docs link. Shortcuts live only in Settings → Shortcuts (Alt+/). The header overflow menu has no Help entry. Once onboarding is finished or skipped (`accountStore` persists `onboarded`), nothing in the command palette, header menu, or settings can reopen it. | Consolidate, don't multiply: add Help/Documentation, Keyboard shortcuts, and "Show welcome" as command-palette entries in `useCommands.ts`, and reuse the existing header overflow menu rather than adding a header icon (forbidden by `frontend/AGENTS.md`). Provide a web-reachable documentation link. | `common/CommandPalette/useCommands.ts`, `layout/AppHeader/HeaderOverflowMenu`. | High |
 
 The existing tab differences are not automatically defects: they serve different contexts. Their contract is documented above so future work does not introduce more variants without a reason.
 
-## Feature modernization candidates — approval required
+## Feature modernization candidates
 
-These are proposals, not approved work. Each should be implemented as a separate, screenshot-reviewed change.
+Implemented: connection picker, query toolbar (Run label and Beautify spelling), bottom panel, onboarding, empty state, help and discovery. **Not done:** moving the toolbar's secondary actions (minify, export, explain) into overflow; do that only when the toolbar visibly wraps. Each change was made on its own surface; keep screenshot review for any follow-up.
 
 | Feature | Recommended change | Reason | Expected effort |
 | --- | --- | --- | --- |
@@ -181,10 +201,10 @@ Do not redesign Settings, the activity rail, application status bar, or DataGrid
 
 ## Implementation sequence
 
-1. **Foundation fixes:** resolve the verified findings (P0/P1 first, then the P2 experience gaps). Keep the default palette byte-for-byte unchanged and capture before/after screenshots.
-2. **Token drift audit:** map real violations to existing tokens and add the radius lint guard. Do not bulk-replace raw search matches.
+1. **Foundation fixes (done):** resolve the verified findings (P0/P1 first, then the P2 experience gaps). Keep the default palette byte-for-byte unchanged and capture before/after screenshots.
+2. **Token drift audit (radius done; font size and control height remain):** map real violations to existing tokens and add the radius lint guard. Do not bulk-replace raw search matches.
 3. **Approved feature work:** implement only the selected modernization candidates, one surface at a time, with responsive and keyboard checks. Experience polish (onboarding, empty states, help) comes after the foundation fixes so it lands on stable contracts.
-4. **Dead-code cleanup:** remove only confirmed unused components/exports after the UI contracts are stable.
+4. **Dead-code cleanup (`TypewriterEffectText` removed; the review-per-surface components remain):** remove only confirmed unused components/exports after the UI contracts are stable.
 
 Current raw search counts are audit leads, **not violation counts**: 196 `borderRadius` occurrences in 119 files, 142 `fontSize` occurrences in 72 files, and 31 occurrences of selected hardcoded heights (22/28/32/36/40) in 21 files. They include valid theme values, token references, shell geometry, mobile rules, and grid internals.
 

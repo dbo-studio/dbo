@@ -71,7 +71,7 @@ export const NoConnectionEngineStyled = styled(Box)(({ theme }) => ({
   gap: theme.spacing(0.75),
   padding: theme.spacing(1.25, 0.5),
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 5,
+  borderRadius: variables.radius.medium,
   backgroundColor: theme.palette.background.default,
   fontSize: variables.fontSize.xs,
   color: theme.palette.text.text

@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import { alpha, Box, styled } from '@mui/material';
 
 export const SettingRowStyled = styled(Box)(({ theme }) => ({
@@ -12,7 +13,7 @@ export const SettingRowStyled = styled(Box)(({ theme }) => ({
   scrollMarginTop: theme.spacing(2),
   '&[data-highlighted="true"]': {
     backgroundColor: alpha(theme.palette.primary.main, 0.08),
-    borderRadius: 4,
+    borderRadius: variables.radius.small,
     marginLeft: theme.spacing(-1),
     marginRight: theme.spacing(-1),
     paddingLeft: theme.spacing(1),

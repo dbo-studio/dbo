@@ -20,7 +20,7 @@ export const ConnectionSwitcherStyled = styled(ButtonBase)(({ theme }) => ({
   justifyContent: 'flex-start',
   gap: theme.spacing(1.25),
   padding: theme.spacing(0.5, 1),
-  borderRadius: 5,
+  borderRadius: variables.radius.medium,
   textAlign: 'start',
   '&:active': {
     backgroundColor: theme.palette.action.hover

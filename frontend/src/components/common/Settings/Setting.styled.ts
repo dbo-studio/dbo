@@ -27,7 +27,7 @@ export const SettingsSearchInputStyled = styled(InputBase)(({ theme }) => ({
   width: '100%',
   fontSize: variables.fontSize.md,
   padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
-  borderRadius: 4,
+  borderRadius: variables.radius.small,
   border: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.default,
   '&:focus-within': {
@@ -63,7 +63,7 @@ export const SettingsResultItemStyled = styled(Box, {
   flexDirection: 'column',
   gap: 2,
   padding: theme.spacing(1, 1.25),
-  borderRadius: 4,
+  borderRadius: variables.radius.small,
   cursor: 'pointer',
   background: active ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
   border: `1px solid ${active ? alpha(theme.palette.primary.main, 0.35) : 'transparent'}`,

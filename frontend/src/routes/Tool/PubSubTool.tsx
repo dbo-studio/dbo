@@ -39,7 +39,7 @@ function StatusPill({ running, paused }: { running: boolean; paused: boolean }):
         gap: 0.75,
         px: 1.25,
         height: 32,
-        borderRadius: 4,
+        borderRadius: 999,
         bgcolor: alpha(color, 0.12),
         color
       }}

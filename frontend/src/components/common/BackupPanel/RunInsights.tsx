@@ -1,3 +1,4 @@
+import { variables } from '@/core/theme/variables';
 import type { BackupArtifactType } from '@/api/backup/types';
 import locales from '@/locales';
 import { Box, Typography } from '@mui/material';
@@ -67,7 +68,15 @@ export default function RunInsights({ runs }: { runs: BackupArtifactType[] }): J
   return (
     <Box
       data-testid='backup-insights'
-      sx={{ display: 'flex', alignItems: 'center', gap: 4, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        mb: 2,
+        p: 1.5,
+        bgcolor: 'action.hover',
+        borderRadius: variables.radius.small
+      }}
     >
       <Stat
         label={locales.backup_insights_success.replace('{count}', String(s.total))}

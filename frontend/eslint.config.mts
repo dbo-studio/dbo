@@ -71,6 +71,11 @@ export default defineConfig([
         },
         {
           selector:
+            "Property[key.name='borderRadius'][value.type='Literal'][value.raw=/^['\"]?([3-9]|1[0-2])(px)?['\"]?$/]",
+          message: 'Use variables.radius.small / medium / large instead of a literal borderRadius.'
+        },
+        {
+          selector:
             "JSXOpeningElement[name.name=/^(Button|IconButton|TextField|Select|Autocomplete|Chip|InputBase|FieldInput|SelectInput|CreatableSelectInput)$/] > JSXAttribute[name.name='size']",
           message: 'Controls have one size (variables.control); drop the size prop.'
         }
