@@ -79,19 +79,13 @@ export default function HistoryItem({ history, selected, onClick, context }: His
       >
         {verb || '—'}
       </Box>
-      <Tooltip
-        title={<code style={{ whiteSpace: 'pre-wrap' }}>{history.query.slice(0, 1200)}</code>}
-        enterDelay={600}
-        placement='top-start'
+      <Typography
+        noWrap
+        variant='body2'
+        sx={{ flex: 1, minWidth: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
       >
-        <Typography
-          noWrap
-          variant='body2'
-          sx={{ flex: 1, minWidth: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
-        >
-          {history.query.replace(/\s+/g, ' ').trim()}
-        </Typography>
-      </Tooltip>
+        {history.query.replace(/\s+/g, ' ').trim()}
+      </Typography>
       <Box className='history-actions' sx={{ display: 'flex', flexShrink: 0 }}>
         <Tooltip title={locales.run}>
           <IconButton aria-label={locales.run} onClick={open}>
