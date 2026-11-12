@@ -11,7 +11,8 @@ import { useAuthStore } from '@/store/authStore/auth.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
-import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, Button, Stack, Typography, alpha } from '@mui/material';
+import { Check } from 'lucide-react';
 import { useMemo, useState, type JSX, type ReactNode } from 'react';
 import type { ChatEmptyStateProps } from '../../types';
 import {
@@ -72,6 +73,20 @@ function Starters({ keys, onSelect }: { keys: ChatPromptKey[]; onSelect?: (promp
   );
 }
 
+const PROVIDERS = [
+  { id: 'openai', name: 'OpenAI' },
+  { id: 'anthropic', name: 'Anthropic' },
+  { id: 'gemini', name: 'Gemini' },
+  { id: 'ollama', name: 'Ollama' }
+];
+
+const BENEFITS = [
+  { id: 'plain', text: locales.ai_no_provider_point_1 },
+  { id: 'schema', text: locales.ai_no_provider_point_2 },
+  { id: 'review', text: locales.ai_no_provider_point_3 }
+];
+
+/** No provider yet: what the assistant does, which providers work, and the fastest way to connect one. */
 function NoProviderState(): JSX.Element {
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
@@ -80,28 +95,93 @@ function NoProviderState(): JSX.Element {
 
   return (
     <EmptyLayout centered>
-      <Heading
-        icon={<EmptyIllustration variant='provider' />}
-        title={locales.ai_no_provider_title}
-        subtitle={canEdit ? locales.ai_no_provider_subtitle : locales.ai_providers_no_permission}
-      />
-      <Stack direction='row' spacing={1}>
-        <Button
-          variant='contained'
-          onClick={() => openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' })}
-          data-testid='ai-empty-open-settings'
-        >
-          {locales.ai_open_ai_settings}
-        </Button>
-        {canEdit && (
-          <Button
-            variant='outlined'
-            onClick={(e) => setSetupAnchor(e.currentTarget)}
-            data-testid='ai-empty-quick-setup'
+      <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 320 }}>
+        <Stack spacing={1} sx={{ alignItems: 'flex-start' }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: variables.radius.large,
+              color: 'primary.main',
+              bgcolor: (theme): string => alpha(theme.palette.primary.main, 0.12)
+            }}
           >
-            {locales.ai_quick_setup}
+            <CustomIcon type='sparkles' size='m' color='currentColor' />
+          </Box>
+          <Typography variant='subtitle1' color='textTitle' sx={{ fontWeight: 600 }}>
+            {locales.ai_no_provider_title}
+          </Typography>
+          <Typography variant='body2' color='textSubdued'>
+            {canEdit ? locales.ai_no_provider_subtitle : locales.ai_providers_no_permission}
+          </Typography>
+        </Stack>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 0.75 }}>
+          {PROVIDERS.map((provider) => (
+            <Stack
+              key={provider.id}
+              direction='row'
+              spacing={1}
+              sx={{
+                alignItems: 'center',
+                px: 1.25,
+                py: 0.75,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: variables.radius.medium,
+                bgcolor: 'background.paper'
+              }}
+            >
+              <Box component='img' src={`/icons/${provider.id}.svg`} alt='' sx={{ width: 16, height: 16 }} />
+              <Typography variant='caption'>{provider.name}</Typography>
+            </Stack>
+          ))}
+        </Box>
+
+        <Stack spacing={0.75}>
+          {BENEFITS.map((benefit) => (
+            <Stack key={benefit.id} direction='row' spacing={1} sx={{ alignItems: 'center' }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  flexShrink: 0,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: '50%',
+                  color: 'primary.main',
+                  bgcolor: (theme): string => alpha(theme.palette.primary.main, 0.12)
+                }}
+              >
+                <Check size={10} />
+              </Box>
+              <Typography variant='caption' color='textSubdued'>
+                {benefit.text}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+
+        <Stack direction='row' spacing={1}>
+          {canEdit && (
+            <Button
+              variant='contained'
+              onClick={(e) => setSetupAnchor(e.currentTarget)}
+              data-testid='ai-empty-quick-setup'
+            >
+              {locales.ai_quick_setup}
+            </Button>
+          )}
+          <Button
+            variant={canEdit ? 'outlined' : 'contained'}
+            onClick={() => openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' })}
+            data-testid='ai-empty-open-settings'
+          >
+            {locales.ai_open_ai_settings}
           </Button>
-        )}
+        </Stack>
       </Stack>
       <AiSetupPopover open={!!setupAnchor} anchorEl={setupAnchor} onClose={() => setSetupAnchor(null)} />
     </EmptyLayout>

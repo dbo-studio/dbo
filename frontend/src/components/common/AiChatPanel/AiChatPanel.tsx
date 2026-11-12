@@ -1,3 +1,4 @@
+import { getAiStatus } from '@/core/ai/aiStatus';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -36,6 +37,7 @@ export default function AiChatPanel() {
   } = useAiChatController();
 
   const currentChat = useAiStore((state) => state.currentChat);
+  const aiReady = getAiStatus(useAiStore((state) => state.providers)).ready;
   const chats = useAiStore((state) => state.chats);
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const updateUI = useSettingStore((state) => state.updateUI);
@@ -109,7 +111,7 @@ export default function AiChatPanel() {
           onFeedback={handleFeedback}
         />
       )}
-      {connectionId && (
+      {connectionId && aiReady && (
         <ComposerContainerStyled>
           {review.openCount > 0 && !workspaceOpen && (
             <ChangesetDock review={review} onReview={() => updateUI({ agentWorkspaceOpen: true })} />

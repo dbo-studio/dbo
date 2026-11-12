@@ -36,7 +36,7 @@ export class SidebarPage extends BasePage {
 
   async switchTo(tabName: SidebarTab): Promise<void> {
     if (tabName === "History" && !(await this.page.getByTestId("bottom-panel").isVisible())) {
-      await this.page.getByTestId("status-panel").click();
+      await this.page.getByTestId("status-history").click();
     }
 
     const tab = this.getTab(tabName);

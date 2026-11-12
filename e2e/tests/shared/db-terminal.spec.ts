@@ -61,7 +61,7 @@ test.describe("DB terminal (SQL) and bottom panel", () => {
 
   test("bottom panel: terminal runs SQL, multi-line input, and History lives there", async ({ page }) => {
     await expect(page.getByTestId("bottom-panel")).toHaveCount(0);
-    await page.getByTestId("status-panel").click();
+    await page.getByTestId("open-terminal").click();
     const panel = page.getByTestId("bottom-panel");
     await expect(panel).toBeVisible();
 
@@ -98,8 +98,10 @@ test.describe("DB terminal (SQL) and bottom panel", () => {
       await expect(page.getByTestId("sidebar-tab-history")).toHaveCount(0);
     });
 
-    await test.step("the panel toggles from the status bar and with Alt+J", async () => {
-      await page.getByTestId("status-panel").click();
+    await test.step("the panel toggles from the footer and with Alt+J", async () => {
+      // The footer History item closes the panel only while History is the open tab.
+      await page.getByTestId("bottom-tab-history").click();
+      await page.getByTestId("status-history").click();
       await expect(panel).toHaveCount(0);
       await page.keyboard.press("Alt+J");
       await expect(page.getByTestId("bottom-panel")).toBeVisible();
@@ -113,7 +115,7 @@ test.describe("DB terminal (SQL) and bottom panel", () => {
     });
     expect(run.ok(), await run.text()).toBeTruthy();
 
-    await page.getByTestId("status-panel").click();
+    await page.getByTestId("open-terminal").click();
     const terminal = page.getByTestId("db-terminal");
     await terminal.click();
     await page.keyboard.type("SELECT char(27) || '[31mRED' AS evil;");

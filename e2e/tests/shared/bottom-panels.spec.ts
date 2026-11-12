@@ -32,7 +32,7 @@ const height = async (page: Page): Promise<number> => (await page.getByTestId("b
 test.describe("bottom panel", () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await open(page, `panel-${uniqueTestSuffix(testInfo)}`, "sqlite");
-    await page.getByTestId("status-panel").click();
+    await page.getByTestId("open-terminal").click();
     await expect(page.getByTestId("db-terminal")).toBeVisible({ timeout: 15000 });
   });
 

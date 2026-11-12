@@ -1,7 +1,7 @@
 import { alpha, Box, ButtonBase, styled } from '@mui/material';
 import { variables } from '@/core/theme/variables';
 
-export const StatusBarStyled = styled(Box)(({ theme }) => ({
+export const AppFooterStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(0.5),

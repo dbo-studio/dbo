@@ -140,7 +140,7 @@ test.describe("Feature permissions (cli, import, export, aiUse)", () => {
       await expect(memberPage.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
 
       await test.step("without cli the panel has History only", async () => {
-        await memberPage.getByTestId("status-panel").click();
+        await memberPage.getByTestId("status-history").click();
         await expect(memberPage.getByTestId("bottom-panel")).toBeVisible();
         await expect(memberPage.getByTestId("bottom-tab-history")).toBeVisible();
         await expect(memberPage.getByTestId("bottom-tab-terminal")).toHaveCount(0);
@@ -157,7 +157,7 @@ test.describe("Feature permissions (cli, import, export, aiUse)", () => {
         await expect(memberPage.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
         // The open panel is remembered across the reload; only open it when it is not.
         if (!(await memberPage.getByTestId("bottom-panel").isVisible().catch(() => false))) {
-          await memberPage.getByTestId("status-panel").click();
+          await memberPage.getByTestId("status-history").click();
         }
         await expect(memberPage.getByTestId("bottom-tab-terminal")).toBeVisible();
       });

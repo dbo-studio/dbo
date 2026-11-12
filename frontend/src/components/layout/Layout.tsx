@@ -19,7 +19,7 @@ import { LayoutBodyStyled, LayoutMainStyled, LayoutStyled } from './Layout.style
 import CenterContainer from './MainContainer/CenterContainer.tsx';
 import EndContainer from './MainContainer/EndContainer.tsx';
 import ExplorerContainer from './MainContainer/ExplorerContainer.tsx';
-import StatusBar from './StatusBar/StatusBar';
+import AppFooter from './AppFooter/AppFooter';
 import StartContainer from './MainContainer/StartContainer';
 import MobileConnectionsPanel from './MobileConnectionsPanel/MobileConnectionsPanel';
 import SidebarDrawer from './SidebarDrawer/SidebarDrawer';
@@ -140,7 +140,7 @@ export default function Layout(): JSX.Element {
           {showConnectionsRail && <StartContainer />}
           <LayoutMainStyled>{renderMain()}</LayoutMainStyled>
         </LayoutBodyStyled>
-        {!useSidebarOverlay && <StatusBar />}
+        {!useSidebarOverlay && <AppFooter />}
       </LayoutStyled>
       {workspaceOpen && <AgentWorkspace />}
     </AiChatProvider>

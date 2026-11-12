@@ -1,5 +1,6 @@
 import api from '@/api';
-import { openBottomPanel } from '@/core/bottomPanel';
+import { closeBottomPanel, openBottomPanel } from '@/core/bottomPanel';
+import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { McpStatus } from '@/api/mcp';
 import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
 import RunningJobs, { useRunningJobs } from '@/components/common/RunningJobs/RunningJobs';
@@ -20,14 +21,21 @@ import { Popover, Tooltip, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import {
-  StatusBarStyled,
+  AppFooterStyled,
   StatusDotStyled,
   StatusItemStyled,
   StatusSpacerStyled,
   StatusTextStyled
-} from './StatusBar.styled';
+} from './AppFooter.styled';
 
 const AI_SETTINGS_TAB = 3;
+
+/** Opens the bottom panel on History; a second click on the open History tab closes the panel. */
+const toggleHistory = (): void => {
+  const panel = useSettingStore.getState().ui.bottomPanel;
+  if (panel.open && panel.tab === 'history') closeBottomPanel();
+  else openBottomPanel('history');
+};
 
 const mcpTone = (status: McpStatus | undefined): 'idle' | 'success' | 'warning' =>
   !status?.enabled ? 'idle' : status.healthy ? 'success' : 'warning';
@@ -82,10 +90,10 @@ function TabInfo(): JSX.Element | null {
 }
 
 /**
- * Always-visible state in three zones: the connection (left), the active tab (centre), and the
+ * The app footer. Always-visible state in three zones: the connection (left), the active tab (centre), and the
  * app (right): jobs, backups, MCP, unread notifications.
  */
-export default function StatusBar(): JSX.Element {
+export default function AppFooter(): JSX.Element {
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const canManageMcp = canManageMcpSettings(mode, user);
@@ -118,7 +126,7 @@ export default function StatusBar(): JSX.Element {
           : 'idle';
 
   return (
-    <StatusBarStyled data-testid='status-bar'>
+    <AppFooterStyled data-testid='app-footer'>
       <StatusTextStyled data-testid='status-connection'>
         <StatusDotStyled tone={connectionTone} />
         <span>
@@ -136,12 +144,8 @@ export default function StatusBar(): JSX.Element {
       <TabInfo />
       <StatusSpacerStyled />
 
-      <StatusItemStyled
-        onClick={() => openBottomPanel()}
-        data-testid='status-panel'
-        aria-label={locales.toggle_bottom_panel}
-      >
-        <span>{locales.bottom_panel}</span>
+      <StatusItemStyled onClick={toggleHistory} data-testid='status-history' aria-label={locales.history}>
+        <span>{locales.history}</span>
       </StatusItemStyled>
 
       <StatusItemStyled
@@ -217,6 +221,6 @@ export default function StatusBar(): JSX.Element {
         </Typography>
         <RunningJobs jobs={running} />
       </Popover>
-    </StatusBarStyled>
+    </AppFooterStyled>
   );
 }

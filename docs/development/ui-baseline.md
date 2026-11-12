@@ -26,6 +26,11 @@ Non-negotiable boundaries:
 - **Compact, not cramped:** dense controls are appropriate, but labels, focus, errors, and hit areas must remain clear.
 - **Predictable interaction:** similar actions use the same placement, variant, feedback, and keyboard behaviour.
 
+## Naming
+
+- **Status bar** is the bar at the bottom of a data surface: the data grid, the object form, a NoSQL key browser. It holds that surface's actions, pagination and counts.
+- **Application footer** is the single shell bar at the bottom of the window (`layout/AppFooter`): connection, active-tab info, History, jobs, backups, MCP, notifications. Do not call it a status bar.
+
 ## Ownership and token contract
 
 | Concern | Owner | Consumer rule |
@@ -58,7 +63,7 @@ Shell regions are not form controls; do not force them into the 24px control rul
 | Activity rail | 48px wide; area buttons are 36×36px |
 | Workspace/sidebar tab strips | 35px high |
 | Bottom-panel header | 36px high |
-| Application status bar | 24px high; clickable items are 20px high |
+| Application footer (the shell bar at the bottom of the window) | 24px high; clickable items are 20px high |
 | Phone/touch | `mobileDensity.ts` raises controls and hit targets, including 44px icon buttons |
 
 If these values are tokenized later, use a separate shell-size group. Do not mix them into `variables.control`.
@@ -106,7 +111,7 @@ Do not merge these implementations merely to reduce file count. Share visual dec
 
 - Use base `EmptyState` with a useful action when the user can resolve the empty state.
 - Loading indicators reserve their region and avoid moving surrounding controls. Keep existing data visible during background refresh when possible.
-- Use the application status bar for persistent connection/app state; do not duplicate it as banners or cards inside the page.
+- Use the application footer for persistent connection/app state; do not duplicate it as banners or cards inside the page.
 - Settings and Backup continue to use `SettingGroup`/`SettingRow`-style rows, not rounded cards.
 
 ### Motion
@@ -200,7 +205,7 @@ Implemented: connection picker, query toolbar (Run label and Beautify spelling),
 | Empty states | Keep base `EmptyState` everywhere. Give first-run and empty-workspace states one primary action plus at most one shortcut hint (e.g. command palette Alt+K). After onboarding is skipped, the "No active connection" screen is the entire first impression — New connection should stay primary, with an optional quiet secondary like opening the command palette. Do not grow empty states into dashboards. | The post-skip first-run screen rendered correctly but bare; good empty states teach the next step without adding chrome. | Small |
 | Help and discovery | Consolidate existing help into the command palette (Documentation, Keyboard shortcuts, Show welcome, New connection, Open editor) and keep the header overflow menu as the only menu surface. Make the documentation link reachable on web, not only in the desktop menu. | Help already exists in five scattered places (palette, settings, desktop menu, AI prompts, terminal `help`); users should not have to know where each piece lives. | Small |
 
-Do not redesign Settings, the activity rail, application status bar, or DataGrid as part of these candidates. Their current rendered structure is a useful reference for the rest of the app.
+Do not redesign Settings, the activity rail, application footer, or DataGrid as part of these candidates. Their current rendered structure is a useful reference for the rest of the app.
 
 ## Implementation sequence
 

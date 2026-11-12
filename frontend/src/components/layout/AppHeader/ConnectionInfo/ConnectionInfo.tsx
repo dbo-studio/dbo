@@ -137,6 +137,7 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
                 <span>
                   <IconButton
                     aria-label='terminal'
+                    data-testid='open-terminal'
                     disabled={!currentConnection}
                     onClick={(): void => openBottomPanel('terminal')}
                   >
