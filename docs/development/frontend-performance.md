@@ -181,7 +181,7 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | P3 | B4 (IndexedDB transactions for 200 chars) | 400 | 1 | -99.8% | see git log |
 | P4 | B10 | | | | |
 | P5 | B5, B6, B7 | | | | |
-| P6 | B2 | | | | |
+| P6 | B1, B2 | first rows 862 ms, heap 94.6 MB, 24,812 DOM nodes, scroll p95 17 ms | 154 ms, 39.3 MB, 3,484 nodes, 17 ms | -82% time, -58% heap, -86% DOM | column virtualization for grids over 30 columns |
 | P7, P8 | B9 | | | | |
 | P9 | B8 | | | | |
 

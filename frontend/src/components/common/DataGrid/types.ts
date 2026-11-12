@@ -1,4 +1,5 @@
 import type { ColumnType, RowType } from '@/types';
+import type { ColumnWindow } from './hooks/useDataGridColumnWindow';
 import type { UseDataGridSearchReturn } from './hooks/useDataGridSearch';
 
 export type DataGridProps = {
@@ -37,6 +38,7 @@ export type DataGridTableRowProps = {
   editable: boolean;
   searchTerm?: string;
   currentMatch?: { rowIndex: number; columnIndex: number } | null;
+  columnWindow?: ColumnWindow;
 };
 
 export type CellEditingReturn = {
@@ -63,6 +65,7 @@ export type DataGridTableBodyRowsProps = {
   editable: boolean;
   searchTerm?: string;
   currentMatch?: { rowIndex: number; columnIndex: number } | null;
+  columnWindow?: ColumnWindow;
 };
 export type DataGridTableHeaderRowProps = {
   columns: ColumnType[];
@@ -72,6 +75,7 @@ export type DataGridTableHeaderRowProps = {
   /** Clicking a header sorts the tab's query; off for rows that belong to no tab. */
   sortable?: boolean;
   onHeaderContextMenu?: (event: React.MouseEvent, columnName: string) => void;
+  columnWindow?: ColumnWindow;
 };
 
 export type CellProps = {

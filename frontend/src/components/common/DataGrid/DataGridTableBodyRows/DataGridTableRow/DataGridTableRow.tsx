@@ -19,7 +19,8 @@ const DataGridTableRow = memo(
     isRemoved,
     editable,
     searchTerm,
-    currentMatch
+    currentMatch,
+    columnWindow
   }: DataGridTableRowProps): JSX.Element {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
     const dataStoreApi = useDataStoreApi();
@@ -78,7 +79,9 @@ const DataGridTableRow = memo(
 
     return (
       <StyledTableRow className={rowClassName}>
+        {columnWindow && columnWindow.leftPad > 0 && <td aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />}
         {columns.map((column, columnIndex) => {
+          if (columnWindow && (columnIndex < columnWindow.start || columnIndex >= columnWindow.end)) return null;
           const columnId = column.name;
           const cellEditable = editable && column.editable !== false;
           const value = row[columnId];
@@ -118,6 +121,9 @@ const DataGridTableRow = memo(
             </TableCell>
           );
         })}
+        {columnWindow && columnWindow.rightPad > 0 && (
+          <td aria-hidden style={{ padding: 0, border: 0 }} colSpan={columns.length - columnWindow.end} />
+        )}
       </StyledTableRow>
     );
   },
@@ -137,6 +143,8 @@ const DataGridTableRow = memo(
       prevProps.editable === nextProps.editable &&
       prevProps.columns.length === nextProps.columns.length &&
       prevProps.columns.every((col, idx) => col.name === nextProps.columns[idx]?.name) &&
+      prevProps.columnWindow?.start === nextProps.columnWindow?.start &&
+      prevProps.columnWindow?.end === nextProps.columnWindow?.end &&
       prevProps.searchTerm === nextProps.searchTerm &&
       prevProps.currentMatch?.rowIndex === nextProps.currentMatch?.rowIndex &&
       prevProps.currentMatch?.columnIndex === nextProps.currentMatch?.columnIndex

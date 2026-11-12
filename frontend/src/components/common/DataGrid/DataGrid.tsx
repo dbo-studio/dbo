@@ -14,6 +14,7 @@ import DataGridTableBodyRows from './DataGridTableBodyRows/DataGridTableBodyRows
 import DataGridTableHeaderRow from './DataGridTableHeaderRow/DataGridTableHeaderRow';
 import { useColumnResize } from './hooks/useColumnResize';
 import { useDataGridColumns } from './hooks/useDataGridColumns';
+import { useDataGridColumnWindow } from './hooks/useDataGridColumnWindow';
 import { useDataGridSearch } from './hooks/useDataGridSearch';
 import { useDataGridSearchIntegration } from './hooks/useDataGridSearchIntegration';
 import { useDataGridVirtualization } from './hooks/useDataGridVirtualization';
@@ -48,6 +49,13 @@ export default function DataGrid({
   });
 
   const { tableColumns, totalTableWidth } = useDataGridColumns({ columns, columnSizes, selectable: !standalone });
+
+  const columnWindow = useDataGridColumnWindow({
+    columns: tableColumns,
+    columnSizes,
+    tableContainerRef,
+    defaultColumnWidth: 200
+  });
 
   const { virtualRows, paddingTop, paddingBottom, totalSize, rowVirtualizer } = useDataGridVirtualization({
     rowsCount: rows.length,
@@ -130,6 +138,7 @@ export default function DataGrid({
               editable={editable}
               sortable={!standalone}
               onHeaderContextMenu={handleHeaderContextMenu}
+              columnWindow={columnWindow}
             />
             <DataGridTableBodyRows
               editable={editable}
@@ -141,6 +150,7 @@ export default function DataGrid({
               paddingBottom={paddingBottom}
               searchTerm={search.searchTerm}
               currentMatch={currentMatch}
+              columnWindow={columnWindow}
             />
           </StyledTable>
         </VirtualTableWrapper>

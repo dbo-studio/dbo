@@ -37,7 +37,8 @@ export default function DataGridTableHeaderRow({
   resizingColumnId,
   editable = false,
   sortable = true,
-  onHeaderContextMenu
+  onHeaderContextMenu,
+  columnWindow
 }: DataGridTableHeaderRowProps): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const theme = useTheme();
@@ -127,7 +128,8 @@ export default function DataGridTableHeaderRow({
   return (
     <StyledTableHead>
       <StyledTableRow>
-        {columns.map((column) => {
+        {columnWindow && columnWindow.leftPad > 0 && <th aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />}
+        {columns.slice(columnWindow?.start ?? 0, columnWindow?.end ?? columns.length).map((column) => {
           const isResizing = resizingColumnId === column.name;
 
           if (column.name === 'select') {
@@ -177,6 +179,9 @@ export default function DataGridTableHeaderRow({
             </SortableTableHeader>
           );
         })}
+        {columnWindow && columnWindow.rightPad > 0 && (
+          <th aria-hidden style={{ padding: 0, border: 0 }} colSpan={columns.length - columnWindow.end} />
+        )}
       </StyledTableRow>
     </StyledTableHead>
   );

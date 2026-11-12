@@ -13,7 +13,8 @@ export default function DataGridTableBodyRows({
   paddingTop,
   paddingBottom,
   searchTerm,
-  currentMatch
+  currentMatch,
+  columnWindow
 }: DataGridTableBodyRowsProps & {
   virtualRows: Array<{ index: number; start: number; end: number; size: number }>;
   paddingTop: number;
@@ -48,6 +49,7 @@ export default function DataGridTableBodyRows({
             isRemoved={rowState.isRemoved}
             searchTerm={searchTerm}
             currentMatch={currentMatch}
+            columnWindow={columnWindow}
           />
         );
       })}
