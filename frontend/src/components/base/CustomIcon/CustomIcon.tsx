@@ -1,8 +1,8 @@
 import { variables } from '@/core/theme/variables';
 import { useTheme } from '@mui/material';
 import type { LucideIcon } from 'lucide-react';
-import { icons } from 'lucide-react';
 import type { JSX } from 'react';
+import { lucideIcons } from './lucideIcons';
 import { type IconProps, IconTypes } from './types';
 
 const sizes = Object.fromEntries(
@@ -31,8 +31,7 @@ export default function CustomIcon({
   }
 
   const mapped = IconTypes[type];
-  const lucideName = (mapped ?? type) as keyof typeof icons;
-  const LucideIcon: LucideIcon | undefined = icons[lucideName];
+  const LucideIcon: LucideIcon | undefined = lucideIcons[mapped ?? type];
   if (!LucideIcon) {
     const asset = mapped ?? type;
     return <img onClick={onClick} src={`/icons/${asset}.svg`} alt={type} width={w} height={h} className={className} />;
