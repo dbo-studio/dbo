@@ -120,7 +120,6 @@ export default function Mongo({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       isPing: false,

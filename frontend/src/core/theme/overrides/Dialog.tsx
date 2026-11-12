@@ -11,7 +11,7 @@ export default function Dialog(theme: Theme): Components {
           boxShadow: 'none',
           background: theme.palette.background.default,
           border: `1px solid ${theme.palette.divider}`,
-          borderRadius: variables.radius.medium,
+          borderRadius: variables.radius.large,
           padding: theme.spacing(2)
         }
       }

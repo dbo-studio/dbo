@@ -4,7 +4,7 @@ import type { ConnectionItemStyledProps } from '../../types';
 
 export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ theme, selected }) => ({
   borderRadius: variables.radius.medium,
-  background: selected ? theme.palette.background.paper : 'unset',
+  background: selected ? theme.palette.action.selected : 'unset',
   padding: theme.spacing(1),
   display: 'flex',
   width: '100%',
@@ -15,21 +15,20 @@ export const ConnectionItemStyled = styled(Box)<ConnectionItemStyledProps>(({ th
   flexDirection: 'column',
   gap: theme.spacing(0.5),
   border: '1px solid',
-  borderColor: selected ? theme.palette.divider : 'transparent',
-  transition: 'background-color 0.2s linear',
+  borderColor: selected ? theme.palette.primary.main : 'transparent',
+  transition: `background-color ${variables.motion.fast} ${variables.motion.easing}, border-color ${variables.motion.fast} ${variables.motion.easing}`,
   ':hover': {
-    transition: 'border-color 0.3s ease',
-    border: `1px solid ${theme.palette.divider}`
+    borderColor: selected ? theme.palette.primary.main : theme.palette.divider
+  },
+  ':focus-visible': {
+    outline: `1px solid ${theme.palette.primary.main}`,
+    outlineOffset: 1
   },
   cursor: 'pointer',
   '& .MuiTypography-root': {
     textAlign: 'center',
     width: '100%',
     lineHeight: 1.25,
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
     wordBreak: 'break-word'
   }
 }));

@@ -103,7 +103,6 @@ export default function HostSql({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       isPing: false,

@@ -31,6 +31,8 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
     setConnectionType(newConnection);
   };
 
+  const handleOpen = (c: SelectionConnectionType): void => onSubmit(c);
+
   const handleOnSubmit = (): void => {
     onSubmit(connectionType);
   };
@@ -44,6 +46,7 @@ export default function ConnectionSelection({ connections, onSubmit, onClose }: 
             <ConnectionItem
               selected={connectionType?.type === c.type}
               onClick={handleConnectionType}
+              onOpen={handleOpen}
               key={uuids[index]}
               connection={c}
             />

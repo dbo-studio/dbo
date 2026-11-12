@@ -19,7 +19,7 @@ export const ModalWrapperStyled = styled(Box, { shouldForwardProp: (prop) => pro
   minWidth: 'min(400px, calc(100vw - 32px))',
   maxWidth: 'calc(100vw - 32px)',
   maxHeight: '90dvh',
-  borderRadius: variables.radius.medium,
+  borderRadius: variables.radius.large,
   border: `1px solid ${theme.palette.divider}`,
   background: theme.palette.background.default,
   position: 'absolute',

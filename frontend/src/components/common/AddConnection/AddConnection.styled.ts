@@ -45,12 +45,11 @@ export const ConnectionFormTabsRootStyled = styled(Box)(({ theme }) => ({
 
 type ConnectionFormTabStyledProps = {
   selected: boolean;
-  isLast: boolean;
 };
 
 export const ConnectionFormTabStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'selected' && prop !== 'isLast'
-})<ConnectionFormTabStyledProps>(({ theme, selected, isLast }) => ({
+  shouldForwardProp: (prop) => prop !== 'selected'
+})<ConnectionFormTabStyledProps>(({ theme, selected }) => ({
   flex: 1,
   display: 'flex',
   alignItems: 'center',
@@ -59,18 +58,16 @@ export const ConnectionFormTabStyled = styled(Box, {
   minWidth: 0,
   borderRadius: 0,
   border: 'none',
-  borderRight: isLast ? 'none' : `1px solid ${theme.palette.divider}`,
   borderBottom: `2px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
-  background: selected ? theme.palette.background.default : theme.palette.background.subdued,
-  color: selected ? theme.palette.text.text : theme.palette.text.subdued,
+  background: 'transparent',
+  color: selected ? theme.palette.text.link : theme.palette.text.subdued,
   fontSize: theme.typography.caption.fontSize,
   fontWeight: selected ? theme.typography.fontWeightMedium : theme.typography.fontWeightRegular,
   padding: `0 ${theme.spacing(1)}`,
   cursor: 'pointer',
   userSelect: 'none',
   '&:hover': {
-    color: theme.palette.text.text,
-    background: selected ? theme.palette.background.default : theme.palette.action.hover
+    color: theme.palette.text.text
   },
   '&:focus-visible': {
     outline: `1px solid ${theme.palette.primary.main}`,

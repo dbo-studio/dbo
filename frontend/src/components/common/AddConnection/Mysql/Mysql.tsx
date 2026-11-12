@@ -106,7 +106,6 @@ export default function Mysql({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       useUri: Boolean(options?.uri),

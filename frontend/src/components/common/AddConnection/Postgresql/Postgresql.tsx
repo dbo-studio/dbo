@@ -106,7 +106,6 @@ export default function PostgreSQL({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       useUri: Boolean(options?.uri),

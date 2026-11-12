@@ -56,7 +56,6 @@ export default function SQLite({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       isPing: false,

@@ -120,7 +120,11 @@ export default function EditConnection(): JSX.Element {
     : undefined;
 
   return (
-    <Modal open={showEditConnection !== undefined && showEditConnection !== false} title={locales.edit_connection}>
+    <Modal
+      open={showEditConnection !== undefined && showEditConnection !== false}
+      title={locales.edit_connection}
+      compact={activeConnection?.type === 'sqlite'}
+    >
       {formProps && isPostgresDriver(activeConnection?.type) && <PostgreSQL {...formProps} />}
       {formProps && isMysqlDriver(activeConnection?.type) && <Mysql {...formProps} />}
       {formProps && isHostSqlDriver(activeConnection?.type) && <HostSql {...formProps} />}

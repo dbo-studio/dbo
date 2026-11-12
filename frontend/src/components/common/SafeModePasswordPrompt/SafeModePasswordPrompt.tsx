@@ -96,7 +96,7 @@ export default function SafeModePasswordPrompt({
       : locales.safe_mode_password_title;
 
   return (
-    <Modal open={open} title={title} onClose={handleClose} zIndex={2000}>
+    <Modal open={open} title={title} onClose={handleClose} zIndex={2000} compact>
       <ConnectionFormContainerStyled
         component='form'
         data-testid='safe-mode-password-prompt'

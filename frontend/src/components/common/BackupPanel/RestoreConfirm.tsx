@@ -95,7 +95,7 @@ export default function RestoreConfirm({
   };
 
   return (
-    <Modal open title={locales.backup_restore_title} onClose={onCancel} padding='24px'>
+    <Modal open title={locales.backup_restore_title} onClose={onCancel} padding='24px' compact>
       <Box sx={{ width: 'min(480px, calc(100vw - 64px))' }}>
         <Typography variant='body2' color='error.main' sx={{ mb: 2 }}>
           {locales.backup_restore_warning}

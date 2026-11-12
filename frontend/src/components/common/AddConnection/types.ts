@@ -16,6 +16,8 @@ export type ConnectionItemProps = {
   connection: SelectionConnectionType;
   selected: boolean;
   onClick: (connection: SelectionConnectionType) => void;
+  /** Double-click or Enter: pick this connection and continue. */
+  onOpen: (connection: SelectionConnectionType) => void;
 };
 
 export type ConnectionItemStyledProps = {

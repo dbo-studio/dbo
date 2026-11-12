@@ -27,8 +27,7 @@ export default function Input(theme: Theme): Components {
             border: `1px solid ${theme.palette.error.main} !important`
           },
           '&.Mui-focused': {
-            borderColor: theme.palette.primary.main,
-            boxShadow: `0 0 0 1px ${theme.palette.primary.main}`
+            borderColor: theme.palette.primary.main
           },
           ':before': {
             borderBottom: 'none !important'

@@ -97,7 +97,6 @@ export default function Redis({
       }
 
       onSubmit(data);
-      form.reset();
     },
     defaultValues: {
       isPing: false,

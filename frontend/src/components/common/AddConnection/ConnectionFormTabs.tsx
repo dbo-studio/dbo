@@ -23,7 +23,6 @@ export default function ConnectionFormTabs({
           tabIndex={0}
           data-testid='connection-tab-general'
           selected={tab === 'general'}
-          isLast={false}
           aria-selected={tab === 'general'}
           onClick={(): void => setTab('general')}
           onKeyDown={(e): void => {
@@ -40,7 +39,6 @@ export default function ConnectionFormTabs({
           tabIndex={0}
           data-testid='connection-tab-ssl'
           selected={tab === 'ssl'}
-          isLast={false}
           aria-selected={tab === 'ssl'}
           onClick={(): void => setTab('ssl')}
           onKeyDown={(e): void => {
@@ -57,7 +55,6 @@ export default function ConnectionFormTabs({
           tabIndex={0}
           data-testid='connection-tab-ssh'
           selected={tab === 'ssh'}
-          isLast
           aria-selected={tab === 'ssh'}
           onClick={(): void => setTab('ssh')}
           onKeyDown={(e): void => {

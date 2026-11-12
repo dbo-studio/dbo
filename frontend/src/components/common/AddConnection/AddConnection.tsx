@@ -134,7 +134,11 @@ export default function AddConnection(): JSX.Element {
   };
 
   return (
-    <Modal open={showAddConnection} title={locales.new_connection}>
+    <Modal
+      open={showAddConnection}
+      title={locales.new_connection}
+      compact={activeStep === 1 && connectionType?.type === 'sqlite'}
+    >
       {activeStep === 0 && (
         <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
       )}

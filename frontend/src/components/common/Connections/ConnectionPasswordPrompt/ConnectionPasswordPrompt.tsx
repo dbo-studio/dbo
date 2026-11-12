@@ -34,7 +34,7 @@ export default function ConnectionPasswordPromptModal(): JSX.Element | null {
   if (showConnectionsRail) return null;
 
   return (
-    <Modal open={show} title={locales.password} onClose={unlock.close}>
+    <Modal open={show} title={locales.password} onClose={unlock.close} compact>
       <ConnectionFormContainerStyled
         component='form'
         onSubmit={(e): void => {
