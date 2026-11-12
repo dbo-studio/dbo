@@ -37,7 +37,6 @@ export default function ConnectorsSection({
   const [editing, setEditing] = useState<Editing>(null);
 
   const refresh = (): void => void queryClient.invalidateQueries({ queryKey });
-  const isDestination = kind === 'destination';
 
   const test = async (item: ConnectorType): Promise<void> => {
     try {
@@ -75,9 +74,6 @@ export default function ConnectorsSection({
 
   const addGrid = (
     <Box>
-      <Typography color='textSecondary' variant='caption' component='p' sx={{ mb: 1 }}>
-        {isDestination ? locales.connector_add_destination : locales.connector_add_channel}
-      </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1 }}>
         {CONNECTOR_TYPES.filter((t) => t.kind === kind).map((t) => (
           <ConnectorTypeTile
@@ -94,7 +90,7 @@ export default function ConnectorsSection({
 
   return (
     <>
-      <SectionHeadStyled>
+      <SectionHeadStyled sx={{ mb: 2 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography color='textTitle' variant='subtitle2' sx={{ fontWeight: 600 }}>
             {title}

@@ -155,28 +155,30 @@ export default function ConnectorForm({ kind, connector, initialType, onClose, o
   return (
     <Box
       component='form'
-      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: connector ? 1 : 0 }}
       onSubmit={(event) => {
         event.preventDefault();
         mutate();
       }}
     >
       {!connector && (
-        <Box
-          role='radiogroup'
-          aria-label={locales.connector_type}
-          sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1 }}
-        >
-          {types.map((t) => (
-            <ConnectorTypeTile
-              key={t.type}
-              type={t.type}
-              label={t.label}
-              testId={`connector-type-${t.type}`}
-              selected={t.type === spec.type}
-              onSelect={() => pick(t)}
-            />
-          ))}
+        <Box>
+          <Box
+            role='radiogroup'
+            aria-label={locales.connector_type}
+            sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 1 }}
+          >
+            {types.map((t) => (
+              <ConnectorTypeTile
+                key={t.type}
+                type={t.type}
+                label={t.label}
+                testId={`connector-type-${t.type}`}
+                selected={t.type === spec.type}
+                onSelect={() => pick(t)}
+              />
+            ))}
+          </Box>
         </Box>
       )}
       <Typography variant='caption' color='textSecondary'>
