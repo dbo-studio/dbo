@@ -71,6 +71,8 @@ Fix: normalized `Map<id, node>` plus `childIds`; `expanded` as a `Set`; `Map<id,
 **P6. Grid DOM weight.** Overscan is `max(30, visibleRows x 3)`, so 100+ rows are mounted, each cell with its own hooks. No column virtualization. Cell display strings are recomputed per render and long values are not truncated.
 Fix: overscan about 8-10; column virtualization; truncate long values in the cell and load the full value on open.
 
+**P7-P10 status (MEASURED: no change made).** `e2e/tests/sqlite/perf-chat.spec.ts` streams a 1,527-word answer with a 120-line SQL block and a 25-row table, then adds 40 turns. At 1x CPU: 0 long tasks, frame p95 17 ms, DOM 3.7k nodes, heap 35 MB, scroll round trip 62 ms. At 6x CPU slowdown: 422 ms of long tasks across the 13 s stream, 9 frames over 50 ms, scroll round trip 240 ms. That is mild jank on slow hardware, not a bottleneck, and the code paths below are riskier to change than the gain justifies. Revisit if reports of slow streaming arrive or if conversations with hundreds of turns or huge result tables show up (not tested).
+
 **P7. AI streaming writes the store and re-renders per token.** `useAiStream.ts`, `useAiSession.ts`. Each delta creates a new `sessions` object; `previewContent` is concatenated (O(n^2) over a long answer); `useAiSession()` returns the whole session.
 Fix: buffer deltas and flush once per animation frame; narrow selectors so only the live preview subscribes to `previewContent`.
 
@@ -166,10 +168,10 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | B5 | expand latency (ms), 5,000 / 30,000 children | 328 / 547 | n/a |
 | B6 | reload latency (ms), 5,000 / 30,000 children (one folder loaded) | 118 / 309 | n/a |
 | B7 | frame p95 (ms), 150 ArrowDown presses | 17 | 17 |
-| B8 | DOM nodes | | |
-| B8 | JS heap (MB) | | |
-| B9 | commits per second | | |
-| B9 | long frames | | |
+| B8 | DOM nodes (41 turns, each with a code block) | 3,714 | n/a |
+| B8 | JS heap after GC (MB); scroll top and back (ms) | 35.2; 62 (240 at 6x CPU slowdown) | n/a |
+| B9 | React commits per second | not measured (no profiler in a production build); 5,644 DOM mutations over a 1,527-word stream | n/a |
+| B9 | long frames: frames over 50 ms / long-task ms / frame p95 | 0 / 0 / 17 ms (1x CPU); 9 / 422 / 33 ms (6x CPU slowdown) | n/a |
 | B10 | cold start (ms) | | |
 | B10 | entry gzip (KB) | 877 | n/a |
 | B11 | heap growth (MB) | | |
@@ -184,8 +186,8 @@ Finding: the app pages results at 100 rows (`shown: 100 rows`), so a 50k-row que
 | P4 (icons only) | B10 bundle | `CustomIcon` shared chunk 1,300 KB raw / 346 KB gzip | 650 KB raw / 190 KB gzip | -50% raw, -156 KB gzip | `CustomIcon` imports 85 named lucide icons instead of the whole `icons` map. Cold-start time not measured yet; Monaco eager import, PWA precache and lazy routes are still open |
 | P5 | B5, B6, B7 | no change | no change | n/a | not needed at measured sizes |
 | P6 | B1, B2 | first rows 862 ms, heap 94.6 MB, 24,812 DOM nodes, scroll p95 17 ms | 154 ms, 39.3 MB, 3,484 nodes, 17 ms | -82% time, -58% heap, -86% DOM | column virtualization for grids over 30 columns |
-| P7, P8 | B9 | | | | |
-| P9 | B8 | | | | |
+| P7, P8 | B9 | no change | no change | n/a | measured fine, see note under P7-P10 |
+| P9 | B8 | no change | no change | n/a | measured fine, see note under P7-P10 |
 
 Targets (to confirm after the baseline): no interaction over 100 ms at p95; scroll frames under 16 ms at p95 on `perf_wide`; entry chunk under 500 KB gzip; typing in the editor causes no more than one IndexedDB transaction per 300 ms.
 
