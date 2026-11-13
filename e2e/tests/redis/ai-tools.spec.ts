@@ -85,11 +85,18 @@ test.describe("Redis AI assistant", () => {
     await composer.press("Enter");
   };
 
-  test("the sidebar has no Fields tab, and the starters are Redis ones", async ({ page }) => {
+  test("the sidebar has Assistant and Snippets with Redis commands, and starters are Redis ones", async ({ page }) => {
     await openAssistant(page);
     await expect(page.getByRole("tab", { name: "Fields" })).toHaveCount(0);
     await expect(page.getByTestId("ai-starter-ai_prompt_redis_keys")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("ai-starter-ai_prompt_write_join")).toHaveCount(0);
+
+    // The sidebar toggle's tooltip covers the tab until the pointer leaves it.
+    await page.mouse.move(600, 300);
+    await page.getByRole("tab", { name: "Snippets" }).click();
+    await expect(page.getByTestId("nosql-snippets").getByText("HGETALL key")).toBeVisible();
+    // Redis has no editor tab, so a snippet can only be copied.
+    await expect(page.getByRole("button", { name: /open in query/i })).toHaveCount(0);
   });
 
   test("a Redis code block runs in the terminal, and Insert only fills the prompt", async ({ page }) => {

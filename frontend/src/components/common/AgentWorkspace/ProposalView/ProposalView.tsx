@@ -1,8 +1,9 @@
 import api from '@/api';
+import Segmented from '@/components/base/Segmented/Segmented';
 import { useChangesetReview } from '@/hooks';
 import locales from '@/locales';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Box, Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import MiniDiagram from '../MiniDiagram/MiniDiagram';
@@ -33,19 +34,12 @@ export default function ProposalView({ changesetId }: { changesetId: number }): 
   return (
     <Stack spacing={1.5} sx={{ p: 1.5 }} data-testid='ai-proposal-view' data-view={view}>
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <ToggleButtonGroup
-          exclusive
-          size='small'
+        <Segmented
+          itemTestId='ai-proposal-view'
           value={view}
-          onChange={(_, next: View | null) => next && setView(next)}
-          sx={{ alignSelf: 'flex-start', '& .MuiToggleButton-root': { py: 0.25, px: 1.25, textTransform: 'none' } }}
-        >
-          {VIEWS.map((item) => (
-            <ToggleButton key={item.value} value={item.value} data-testid={`ai-proposal-view-${item.value}`}>
-              {item.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          onChange={setView}
+          options={VIEWS.map((item) => ({ value: item.value, label: item.label }))}
+        />
         <Box sx={{ flex: 1 }} />
         {changeset.undoSql.length > 0 && review.openCount === 0 && (
           <Button

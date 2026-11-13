@@ -1,4 +1,4 @@
-import { isPostgresDriver } from '@/core/db/connectionAliases';
+import { isNoSQLType, isPostgresDriver } from '@/core/db/connectionAliases';
 import { parseObjectNodeId } from '@/core/db/parseObjectNodeId';
 import type { TreeNodeType } from '@/types/Tree';
 
@@ -9,6 +9,11 @@ export type DiagramScope = {
 };
 
 export const diagramScopeFromTreeNode = (node: TreeNodeType, engine: string | undefined): DiagramScope | null => {
+  // Redis and MongoDB have no relational schema to draw.
+  if (isNoSQLType(engine)) {
+    return null;
+  }
+
   if (node.type === 'table') {
     const parsed = parseObjectNodeId(node.id);
     return {

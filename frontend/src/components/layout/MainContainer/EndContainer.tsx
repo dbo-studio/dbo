@@ -5,6 +5,7 @@ import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSect
 import { SidebarTabPanelStyled } from '@/components/base/SidebarSectionTabs/SidebarSectionTabs.styled';
 import AiChatPanel from '@/components/common/AiChatPanel/AiChatPanel';
 import DBFields from '@/components/common/DBFields/DBFields';
+import SqlSnippets from '@/components/common/SqlSnippets/SqlSnippets';
 import DiagramSource from '@/components/common/DiagramSource/DiagramSource';
 import { TabMode } from '@/core/enums';
 import { getSidebarMaxWidth, useLayoutMode, useSelectedTab, useWindowSize } from '@/hooks';
@@ -24,7 +25,7 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
   const selectedTabId = sidebar.rightSidebarTab ?? 0;
   const isDiagram = selectedTab?.mode === TabMode.Diagram;
   const workspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
-  // Fields describe SQL columns, so MongoDB and Redis get the assistant only.
+  // Fields describe SQL columns, so MongoDB and Redis get only the assistant and snippets.
   const noSql = isNoSQLType(useCurrentConnection()?.type);
   const aiAllowed = useFeaturePermissions().ai;
 
@@ -32,7 +33,8 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
     () =>
       [
         { id: 0, label: locales.assistant },
-        { id: 1, label: isDiagram ? locales.source : locales.fields }
+        { id: 1, label: isDiagram ? locales.source : locales.fields },
+        { id: 2, label: locales.snippets }
       ].filter((tab) => !noSql || tab.id !== 1),
     [isDiagram, noSql]
   );
@@ -47,6 +49,8 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
       // The agent workspace drives the same chat while it is open.
       return workspaceOpen ? null : <AiChatPanel />;
     }
+
+    if (activeTabId === 2) return <SqlSnippets />;
 
     return isDiagram ? <DiagramSource /> : <DBFields />;
   }, [activeTabId, isDiagram, workspaceOpen, aiAllowed]);

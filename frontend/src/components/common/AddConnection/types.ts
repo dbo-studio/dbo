@@ -12,28 +12,12 @@ export type SelectionConnectionType = {
   component: React.ComponentType<ConnectionSettingsProps>;
 };
 
-export type ConnectionItemProps = {
-  connection: SelectionConnectionType;
-  selected: boolean;
-  onClick: (connection: SelectionConnectionType) => void;
-  /** Double-click or Enter: pick this connection and continue. */
-  onOpen: (connection: SelectionConnectionType) => void;
-};
-
-export type ConnectionItemStyledProps = {
-  selected?: boolean | string;
-};
-
-export type ConnectionSelectionProps = {
-  connections: SelectionConnectionType[];
-  onSubmit: (connection: SelectionConnectionType | undefined) => void;
-  onClose: () => void;
-};
-
 export type ConnectionSettingsProps = {
   connection?: ConnectionType;
   /** Stored connection type / branding alias. */
   engine?: string;
+  /** A pasted connection string to fill the form from (new connections only). */
+  initialUri?: string;
   /** Overrides the submit button text (default: Update when editing, Create otherwise). */
   submitLabel?: string;
   pingLoading: boolean;
@@ -43,15 +27,10 @@ export type ConnectionSettingsProps = {
   onClose: () => void;
 };
 
-export type ConnectionFormTabId = 'general' | 'ssl' | 'ssh';
-
 export type ConnectionFormTabsProps = {
   general: ReactNode;
   ssl: ReactNode;
   ssh: ReactNode;
-  generalLabel: string;
-  sslLabel: string;
-  sshLabel: string;
 };
 
 export type ConnectionSSLFieldsProps = {

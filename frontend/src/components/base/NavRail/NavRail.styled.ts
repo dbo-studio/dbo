@@ -25,6 +25,8 @@ export const NavRailStyled = styled(Box, {
 
 export const NavRailListStyled = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
+  position: 'relative',
+  isolation: 'isolate',
   overflow: 'auto',
   flex: 1,
   minHeight: 0
@@ -41,12 +43,13 @@ export const NavRailItemStyled = styled(Box, {
   marginBottom: theme.spacing(0.25),
   cursor: 'pointer',
   borderRadius: variables.radius.small,
-  borderLeft: `3px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
-  background: selected ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+  borderLeft: '3px solid transparent',
   color: selected ? theme.palette.text.link : theme.palette.text.text,
+  transition: `color ${variables.motion.base} ${variables.motion.easing}, background-color ${variables.motion.base} ${variables.motion.easing}`,
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
   textTransform: 'none',
   '&:hover': {
-    background: selected ? alpha(theme.palette.primary.main, 0.14) : alpha(theme.palette.action.hover, 0.6)
+    background: selected ? 'transparent' : alpha(theme.palette.action.hover, 0.6)
   },
   '&:focus-visible': {
     outline: `2px solid ${theme.palette.primary.main}`,

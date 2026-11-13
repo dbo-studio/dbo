@@ -1,4 +1,5 @@
 import { variables } from '@/core/theme/variables';
+import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import type {
   DashboardType,
@@ -12,7 +13,7 @@ import Modal from '@/components/base/Modal/Modal';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
-import { Box, Button, Chip, InputBase, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Box, Button, Chip, InputBase, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -240,19 +241,15 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
           )}
 
           <Stack spacing={1} sx={{ border: 1, borderColor: 'divider', borderRadius: variables.radius.small, p: 1 }}>
-            <ToggleButtonGroup
-              exclusive
-              size='small'
+            <Segmented
+              testId='schedule-kind'
               value={kind}
-              onChange={(_, next: SubscriptionKind | null) => next && setKind(next)}
-            >
-              <ToggleButton value='email' data-testid='schedule-kind-email'>
-                {locales.schedule_email}
-              </ToggleButton>
-              <ToggleButton value='webhook' data-testid='schedule-kind-webhook'>
-                {locales.schedule_webhook}
-              </ToggleButton>
-            </ToggleButtonGroup>
+              onChange={setKind}
+              options={[
+                { value: 'email', label: locales.schedule_email },
+                { value: 'webhook', label: locales.schedule_webhook }
+              ]}
+            />
             <InputBase
               placeholder={kind === 'email' ? locales.schedule_target_email : locales.schedule_target_webhook}
               value={target}
@@ -270,18 +267,15 @@ function ScheduleForm({ board, onClose }: { board: DashboardType; onClose: () =>
               />
             )}
             <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-              <ToggleButtonGroup
-                exclusive
-                size='small'
+              <Segmented
+                testId='schedule-frequency'
                 value={frequency}
-                onChange={(_, next: SubscriptionFrequency | null) => next && setFrequency(next)}
-              >
-                {(['hourly', 'daily', 'weekly'] as const).map((value) => (
-                  <ToggleButton key={value} value={value} data-testid={`schedule-frequency-${value}`}>
-                    {locales[`schedule_${value}`]}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
+                onChange={setFrequency}
+                options={(['hourly', 'daily', 'weekly'] as const).map((value) => ({
+                  value,
+                  label: locales[`schedule_${value}`]
+                }))}
+              />
               {frequency === 'weekly' && (
                 <Box sx={{ width: 150 }}>
                   <SelectInput

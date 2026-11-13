@@ -75,6 +75,21 @@ export default React.memo(function ExplorerContainer({
 
   // With the activity bar, the sidebar shows one area at a time; without it (phone, tablet) it is the explorer.
   const body = (): JSX.Element => {
+    if (showConnectionsRail && (!currentConnection || locked)) {
+      return (
+        <>
+          <ConnectionSwitcher />
+          {!currentConnection ? (
+            <Typography variant='caption' color='textSubdued' sx={{ p: 2 }}>
+              {locales.explorer_pick_connection}
+            </Typography>
+          ) : (
+            <UnlockPanel />
+          )}
+        </>
+      );
+    }
+
     if (showConnectionsRail && area === 'boards') {
       return (
         <>
@@ -102,18 +117,8 @@ export default React.memo(function ExplorerContainer({
     return (
       <>
         {showConnectionsRail && <ConnectionSwitcher />}
-        {showConnectionsRail && !currentConnection ? (
-          <Typography variant='caption' color='textSubdued' sx={{ p: 2 }}>
-            {locales.explorer_pick_connection}
-          </Typography>
-        ) : showConnectionsRail && locked ? (
-          <UnlockPanel />
-        ) : (
-          <>
-            <SidebarSectionTabs value={selectedTabId} onChange={setSelectedTabId} tabs={views} />
-            <SidebarTabPanelStyled role='tabpanel'>{selectedTabContent}</SidebarTabPanelStyled>
-          </>
-        )}
+        <SidebarSectionTabs value={selectedTabId} onChange={setSelectedTabId} tabs={views} />
+        <SidebarTabPanelStyled role='tabpanel'>{selectedTabContent}</SidebarTabPanelStyled>
       </>
     );
   };

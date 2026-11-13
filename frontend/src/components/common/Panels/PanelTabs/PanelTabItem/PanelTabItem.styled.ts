@@ -68,5 +68,9 @@ export const PanelTabItemStyled = styled(Box, {
       }
     }
   },
-  borderBottom: selected ? `4px solid ${theme.palette.primary.main}` : `4px solid ${theme.palette.background.default}`
+  borderBottom: selected ? `4px solid ${theme.palette.primary.main}` : `4px solid ${theme.palette.background.default}`,
+  // Tabs open, close and reorder, so a sliding indicator would fight the layout; ease the colours instead.
+  transition: `border-color ${variables.motion.base} ${variables.motion.easing}`,
+  'span, svg': { transition: `color ${variables.motion.base} ${variables.motion.easing}` },
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none', 'span, svg': { transition: 'none' } }
 }));

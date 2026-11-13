@@ -41,7 +41,6 @@ export class ConnectionPage extends BasePage {
   readonly newConnectionModal: Locator;
   readonly editConnectionModal: Locator;
   readonly connectionTypeSelector: (type: string) => Locator;
-  readonly selectConnectionButton: Locator;
   readonly testConnectionButton: Locator;
   readonly createConnectionButton: Locator;
   readonly addConnectionButton: Locator;
@@ -62,7 +61,6 @@ export class ConnectionPage extends BasePage {
     this.editConnectionModal = page.getByText("Edit connection");
     this.connectionTypeSelector = (type: string) =>
       page.getByTestId(`selected-connection-${type}`);
-    this.selectConnectionButton = page.getByTestId("select-connection");
     this.testConnectionButton = page.getByTestId("test-connection");
     this.createConnectionButton = page.getByTestId("create-connection");
     this.addConnectionButton = page.getByTestId("add-connection");
@@ -261,7 +259,7 @@ export class ConnectionPage extends BasePage {
   }
 
   async openGeneralTab(): Promise<void> {
-    await this.page.getByTestId("connection-tab-general").click();
+    // General fields are always on screen now; only SSL and SSH fold away.
     await expect(this.nameInput).toBeVisible();
   }
 
@@ -375,7 +373,6 @@ export class ConnectionPage extends BasePage {
 
   async selectConnectionType(type: string = "PostgreSQL"): Promise<void> {
     await this.connectionTypeSelector(type).click();
-    await this.selectConnectionButton.click();
     await this.nameInput.waitFor({ state: "visible", timeout: 30000 });
   }
 

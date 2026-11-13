@@ -5,10 +5,12 @@ import { Modal, Typography } from '@mui/material';
 import { type JSX, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import {
   PaletteBoxStyled,
+  PaletteFooterStyled,
   PaletteGroupStyled,
   PaletteInputStyled,
   PaletteItemStyled,
-  PaletteListStyled
+  PaletteListStyled,
+  PaletteSearchStyled
 } from './CommandPalette.styled';
 import { useCommands } from './useCommands';
 
@@ -59,17 +61,20 @@ function PaletteBody({ onClose }: { onClose: () => void }): JSX.Element {
 
   return (
     <PaletteBoxStyled data-testid='command-palette' onKeyDown={onKeyDown} tabIndex={-1}>
-      <PaletteInputStyled
-        autoFocus
-        fullWidth
-        value={query}
-        placeholder={locales.command_palette_placeholder}
-        onChange={(event) => {
-          setQuery(event.target.value);
-          setActive(0);
-        }}
-        inputProps={{ 'aria-label': locales.command_palette, 'data-testid': 'command-palette-input' }}
-      />
+      <PaletteSearchStyled>
+        <CustomIcon type='search' size='s' />
+        <PaletteInputStyled
+          autoFocus
+          fullWidth
+          value={query}
+          placeholder={locales.command_palette_placeholder}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setActive(0);
+          }}
+          inputProps={{ 'aria-label': locales.command_palette, 'data-testid': 'command-palette-input' }}
+        />
+      </PaletteSearchStyled>
       <PaletteListStyled ref={listRef} role='listbox'>
         {commands.length === 0 && (
           <Typography variant='body2' color='textSubdued' sx={{ p: 1.5 }}>
@@ -79,9 +84,7 @@ function PaletteBody({ onClose }: { onClose: () => void }): JSX.Element {
         {commands.map((command, i) => (
           <div key={command.id}>
             {(i === 0 || commands[i - 1].group !== command.group) && (
-              <PaletteGroupStyled>
-                <Typography variant='caption'>{command.group}</Typography>
-              </PaletteGroupStyled>
+              <PaletteGroupStyled>{command.group}</PaletteGroupStyled>
             )}
             <PaletteItemStyled
               role='option'
@@ -92,11 +95,11 @@ function PaletteBody({ onClose }: { onClose: () => void }): JSX.Element {
               onClick={() => run(i)}
             >
               <CustomIcon type={command.icon} size='s' />
-              <Typography variant='body2' color='inherit' noWrap sx={{ flex: 1 }}>
+              <Typography variant='inherit' color='inherit' noWrap sx={{ flex: '0 1 auto' }}>
                 {command.label}
               </Typography>
               {command.hint && (
-                <Typography variant='caption' color='textSecondary' noWrap>
+                <Typography variant='inherit' color='textSubdued' noWrap sx={{ fontSize: '0.92em' }}>
                   {command.hint}
                 </Typography>
               )}
@@ -104,6 +107,17 @@ function PaletteBody({ onClose }: { onClose: () => void }): JSX.Element {
           </div>
         ))}
       </PaletteListStyled>
+      <PaletteFooterStyled>
+        <span>
+          <kbd>↑↓</kbd> {locales.command_palette_navigate}
+        </span>
+        <span>
+          <kbd>↵</kbd> {locales.command_palette_run}
+        </span>
+        <span>
+          <kbd>Esc</kbd> {locales.command_palette_close}
+        </span>
+      </PaletteFooterStyled>
     </PaletteBoxStyled>
   );
 }

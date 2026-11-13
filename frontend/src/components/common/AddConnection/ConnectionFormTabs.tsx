@@ -1,91 +1,47 @@
-import { Box, styled } from '@mui/material';
-import type { JSX } from 'react';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { variables } from '@/core/theme/variables';
+import locales from '@/locales';
+import { Box, ButtonBase, Collapse, Typography } from '@mui/material';
+import type { JSX, ReactNode } from 'react';
 import { useState } from 'react';
 
-import { ConnectionFormTabStyled, ConnectionFormTabsRootStyled } from './AddConnection.styled';
-import type { ConnectionFormTabId, ConnectionFormTabsProps } from './types';
+import type { ConnectionFormTabsProps } from './types';
 
-export default function ConnectionFormTabs({
-  general,
-  ssl,
-  ssh,
-  generalLabel,
-  sslLabel,
-  sshLabel
-}: ConnectionFormTabsProps): JSX.Element {
-  const [tab, setTab] = useState<ConnectionFormTabId>('general');
+function Section({ id, label, children }: { id: 'ssl' | 'ssh'; label: string; children: ReactNode }): JSX.Element {
+  const [open, setOpen] = useState(false);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-      <ConnectionFormTabsRootStyled role='tablist'>
-        <ConnectionFormTabStyled
-          role='tab'
-          tabIndex={0}
-          data-testid='connection-tab-general'
-          selected={tab === 'general'}
-          aria-selected={tab === 'general'}
-          onClick={(): void => setTab('general')}
-          onKeyDown={(e): void => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setTab('general');
-            }
-          }}
-        >
-          {generalLabel}
-        </ConnectionFormTabStyled>
-        <ConnectionFormTabStyled
-          role='tab'
-          tabIndex={0}
-          data-testid='connection-tab-ssl'
-          selected={tab === 'ssl'}
-          aria-selected={tab === 'ssl'}
-          onClick={(): void => setTab('ssl')}
-          onKeyDown={(e): void => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setTab('ssl');
-            }
-          }}
-        >
-          {sslLabel}
-        </ConnectionFormTabStyled>
-        <ConnectionFormTabStyled
-          role='tab'
-          tabIndex={0}
-          data-testid='connection-tab-ssh'
-          selected={tab === 'ssh'}
-          aria-selected={tab === 'ssh'}
-          onClick={(): void => setTab('ssh')}
-          onKeyDown={(e): void => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setTab('ssh');
-            }
-          }}
-        >
-          {sshLabel}
-        </ConnectionFormTabStyled>
-      </ConnectionFormTabsRootStyled>
-      <ConnectionFormTabPanelStyled sx={{ display: tab === 'general' ? 'flex' : 'none' }}>
-        {general}
-      </ConnectionFormTabPanelStyled>
-      <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssl' ? 'flex' : 'none' }}>
-        {ssl}
-      </ConnectionFormTabPanelStyled>
-      <ConnectionFormTabPanelStyled sx={{ display: tab === 'ssh' ? 'flex' : 'none' }}>
-        {ssh}
-      </ConnectionFormTabPanelStyled>
+    <Box sx={(theme) => ({ border: `1px solid ${theme.palette.divider}`, borderRadius: variables.radius.medium })}>
+      <ButtonBase
+        data-testid={`connection-tab-${id}`}
+        aria-expanded={open}
+        onClick={(): void => setOpen((value) => !value)}
+        sx={{ width: '100%', justifyContent: 'flex-start', gap: 1, px: 1.5, py: 1, textAlign: 'left' }}
+      >
+        <CustomIcon type={open ? 'chevronDown' : 'chevronRight'} size='xs' />
+        <Typography variant='body2' color='textTitle' sx={{ fontWeight: 500 }}>
+          {label}
+        </Typography>
+      </ButtonBase>
+      {/* Stays mounted when closed so the fields keep their values and tests can still reach them. */}
+      <Collapse in={open}>
+        <Box sx={{ px: 1.5, pb: 1.5, display: 'flex', flexDirection: 'column' }}>{children}</Box>
+      </Collapse>
     </Box>
   );
 }
 
-const ConnectionFormTabPanelStyled = styled(Box)(({ theme }) => ({
-  flex: 1,
-  minHeight: 0,
-  overflowY: 'auto',
-  overflowX: 'hidden',
-  paddingTop: theme.spacing(1.5),
-  display: 'flex',
-  flexDirection: 'column'
-}));
+/** The general fields up front; SSL and the SSH tunnel fold away until the user needs them. */
+export default function ConnectionFormTabs({ general, ssl, ssh }: ConnectionFormTabsProps): JSX.Element {
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minHeight: 0 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>{general}</Box>
+      <Section id='ssl' label={locales.connection_section_ssl}>
+        {ssl}
+      </Section>
+      <Section id='ssh' label={locales.connection_section_ssh}>
+        {ssh}
+      </Section>
+    </Box>
+  );
+}

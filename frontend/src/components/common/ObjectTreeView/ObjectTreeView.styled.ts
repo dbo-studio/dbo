@@ -67,7 +67,7 @@ type NodeLabelProps = { isFocused?: boolean; isSelected?: boolean; level: number
 
 export const NodeLabel = styled(Box, {
   shouldForwardProp: (prop): boolean => !['isFocused', 'isSelected', 'level', 'reveal'].includes(String(prop))
-})<NodeLabelProps>(({ theme, isFocused, isSelected, level, reveal: shouldReveal }) => ({
+})<NodeLabelProps>(({ theme, isSelected, level, reveal: shouldReveal }) => ({
   padding: theme.spacing(0.4),
   paddingLeft: `${level * TREE_INDENT}px`,
   display: 'flex',
@@ -83,23 +83,37 @@ export const NodeLabel = styled(Box, {
   zIndex: 1,
   gap: theme.spacing(0.5),
   outline: 'none',
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover
-  },
-  // Keyboard focus is a ring only, so it never reads as hover or as selected.
-  ...(isFocused && {
-    borderColor: theme.palette.primary.main
-  }),
-  ...(isSelected && {
-    backgroundColor: theme.palette.action.selected,
-    '& p': {
-      fontWeight: 500,
-      color: theme.palette.text.link
-    },
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.primary.main, 0.2)
+  // Indent guides: one vertical line per ancestor level, centred under that level's chevron.
+  ...(level > 0 && {
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      width: level * TREE_INDENT,
+      pointerEvents: 'none',
+      backgroundImage: `linear-gradient(to right, ${theme.palette.divider} 1px, transparent 1px)`,
+      backgroundSize: `${TREE_INDENT}px 100%`,
+      backgroundPosition: `${TREE_INDENT / 2}px 0`,
+      backgroundRepeat: 'repeat-x'
     }
   }),
+  // Hover is a faint neutral wash; selected is a brand tint. Hover must never read stronger than selected.
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.text.primary, 0.06)
+  },
+  // The clicked row stays tinted even when it opens no tab (expand-only nodes).
+  '&[data-active]': {
+    backgroundColor: alpha(theme.palette.text.primary, 0.1)
+  },
+  ...(isSelected && {
+    backgroundColor: alpha(theme.palette.primary.main, 0.16),
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.22)
+    }
+  }),
+  // Keyboard focus only: an inset ring on the active row, never from a mouse click.
   '&:focus-visible': {
     borderColor: theme.palette.primary.main
   },

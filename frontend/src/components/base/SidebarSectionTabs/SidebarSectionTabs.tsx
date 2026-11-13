@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
-import type { KeyboardEvent, JSX } from 'react';
+import SelectionIndicator from '@/components/base/SelectionIndicator/SelectionIndicator';
+import { type KeyboardEvent, type JSX, useRef } from 'react';
 import {
   SidebarSectionTabCloseStyled,
   SidebarSectionTabLabelStyled,
@@ -15,6 +16,8 @@ export default function SidebarSectionTabs<T extends string | number>({
   tabs,
   'aria-label': ariaLabel
 }: SidebarSectionTabsProps<T>): JSX.Element {
+  const rootRef = useRef<HTMLDivElement>(null);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, index: number): void => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
       return;
@@ -28,7 +31,8 @@ export default function SidebarSectionTabs<T extends string | number>({
   };
 
   return (
-    <SidebarSectionTabsRootStyled role='tablist' aria-label={ariaLabel}>
+    <SidebarSectionTabsRootStyled ref={rootRef} role='tablist' aria-label={ariaLabel}>
+      <SelectionIndicator rootRef={rootRef} variant='underline' />
       {tabs.map((tab, index) => {
         const selected = value === tab.id;
 

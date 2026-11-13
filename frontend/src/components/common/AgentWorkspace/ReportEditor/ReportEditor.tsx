@@ -1,4 +1,5 @@
 import { variables } from '@/core/theme/variables';
+import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
@@ -12,21 +13,11 @@ import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartRep
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import PinReportButton from '../PinReportButton/PinReportButton';
 import ParamInput from '../ParamInput/ParamInput';
-import { CHART_TYPES, numericColumns, questionParams, type ChartType } from '@/core/charts/chartSpec';
+import { CHART_TYPES, numericColumns, questionParams } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  FormControlLabel,
-  Stack,
-  Switch,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography
-} from '@mui/material';
+import { Box, Button, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRef, useState, type JSX } from 'react';
 
@@ -179,19 +170,12 @@ export default function ReportEditor({
           <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
         </Stack>
       </Stack>
-      <ToggleButtonGroup
-        exclusive
-        size='small'
+      <Segmented
+        testId='ai-report-type'
         value={edited.spec.type}
-        onChange={(_, type: ChartType | null) => type && setEdited({ ...edited, spec: { ...edited.spec, type } })}
-        sx={{ flexWrap: 'wrap', '& .MuiToggleButton-root': { py: 0.25, px: 1, textTransform: 'none' } }}
-      >
-        {CHART_TYPES.map((type) => (
-          <ToggleButton key={type} value={type} data-testid={`ai-report-type-${type}`}>
-            {locales[`ai_chart_type_${type}`]}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+        onChange={(type) => setEdited({ ...edited, spec: { ...edited.spec, type } })}
+        options={CHART_TYPES.map((type) => ({ value: type, label: locales[`ai_chart_type_${type}`] }))}
+      />
       {['bar', 'row', 'area'].includes(edited.spec.type) && (
         <FormControlLabel
           label={locales.ai_report_stacked}

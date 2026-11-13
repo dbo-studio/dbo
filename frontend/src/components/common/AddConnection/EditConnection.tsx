@@ -1,17 +1,18 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
-import Modal from '@/components/base/Modal/Modal';
 import {
   isHostSqlDriver,
   isMongoDriver,
   isMysqlDriver,
   isPostgresDriver,
-  isRedisDriver
+  isRedisDriver,
+  getConnectionAlias
 } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect } from 'react';
@@ -22,7 +23,13 @@ import HostSql from './HostSql/HostSql';
 import Mongo from './Mongo/Mongo';
 import Redis from './Redis/Redis';
 import SQLite from './SQLite/SQLite';
+import ConnectionShell from './ConnectionShell';
 import { formatPingFailureMessage, formatPingSuccessMessage } from './pingDiagnostics';
+
+const engineOf = (type: string | undefined): { name: string; logo: keyof typeof IconTypes } | undefined => {
+  const alias = getConnectionAlias(type);
+  return alias ? { name: alias.name, logo: alias.logo as keyof typeof IconTypes } : undefined;
+};
 
 export default function EditConnection(): JSX.Element {
   const queryClient = useQueryClient();
@@ -120,10 +127,11 @@ export default function EditConnection(): JSX.Element {
     : undefined;
 
   return (
-    <Modal
+    <ConnectionShell
       open={showEditConnection !== undefined && showEditConnection !== false}
       title={locales.edit_connection}
-      compact={activeConnection?.type === 'sqlite'}
+      engine={engineOf(activeConnection?.type)}
+      onClose={handleClose}
     >
       {formProps && isPostgresDriver(activeConnection?.type) && <PostgreSQL {...formProps} />}
       {formProps && isMysqlDriver(activeConnection?.type) && <Mysql {...formProps} />}
@@ -131,6 +139,6 @@ export default function EditConnection(): JSX.Element {
       {formProps && isRedisDriver(activeConnection?.type) && <Redis {...formProps} />}
       {formProps && isMongoDriver(activeConnection?.type) && <Mongo {...formProps} />}
       {formProps && activeConnection?.type === 'sqlite' && <SQLite {...formProps} />}
-    </Modal>
+    </ConnectionShell>
   );
 }

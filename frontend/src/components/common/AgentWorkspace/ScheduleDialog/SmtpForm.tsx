@@ -1,8 +1,9 @@
 import { variables } from '@/core/theme/variables';
+import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Button, InputBase, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Button, InputBase, Stack, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -92,22 +93,16 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
       </Stack>
       {field('fromAddress', locales.smtp_from)}
       <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-        <ToggleButtonGroup
-          exclusive
-          size='small'
+        <Segmented
+          testId='smtp-security'
           value={form.security}
-          onChange={(_, next: Security | null) => next && set({ security: next })}
-        >
-          <ToggleButton value='starttls' data-testid='smtp-security-starttls'>
-            STARTTLS
-          </ToggleButton>
-          <ToggleButton value='tls' data-testid='smtp-security-tls'>
-            TLS
-          </ToggleButton>
-          <ToggleButton value='none' data-testid='smtp-security-none'>
-            {locales.smtp_security_none}
-          </ToggleButton>
-        </ToggleButtonGroup>
+          onChange={(security) => set({ security })}
+          options={[
+            { value: 'starttls', label: 'STARTTLS' },
+            { value: 'tls', label: 'TLS' },
+            { value: 'none', label: locales.smtp_security_none }
+          ]}
+        />
         <div style={{ flex: 1 }} />
         <Button
           variant='contained'

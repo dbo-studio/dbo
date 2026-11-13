@@ -11,10 +11,14 @@ export const ModalBodyStyled = styled(Box)(() => ({
   flexDirection: 'column'
 }));
 
-export const ModalWrapperStyled = styled(Box, { shouldForwardProp: (prop) => prop !== 'compact' })<{
+const WIDTHS = { sm: 400, md: 512, lg: 768, xl: 920 } as const;
+
+export const ModalWrapperStyled = styled(Box, { shouldForwardProp: (prop) => prop !== 'compact' && prop !== 'size' })<{
   padding?: string;
   compact?: boolean;
-}>(({ theme, padding, compact }) => ({
+  size?: keyof typeof WIDTHS;
+}>(({ theme, padding, compact, size }) => ({
+  ...(size ? { width: `min(${WIDTHS[size]}px, calc(100vw - 32px))` } : {}),
   minHeight: compact ? undefined : 'min(400px, 90dvh)',
   minWidth: 'min(400px, calc(100vw - 32px))',
   maxWidth: 'calc(100vw - 32px)',

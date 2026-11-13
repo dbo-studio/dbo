@@ -111,7 +111,7 @@ test.describe("MongoDB AI assistant", () => {
     expect(llm.offeredTools.at(-1)).toContain("preview_write");
   });
 
-  test("the sidebar shows the Assistant but no Fields, and the chat answers", async ({ page }) => {
+  test("the sidebar shows Assistant and Snippets but no Fields, and the chat answers", async ({ page }) => {
     await m.add(page, '{"name":"a"}');
     llm.reply = { text: "There is one document.", wordDelayMs: 0 };
 
@@ -121,6 +121,7 @@ test.describe("MongoDB AI assistant", () => {
     const settings = new SettingsPage(page);
     await settings.openRightSidebar();
     await expect(page.getByRole("tab", { name: "Assistant" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Snippets" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Fields" })).toHaveCount(0);
 
     const composer = page.getByPlaceholder(/ask anything/i);
@@ -128,6 +129,12 @@ test.describe("MongoDB AI assistant", () => {
     await composer.fill("how many documents?");
     await composer.press("Enter");
     await expect(page.getByText("There is one document.")).toBeVisible({ timeout: 20000 });
+
+    await page.getByRole("tab", { name: "Snippets" }).click();
+    const snippets = page.getByTestId("nosql-snippets");
+    await expect(snippets).toBeVisible();
+    await expect(snippets.getByText("db.collection.find({}).limit(100)")).toBeVisible();
+    await expect(page.getByTestId("sql-snippets")).toHaveCount(0);
   });
 
   /** Reloads so the panel sees the fake provider, then opens the assistant. */

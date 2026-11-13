@@ -24,7 +24,13 @@ export default function Chip(theme: Theme): Components {
       variants: [
         {
           props: { variant: 'filled', color: 'default' },
-          style: { backgroundColor: theme.palette.action.hover, color: theme.palette.text.secondary }
+          style: {
+            backgroundColor: theme.palette.action.hover,
+            color: theme.palette.text.secondary,
+            '&.MuiChip-clickable:hover, &.MuiChip-clickable.Mui-focusVisible': {
+              backgroundColor: theme.palette.action.selected
+            }
+          }
         },
         {
           props: { variant: 'outlined', color: 'default' },
@@ -33,7 +39,14 @@ export default function Chip(theme: Theme): Components {
         ...COLORS.flatMap((color) => [
           {
             props: { variant: 'filled' as const, color },
-            style: { backgroundColor: alpha(theme.palette[color].main, 0.14), color: text(color) }
+            style: {
+              backgroundColor: alpha(theme.palette[color].main, 0.14),
+              color: text(color),
+              // MUI's default clickable hover is a solid dark fill, which swallows the soft-badge text.
+              '&.MuiChip-clickable:hover, &.MuiChip-clickable.Mui-focusVisible': {
+                backgroundColor: alpha(theme.palette[color].main, 0.24)
+              }
+            }
           },
           {
             props: { variant: 'outlined' as const, color },
