@@ -173,6 +173,9 @@ function TreeRow({
         data-testid={`tree-node-${slug(node.name)}`}
         data-node-id={node.id}
         data-level={level}
+        data-depth={level}
+        data-state={hasChildren ? (isExpanded ? 'open' : 'closed') : undefined}
+        data-selected={isSelected || undefined}
         data-active={isActive || undefined}
         level={level}
         isSelected={isSelected}

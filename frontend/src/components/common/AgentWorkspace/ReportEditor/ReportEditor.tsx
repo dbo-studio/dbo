@@ -1,29 +1,23 @@
 import { variables } from '@/core/theme/variables';
+import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
+import { isNoSQLType } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
 import { useSaveReport } from '@/components/common/AiChatPanel/hooks/useSaveReport';
 import PinReportButton from '../PinReportButton/PinReportButton';
 import ParamInput from '../ParamInput/ParamInput';
-import { CHART_TYPES, numericColumns, questionParams, type ChartType } from '@/core/charts/chartSpec';
+import { CHART_TYPES, numericColumns, questionParams } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  FormControlLabel,
-  Stack,
-  Switch,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography
-} from '@mui/material';
+import { Box, Button, CircularProgress, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRef, useState, type JSX } from 'react';
 
@@ -39,6 +33,8 @@ export default function ReportEditor({
   scope?: { database?: string; schema?: string };
 }): JSX.Element {
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
+  // A MongoDB or Redis report is a JSON pipeline or command: no SQL editor. Its {{filters}} still take values.
+  const noSql = isNoSQLType(useCurrentConnection()?.type);
   const [edited, setEdited] = useState<ChartReport>(report);
   const [sql, setSql] = useState(report.sql);
   // Values for the {{filters}}; saving keeps them as the report's defaults.
@@ -174,19 +170,12 @@ export default function ReportEditor({
           <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
         </Stack>
       </Stack>
-      <ToggleButtonGroup
-        exclusive
-        size='small'
+      <Segmented
+        testId='ai-report-type'
         value={edited.spec.type}
-        onChange={(_, type: ChartType | null) => type && setEdited({ ...edited, spec: { ...edited.spec, type } })}
-        sx={{ flexWrap: 'wrap', '& .MuiToggleButton-root': { py: 0.25, px: 1, textTransform: 'none' } }}
-      >
-        {CHART_TYPES.map((type) => (
-          <ToggleButton key={type} value={type} data-testid={`ai-report-type-${type}`}>
-            {locales[`ai_chart_type_${type}`]}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+        onChange={(type) => setEdited({ ...edited, spec: { ...edited.spec, type } })}
+        options={CHART_TYPES.map((type) => ({ value: type, label: locales[`ai_chart_type_${type}`] }))}
+      />
       {['bar', 'row', 'area'].includes(edited.spec.type) && (
         <FormControlLabel
           label={locales.ai_report_stacked}
@@ -239,13 +228,17 @@ export default function ReportEditor({
           overflow: 'hidden'
         }}
       >
-        <SqlEditor
-          editorHeight={160}
-          value={sql}
-          onChange={setSql}
-          autocomplete={autocomplete ?? EMPTY_AUTOCOMPLETE}
-          onRunQuery={() => run()}
-        />
+        {noSql ? (
+          <CodeEditor value={sql} onChange={setSql} language='json' />
+        ) : (
+          <SqlEditor
+            editorHeight={160}
+            value={sql}
+            onChange={setSql}
+            autocomplete={autocomplete ?? EMPTY_AUTOCOMPLETE}
+            onRunQuery={() => run()}
+          />
+        )}
       </Box>
       {error && (
         <Typography variant='caption' color='error'>

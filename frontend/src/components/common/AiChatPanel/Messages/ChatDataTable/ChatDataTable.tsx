@@ -1,10 +1,11 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import Segmented from '@/components/base/Segmented/Segmented';
 import { formatCellValue, toCsv } from '@/core/utils/csv';
 import locales from '@/locales';
 import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { CircularProgress, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import { Resizer } from '@/components/common/DataGrid/DataGridTable.styled';
 import { lazy, Suspense, useState, type JSX } from 'react';
 import { toast } from 'sonner';
@@ -147,20 +148,14 @@ export default function ChatDataTable({
     >
       {chartable && showChart && (
         <Suspense fallback={<CircularProgress size={16} />}>
-          <ToggleButtonGroup
-            exclusive
-            size='small'
-            value={spec.type}
-            onChange={(_, next: ChartType | null) => next && setChartType(next)}
-            sx={{ m: 1, mb: 0, '& .MuiToggleButton-root': { py: 0.25, px: 1, textTransform: 'none' } }}
-            data-testid='ai-chart-type'
-          >
-            {SWITCHABLE.map((type) => (
-              <ToggleButton key={type} value={type} data-testid={`ai-chart-type-${type}`}>
-                {locales[`ai_chart_type_${type}`]}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+          <Box sx={{ m: 1, mb: 0 }}>
+            <Segmented
+              testId='ai-chart-type'
+              value={spec.type}
+              onChange={setChartType}
+              options={SWITCHABLE.map((type) => ({ value: type, label: locales[`ai_chart_type_${type}`] }))}
+            />
+          </Box>
           <ChartView rows={rows} columns={allColumns} spec={spec} />
         </Suspense>
       )}

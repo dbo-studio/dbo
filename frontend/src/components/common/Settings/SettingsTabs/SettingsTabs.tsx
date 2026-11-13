@@ -1,5 +1,6 @@
 import { useSelectedTab } from '@/hooks';
 import Segmented from '@/components/base/Segmented/Segmented';
+import { variables } from '@/core/theme/variables';
 import { Box } from '@mui/material';
 import { type JSX, type ReactNode, useState } from 'react';
 
@@ -38,7 +39,20 @@ export default function SettingsTabs({ tabs, initial }: Props): JSX.Element {
         testId='settings-tab'
         options={tabs.map((t) => ({ value: t.id, label: t.count ? `${t.label} · ${t.count}` : t.label }))}
       />
-      <Box role='tabpanel' data-settings-id={active.ids?.[0]} sx={{ pt: 2.5 }}>
+      <Box
+        key={active.id}
+        role='tabpanel'
+        data-settings-id={active.ids?.[0]}
+        sx={{
+          pt: 2.5,
+          animation: `settingsTabIn ${variables.motion.base} ${variables.motion.easing}`,
+          '@keyframes settingsTabIn': {
+            from: { opacity: 0, transform: 'translateY(4px)' },
+            to: { opacity: 1, transform: 'none' }
+          },
+          '@media (prefers-reduced-motion: reduce)': { animation: 'none' }
+        }}
+      >
         {active.content}
       </Box>
     </Box>

@@ -2,6 +2,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
 import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales/index.ts';
+import { shortcuts } from '@/core/utils';
+import { useCommandPaletteStore } from '@/store/commandPalette/commandPalette.store';
 import { useSettingStore } from '@/store/settingStore/setting.store.ts';
 import { Badge, IconButton, Stack, Tooltip } from '@mui/material';
 import type { JSX } from 'react';
@@ -27,6 +29,15 @@ export default function Actions(): JSX.Element {
         justifyContent: 'flex-end'
       }}
     >
+      <Tooltip title={`${locales.command_palette} (${shortcuts.commandPalette.command.join('+')})`}>
+        <IconButton
+          aria-label={locales.command_palette}
+          data-testid='open-command-palette'
+          onClick={(): void => useCommandPaletteStore.getState().toggle()}
+        >
+          <CustomIcon type={'search'} size={'m'} />
+        </IconButton>
+      </Tooltip>
       <NotificationBell />
       {release ? (
         <Tooltip title={locales.new_version_available}>

@@ -44,3 +44,21 @@ export function summarizeQueryResult(res: RunQueryResponseType): string {
 
   return `${rowCount} row(s), columns: ${columns}${table ? `\nSample rows:\n${table}` : ''}`;
 }
+
+const MAX_SUMMARY_TEXT = 1500;
+
+/** Summary of a MongoDB or Redis result for the assistant: documents become sample rows, anything else is cut text. */
+export function summarizeDocuments(output: unknown): string {
+  const isDoc = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+  if (Array.isArray(output) && output.length > 0 && output.every(isDoc)) {
+    const columns = [...new Set(output.flatMap((d) => Object.keys(d)))];
+    const table = formatSampleRowsTable(output);
+
+    return `${output.length} document(s), fields: ${columns.join(', ')}${table ? `\nSample documents:\n${table}` : ''}`;
+  }
+
+  const text = JSON.stringify(output ?? null);
+
+  return `Result: ${text.length > MAX_SUMMARY_TEXT ? `${text.slice(0, MAX_SUMMARY_TEXT)}…` : text}`;
+}

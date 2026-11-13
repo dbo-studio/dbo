@@ -71,6 +71,7 @@ fn main() {
             restart_backend,
             take_pending_open_files,
             read_sql_file,
+            set_window_toolbar,
             tray::set_keep_running,
             tray::update_tray_status,
             tray::quit_app
@@ -163,15 +164,21 @@ fn setup_close_to_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error
 
 /// An empty unified toolbar gives the window native toolbar chrome: AppKit places
 /// the traffic lights and applies the toolbar window corner radius.
+/// In native fullscreen the toolbar becomes a visible strip that hides the web
+/// header, so the frontend removes it there (`set_window_toolbar`).
 #[cfg(target_os = "macos")]
-fn setup_macos_toolbar(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn apply_macos_toolbar(app: &AppHandle, visible: bool) -> Result<(), Box<dyn std::error::Error>> {
     use objc2::MainThreadMarker;
     use objc2_app_kit::{NSTitlebarSeparatorStyle, NSToolbar, NSWindow, NSWindowToolbarStyle};
 
     let window = app.get_webview_window("main").ok_or("main window not found")?;
-    let mtm = MainThreadMarker::new().ok_or("setup must run on the main thread")?;
+    let mtm = MainThreadMarker::new().ok_or("toolbar must be applied on the main thread")?;
     // SAFETY: ns_window is the live NSWindow owned by the main webview window.
     let ns_window = unsafe { &*(window.ns_window()? as *const NSWindow) };
+    if !visible {
+        ns_window.setToolbar(None);
+        return Ok(());
+    }
     let toolbar = NSToolbar::new(mtm);
     ns_window.setToolbar(Some(&toolbar));
     ns_window.setToolbarStyle(NSWindowToolbarStyle::UnifiedCompact);
@@ -179,8 +186,30 @@ fn setup_macos_toolbar(app: &tauri::App) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
+fn setup_macos_toolbar(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    apply_macos_toolbar(app.handle(), true)
+}
+
 #[cfg(not(target_os = "macos"))]
 fn setup_macos_toolbar(_app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
+
+#[tauri::command]
+fn set_window_toolbar(app: AppHandle, visible: bool) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let handle = app.clone();
+        app.run_on_main_thread(move || {
+            if let Err(e) = apply_macos_toolbar(&handle, visible) {
+                eprintln!("set_window_toolbar failed: {e}");
+            }
+        })
+        .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, visible);
     Ok(())
 }
 

@@ -1,7 +1,6 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
-import Modal from '@/components/base/Modal/Modal';
-import { CONNECTION_ALIASES, type ConnectionAliasDef } from '@/core/db/connectionAliases';
+import { CONNECTION_ALIASES, getConnectionAlias, type ConnectionAliasDef } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -9,7 +8,10 @@ import type { ConnectionType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useMemo, useState, type ComponentType } from 'react';
 import { toast } from 'sonner';
-import ConnectionSelection from './ConnectionSelection/ConnectionSelection';
+import ConnectionCatalog from './ConnectionCatalog/ConnectionCatalog';
+import ConnectionShell from './ConnectionShell';
+import ConnectionUriBar from './ConnectionUriBar';
+import { engineForUri } from './connectionCatalog';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import HostSql from './HostSql/HostSql';
@@ -54,15 +56,30 @@ const connectionTypes: SelectionConnectionType[] = CONNECTION_ALIASES.map((alias
   component: formForAlias(alias)
 }));
 
+const sameDriver = (a: SelectionConnectionType, b: SelectionConnectionType): boolean =>
+  getConnectionAlias(a.type)?.driver === getConnectionAlias(b.type)?.driver;
+
 const connectionTypeByEngine = Object.fromEntries(connectionTypes.map((c) => [c.type, c])) as Record<
   ConnectionType['type'],
   SelectionConnectionType
 >;
 
+const LAST_ENGINE_KEY = 'dbo.lastConnectionType';
+
+const initialType = ((): SelectionConnectionType => {
+  try {
+    return (
+      connectionTypeByEngine[localStorage.getItem(LAST_ENGINE_KEY) as ConnectionType['type']] ?? connectionTypes[0]
+    );
+  } catch {
+    return connectionTypes[0];
+  }
+})();
+
 export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
-  const [selectedType, setSelectedType] = useState<SelectionConnectionType | undefined>(undefined);
-  const [step, setStep] = useState(0);
+  const [selectedType, setSelectedType] = useState<SelectionConnectionType>(initialType);
+  const [pastedUri, setPastedUri] = useState<string | undefined>(undefined);
 
   const showAddConnection = useSettingStore((state) => state.ui.showAddConnection);
   const duplicateConnectionId = useSettingStore((state) => state.ui.duplicateConnectionId);
@@ -77,7 +94,6 @@ export default function AddConnection(): JSX.Element {
   }, [connections, duplicateConnectionId]);
 
   const connectionType = sourceConnection ? connectionTypeByEngine[sourceConnection.type] : selectedType;
-  const activeStep = sourceConnection ? 1 : step;
 
   const { mutateAsync: createConnectionMutation, isPending: createConnectionPending } = useMutation({
     mutationFn: api.connection.createConnection
@@ -87,15 +103,29 @@ export default function AddConnection(): JSX.Element {
     mutationFn: api.connection.pingConnection
   });
 
-  const handleClose = (): void => {
-    setSelectedType(undefined);
-    updateUI({ showAddConnection: false, duplicateConnectionId: undefined });
-    setStep(0);
+  const selectType = (type: SelectionConnectionType): void => {
+    setSelectedType(type);
+    setPastedUri(undefined);
+    try {
+      localStorage.setItem(LAST_ENGINE_KEY, type.type);
+    } catch {
+      /* remembering the last engine is a convenience */
+    }
   };
 
-  const handleSetConnection = (connection: SelectionConnectionType | undefined): void => {
-    setSelectedType(connection);
-    setStep(1);
+  const handlePasteUri = (uri: string): void => {
+    const detected = connectionTypeByEngine[engineForUri(uri) as ConnectionType['type']];
+    // Keep a branded pick (Supabase, Neon…) when the string fits its driver.
+    if (detected && detected.component !== selectedType.component && !sameDriver(detected, selectedType)) {
+      setSelectedType(detected);
+    }
+    setPastedUri(uri);
+    toast.success(locales.connection_uri_filled);
+  };
+
+  const handleClose = (): void => {
+    setPastedUri(undefined);
+    updateUI({ showAddConnection: false, duplicateConnectionId: undefined });
   };
 
   const handlePingConnection = async (data: PingConnectionRequestType): Promise<void> => {
@@ -134,17 +164,27 @@ export default function AddConnection(): JSX.Element {
   };
 
   return (
-    <Modal
+    <ConnectionShell
       open={showAddConnection}
       title={locales.new_connection}
-      compact={activeStep === 1 && connectionType?.type === 'sqlite'}
+      subtitle={sourceConnection ? undefined : locales.new_connection_hint}
+      engine={connectionType ? { name: connectionType.name, logo: connectionType.logo } : undefined}
+      onClose={handleClose}
+      top={
+        sourceConnection ? undefined : (
+          <ConnectionUriBar onUri={handlePasteUri} recognises={(uri) => engineForUri(uri) !== undefined} />
+        )
+      }
+      rail={
+        sourceConnection ? undefined : (
+          <ConnectionCatalog connections={connectionTypes} selected={selectedType.type} onSelect={selectType} />
+        )
+      }
     >
-      {activeStep === 0 && (
-        <ConnectionSelection onClose={handleClose} onSubmit={handleSetConnection} connections={connectionTypes} />
-      )}
-      {activeStep === 1 && connectionType?.component && (
+      {connectionType?.component && (
         <connectionType.component
-          key={sourceConnection ? `duplicate-${sourceConnection.id}` : 'new-connection'}
+          key={sourceConnection ? `duplicate-${sourceConnection.id}` : `new-${connectionType.type}-${pastedUri ?? ''}`}
+          initialUri={pastedUri}
           connection={sourceConnection}
           engine={connectionType.type}
           submitLabel={sourceConnection ? locales.save : undefined}
@@ -155,6 +195,6 @@ export default function AddConnection(): JSX.Element {
           onSubmit={(data) => void handleCreateConnection(data)}
         />
       )}
-    </Modal>
+    </ConnectionShell>
   );
 }

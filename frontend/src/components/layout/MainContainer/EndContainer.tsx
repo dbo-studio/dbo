@@ -5,6 +5,7 @@ import SidebarSectionTabs from '@/components/base/SidebarSectionTabs/SidebarSect
 import { SidebarTabPanelStyled } from '@/components/base/SidebarSectionTabs/SidebarSectionTabs.styled';
 import AiChatPanel from '@/components/common/AiChatPanel/AiChatPanel';
 import DBFields from '@/components/common/DBFields/DBFields';
+import SqlSnippets from '@/components/common/SqlSnippets/SqlSnippets';
 import DiagramSource from '@/components/common/DiagramSource/DiagramSource';
 import { TabMode } from '@/core/enums';
 import { getSidebarMaxWidth, useLayoutMode, useSelectedTab, useWindowSize } from '@/hooks';
@@ -24,35 +25,42 @@ export default function EndContainer({ overlay = false, fullPage = false }: EndC
   const selectedTabId = sidebar.rightSidebarTab ?? 0;
   const isDiagram = selectedTab?.mode === TabMode.Diagram;
   const workspaceOpen = useSettingStore((state) => state.ui.agentWorkspaceOpen);
-  // AI chat and the SQL fields panel are SQL-only; NoSQL connections get an empty sidebar.
+  // Fields describe SQL columns, so MongoDB and Redis get only the assistant and snippets.
   const noSql = isNoSQLType(useCurrentConnection()?.type);
   const aiAllowed = useFeaturePermissions().ai;
 
   const sectionTabs = useMemo(
-    () => [
-      { id: 0, label: locales.assistant },
-      { id: 1, label: isDiagram ? locales.source : locales.fields }
-    ],
-    [isDiagram]
+    () =>
+      [
+        { id: 0, label: locales.assistant },
+        { id: 1, label: isDiagram ? locales.source : locales.fields },
+        { id: 2, label: locales.snippets }
+      ].filter((tab) => !noSql || tab.id !== 1),
+    [isDiagram, noSql]
   );
 
-  const selectedTabContent = useMemo(() => {
-    if (noSql || !aiAllowed) return null;
+  // A stored Fields tab does not exist on a NoSQL connection; show the assistant instead.
+  const activeTabId = noSql && Number(selectedTabId) === 1 ? 0 : Number(selectedTabId);
 
-    if (Number(selectedTabId) === 0) {
+  const selectedTabContent = useMemo(() => {
+    if (!aiAllowed) return null;
+
+    if (activeTabId === 0) {
       // The agent workspace drives the same chat while it is open.
       return workspaceOpen ? null : <AiChatPanel />;
     }
 
+    if (activeTabId === 2) return <SqlSnippets />;
+
     return isDiagram ? <DiagramSource /> : <DBFields />;
-  }, [selectedTabId, isDiagram, workspaceOpen, noSql, aiAllowed]);
+  }, [activeTabId, isDiagram, workspaceOpen, aiAllowed]);
 
   const maxWidth = isCompact && windowSize.widthNumber ? getSidebarMaxWidth(windowSize.widthNumber) : 500;
 
   const content = (
     <EndContainerStyled fullPage={fullPage}>
       <SidebarSectionTabs
-        value={selectedTabId}
+        value={activeTabId}
         onChange={(id): void => updateUI({ sidebar: { ...sidebar, rightSidebarTab: id } })}
         tabs={sectionTabs}
       />

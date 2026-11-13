@@ -13,6 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   restore_drill: locales.job_type_restore_drill,
   export: locales.job_type_export,
   import: locales.job_type_import,
+  nosql_import: locales.job_type_import,
   query: locales.job_type_query,
   tool_install: locales.job_type_tool_install
 };

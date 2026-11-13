@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -28,6 +30,36 @@ var blockedCommands = setOf(
 	"SAVE", "BGSAVE", "BGREWRITEAOF", "BLPOP", "BRPOP", "BRPOPLPUSH", "BLMOVE", "BZPOPMIN", "BZPOPMAX", "XREAD", "XREADGROUP",
 	"WAIT", "CLIENT", "ACL",
 )
+
+// selectPrefix is a first line that picks the database a statement runs on: `SELECT 2` then the command.
+var selectPrefix = regexp.MustCompile(`^\s*SELECT\s+(\d+)\s*(?:;|\n)\s*`)
+
+// splitDB reads the database a statement names with a leading `SELECT n` line. db is -1 when it names none, and the
+// statement then runs on the CLI's own connection.
+func splitDB(input string) (db int, rest string) {
+	m := selectPrefix.FindStringSubmatch(input)
+	if m == nil || strings.TrimSpace(input[len(m[0]):]) == "" {
+		return -1, input
+	}
+
+	n, err := strconv.Atoi(m[1])
+	if err != nil {
+		return -1, input
+	}
+
+	return n, input[len(m[0]):]
+}
+
+// statementClient is the connection a statement runs on: the named database's shared client, or the CLI session.
+func (r *Repository) statementClient(db int) (*redis.Client, func()) {
+	if db < 0 {
+		return r.cliClient(), func() {}
+	}
+
+	c := r.client(db)
+
+	return c, func() { r.release(c) }
+}
 
 var destructiveCommands = setOf("FLUSHALL", "FLUSHDB", "DEL", "UNLINK", "RENAME", "RESTORE")
 
@@ -65,6 +97,9 @@ func (r *Repository) Classify(op contract.Operation) contract.SafetyClass {
 }
 
 func classifyCommand(raw string) contract.SafetyClass {
+	// A leading SELECT n only picks the database; the command after it is what gets rated.
+	_, raw = splitDB(raw)
+
 	args, err := splitArgs(raw)
 	if err != nil || len(args) == 0 {
 		return contract.SafetyBlocked
@@ -156,6 +191,8 @@ func unescape(r rune) rune {
 
 // RunCommand runs one command on the connection's default db. Safe Mode classification happens in the service before this call.
 func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.CommandResult, error) {
+	db, input := splitDB(input)
+
 	args, err := splitArgs(input)
 	if err != nil {
 		return nil, err
@@ -165,7 +202,8 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 		return nil, errors.New("empty command")
 	}
 
-	c := r.cliClient()
+	c, release := r.statementClient(db)
+	defer release()
 
 	iargs := make([]any, len(args))
 	for i, a := range args {

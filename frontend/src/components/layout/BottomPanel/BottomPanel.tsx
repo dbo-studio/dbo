@@ -1,5 +1,6 @@
 import { variables } from '@/core/theme/variables';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import SelectionIndicator from '@/components/base/SelectionIndicator/SelectionIndicator';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox';
 import DbTerminal from '@/components/common/DbTerminal/DbTerminal';
 import Histories from '@/components/common/Histories/Histories';
@@ -27,6 +28,7 @@ export default function BottomPanel(): JSX.Element | null {
 
   const [clearKey, setClearKey] = useState(0);
   const restoreRef = useRef<number | null>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   if (!panel.open) return null;
 
@@ -67,7 +69,21 @@ export default function BottomPanel(): JSX.Element | null {
           minHeight: 0
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, height: 36, flexShrink: 0 }} role='tablist'>
+        <Box
+          ref={tabsRef}
+          sx={{
+            position: 'relative',
+            isolation: 'isolate',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1,
+            height: 36,
+            flexShrink: 0
+          }}
+          role='tablist'
+        >
+          <SelectionIndicator rootRef={tabsRef} variant='tint' />
           {tabs.map((t) => (
             <Box
               key={t.id}
@@ -88,8 +104,7 @@ export default function BottomPanel(): JSX.Element | null {
                 userSelect: 'none',
                 typography: 'body2',
                 color: tab === t.id ? 'text.link' : 'text.secondary',
-                bgcolor: tab === t.id ? 'action.selected' : 'transparent',
-                '&:hover': { color: 'text.primary', bgcolor: tab === t.id ? 'action.selected' : 'action.hover' },
+                '&:hover': { color: 'text.primary', bgcolor: tab === t.id ? 'transparent' : 'action.hover' },
                 '&:focus-visible': { outline: 2, outlineStyle: 'solid', outlineColor: 'primary.main' }
               }}
             >

@@ -1,6 +1,7 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { Typography } from '@mui/material';
-import { type KeyboardEvent, type JSX } from 'react';
+import SelectionIndicator from '@/components/base/SelectionIndicator/SelectionIndicator';
+import { type KeyboardEvent, type JSX, useRef } from 'react';
 import { NavRailItemStyled, NavRailListStyled, NavRailStyled } from './NavRail.styled';
 import type { NavRailItemProps, NavRailProps } from './types';
 
@@ -19,7 +20,14 @@ export default function NavRail({
 }
 
 export function NavRailList({ children }: { children: NavRailProps['children'] }): JSX.Element {
-  return <NavRailListStyled>{children}</NavRailListStyled>;
+  const ref = useRef<HTMLDivElement>(null);
+
+  return (
+    <NavRailListStyled ref={ref}>
+      <SelectionIndicator rootRef={ref} variant='nav' />
+      {children}
+    </NavRailListStyled>
+  );
 }
 
 export function NavRailItem({

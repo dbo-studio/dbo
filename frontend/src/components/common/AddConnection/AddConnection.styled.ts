@@ -5,7 +5,7 @@ export const ConnectionFormContainerStyled = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
   minHeight: 0,
-  minWidth: 'min(480px, calc(100vw - 64px))',
+  minWidth: 0,
   overflow: 'hidden'
 })) as typeof Box;
 
@@ -20,9 +20,12 @@ export const ConnectionFormBodyStyled = styled(Box)(({ theme }) => ({
 }));
 
 // Side-by-side fields share the row equally, like the full-width ones above and below them.
-export const ConnectionFormRowStyled = styled(Box)(({ theme }) => ({
+export const ConnectionFormRowStyled = styled(Box, { shouldForwardProp: (p) => p !== 'hostPort' })<{
+  /** A wide first field with a narrow second one, e.g. host and port. */
+  hostPort?: boolean;
+}>(({ theme, hostPort }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gridTemplateColumns: hostPort ? 'minmax(0, 1fr) 120px' : 'repeat(2, minmax(0, 1fr))',
   columnGap: theme.spacing(2)
 }));
 

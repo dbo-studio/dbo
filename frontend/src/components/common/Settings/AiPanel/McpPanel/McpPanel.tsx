@@ -55,7 +55,7 @@ const monoChipSx = (theme: Theme) => ({
 export default function McpPanel() {
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | undefined>();
-  const [selectedClient, setSelectedClient] = useState<McpClientId>('cursor');
+  const [selectedClient, setSelectedClient] = useState<McpClientId>('claude-code');
 
   const { data: status } = useQuery({
     queryKey: ['mcp-status'],
@@ -83,11 +83,8 @@ export default function McpPanel() {
   });
 
   const clientConfigs = useMemo(() => {
-    if (!token) {
-      return [];
-    }
-
-    return buildMcpClientConfigs(status?.proxyUrl ?? 'http://127.0.0.1:8080/api/mcp', token);
+    // Shown even while MCP is off: only a fresh token is readable, so fall back to a placeholder.
+    return buildMcpClientConfigs(status?.proxyUrl ?? 'http://127.0.0.1:8080/api/mcp', token ?? '<YOUR_TOKEN>');
   }, [status?.proxyUrl, token]);
 
   const selectedConfig = useMemo(
@@ -97,6 +94,7 @@ export default function McpPanel() {
 
   const clientSelectOptions = useMemo(
     () => [
+      { label: locales.mcp_config_claude_code, value: 'claude-code' as const },
       { label: locales.mcp_config_cursor, value: 'cursor' as const },
       { label: locales.mcp_config_claude, value: 'claude' as const },
       { label: locales.mcp_config_copilot, value: 'copilot' as const }
@@ -164,6 +162,7 @@ export default function McpPanel() {
         </McpSectionStyled>
       )}
 
+      {!status?.enabled && <Alert severity='info'>{locales.mcp_enable_to_connect}</Alert>}
       {status?.enabled && !token && <Alert severity='info'>{locales.mcp_regenerate_to_copy}</Alert>}
 
       {selectedConfig && (
@@ -174,7 +173,7 @@ export default function McpPanel() {
             options={clientSelectOptions}
             onChange={(option) => {
               const value = (option as SelectInputOption)?.value;
-              if (value === 'cursor' || value === 'claude' || value === 'copilot') {
+              if (value === 'claude-code' || value === 'cursor' || value === 'claude' || value === 'copilot') {
                 setSelectedClient(value);
               }
             }}
@@ -188,8 +187,12 @@ export default function McpPanel() {
               </IconButton>
             </McpConfigHeaderStyled>
 
-            <SyntaxHighlighter value={selectedConfig.value} lang='json' />
+            <SyntaxHighlighter value={selectedConfig.value} lang={selectedConfig.lang} />
           </McpConfigSectionStyled>
+
+          <Typography variant='caption' color='text.secondary'>
+            {locales[selectedConfig.hintKey]}
+          </Typography>
         </Stack>
       )}
 

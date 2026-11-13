@@ -94,7 +94,9 @@ export const useChangesetReview = (changesetId: number): ChangesetReview => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['schema-diagram'] }),
         queryClient.invalidateQueries({ queryKey: ['autocomplete'] }),
-        queryClient.invalidateQueries({ queryKey: ['ai_autocomplete'] })
+        queryClient.invalidateQueries({ queryKey: ['ai_autocomplete'] }),
+        // A MongoDB or Redis change moves documents and keys that an open Browse tab lists.
+        queryClient.invalidateQueries({ queryKey: ['nosql'] })
       ]);
     } finally {
       setIsApplying(false);

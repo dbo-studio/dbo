@@ -14,6 +14,8 @@ type (
 		Model      string `json:"model"`
 		// AgentTier is the connection's agent level, set by the server, never by the client.
 		AgentTier string `json:"-"`
+		// NoSQL is set by the server for MongoDB and Redis connections, which get their own read-only tools.
+		NoSQL bool `json:"-"`
 	}
 
 	AiContextOptions struct {

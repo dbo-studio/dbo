@@ -10,6 +10,7 @@ import (
 	serviceAiChangeset "github.com/dbo-studio/dbo/internal/service/ai_changeset"
 	serviceDashboard "github.com/dbo-studio/dbo/internal/service/dashboard"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
+	serviceNoSQL "github.com/dbo-studio/dbo/internal/service/nosql"
 	serviceQuestion "github.com/dbo-studio/dbo/internal/service/question"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/cache"
@@ -30,6 +31,7 @@ type AiServiceImpl struct {
 	questionService  serviceQuestion.IQuestionService
 	dashboardService serviceDashboard.IDashboardService
 	schemaService    serviceSchema.ISchemaService
+	nosqlService     serviceNoSQL.INoSQLService
 	cm               *databaseConnection.ConnectionManager
 	toolRegistry     *serviceDbtools.Registry
 	logger           logger.Logger
@@ -45,6 +47,7 @@ func NewAiService(
 	questionService serviceQuestion.IQuestionService,
 	dashboardService serviceDashboard.IDashboardService,
 	schemaService serviceSchema.ISchemaService,
+	nosqlService serviceNoSQL.INoSQLService,
 	cm *databaseConnection.ConnectionManager,
 	toolRegistry *serviceDbtools.Registry,
 	appLogger logger.Logger,
@@ -58,6 +61,7 @@ func NewAiService(
 		questionService:  questionService,
 		dashboardService: dashboardService,
 		schemaService:    schemaService,
+		nosqlService:     nosqlService,
 		cm:               cm,
 		toolRegistry:     toolRegistry,
 		logger:           appLogger,

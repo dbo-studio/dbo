@@ -17,6 +17,10 @@ export type ChartReport = {
 
 type ShowChartArgs = {
   sql?: string;
+  /** MongoDB and Redis charts name a pipeline or a command instead of SQL. */
+  container?: string;
+  pipeline?: string;
+  command?: string;
   title?: string;
   type?: string;
   x?: string;
@@ -27,6 +31,21 @@ type ShowChartArgs = {
   goal?: number;
   params?: Record<string, string>;
 };
+
+/**
+ * The query text a MongoDB or Redis report is saved with: a JSON object with a container and pipeline, or a command.
+ * The server stores and runs it as is.
+ */
+export function nosqlQueryText(args: Pick<ShowChartArgs, 'container' | 'pipeline' | 'command'>): string {
+  if (args.pipeline?.trim()) {
+    try {
+      return JSON.stringify({ container: args.container ?? '', pipeline: JSON.parse(args.pipeline) as unknown });
+    } catch {
+      return '';
+    }
+  }
+  return args.command?.trim() ? JSON.stringify({ command: args.command.trim() }) : '';
+}
 
 /** Reads a finished show_chart call; the agent's chart settings win, the auto pick fills the gaps. */
 export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
@@ -43,7 +62,7 @@ export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
     return {
       id: trace.id,
       title: args.title ?? '',
-      sql: args.sql ?? '',
+      sql: args.sql ?? nosqlQueryText(args),
       rows,
       columns,
       spec: {

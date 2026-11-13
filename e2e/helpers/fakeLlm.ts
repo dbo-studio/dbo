@@ -93,6 +93,7 @@ export class FakeLlm {
     const body = JSON.parse(rawBody || "{}") as {
       tools?: Array<{ function?: { name?: string } }>;
       messages?: Array<{ role: string; content?: unknown }>;
+      stream?: boolean;
     };
     this.systemPrompts.push(
       (body.messages ?? [])
@@ -100,6 +101,27 @@ export class FakeLlm {
         .map((message) => JSON.stringify(message.content))
         .join("\n"),
     );
+    // Inline completion asks for one plain JSON answer, not a stream.
+    if (body.stream !== true) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(
+        JSON.stringify({
+          id: "chatcmpl-e2e",
+          object: "chat.completion",
+          created: 1,
+          model: "fake-model",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "ok" },
+              finish_reason: "stop",
+            },
+          ],
+        }),
+      );
+      return;
+    }
+
     const tools = (body.tools ?? []).map((tool) => tool.function?.name ?? "");
     if (tools.length > 0) {
       this.offeredTools.push(tools);

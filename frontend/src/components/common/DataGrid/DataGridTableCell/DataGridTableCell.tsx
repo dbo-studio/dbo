@@ -107,7 +107,7 @@ export const DataGridTableCell = memo(
     useEffect(() => {
       if (isEditing && inputRef.current && !(isFkPicker && fkLookupOpen)) {
         requestAnimationFrame(() => {
-          inputRef.current?.focus();
+          inputRef.current?.focus({ preventScroll: true });
           inputRef.current?.select();
         });
       }
@@ -282,6 +282,9 @@ export const DataGridTableCell = memo(
           onKeyDown={(e): void => {
             if (e.key === 'Enter' || e.key === 'Escape') {
               e.currentTarget.blur();
+            } else if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') {
+              // Keep caret keys inside the input; the scroll container must not see them.
+              e.stopPropagation();
             }
           }}
           style={mappedType === 'number' ? { textAlign: 'right' } : undefined}

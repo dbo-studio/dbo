@@ -29,7 +29,7 @@ import { setMongoContext } from '@/components/base/MongoEditor/mongoCompletions'
 import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useMemo, useState } from 'react';
+import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import BulkDeleteDialog from './BulkDeleteDialog';
 import ItemHeader from './ItemHeader';
@@ -39,6 +39,15 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import KeyList from './KeyList';
 import { buildKeyRows } from './keyTree';
 import StatsDialog from './StatsDialog';
+import IndexesDialog from './IndexesDialog';
+import ExplainDialog from './ExplainDialog';
+import AggregateDialog from './AggregateDialog';
+import SchemaDialog from './SchemaDialog';
+import RenameCollectionDialog from './RenameCollectionDialog';
+import { tools } from '@/core/utils/tools';
+import { useAiBridge } from '@/hooks/useAiBridge';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
+import { useTreeStore } from '@/store/treeStore/tree.store';
 import RecycleDialog from './RecycleDialog';
 import MemberWindowView from './MemberWindowView';
 import ItemView from './ItemView';
@@ -51,7 +60,7 @@ const chordLabel = (label: string, command: string[]): string => `${label} (${co
 const PAGE_SIZE = 100;
 const DEFAULT_LIST_WIDTH = 320;
 
-type Applied = { filter: string; filters: NoSQLBrowseFilter[]; sorts: NoSQLBrowseSort[] };
+type Applied = { filter: string; filters: NoSQLBrowseFilter[]; sorts: NoSQLBrowseSort[]; projection?: string };
 const NO_FILTER: Applied = { filter: '', filters: [], sorts: [] };
 
 const has = (spec: NoSQLContainerSpec | undefined, cap: NoSQLCapability): boolean =>
@@ -84,6 +93,17 @@ function createPayload(
   };
 }
 
+/** Reads a Mongo sort document ({"age": -1}) as ordered sorts; throws on anything else. */
+const parseSort = (text: string): NoSQLBrowseSort[] => {
+  if (!text.trim()) return [];
+  const doc: unknown = JSON.parse(text);
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) throw new Error('sort');
+  return Object.entries(doc).map(([field, dir]) => {
+    if (dir !== 1 && dir !== -1) throw new Error('sort');
+    return { field, desc: dir === -1 };
+  });
+};
+
 const toApplied = (tab: BrowseTabType): Applied => ({
   filter: (tab.filters ?? [])
     .filter((f) => f.isActive)
@@ -113,6 +133,8 @@ export default function Browse(): JSX.Element {
   const [applied, setApplied] = useState<Applied>(NO_FILTER);
   const [pattern, setPattern] = useState('');
   const [query, setQuery] = useState('');
+  const [sortText, setSortText] = useState('');
+  const [projectText, setProjectText] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [newId, setNewId] = useState('');
@@ -120,6 +142,16 @@ export default function Browse(): JSX.Element {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [indexesOpen, setIndexesOpen] = useState(false);
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [aggOpen, setAggOpen] = useState(false);
+  const [schemaOpen, setSchemaOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+  const aiAllowed = useFeaturePermissions().ai;
+  const { prefillChat } = useAiBridge();
+  const removeTab = useTabStore((state) => state.removeTab);
+  const reloadTree = useTreeStore((state) => state.reloadTree);
   const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null);
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
   const [statusSlot, setStatusSlot] = useState<HTMLElement | null>(null);
@@ -231,6 +263,66 @@ export default function Browse(): JSX.Element {
     [spec]
   );
 
+  const collectionName = containerId.split('/').slice(1).join('/');
+
+  const exportDocs = async (format: 'ndjson' | 'csv' = 'ndjson'): Promise<void> => {
+    try {
+      const blob = await api.nosql.exportCollection(connectionId, containerId, applied.filter || undefined, format);
+      tools.fileDownload(blob, `${collectionName}.${format}`);
+    } catch {
+      toast.error(locales.action_failed);
+    }
+  };
+
+  /** Uploads the file and follows its background job, so a large import neither blocks the app nor sits in memory. */
+  const importFile = async (file: File): Promise<void> => {
+    const name = file.name.toLowerCase();
+    const format = name.endsWith('.csv') ? 'csv' : name.endsWith('.json') ? 'json' : 'ndjson';
+
+    try {
+      const jobId = await withSafeModeRetry((confirmed) =>
+        api.nosql.importFile(connectionId, containerId, file, format, confirmed)
+      );
+      if (jobId === undefined) return;
+      toast.info(locales.nosql_import_started);
+
+      for (;;) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const job = await api.job.detail(String(jobId));
+        if (job.status === 'pending' || job.status === 'running') continue;
+
+        await refresh();
+        if (job.status === 'completed') {
+          toast.success(locales.nosql_imported.replace('{n}', String(job.result?.successRows ?? 0)));
+        } else {
+          toast.error(locales.nosql_import_failed.replace('{message}', job.error ?? job.message));
+        }
+        return;
+      }
+    } catch {
+      toast.error(locales.action_failed);
+    }
+  };
+
+  const closeAfterStructureChange = async (): Promise<void> => {
+    if (tab) removeTab(tab.id);
+    await reloadTree(false);
+  };
+
+  const dropCollection = (): void =>
+    confirmDanger(
+      locales.nosql_drop_collection,
+      locales.nosql_drop_collection_confirm.replace('{name}', collectionName),
+      () => {
+        void withSafeModeRetry(async (confirmed) => {
+          await api.nosql.dropCollection(connectionId, containerId, confirmed);
+          return true;
+        })
+          .then((done) => (done ? closeAfterStructureChange() : undefined))
+          .catch(() => toast.error(locales.action_failed));
+      }
+    );
+
   const moreItems: { id: string; label: string; danger?: boolean; run: () => void }[] = [
     ...(spec?.tools ?? [])
       .filter((toolId) => toolId !== 'cli' || cliAllowed)
@@ -245,6 +337,57 @@ export default function Browse(): JSX.Element {
     ...(has(spec, 'stats')
       ? [{ id: 'stats', label: locales.nosql_stats_title, run: (): void => setStatsOpen(true) }]
       : []),
+    ...(aiAllowed
+      ? [
+          {
+            id: 'ai-collection',
+            label: isMongo ? locales.ai_ask_collection : locales.ai_ask_database,
+            run: (): void => {
+              const message = `Tell me about ${isMongo ? 'the collection' : 'the Redis database'} ${containerId}.`;
+              prefillChat(message, true, { input: message });
+            }
+          },
+          ...(selectedId
+            ? [
+                {
+                  id: 'ai-item',
+                  label: locales.ai_ask_item,
+                  run: (): void => {
+                    const message = isMongo
+                      ? `Explain the document with _id ${selectedId} in ${containerId}.`
+                      : `Explain the key ${selectedId} in ${containerId}.`;
+                    prefillChat(message, true, { input: message });
+                  }
+                }
+              ]
+            : [])
+        ]
+      : []),
+    ...(has(spec, 'transfer')
+      ? [
+          { id: 'export', label: locales.nosql_export, run: (): void => void exportDocs('ndjson') },
+          { id: 'export-csv', label: locales.nosql_export_csv, run: (): void => void exportDocs('csv') },
+          { id: 'import', label: locales.nosql_import, run: (): void => importRef.current?.click() }
+        ]
+      : []),
+    ...(has(spec, 'collection-admin')
+      ? [
+          { id: 'rename', label: locales.nosql_rename_collection, run: (): void => setRenameOpen(true) },
+          { id: 'drop', label: locales.nosql_drop_collection, danger: true, run: dropCollection }
+        ]
+      : []),
+    ...(has(spec, 'schema')
+      ? [{ id: 'schema', label: locales.nosql_schema, run: (): void => setSchemaOpen(true) }]
+      : []),
+    ...(has(spec, 'aggregate')
+      ? [{ id: 'aggregate', label: locales.nosql_aggregate, run: (): void => setAggOpen(true) }]
+      : []),
+    ...(has(spec, 'indexes')
+      ? [
+          { id: 'indexes', label: locales.nosql_indexes_title, run: (): void => setIndexesOpen(true) },
+          { id: 'explain', label: locales.nosql_explain, run: (): void => setExplainOpen(true) }
+        ]
+      : []),
     ...(has(spec, 'recycle')
       ? [{ id: 'recycle', label: locales.nosql_recycle_title, run: (): void => setRecycleOpen(true) }]
       : []),
@@ -255,7 +398,14 @@ export default function Browse(): JSX.Element {
 
   if (!tab) return <></>;
 
-  const applyText = (text: string): void => setApplied({ ...NO_FILTER, filter: text });
+  const applyText = (text: string): void => {
+    if (spec?.filter !== 'query') return setApplied({ ...NO_FILTER, filter: text });
+    try {
+      setApplied({ ...NO_FILTER, filter: text, sorts: parseSort(sortText), projection: projectText.trim() });
+    } catch {
+      toast.error(locales.nosql_sort_invalid);
+    }
+  };
 
   const applyFields = (): void => setApplied(toApplied(useTabStore.getState().selectedTab<BrowseTabType>() ?? tab));
 
@@ -274,6 +424,28 @@ export default function Browse(): JSX.Element {
                   onEnter={applyText}
                 />
               </Box>
+              {spec.filter === 'query' && (
+                <>
+                  <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-sort-bar'>
+                    <InlineSqlEditor
+                      language='json'
+                      placeholder={locales.nosql_sort_query}
+                      value={sortText}
+                      onChange={setSortText}
+                      onEnter={(): void => applyText(query)}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-project-bar'>
+                    <InlineSqlEditor
+                      language='json'
+                      placeholder={locales.nosql_project_query}
+                      value={projectText}
+                      onChange={setProjectText}
+                      onEnter={(): void => applyText(query)}
+                    />
+                  </Box>
+                </>
+              )}
               <SubmitButtonStyled
                 variant='contained'
                 aria-label={locales.nosql_run}
@@ -369,6 +541,62 @@ export default function Browse(): JSX.Element {
       {statsOpen && (
         <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />
       )}
+      {indexesOpen && (
+        <IndexesDialog
+          connectionId={connectionId}
+          containerId={containerId}
+          canEdit={has(spec, 'edit')}
+          onClose={(): void => setIndexesOpen(false)}
+        />
+      )}
+      <input
+        ref={importRef}
+        type='file'
+        hidden
+        accept='.json,.ndjson,.jsonl,.csv'
+        data-testid='import-file'
+        onChange={(e): void => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) void importFile(file);
+        }}
+      />
+      {renameOpen && (
+        <RenameCollectionDialog
+          connectionId={connectionId}
+          containerId={containerId}
+          name={collectionName}
+          onClose={(): void => setRenameOpen(false)}
+          onRenamed={(): void => {
+            setRenameOpen(false);
+            void closeAfterStructureChange();
+          }}
+        />
+      )}
+      {schemaOpen && (
+        <SchemaDialog
+          connectionId={connectionId}
+          containerId={containerId}
+          canEdit={has(spec, 'edit')}
+          onClose={(): void => setSchemaOpen(false)}
+        />
+      )}
+      {aggOpen && (
+        <AggregateDialog
+          connectionId={connectionId}
+          containerId={containerId}
+          onClose={(): void => setAggOpen(false)}
+        />
+      )}
+      {explainOpen && (
+        <ExplainDialog
+          connectionId={connectionId}
+          containerId={containerId}
+          filter={applied.filter}
+          sorts={applied.sorts}
+          onClose={(): void => setExplainOpen(false)}
+        />
+      )}
       {recycleOpen && (
         <RecycleDialog
           connectionId={connectionId}
@@ -444,10 +672,20 @@ export default function Browse(): JSX.Element {
                   />
                 ) : (
                   <ItemView
-                    key={`${item.id}:${JSON.stringify(item.value)}`}
+                    key={item.view === 'document' ? item.id : `${item.id}:${JSON.stringify(item.value)}`}
                     item={item}
                     editable={has(spec, 'edit') && !item.meta?.readonly}
                     onSave={(value): void => void save({ value })}
+                    tree={
+                      has(spec, 'doc-tree') && item.view === 'document'
+                        ? {
+                            connectionId,
+                            containerId,
+                            onMutated: (): void =>
+                              void qc.invalidateQueries({ queryKey: ['nosql', 'item', connectionId, containerId] })
+                          }
+                        : undefined
+                    }
                   />
                 )}
               </Box>

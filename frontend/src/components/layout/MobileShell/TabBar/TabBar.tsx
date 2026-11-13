@@ -2,7 +2,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useMobileNavStore } from '@/store/mobileNavStore/mobileNav.store';
 import type { MobileTab } from '@/store/mobileNavStore/types';
-import type { JSX } from 'react';
+import SelectionIndicator from '@/components/base/SelectionIndicator/SelectionIndicator';
+import { type JSX, useRef } from 'react';
 import type { TabBarItem } from '../types';
 import { TabBarButtonStyled, TabBarStyled } from './TabBar.styled';
 
@@ -17,6 +18,8 @@ export default function TabBar(): JSX.Element {
   const setActiveTab = useMobileNavStore((state) => state.setActiveTab);
   const resetTab = useMobileNavStore((state) => state.resetTab);
 
+  const rootRef = useRef<HTMLElement>(null);
+
   const handleSelect = (tab: MobileTab): void => {
     // Tapping the active tab again returns to its root, as native tab bars do.
     if (tab === activeTab) {
@@ -27,7 +30,8 @@ export default function TabBar(): JSX.Element {
   };
 
   return (
-    <TabBarStyled aria-label={locales.mobile_navigation}>
+    <TabBarStyled ref={rootRef} aria-label={locales.mobile_navigation}>
+      <SelectionIndicator rootRef={rootRef} variant='overline' />
       {items.map((item) => (
         <TabBarButtonStyled
           key={item.id}

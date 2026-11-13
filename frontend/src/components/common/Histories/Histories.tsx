@@ -1,4 +1,5 @@
 import api from '@/api';
+import Segmented from '@/components/base/Segmented/Segmented';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import Search from '@/components/base/Search/Search';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
@@ -6,17 +7,7 @@ import locales from '@/locales';
 import type { HistoryType } from '@/types/History';
 import VirtualList from '@/components/base/VirtualList/VirtualList';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
-import {
-  Box,
-  Button,
-  ClickAwayListener,
-  IconButton,
-  LinearProgress,
-  ToggleButton,
-  ToggleButtonGroup,
-  Tooltip,
-  Typography
-} from '@mui/material';
+import { Box, Button, ClickAwayListener, IconButton, LinearProgress, Tooltip, Typography } from '@mui/material';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useRef, useState } from 'react';
 import DeleteHistoryIcon from './DeleteHistoryIcon';
@@ -111,21 +102,12 @@ export default function Histories(): JSX.Element {
           <Box sx={{ flex: 1, maxWidth: 420 }}>
             <Search onChange={(name): void => setSearch(name)} />
           </Box>
-          <ToggleButtonGroup
-            exclusive
-            size='small'
+          <Segmented
+            ariaLabel={locales.history}
             value={filter}
-            onChange={(_, value: HistoryFilter | null): void => {
-              if (value) setFilter(value);
-            }}
-            aria-label={locales.history}
-          >
-            {FILTERS.map((f) => (
-              <ToggleButton key={f.id} value={f.id} sx={{ px: 1.25, py: 0.25, textTransform: 'none' }}>
-                {f.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
+            onChange={setFilter}
+            options={FILTERS.map((f) => ({ value: f.id, label: f.label }))}
+          />
           <Typography variant='caption' color='textSubdued' sx={{ flex: 1 }}>
             {locales.history_count.replace('{count}', String(filteredHistories.length))}
           </Typography>

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/database"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
@@ -50,10 +50,8 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		req.Mode = dto.AiChatModeAsk
 	}
 
-	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
-	if err != nil {
-		return err
-	}
+	// MongoDB and Redis have their own tool set; a read-only connection already runs in Ask above.
+	req.NoSQL = databaseContract.IsNoSQL(conn.ConnectionType)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -62,7 +60,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 		return err
 	}
 
-	contextStr, err := repo.AiContext(ctx, toAIContextInput(req))
+	contextStr, err := s.aiContext(ctx, conn, req)
 	if err != nil {
 		return apperror.InternalServerError(err)
 	}
@@ -82,6 +80,9 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
+	if req.NoSQL {
+		providerReq.Tools = serviceDbtools.NoSQLChatTools(req.AgentMode(), req.AgentTier)
+	}
 	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{

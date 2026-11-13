@@ -53,18 +53,29 @@ export type PendingEditorQueryRun = {
   run: boolean;
 };
 
+/** A command the assistant (or a snippet) hands to the bottom-panel terminal. */
+export type PendingTerminalCommand = {
+  command: string;
+  /** false = only put the command on the prompt (Insert); the user presses Enter. */
+  run: boolean;
+};
+
 export type DataQuerySlice = {
   isDataFetching: boolean;
   reRunQuery: boolean;
   reRender: boolean;
   lastQueryResult: string | undefined;
   pendingEditorQueryRun?: PendingEditorQueryRun;
+  pendingTerminalCommand?: PendingTerminalCommand;
   gridEditable: boolean;
   updatableNodeId?: string;
   editableReason?: string;
   drivingTable?: string;
   queryPaginated: boolean;
   clearPendingEditorQueryRun: () => void;
+  clearPendingTerminalCommand: () => void;
+  /** Opens the terminal and puts a command on its prompt, or runs it. For connections without an editor tab (Redis). */
+  sendToTerminal: (command: string, run: boolean) => void;
   cancelRunningQuery: (options?: { silent?: boolean }) => void;
   runQuery: (abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;
   runRawQuery: (query?: string, abortController?: AbortController) => Promise<RunQueryResponseType | undefined>;

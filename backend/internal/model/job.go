@@ -28,6 +28,8 @@ const (
 	JobTypeRestore JobType = "restore"
 	// JobTypeBulkDelete removes every NoSQL item matching a pattern, in batches.
 	JobTypeBulkDelete JobType = "bulk_delete"
+	// JobTypeNoSQLImport inserts the documents of an uploaded file into a collection, in batches.
+	JobTypeNoSQLImport JobType = "nosql_import"
 	// JobTypeToolInstall downloads a native backup tool on the user's request.
 	JobTypeToolInstall JobType = "tool_install"
 	// JobTypeRestoreDrill restores a backup into a throwaway database to prove it works.

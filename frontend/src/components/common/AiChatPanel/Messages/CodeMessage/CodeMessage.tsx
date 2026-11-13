@@ -2,6 +2,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import MermaidView from '@/components/base/MermaidView/MermaidView';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
+import { isRedisDriver } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -19,6 +21,8 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   const [, copy] = useCopyToClipboard();
   const isDark = useSettingStore((state) => state.theme.isDark);
   const baseline = use(DiffBaselineContext);
+  // Redis has no editor tab: its commands go to the terminal.
+  const redis = isRedisDriver(useCurrentConnection()?.type);
   const [showDiff, setShowDiff] = useState(false);
   // A diagram block is drawn; its source is one click away. The SQL actions do not apply to it.
   const isDiagram = message.language === 'mermaid';
@@ -35,6 +39,10 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   };
 
   const handleInsert = (): void => {
+    if (redis) {
+      useDataStore.getState().sendToTerminal(message.content, false);
+      return;
+    }
     useDataStore.getState().insertQueryInEditor(message.content);
     toast.success(locales.insert_into_editor);
   };
@@ -44,6 +52,10 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   };
 
   const handleRun = (): void => {
+    if (redis) {
+      useDataStore.getState().sendToTerminal(message.content, true);
+      return;
+    }
     try {
       useDataStore.getState().runQueryInEditor(message.content);
     } catch {
@@ -78,17 +90,19 @@ export default function CodeMessage({ message }: CodeMessageProps) {
           {!isDiagram && (
             <>
               <Tooltip title={locales.insert_into_editor}>
-                <IconButton onClick={handleInsert}>
+                <IconButton onClick={handleInsert} data-testid='ai-code-insert'>
                   <CustomIcon type='pen' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={locales.ai_open_new_query_tab}>
-                <IconButton onClick={handleOpenNewTab} data-testid='ai-code-open-tab'>
-                  <CustomIcon type='plus' />
-                </IconButton>
-              </Tooltip>
+              {!redis && (
+                <Tooltip title={locales.ai_open_new_query_tab}>
+                  <IconButton onClick={handleOpenNewTab} data-testid='ai-code-open-tab'>
+                    <CustomIcon type='plus' />
+                  </IconButton>
+                </Tooltip>
+              )}
               <Tooltip title={locales.run_query}>
-                <IconButton onClick={handleRun}>
+                <IconButton onClick={handleRun} data-testid='ai-code-run'>
                   <CustomIcon type='play' />
                 </IconButton>
               </Tooltip>

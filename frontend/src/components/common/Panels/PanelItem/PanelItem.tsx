@@ -64,7 +64,7 @@ export default function PanelItem(): JSX.Element {
           (selectedTab.mode === TabMode.Question && <Question />) ||
           (selectedTab.mode === TabMode.Settings && <Settings />) ||
           (selectedTab.mode === TabMode.Backup && <Backup />) ||
-          (selectedTab.mode === TabMode.Browse && <Browse />) ||
+          (selectedTab.mode === TabMode.Browse && <Browse key={selectedTab.id} />) ||
           (selectedTab.mode === TabMode.Tool && <Tool />)
         : null}
     </PanelItemStyled>

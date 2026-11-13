@@ -2,6 +2,8 @@ import { ButtonBase, styled } from '@mui/material';
 import { variables } from '@/core/theme/variables';
 
 export const TabBarStyled = styled('nav')(({ theme }) => ({
+  position: 'relative',
+  isolation: 'isolate',
   display: 'flex',
   flexShrink: 0,
   borderTop: `1px solid ${theme.palette.divider}`,
@@ -16,14 +18,14 @@ export const TabBarButtonStyled = styled(ButtonBase)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: 3,
-  borderTop: '2px solid transparent',
   marginTop: -1,
+  transition: `color ${variables.motion.base} ${variables.motion.easing}, background-color ${variables.motion.base} ${variables.motion.easing}`,
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
   fontSize: variables.fontSize.xxs,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: theme.palette.text.subdued,
   '&[aria-current="page"]': {
-    borderTopColor: theme.palette.primary.main,
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.text,
     fontWeight: theme.typography.fontWeightMedium,

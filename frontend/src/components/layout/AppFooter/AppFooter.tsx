@@ -1,10 +1,11 @@
 import api from '@/api';
 import { closeBottomPanel, openBottomPanel } from '@/core/bottomPanel';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { McpStatus } from '@/api/mcp';
 import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
 import RunningJobs, { useRunningJobs } from '@/components/common/RunningJobs/RunningJobs';
-import { canManageMcpSettings } from '@/core/auth/permissions';
+import { canManageMcpSettings, canUseCli } from '@/core/auth/permissions';
 import { openBackup } from '@/core/backup/openBackup';
 import { TabMode } from '@/core/enums';
 import { openSettings } from '@/core/settings/openSettings';
@@ -97,6 +98,7 @@ export default function AppFooter(): JSX.Element {
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const canManageMcp = canManageMcpSettings(mode, user);
+  const cliAllowed = canUseCli(mode, user);
   const connection = useCurrentConnection();
   const loading = useConnectionStore((s) => s.loading);
   const running = useRunningJobs();
@@ -143,6 +145,18 @@ export default function AppFooter(): JSX.Element {
       <StatusSpacerStyled />
       <TabInfo />
       <StatusSpacerStyled />
+
+      {cliAllowed && (
+        <StatusItemStyled
+          onClick={() => openBottomPanel('terminal')}
+          disabled={!connection}
+          data-testid='open-terminal'
+          aria-label='terminal'
+        >
+          <CustomIcon type='terminal' size='xs' />
+          <span>{locales.bottom_panel_terminal}</span>
+        </StatusItemStyled>
+      )}
 
       <StatusItemStyled onClick={toggleHistory} data-testid='status-history' aria-label={locales.history}>
         <span>{locales.history}</span>

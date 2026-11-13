@@ -1,18 +1,29 @@
+import { isMongoDriver, isRedisDriver } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import type { AiContextType, AiSelectionAction } from '@/types';
 import { useCallback } from 'react';
 
-const ACTION_PROMPTS: Record<AiSelectionAction, string> = {
-  explain: 'Explain this SQL query in detail.',
-  optimize: 'Suggest optimizations for this SQL query.',
-  fix: 'Fix the errors in this SQL query.'
-};
+/** What the user is looking at, so the prompt does not call a MongoDB statement a SQL query. */
+function subjectFor(type: string | undefined): string {
+  if (isMongoDriver(type)) return 'MongoDB statement';
+  if (isRedisDriver(type)) return 'Redis command';
+  return 'SQL query';
+}
+
+const actionPrompt = (action: AiSelectionAction, subject: string): string =>
+  ({
+    explain: `Explain this ${subject} in detail.`,
+    optimize: `Suggest optimizations for this ${subject}.`,
+    fix: `Fix the errors in this ${subject}.`
+  })[action];
 
 export function useAiBridge() {
   const setBridgeRequest = useAiStore((s) => s.setBridgeRequest);
   const updateContext = useAiStore((s) => s.updateContext);
   const updateUI = useSettingStore((s) => s.updateUI);
+  const subject = subjectFor(useCurrentConnection()?.type);
 
   const openAssistant = useCallback(
     (tab = 0) => {
@@ -36,25 +47,25 @@ export function useAiBridge() {
 
   const askAboutSelection = useCallback(
     (sql: string, action: AiSelectionAction, contextPatch?: Partial<AiContextType>) => {
-      const message = ACTION_PROMPTS[action];
+      const message = actionPrompt(action, subject);
       prefillChat(message, true, {
         ...contextPatch,
         selectedQuery: sql,
         input: message
       });
     },
-    [prefillChat]
+    [prefillChat, subject]
   );
 
   const askAboutError = useCallback(
     (query?: string) => {
-      const message = 'Help me fix this query error.';
+      const message = `Help me fix this ${subject} error.`;
       prefillChat(message, true, {
         selectedQuery: query,
         input: message
       });
     },
-    [prefillChat]
+    [prefillChat, subject]
   );
 
   return { openAssistant, prefillChat, askAboutSelection, askAboutError };

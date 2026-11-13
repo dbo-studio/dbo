@@ -1,4 +1,5 @@
 import { variables } from '@/core/theme/variables';
+import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import type { DashboardShareType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -14,8 +15,6 @@ import {
   InputBase,
   Stack,
   Switch,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography
 } from '@mui/material';
@@ -317,22 +316,18 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
 
           <Section title={locales.share_new_link}>
             <Field label={locales.share_expiry}>
-              <ToggleButtonGroup
-                exclusive
-                size='small'
+              <Segmented
                 value={days}
-                onChange={(_, picked: number | null) => picked !== null && setDays(picked)}
-                sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 1, textTransform: 'none' } }}
-              >
-                {PRESETS.map((preset) => (
-                  <ToggleButton key={preset.days} value={preset.days} data-testid={`share-preset-${preset.days}`}>
-                    {preset.label}
-                  </ToggleButton>
-                ))}
-                <ToggleButton value={CUSTOM} data-testid='share-preset-custom'>
-                  {locales.share_expiry_custom}
-                </ToggleButton>
-              </ToggleButtonGroup>
+                onChange={setDays}
+                options={[
+                  ...PRESETS.map((preset) => ({
+                    value: preset.days,
+                    label: preset.label,
+                    testId: `share-preset-${preset.days}`
+                  })),
+                  { value: CUSTOM, label: locales.share_expiry_custom, testId: 'share-preset-custom' }
+                ]}
+              />
             </Field>
             {days === CUSTOM && (
               <Field label=''>

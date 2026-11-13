@@ -15,6 +15,7 @@ import {
   ConnectionFormContainerStyled,
   ConnectionFormRowStyled
 } from '../AddConnection.styled';
+import ConnectionFormSection from '../ConnectionFormSection';
 import ConnectionFormTabs from '../ConnectionFormTabs';
 import ConnectionSSHFields from '../ConnectionSSHFields';
 import ConnectionSSLFields from '../ConnectionSSLFields';
@@ -68,6 +69,7 @@ export default function PostgreSQL({
   connection,
   submitLabel,
   engine = 'postgresql',
+  initialUri,
   onClose,
   onPing,
   onSubmit,
@@ -77,7 +79,8 @@ export default function PostgreSQL({
   const options = connection?.options as PostgresqlOptionsType | undefined;
   const sslDefaults = sslFormDefaults(options?.ssl);
   const connectionType = connection?.type ?? engine;
-  const parsedUri = options?.uri ? parseConnectionUri(options.uri, 'postgresql') : null;
+  const sourceUri = options?.uri ?? initialUri;
+  const parsedUri = sourceUri ? parseConnectionUri(sourceUri, 'postgresql') : null;
 
   const form = useForm({
     validators: {
@@ -111,12 +114,12 @@ export default function PostgreSQL({
       useUri: Boolean(options?.uri),
       isPing: false,
       rememberPassword: false,
-      name: connection?.name ?? '',
+      name: connection?.name ?? (initialUri && parsedUri ? parsedUri.database || parsedUri.host : ''),
       host: options?.host || parsedUri?.host || '',
       // A new connection starts on the engine's usual port, which the field shows as its placeholder.
       port: options?.port?.toString() || parsedUri?.port || DEFAULT_PORTS.postgresql,
       username: options?.username || parsedUri?.username || '',
-      password: '',
+      password: initialUri ? (parsedUri?.password ?? '') : '',
       database: options?.database || parsedUri?.database || '',
       uri: parsedUri?.redactedUri ?? options?.uri ?? '',
       ...sslDefaults,
@@ -191,9 +194,6 @@ export default function PostgreSQL({
     >
       <ConnectionFormBodyStyled>
         <ConnectionFormTabs
-          generalLabel={locales.general}
-          sslLabel={locales.ssl}
-          sshLabel={locales.ssh}
           general={
             <>
               <form.Field name='name'>
@@ -214,102 +214,117 @@ export default function PostgreSQL({
               <form.Subscribe selector={(state) => state.values.useUri}>
                 {(useUri): JSX.Element => (
                   <>
-                    <ConnectionFormRowStyled>
-                      <form.Field name='host'>
+                    <ConnectionFormSection title={locales.connection_section_server}>
+                      <ConnectionFormRowStyled hostPort>
+                        <form.Field name='host'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='host'
+                                placeholder='localhost'
+                                disabled={useUri}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.host}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+
+                        <form.Field name='port'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='port'
+                                disabled={useUri}
+                                placeholder={'5432'}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.port}
+                                type='number'
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+                      </ConnectionFormRowStyled>
+                      <form.Field name='database'>
                         {(field): JSX.Element => (
-                          <Box>
+                          <>
                             <FieldInput
-                              name='host'
-                              placeholder='localhost'
+                              name='database'
                               disabled={useUri}
                               value={field.state.value}
                               error={field.state.meta.errors.length > 0}
-                              label={locales.host}
+                              label={locales.database}
+                              fullWidth={true}
                               onChange={(e): void => field.handleChange(e.target.value)}
                             />
                             <FormError mb={1} errors={field.state.meta.errors} />
-                          </Box>
+                          </>
                         )}
                       </form.Field>
+                    </ConnectionFormSection>
+                    <ConnectionFormSection title={locales.connection_section_auth}>
+                      <ConnectionFormRowStyled>
+                        <form.Field name='username'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                mb={1}
+                                name='username'
+                                disabled={useUri}
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.username}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
 
-                      <form.Field name='port'>
-                        {(field): JSX.Element => (
-                          <Box>
-                            <FieldInput
-                              name='port'
-                              disabled={useUri}
-                              placeholder={'5432'}
-                              value={field.state.value}
-                              error={field.state.meta.errors.length > 0}
-                              label={locales.port}
-                              type='number'
-                              onChange={(e): void => field.handleChange(e.target.value)}
-                            />
-                            <FormError mb={1} errors={field.state.meta.errors} />
-                          </Box>
-                        )}
-                      </form.Field>
-                    </ConnectionFormRowStyled>
-                    <ConnectionFormRowStyled>
-                      <form.Field name='username'>
-                        {(field): JSX.Element => (
-                          <Box>
-                            <FieldInput
-                              mb={1}
-                              name='username'
-                              disabled={useUri}
-                              value={field.state.value}
-                              error={field.state.meta.errors.length > 0}
-                              label={locales.username}
-                              onChange={(e): void => field.handleChange(e.target.value)}
-                            />
-                            <FormError mb={1} errors={field.state.meta.errors} />
-                          </Box>
-                        )}
-                      </form.Field>
+                        <form.Field name='password'>
+                          {(field): JSX.Element => (
+                            <Box>
+                              <FieldInput
+                                name='password'
+                                value={field.state.value}
+                                error={field.state.meta.errors.length > 0}
+                                label={locales.password}
+                                onChange={(e): void => field.handleChange(e.target.value)}
+                              />
+                              <FormError mb={1} errors={field.state.meta.errors} />
+                            </Box>
+                          )}
+                        </form.Field>
+                      </ConnectionFormRowStyled>
 
-                      <form.Field name='password'>
-                        {(field): JSX.Element => (
-                          <Box>
-                            <FieldInput
-                              name='password'
-                              value={field.state.value}
-                              error={field.state.meta.errors.length > 0}
-                              label={locales.password}
-                              onChange={(e): void => field.handleChange(e.target.value)}
+                      <ConnectionFormCheckboxRowStyled>
+                        <form.Field name='rememberPassword'>
+                          {(field): JSX.Element => (
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={field.state.value}
+                                  size={'small'}
+                                  onChange={(e): void => field.handleChange(e.target.checked)}
+                                />
+                              }
+                              label={locales.remember_password}
                             />
-                            <FormError mb={1} errors={field.state.meta.errors} />
-                          </Box>
-                        )}
-                      </form.Field>
-                    </ConnectionFormRowStyled>
-
-                    <form.Field name='database'>
-                      {(field): JSX.Element => (
-                        <>
-                          <FieldInput
-                            name='database'
-                            disabled={useUri}
-                            value={field.state.value}
-                            error={field.state.meta.errors.length > 0}
-                            label={locales.database}
-                            fullWidth={true}
-                            onChange={(e): void => field.handleChange(e.target.value)}
-                          />
-                          <FormError mb={1} errors={field.state.meta.errors} />
-                        </>
-                      )}
-                    </form.Field>
+                          )}
+                        </form.Field>
+                      </ConnectionFormCheckboxRowStyled>
+                    </ConnectionFormSection>
                   </>
                 )}
               </form.Subscribe>
 
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}
-              >
+              <ConnectionFormSection title={locales.uri}>
                 <ConnectionFormCheckboxRowStyled>
                   <form.Field name='useUri'>
                     {(field): JSX.Element => (
@@ -401,24 +416,7 @@ export default function PostgreSQL({
                     </form.Field>
                   )}
                 </form.Subscribe>
-              </Box>
-
-              <ConnectionFormCheckboxRowStyled>
-                <form.Field name='rememberPassword'>
-                  {(field): JSX.Element => (
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={field.state.value}
-                          size={'small'}
-                          onChange={(e): void => field.handleChange(e.target.checked)}
-                        />
-                      }
-                      label={locales.remember_password}
-                    />
-                  )}
-                </form.Field>
-              </ConnectionFormCheckboxRowStyled>
+              </ConnectionFormSection>
             </>
           }
           ssh={

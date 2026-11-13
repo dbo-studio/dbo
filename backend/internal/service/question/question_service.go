@@ -17,6 +17,7 @@ import (
 var (
 	errQuestionNotFound = errors.New("report not found")
 	errFieldFormat      = errors.New("a field filter names its column as table.column")
+	errNoSQLFilters     = errors.New("field filters are not available on MongoDB and Redis reports")
 )
 
 type IQuestionService interface {
@@ -88,8 +89,8 @@ func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreat
 	}
 
 	// A report only ever reads; a write saved here would run on every refresh.
-	if _, err := serviceDbtools.GuardReadOnlySQL(req.SQL); err != nil {
-		return nil, apperror.BadRequest(err)
+	if err := s.guardQuery(ctx, req.ConnectionID, req.SQL); err != nil {
+		return nil, err
 	}
 
 	chart, err := json.Marshal(req.Chart)
@@ -128,8 +129,8 @@ func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.Ques
 	}
 
 	if req.SQL != nil {
-		if _, err := serviceDbtools.GuardReadOnlySQL(*req.SQL); err != nil {
-			return nil, apperror.BadRequest(err)
+		if err := s.guardQuery(ctx, int32(question.ConnectionID), *req.SQL); err != nil {
+			return nil, err
 		}
 
 		question.SQL = *req.SQL
@@ -201,6 +202,10 @@ func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPrev
 }
 
 func (s IQuestionServiceImpl) FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error) {
+	if conn, err := s.connectionRepo.Find(ctx, req.ConnectionID); err == nil && databaseContract.IsNoSQL(conn.ConnectionType) {
+		return nil, apperror.BadRequest(errNoSQLFilters)
+	}
+
 	parts := FieldPattern.FindStringSubmatch(req.Field)
 	if parts == nil {
 		return nil, apperror.BadRequest(errFieldFormat)
@@ -227,10 +232,48 @@ func placeholderPrefix(connectionType string) string {
 	return ""
 }
 
+// guardQuery checks a report's query text is a read: a SELECT on a SQL connection, a pipeline or read-only command
+// on MongoDB and Redis.
+func (s IQuestionServiceImpl) guardQuery(ctx context.Context, connectionID int32, text string) error {
+	conn, err := s.connectionRepo.Find(ctx, connectionID)
+	if err != nil {
+		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	if databaseContract.IsNoSQL(conn.ConnectionType) {
+		if err := s.toolRegistry.ValidateNoSQLQuery(ctx, connectionID, text); err != nil {
+			return apperror.BadRequest(err)
+		}
+
+		return nil
+	}
+
+	if _, err := serviceDbtools.GuardReadOnlySQL(text); err != nil {
+		return apperror.BadRequest(err)
+	}
+
+	return nil
+}
+
 func (s IQuestionServiceImpl) run(ctx context.Context, toolCtx serviceDbtools.ToolContext, sql string, params map[string]string) (json.RawMessage, error) {
 	conn, err := s.connectionRepo.Find(ctx, toolCtx.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	// On MongoDB and Redis the stored text is a pipeline or command; its {{filters}} go in as JSON values.
+	if databaseContract.IsNoSQL(conn.ConnectionType) {
+		rendered, err := RenderNoSQLParams(sql, params)
+		if err != nil {
+			return nil, apperror.BadRequest(err)
+		}
+
+		result, err := s.toolRegistry.RunNoSQLQuery(ctx, toolCtx.ConnectionID, rendered)
+		if err != nil {
+			return nil, apperror.BadRequest(err)
+		}
+
+		return json.RawMessage(result), nil
 	}
 
 	rendered, args, err := RenderParams(sql, params, placeholderPrefix(conn.ConnectionType))

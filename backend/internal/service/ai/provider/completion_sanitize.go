@@ -1,6 +1,12 @@
 package aiProvider
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
+
+// fenceOpen is an opening code fence with any language tag: ```sql, ```javascript, ```redis.
+var fenceOpen = regexp.MustCompile("^```[A-Za-z]*")
 
 func sanitizeCompletion(prefix, suffix, completion string) string {
 	completion = strings.TrimSpace(completion)
@@ -28,9 +34,7 @@ func sanitizeCompletion(prefix, suffix, completion string) string {
 
 func stripCodeFences(text string) string {
 	text = strings.TrimSpace(text)
-	text = strings.TrimPrefix(text, "```sql")
-	text = strings.TrimPrefix(text, "```SQL")
-	text = strings.TrimPrefix(text, "```")
+	text = fenceOpen.ReplaceAllString(text, "")
 	text = strings.TrimSuffix(text, "```")
 
 	return strings.TrimSpace(text)

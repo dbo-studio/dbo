@@ -3,9 +3,7 @@ import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconProps } from '@/components/base/CustomIcon/types';
-import EmptyState from '@/components/base/EmptyState/EmptyState';
 import Search from '@/components/base/Search/Search';
-import { isNoSQLType } from '@/core/db/connectionAliases';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { Box, IconButton, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
@@ -26,17 +24,15 @@ export default function Boards(): JSX.Element {
   const [menu, setMenu] = useState<MenuType[]>([]);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
-  // Reports are SQL, which a key-value or document connection cannot run.
-  const sqlOnly = !isNoSQLType(connection?.type);
   const dashboards = useQuery({
     queryKey: ['dashboards', connectionId],
     queryFn: () => api.dashboard.getDashboards(Number(connectionId)),
-    enabled: !!connectionId && sqlOnly
+    enabled: !!connectionId
   });
   const reports = useQuery({
     queryKey: ['questions', connectionId],
     queryFn: () => api.question.getQuestions(Number(connectionId)),
-    enabled: !!connectionId && sqlOnly
+    enabled: !!connectionId
   });
 
   const refresh = (): void => {
@@ -82,8 +78,6 @@ export default function Boards(): JSX.Element {
 
   const filter = (items: Item[] | undefined): Item[] =>
     (items ?? []).filter((item) => item.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
-
-  if (!sqlOnly) return <EmptyState title={locales.boards_nosql_unsupported} />;
 
   return (
     <Stack sx={{ mt: 1, minHeight: 0, flex: 1 }} data-testid='boards-view'>

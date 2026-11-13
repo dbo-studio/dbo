@@ -1,9 +1,12 @@
+import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
 
 export const SidebarSectionTabsRootStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   height: 35,
   flexShrink: 0,
+  position: 'relative',
+  isolation: 'isolate',
   borderBottom: `1px solid ${theme.palette.divider}`
 }));
 
@@ -25,7 +28,6 @@ export const SidebarSectionTabStyled = styled(Box, {
   borderRadius: 0,
   border: 'none',
   borderRight: isLast ? 'none' : `1px solid ${theme.palette.divider}`,
-  borderBottom: `2px solid ${selected ? theme.palette.primary.main : 'transparent'}`,
   background: selected ? theme.palette.background.default : theme.palette.background.subdued,
   color: selected ? theme.palette.text.text : theme.palette.text.subdued,
   fontSize: theme.typography.caption.fontSize,
@@ -36,6 +38,8 @@ export const SidebarSectionTabStyled = styled(Box, {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+  transition: `color ${variables.motion.base} ${variables.motion.easing}, background-color ${variables.motion.base} ${variables.motion.easing}, border-color ${variables.motion.base} ${variables.motion.easing}`,
+  '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
   '&:hover': {
     color: theme.palette.text.text,
     background: selected ? theme.palette.background.default : theme.palette.action.hover
