@@ -2,7 +2,10 @@ import api from '@/api';
 import { canUseCli } from '@/core/auth/permissions';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
+import { summarizeDocuments } from '@/core/utils/queryResultSummary';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import { useAuthStore } from '@/store/authStore/auth.store';
+import { useDataStore } from '@/store/dataStore/data.store';
 import { useTheme } from '@mui/material';
 import { Terminal, useTerminal } from '@wterm/react';
 import '@wterm/react/css';
@@ -87,6 +90,15 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
         api.cli.run({ connectionId, input, confirmed }, controller.signal)
       );
       write(`${result === undefined ? dim(locales.cli_not_run) : formatResult(result).join('\r\n')}`);
+      // The assistant sees what this command returned.
+      if (result !== undefined) {
+        const ai = useAiStore.getState();
+        ai.updateContext({
+          ...ai.context,
+          selectedQuery: input,
+          queryResultSummary: summarizeDocuments(result.output)
+        });
+      }
     } catch (e) {
       if (controller.signal.aborted) {
         write(red('^C'));
@@ -150,10 +162,48 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
   };
 
   const started = useRef(false);
+
+  /** Applies a command handed over from outside (a chat code block): run it, or leave it on the prompt. */
+  const applyPending = (): void => {
+    const store = useDataStore.getState();
+    const pendingCommand = store.pendingTerminalCommand;
+    if (!pendingCommand || !started.current || running.current) return;
+    store.clearPendingTerminalCommand();
+
+    const lines = pendingCommand.command
+      .split('\n')
+      .map((l) => sanitize(l.trim()))
+      .filter(Boolean);
+    if (lines.length === 0) return;
+
+    if (!pendingCommand.run) {
+      line.current = lines[0];
+      redraw();
+      return;
+    }
+
+    void (async (): Promise<void> => {
+      for (const input of lines) {
+        const list = history();
+        if (list[list.length - 1] !== input) list.push(input);
+        write(`${input}\r\n`);
+        await run(input);
+      }
+    })();
+  };
+  const applyPendingRef = useRef(applyPending);
+  applyPendingRef.current = applyPending;
+  const pendingCommand = useDataStore((s) => s.pendingTerminalCommand);
+
+  useEffect(() => {
+    if (pendingCommand) applyPendingRef.current();
+  }, [pendingCommand]);
+
   const start = (): void => {
     if (started.current) return;
     started.current = true;
     write(`${dim(locales.cli_welcome)}\r\n${prompt()}`);
+    applyPendingRef.current();
   };
 
   const handleData = (data: string): void => {

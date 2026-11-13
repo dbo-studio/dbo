@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -14,6 +15,9 @@ import (
 
 // maxJSON bounds one pasted filter or document.
 const maxJSON = 4 << 20
+
+// maxRowValue is the largest document Browse inlines per row, so a page of big documents stays small.
+const maxRowValue = 16 << 10
 
 // blockedOperators run JavaScript on the server or write outside the collection being browsed.
 var blockedOperators = regexp.MustCompile(`(?i)"\$(where|function|accumulator|out|merge)"|\bmapReduce\b|\beval\b`)
@@ -118,7 +122,7 @@ func idString(v any) string {
 	return strings.TrimSuffix(strings.TrimPrefix(c, `{"_id":`), "}")
 }
 
-// Browse pages documents by _id. Paging by _id compares within one BSON type, so a collection that mixes _id
+// Browse pages documents by _id, or by offset when sorted. Paging by _id compares within one BSON type, so a collection that mixes _id
 // types pages only through the first type; shortcut: switch to skip paging if that shows up in practice.
 func (r *Repository) Browse(ctx context.Context, containerID string, q contract.BrowseQuery) (*contract.BrowsePage, error) {
 	c, err := r.client()
@@ -137,13 +141,45 @@ func (r *Repository) Browse(ctx context.Context, containerID string, q contract.
 		return nil, err
 	}
 
-	if q.Cursor != "" {
-		filter = bson.D{{Key: "$and", Value: bson.A{filter, bson.D{{Key: "_id", Value: bson.D{{Key: "$gt", Value: parseID(q.Cursor)}}}}}}}
-	}
-
 	limit := q.ClampLimit(100)
 
-	cur, err := coll.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit)+1))
+	sort, err := sortDoc(q.Sorts)
+	if err != nil {
+		return nil, err
+	}
+
+	proj, err := projection(q.Projection)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Find().SetLimit(int64(limit) + 1)
+	if proj != nil {
+		opts.SetProjection(proj)
+	}
+
+	// Default order pages by an _id cursor; a custom sort pages by offset because its key is not unique.
+	var offset int64
+
+	if sort == nil {
+		opts.SetSort(bson.D{{Key: "_id", Value: 1}})
+
+		if q.Cursor != "" {
+			filter = bson.D{{Key: "$and", Value: bson.A{filter, bson.D{{Key: "_id", Value: bson.D{{Key: "$gt", Value: parseID(q.Cursor)}}}}}}}
+		}
+	} else {
+		opts.SetSort(append(sort, bson.E{Key: "_id", Value: 1})).SetCollation(&options.Collation{Locale: "en", NumericOrdering: true})
+
+		if q.Cursor != "" {
+			if offset, err = strconv.ParseInt(q.Cursor, 10, 64); err != nil || offset < 0 {
+				return nil, contract.Invalid("invalid cursor")
+			}
+
+			opts.SetSkip(offset)
+		}
+	}
+
+	cur, err := coll.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -160,16 +196,88 @@ func (r *Repository) Browse(ctx context.Context, containerID string, q contract.
 
 		if i == limit {
 			// The extra row only proves there is a next page; it is fetched again from the cursor.
-			prev, _ := docID(docs[limit-1])
-			page.NextCursor = idString(prev)
+			if sort != nil {
+				page.NextCursor = strconv.FormatInt(offset+int64(limit), 10)
+			} else {
+				prev, _ := docID(docs[limit-1])
+				page.NextCursor = idString(prev)
+			}
 
 			break
 		}
 
-		page.Items = append(page.Items, contract.Item{ID: idString(id), View: contract.ViewDocument, Meta: map[string]any{"type": "doc"}})
+		text, err := canonical(d)
+		if err != nil {
+			return nil, err
+		}
+
+		item := contract.Item{ID: idString(id), View: contract.ViewDocument, Value: text, Meta: map[string]any{"type": "doc", "projected": proj != nil, "size": len(text)}}
+
+		// A large document stays out of the list payload; the client loads it on demand through Get.
+		if len(text) > maxRowValue {
+			item.Value = nil
+			item.Meta["truncated"] = true
+		}
+
+		page.Items = append(page.Items, item)
 	}
 
 	return page, nil
+}
+
+// sortDoc turns the requested sorts into an ordered sort document; nil means the default order.
+func sortDoc(sorts []contract.BrowseSort) (bson.D, error) {
+	var d bson.D
+
+	for _, s := range sorts {
+		if s.Field == "" {
+			return nil, contract.Invalid("sort field is required")
+		}
+
+		dir := 1
+		if s.Desc {
+			dir = -1
+		}
+
+		d = append(d, bson.E{Key: s.Field, Value: dir})
+	}
+
+	return d, nil
+}
+
+// projection parses a projection document. _id stays included so every row keeps its identity.
+func projection(text string) (bson.D, error) {
+	p, err := parseDoc(text)
+	if err != nil || len(p) == 0 {
+		return nil, err
+	}
+
+	out := make(bson.D, 0, len(p))
+
+	for _, e := range p {
+		if e.Key == "_id" && isFalsy(e.Value) {
+			continue
+		}
+
+		out = append(out, e)
+	}
+
+	return out, nil
+}
+
+func isFalsy(v any) bool {
+	switch n := v.(type) {
+	case bool:
+		return !n
+	case int32:
+		return n == 0
+	case int64:
+		return n == 0
+	case float64:
+		return n == 0
+	}
+
+	return false
 }
 
 func (r *Repository) Get(ctx context.Context, containerID, itemID string) (*contract.Item, error) {

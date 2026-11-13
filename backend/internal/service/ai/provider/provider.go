@@ -50,6 +50,8 @@ type CompletionRequest struct {
 	Suffix  *string `json:"suffix,omitempty"`
 	Model   string  `json:"model"`
 	Context string  `json:"context,omitempty"`
+	// Engine is the connection type; MongoDB and Redis complete shell statements and commands, not SQL.
+	Engine string `json:"engine,omitempty"`
 }
 
 type CompletionResponse struct {

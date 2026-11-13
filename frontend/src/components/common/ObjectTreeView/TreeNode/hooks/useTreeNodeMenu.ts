@@ -1,5 +1,5 @@
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { isNoSQLType } from '@/core/db/connectionAliases';
+import { isMongoDriver, isNoSQLType, isRedisDriver } from '@/core/db/connectionAliases';
 import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
@@ -48,6 +48,53 @@ function tableAiMenu(tableName: string, prefillChat: ReturnType<typeof useAiBrid
         action: () => run(`Tell me about the ${tableName} table.`),
         closeAfterAction: true
       }
+    ]
+  };
+}
+
+/** The AI menu of a MongoDB collection or a Redis database: queries and questions, not SELECT/UPDATE/DELETE. */
+function nosqlAiMenu(
+  node: { id: string; name: string },
+  type: string | undefined,
+  prefillChat: ReturnType<typeof useAiBridge>['prefillChat']
+): MenuType {
+  const run = (message: string): void => prefillChat(message, true, { input: message });
+  const mongo = isMongoDriver(type);
+  const target = mongo ? `the collection ${node.id}` : `the Redis database ${node.id}`;
+
+  return {
+    name: locales.ai_menu,
+    children: [
+      {
+        name: mongo ? locales.ai_find_documents : locales.ai_find_keys,
+        action: () =>
+          run(
+            mongo
+              ? `Write a find query for ${target}. Ask me what to filter on if it is not obvious.`
+              : `Write a command to find keys in ${target}.`
+          ),
+        closeAfterAction: true
+      },
+      ...(mongo
+        ? [
+            {
+              name: locales.ai_aggregate,
+              action: () => run(`Write an aggregation pipeline for ${target}.`),
+              closeAfterAction: true
+            },
+            {
+              name: locales.ai_describe_schema,
+              action: () => run(`Describe the fields and types of ${target}.`),
+              closeAfterAction: true
+            },
+            {
+              name: locales.ai_suggest_indexes,
+              action: () => run(`Which indexes would help ${target}? Check the existing ones first.`),
+              closeAfterAction: true
+            }
+          ]
+        : []),
+      { name: locales.ai_ask, action: () => run(`Tell me about ${target}.`), closeAfterAction: true }
     ]
   };
 }
@@ -210,7 +257,13 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
-    const ai: MenuType[] = node.type === 'table' ? [tableAiMenu(node.name, prefillChat)] : [];
+    const nosqlAi = isMongoDriver(currentConnection?.type) || isRedisDriver(currentConnection?.type);
+    const ai: MenuType[] =
+      node.type !== 'table'
+        ? []
+        : nosqlAi
+          ? [nosqlAiMenu(node, currentConnection?.type, prefillChat)]
+          : [tableAiMenu(node.name, prefillChat)];
 
     const utility: MenuType[] = [
       pinItem([node], isPinned(node)),

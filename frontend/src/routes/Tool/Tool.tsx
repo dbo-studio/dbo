@@ -4,10 +4,12 @@ import type { ToolTabType } from '@/types/Tab';
 import { Typography } from '@mui/material';
 import type { ComponentType, JSX } from 'react';
 import PubSubTool from './PubSubTool';
+import ServerTool from './ServerTool';
 
 /** Tool registry: tool id (from `ContainerSpec.tools`) to its component. Add new engine-specific tools here. */
 const TOOLS: Record<string, ComponentType<{ connectionId: number }>> = {
-  pubsub: PubSubTool
+  pubsub: PubSubTool,
+  server: ServerTool
 };
 
 export default function Tool(): JSX.Element {

@@ -1,4 +1,5 @@
 import { canUseAi } from '@/core/auth/permissions';
+import { isMongoDriver } from '@/core/db/connectionAliases';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import api from '@/api';
 import type { AICompleteRequest } from '@/api/ai/types';
@@ -88,6 +89,11 @@ export function registerInlineAIProvider(monaco: typeof Monaco, languageId: stri
       const currentConnection = useConnectionStore.getState().currentConnection;
 
       if (!currentConnection()?.id) {
+        return emptyResult;
+      }
+
+      // JavaScript is the MongoDB shell's language here; any other connection has no JavaScript editor to complete.
+      if (languageId === 'javascript' && !isMongoDriver(currentConnection()?.type)) {
         return emptyResult;
       }
 

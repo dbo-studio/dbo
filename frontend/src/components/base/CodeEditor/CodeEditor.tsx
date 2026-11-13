@@ -47,6 +47,8 @@ export default function CodeEditor({
         options={{
           ...editorConfig,
           readOnly: !editable,
+          folding: language === 'json',
+          showFoldingControls: 'always',
           fontSize: theme.editorFontSize,
           fontFamily: getEditorFontFamily(theme.editorFont)
         }}

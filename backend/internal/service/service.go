@@ -93,6 +93,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 	jobManager.RegisterProcessor(processors.NewRestoreDrillProcessor(jobManager, cm, repo.ConnectionRepo, repo.BackupArtifactRepo, repo.BackupScheduleRepo, ss, connectorService))
 	jobManager.RegisterProcessor(processors.NewToolInstallProcessor(jobManager))
 	jobManager.RegisterProcessor(processors.NewNoSQLBulkDeleteProcessor(jobManager, cm, repo.ConnectionRepo))
+	jobManager.RegisterProcessor(processors.NewNoSQLImportProcessor(jobManager, cm, repo.ConnectionRepo))
 
 	aiProviderService := serviceAiProvider.NewAiProviderService(repo.AiProviderRepo)
 	toolRegistry := serviceDbtools.NewRegistry(cm, repo.ConnectionRepo, deps.Cache)
@@ -111,10 +112,10 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		deps.Logger,
 	)
 	schemaService := serviceSchema.NewSchemaService(repo.ConnectionRepo, cm, deps.Cache)
-	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiAuditRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService, deps.Logger)
+	nosqlService := serviceNoSQL.NewService(repo.ConnectionRepo, cm, deps.Cache, jobManager, repo.NoSQLRecycleRepo)
+	aiChangesetService := serviceAiChangeset.NewAiChangesetService(repo.AiChangesetRepo, repo.AiAuditRepo, repo.AiChatRepo, repo.ConnectionRepo, schemaService, nosqlService, deps.Logger)
 	adminUsersService := serviceAdminUsers.NewAdminUsersService(repo.UserRepo, repo.WebSessionRepo)
 
-	nosqlService := serviceNoSQL.NewService(repo.ConnectionRepo, cm, deps.Cache, jobManager, repo.NoSQLRecycleRepo)
 	queryService := serviceQuery.NewQueryService(repo.ConnectionRepo, repo.HistoryRepo, cm, deps.Cache, jobManager)
 
 	return &Service{
@@ -138,7 +139,7 @@ func NewService(repo *repository.Repository, cm *databaseConnection.ConnectionMa
 		BackupScheduleService:        serviceBackup.NewBackupScheduleService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupScheduleRepo, repo.BackupConnectorRepo, ss),
 		BackupScheduler:              serviceBackup.NewScheduler(repo.BackupScheduleRepo, jobManager, repo.JobRepo, repo.ConnectionRepo, connectorService, deps.Logger),
 		BackupService:                serviceBackup.NewBackupService(jobManager, repo.ConnectionRepo, repo.ConnectionShareRepo, repo.BackupArtifactRepo, repo.BackupConnectorRepo, connectorService, deps.Cache),
-		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, cm, toolRegistry, deps.Logger, deps.Cache),
+		AiService:                    serviceAI.NewAiService(repo.ConnectionRepo, repo.AiProviderRepo, repo.AiChatRepo, aiChangesetService, questionService, dashboardService, schemaService, nosqlService, cm, toolRegistry, deps.Logger, deps.Cache),
 		AiProviderService:            aiProviderService,
 		AiChatService:                serviceAiChat.NewAiChatService(repo.AiChatRepo, repo.ConnectionRepo, deps.Config),
 		AiChangesetService:           aiChangesetService,

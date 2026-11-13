@@ -7,15 +7,15 @@ import { useMongo } from "./_case";
 test.describe("MongoDB capabilities", () => {
   const m = useMongo("cap");
 
-  test("describe advertises its capabilities and only the CLI tool", async ({ page }) => {
+  test("describe advertises its capabilities and the CLI and server tools", async ({ page }) => {
     await m.add(page, '{"a":1}');
     const res = await page.request.get(`${apiUrl()}/nosql/describe`, { params: { connectionId: m.s.id, containerId: m.s.container }, headers });
     const spec = await j(res);
     expect(spec.filter).toBe("query");
     expect(spec.listStyle).toBe("flat");
-    for (const cap of ["insert", "edit", "delete", "bulk-delete", "bulk-delete-pattern", "recycle", "stats"]) expect(spec.capabilities, cap).toContain(cap);
+    for (const cap of ["insert", "edit", "delete", "bulk-delete", "bulk-delete-pattern", "recycle", "stats", "doc-tree", "indexes", "aggregate", "schema", "transfer", "collection-admin"]) expect(spec.capabilities, cap).toContain(cap);
     for (const cap of ["ttl", "rename", "window"]) expect(spec.capabilities, cap).not.toContain(cap);
-    expect(spec.tools).toEqual(["cli"]);
+    expect(spec.tools).toEqual(["cli", "server"]);
     expect(spec.createKinds.map((k: { id: string }) => k.id)).toEqual(["document"]);
   });
 

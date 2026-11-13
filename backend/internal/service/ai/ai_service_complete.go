@@ -8,7 +8,9 @@ import (
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
@@ -40,16 +42,28 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
-	if err != nil {
-		return nil, err
-	}
+	var contextStr string
 
-	if err := ctx.Err(); err != nil {
-		return nil, apperror.QueryCanceled()
-	}
+	if databaseContract.IsNoSQL(conn.ConnectionType) {
+		// MongoDB and Redis have no SQL schema; the model gets the container list instead.
+		nosqlRepo, err := database.NewNoSQLRepository(ctx, conn, s.cm)
+		if err != nil {
+			return nil, err
+		}
 
-	contextStr := repo.AiCompleteContext(ctx, toAICompleteInput(req))
+		contextStr, _ = serviceDbtools.ListContainers(ctx, nosqlRepo)
+	} else {
+		repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := ctx.Err(); err != nil {
+			return nil, apperror.QueryCanceled()
+		}
+
+		contextStr = repo.AiCompleteContext(ctx, toAICompleteInput(req))
+	}
 
 	if err := ctx.Err(); err != nil {
 		return nil, apperror.QueryCanceled()
@@ -60,6 +74,7 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		Suffix:  req.ContextOpts.Suffix,
 		Model:   dbProvider.Model,
 		Context: contextStr,
+		Engine:  conn.ConnectionType,
 	}
 
 	providerResp, err := provider.Complete(ctx, providerReq)

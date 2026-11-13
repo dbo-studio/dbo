@@ -2,7 +2,10 @@ import { variables } from '@/core/theme/variables';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
+import CodeEditor from '@/components/base/CodeEditor/CodeEditor';
 import SqlEditor from '@/components/base/SqlEditor/SqlEditor';
+import { isNoSQLType } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import ChartView from '@/components/common/ChartView/ChartView';
 import type { ChartReport } from '@/components/common/AiChatPanel/utils/chartReport';
@@ -39,6 +42,8 @@ export default function ReportEditor({
   scope?: { database?: string; schema?: string };
 }): JSX.Element {
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
+  // A MongoDB or Redis report is a JSON pipeline or command: no SQL editor. Its {{filters}} still take values.
+  const noSql = isNoSQLType(useCurrentConnection()?.type);
   const [edited, setEdited] = useState<ChartReport>(report);
   const [sql, setSql] = useState(report.sql);
   // Values for the {{filters}}; saving keeps them as the report's defaults.
@@ -239,13 +244,17 @@ export default function ReportEditor({
           overflow: 'hidden'
         }}
       >
-        <SqlEditor
-          editorHeight={160}
-          value={sql}
-          onChange={setSql}
-          autocomplete={autocomplete ?? EMPTY_AUTOCOMPLETE}
-          onRunQuery={() => run()}
-        />
+        {noSql ? (
+          <CodeEditor value={sql} onChange={setSql} language='json' />
+        ) : (
+          <SqlEditor
+            editorHeight={160}
+            value={sql}
+            onChange={setSql}
+            autocomplete={autocomplete ?? EMPTY_AUTOCOMPLETE}
+            onRunQuery={() => run()}
+          />
+        )}
       </Box>
       {error && (
         <Typography variant='caption' color='error'>

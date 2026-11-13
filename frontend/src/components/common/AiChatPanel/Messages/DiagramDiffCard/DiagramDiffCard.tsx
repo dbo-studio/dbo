@@ -2,6 +2,8 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import QueryPreviewModal from '@/components/common/QueryPreviewModal/QueryPreviewModal';
 import { summarizeChangeset } from '@/core/diagram/changesetSummary';
 import { useChangesetReview } from '@/hooks';
+import { isNoSQLType } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
 import { changeCount } from '@/core/ai/changeCount';
 import locales from '@/locales';
 import { isOpen, useChangesetStore } from '@/store/changesetStore/changeset.store';
@@ -48,6 +50,8 @@ function OpReview({
 export default function DiagramDiffCard({ changesetId }: { changesetId: number }): JSX.Element | null {
   const theme = useTheme();
   const review = useChangesetReview(changesetId);
+  // A MongoDB or Redis change is statements: there is no schema diagram to draw or open.
+  const noSql = isNoSQLType(useCurrentConnection()?.type);
   const { changeset } = review;
   if (!changeset) return null;
 
@@ -89,7 +93,7 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
         />
       </Stack>
       <AgentCardBodyStyled>
-        <DiagramThumbnail ops={changeset.diagramOps} />
+        {!noSql && <DiagramThumbnail ops={changeset.diagramOps} />}
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
           {lines.map((line, index) => (
             <Typography
@@ -112,9 +116,11 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
           ))}
         </Box>
         <CardActionsStyled>
-          <Button variant='text' onClick={openInDiagram} data-testid='ai-diagram-open'>
-            {locales.ai_open_in_diagram}
-          </Button>
+          {!noSql && (
+            <Button variant='text' onClick={openInDiagram} data-testid='ai-diagram-open'>
+              {locales.ai_open_in_diagram}
+            </Button>
+          )}
           {pending && (
             <>
               <Button

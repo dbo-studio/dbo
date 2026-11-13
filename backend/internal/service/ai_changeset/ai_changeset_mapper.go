@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/goccy/go-json"
@@ -44,6 +45,31 @@ func changesetToResponse(changeset *model.AiChangeset, connectionType string) (*
 		default:
 			open = append(open, ops[i])
 		}
+	}
+
+	// A MongoDB or Redis change is statements: no tables, no diagram, and the undo is what each write captured.
+	if contract.IsNoSQL(connectionType) {
+		undo := nosqlUndoStatements(changeset)
+
+		return &dto.AiChangesetResponse{
+			ID:           changeset.ID,
+			ChatID:       changeset.ChatID,
+			ConnectionID: int32(changeset.ConnectionID),
+			Database:     changeset.Database,
+			Schema:       changeset.Schema,
+			Ops: lo.Map(rows, func(row *model.AiChangesetOp, i int) dto.AiChangesetOp {
+				return dto.AiChangesetOp{
+					Position:       row.Position,
+					Status:         string(row.Status),
+					Error:          row.Error,
+					UndoNote:       row.UndoNote,
+					SchemaChangeOp: ops[i],
+				}
+			}),
+			// The client reads these as lists, so they are empty lists, never null.
+			DiagramOps: []dto.DiagramOp{},
+			UndoSQL:    lo.Ternary(len(undo) > 0, undo, []string{}),
+		}, nil
 	}
 
 	return &dto.AiChangesetResponse{

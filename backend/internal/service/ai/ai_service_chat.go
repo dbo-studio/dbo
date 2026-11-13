@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
-	"github.com/dbo-studio/dbo/internal/database"
 	"github.com/dbo-studio/dbo/internal/model"
 	aiProvider "github.com/dbo-studio/dbo/internal/service/ai/provider"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -33,12 +32,7 @@ func (s *AiServiceImpl) Chat(ctx context.Context, req *dto.AiChatRequest) (*dto.
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)
-	if err != nil {
-		return nil, err
-	}
-
-	contextStr, err := repo.AiContext(ctx, toAIContextInput(req))
+	contextStr, err := s.aiContext(ctx, conn, req)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}

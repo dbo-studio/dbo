@@ -41,8 +41,16 @@ func (r *Repository) Classify(op contract.Operation) contract.SafetyClass {
 		}
 
 		return contract.SafetyWrite
-	case "bulk-delete":
+	case "bulk-delete", "index-drop", "collection-drop", "server-destructive":
 		return contract.SafetyDestructive
+	case "index-create", "validator-set", "collection-rename", "import", "server-write":
+		return contract.SafetyWrite
+	case "explain", "aggregate", "analyze", "export", "server-read":
+		if checkJSON(op.Raw) != nil {
+			return contract.SafetyBlocked
+		}
+
+		return contract.SafetyRead
 	case "command":
 		return classifyCommand(op.Raw)
 	default:
@@ -861,7 +869,8 @@ func (r *Repository) exec(ctx context.Context, coll *mongo.Collection, cmd *call
 			return nil, err
 		}
 
-		return wrap(bson.D{{Key: "insertedCount", Value: len(res.InsertedIDs)}}, nil)
+		// The ids let a write be undone: the driver only knows them once the insert ran.
+		return wrap(bson.D{{Key: "insertedCount", Value: len(res.InsertedIDs)}, {Key: "insertedIds", Value: res.InsertedIDs}}, nil)
 	case "updateOne", "updateMany", "replaceOne":
 		return r.update(ctx, coll, cmd)
 	case "deleteOne", "deleteMany":

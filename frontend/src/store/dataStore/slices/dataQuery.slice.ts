@@ -1,3 +1,4 @@
+import { openBottomPanel } from '@/core/bottomPanel';
 import { TabMode } from '@/core/enums';
 import { runQueryInBackground, runRawQueryInBackground } from '@/api/query';
 import {
@@ -71,11 +72,19 @@ export const createDataQuerySlice: StateCreator<
     reRender: false,
     lastQueryResult: undefined,
     pendingEditorQueryRun: undefined,
+    pendingTerminalCommand: undefined,
     gridEditable: false,
     updatableNodeId: undefined,
     editableReason: undefined,
     drivingTable: undefined,
     queryPaginated: false,
+    clearPendingTerminalCommand: (): void => {
+      set({ pendingTerminalCommand: undefined }, undefined, 'clearPendingTerminalCommand');
+    },
+    sendToTerminal: (command: string, run: boolean): void => {
+      set({ pendingTerminalCommand: { command, run } }, undefined, 'sendToTerminal');
+      openBottomPanel('terminal');
+    },
     clearPendingEditorQueryRun: (): void => {
       set({ pendingEditorQueryRun: undefined }, undefined, 'clearPendingEditorQueryRun');
     },

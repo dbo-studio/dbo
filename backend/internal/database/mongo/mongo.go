@@ -36,6 +36,12 @@ var (
 	_ contract.Recycler        = (*Repository)(nil)
 	_ contract.CommandRunner   = (*Repository)(nil)
 	_ contract.StatsProvider   = (*Repository)(nil)
+	_ contract.DocTree         = (*Repository)(nil)
+	_ contract.IndexManager    = (*Repository)(nil)
+	_ contract.Aggregator      = (*Repository)(nil)
+	_ contract.SchemaTools     = (*Repository)(nil)
+	_ contract.DataTransfer    = (*Repository)(nil)
+	_ contract.CollectionAdmin = (*Repository)(nil)
 )
 
 type clientKey struct {
@@ -249,6 +255,7 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 		ContextMenu: []contract.TreeNodeAction{
 			refreshAction,
 			{Title: "CLI", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolCLI)}},
+			{Title: "Server", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolServer)}},
 		},
 	}
 
@@ -419,9 +426,9 @@ func (r *Repository) Describe(ctx context.Context, containerID string) (*contrac
 		Filter:    contract.FilterQuery,
 		ListStyle: contract.ListFlat,
 		Capabilities: []contract.Capability{
-			contract.CapInsert, contract.CapEdit, contract.CapDelete, contract.CapBulkDelete, contract.CapBulkDeletePattern, contract.CapRecycle, contract.CapStats,
+			contract.CapInsert, contract.CapEdit, contract.CapDelete, contract.CapBulkDelete, contract.CapBulkDeletePattern, contract.CapRecycle, contract.CapStats, contract.CapDocTree, contract.CapIndexes, contract.CapAggregate, contract.CapSchema, contract.CapTransfer, contract.CapCollectionAdmin,
 		},
-		Tools:       []contract.ToolID{contract.ToolCLI},
+		Tools:       []contract.ToolID{contract.ToolCLI, contract.ToolServer},
 		CreateKinds: []contract.CreateKind{{ID: "document", Label: "Document", View: contract.ViewDocument}},
 	}, nil
 }

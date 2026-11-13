@@ -11,6 +11,7 @@ import (
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceNoSQL "github.com/dbo-studio/dbo/internal/service/nosql"
 	serviceSchema "github.com/dbo-studio/dbo/internal/service/schema"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -57,6 +58,7 @@ type IAiChangesetServiceImpl struct {
 	aiChatRepo      repository.IAiChatRepo
 	connectionRepo  repository.IConnectionRepo
 	schemaService   serviceSchema.ISchemaService
+	nosql           serviceNoSQL.INoSQLService
 	logger          logger.Logger
 }
 
@@ -66,6 +68,7 @@ func NewAiChangesetService(
 	aiChatRepo repository.IAiChatRepo,
 	connectionRepo repository.IConnectionRepo,
 	schemaService serviceSchema.ISchemaService,
+	nosql serviceNoSQL.INoSQLService,
 	logger logger.Logger,
 ) IAiChangesetService {
 	return &IAiChangesetServiceImpl{
@@ -74,6 +77,7 @@ func NewAiChangesetService(
 		aiChatRepo:      aiChatRepo,
 		connectionRepo:  connectionRepo,
 		schemaService:   schemaService,
+		nosql:           nosql,
 		logger:          logger,
 	}
 }
@@ -359,6 +363,10 @@ func (s IAiChangesetServiceImpl) PreviewOp(ctx context.Context, chatID, changese
 		return nil, apperror.BadRequest(errors.New("only a data change can be previewed"))
 	}
 
+	if s.isNoSQL(ctx, changeset.ConnectionID) {
+		return s.nosqlPreviewOp(ctx, changeset, ops[0].SQL)
+	}
+
 	return s.schemaService.PreviewWrite(ctx, &dto.WritePreviewRequest{
 		ConnectionID: int32(changeset.ConnectionID),
 		Database:     lo.EmptyableToPtr(changeset.Database),
@@ -371,6 +379,11 @@ func (s IAiChangesetServiceImpl) Before(ctx context.Context, chatID, changesetID
 	changeset, err := s.find(ctx, chatID, changesetID)
 	if err != nil {
 		return nil, err
+	}
+
+	// A statement change has no table definition to show.
+	if s.isNoSQL(ctx, changeset.ConnectionID) {
+		return map[string]*contract.TableStructure{}, nil
 	}
 
 	ops, err := decodeOps(lo.Map(changeset.Ops, func(_ model.AiChangesetOp, i int) *model.AiChangesetOp { return &changeset.Ops[i] }))
@@ -404,6 +417,10 @@ func (s IAiChangesetServiceImpl) Preview(ctx context.Context, chatID, changesetI
 		return nil, err
 	}
 
+	if s.isNoSQL(ctx, changeset.ConnectionID) {
+		return lo.Map(req.Ops, func(op dto.SchemaChangeOp, _ int) string { return op.SQL }), nil
+	}
+
 	return s.schemaService.PreviewChange(ctx, req)
 }
 
@@ -426,6 +443,10 @@ func (s IAiChangesetServiceImpl) Apply(ctx context.Context, chatID, changesetID 
 	}
 
 	req.Confirmed = apply.Confirmed
+
+	if s.isNoSQL(ctx, changeset.ConnectionID) {
+		return s.applyNoSQL(ctx, changeset, req, open, apply.Confirmed)
+	}
 
 	// Read the SQL before it runs: the audit entry shows what was attempted even when the apply fails.
 	statements, _ := s.schemaService.PreviewChange(ctx, req)
@@ -579,8 +600,17 @@ func (s IAiChangesetServiceImpl) Undo(ctx context.Context, chatID, changesetID u
 		return nil, apperror.InternalServerError(err)
 	}
 
-	schemaUndo := serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
-	statements := undoStatements(changeset, connection.ConnectionType, ops)
+	var schemaUndo, statements []string
+
+	if contract.IsNoSQL(connection.ConnectionType) {
+		statements = nosqlUndoStatements(changeset)
+		if lo.SomeBy(statements, isNoSQLStructure) {
+			schemaUndo = statements
+		}
+	} else {
+		schemaUndo = serviceSchema.CompensatingSQL(connection.ConnectionType, changeset.Database, changeset.Schema, ops)
+		statements = undoStatements(changeset, connection.ConnectionType, ops)
+	}
 
 	switch {
 	case connection.AgentTier == model.AgentTierReadOnly:
@@ -622,6 +652,10 @@ func (s IAiChangesetServiceImpl) allowedByTier(ctx context.Context, changeset *m
 	connection, err := s.connectionRepo.Find(ctx, int32(changeset.ConnectionID))
 	if err != nil {
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	if contract.IsNoSQL(connection.ConnectionType) {
+		return allowedNoSQLByTier(connection.AgentTier, ops)
 	}
 
 	switch connection.AgentTier {

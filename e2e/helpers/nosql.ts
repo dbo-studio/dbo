@@ -71,6 +71,12 @@ export const nosql = (page: Page, connectionId: number, containerId: string) => 
     page.request.post(`${apiUrl()}/nosql/item/member`, { data: { connectionId, containerId, itemId, op, confirmed }, headers }),
   window: (itemId: string, params: Record<string, string | number> = {}) =>
     page.request.get(`${apiUrl()}/nosql/item/window`, { params: { connectionId, containerId, itemId, ...params }, headers }),
+  tree: (itemId: string, path: string[] = [], params: Record<string, number> = {}) =>
+    page.request.get(`${apiUrl()}/nosql/item/tree`, { params: { connectionId, containerId, itemId, path: JSON.stringify(path), ...params }, headers }),
+  setField: (itemId: string, path: string[], value: string, typeHint = "", confirmed = true) =>
+    page.request.put(`${apiUrl()}/nosql/item/field`, { data: { connectionId, containerId, itemId, path, value, typeHint, confirmed }, headers }),
+  unsetField: (itemId: string, path: string[], confirmed = true) =>
+    page.request.post(`${apiUrl()}/nosql/item/field/unset`, { data: { connectionId, containerId, itemId, path, confirmed }, headers }),
   cli: (input: string, confirmed = false) =>
     page.request.post(`${apiUrl()}/nosql/tools/cli/run`, { data: { connectionId, input, confirmed }, headers }),
 });

@@ -25,6 +25,8 @@ type ToolContext struct {
 	ConnectionID int32
 	Schema       *string
 	Database     *string
+	// NoSQL is set for MongoDB and Redis connections, which have their own read-only tool set.
+	NoSQL bool
 	// Args are values bound to the placeholders of the statement, for callers that fill it from user input.
 	Args []any
 }
@@ -44,6 +46,24 @@ func NewRegistry(cm *databaseConnection.ConnectionManager, connectionRepo reposi
 }
 
 func (r *Registry) Execute(ctx context.Context, toolName string, args map[string]any, toolCtx ToolContext) (string, error) {
+	// On a MongoDB or Redis connection a chart runs a pipeline or command, not a SELECT.
+	if toolCtx.NoSQL && toolName == ToolShowChart {
+		spec, err := NoSQLSpecFromArgs(argString(args, "container"), argString(args, "pipeline"), argString(args, "command"))
+		if err != nil {
+			return "", err
+		}
+
+		if strings.Contains(spec, "{{") {
+			return "", fmt.Errorf("give a value for each {{filter}} in params")
+		}
+
+		return r.RunNoSQLQuery(ctx, toolCtx.ConnectionID, spec)
+	}
+
+	if out, handled, err := r.executeNoSQL(ctx, toolName, args, toolCtx); handled {
+		return out, err
+	}
+
 	switch toolName {
 	case "list_tables":
 		return r.listTables(ctx, args, toolCtx)

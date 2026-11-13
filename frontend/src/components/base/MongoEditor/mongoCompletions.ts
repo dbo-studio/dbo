@@ -1,3 +1,4 @@
+import { registerInlineAIProvider } from '@/components/base/SqlEditor/helpers/registerInlineAIProvider';
 import type * as Monaco from 'monaco-editor';
 
 /** Live data the completion providers read; set by whichever Mongo editor is mounted. */
@@ -165,4 +166,7 @@ export function registerMongoCompletions(monaco: typeof Monaco): void {
     triggerCharacters: ['.', '$', '"', '('],
     provideCompletionItems: (model, position) => provideShell(monaco, model, position)
   });
+
+  // Ghost-text suggestions for shell statements, from the same assistant as the SQL editor's.
+  registerInlineAIProvider(monaco, 'javascript');
 }

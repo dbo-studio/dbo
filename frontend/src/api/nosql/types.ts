@@ -11,7 +11,13 @@ export type NoSQLCapability =
   | 'rename'
   | 'recycle'
   | 'window'
-  | 'stats';
+  | 'stats'
+  | 'doc-tree'
+  | 'indexes'
+  | 'aggregate'
+  | 'schema'
+  | 'transfer'
+  | 'collection-admin';
 
 export type NoSQLFieldInfo = { name: string; types: string[] };
 
@@ -46,6 +52,7 @@ export type NoSQLBrowseRequest = {
   filter?: string;
   filters?: NoSQLBrowseFilter[];
   sorts?: NoSQLBrowseSort[];
+  projection?: string;
 };
 
 export type NoSQLBrowsePage = { items: NoSQLItem[]; nextCursor: string };
@@ -95,4 +102,98 @@ export type NoSQLContainerStats = {
   avgObjSize: number;
   storageSize: number;
   indexes: NoSQLIndexInfo[];
+};
+
+export type NoSQLDocNode = {
+  key: string;
+  path: string[];
+  type: string;
+  value: string;
+  count: number;
+  truncated: boolean;
+};
+export type NoSQLDocChildren = { nodes: NoSQLDocNode[]; total: number };
+export type NoSQLDocFieldRequest = NoSQLItemRef & {
+  path: string[];
+  value?: string;
+  typeHint?: string;
+  confirmed?: boolean;
+};
+
+export type NoSQLIndexDetail = {
+  name: string;
+  keys: string;
+  unique: boolean;
+  sparse: boolean;
+  ttlSecs: number | null;
+  partial: string;
+  ops: number;
+};
+export type NoSQLIndexSpec = {
+  keys: string;
+  name?: string;
+  unique?: boolean;
+  sparse?: boolean;
+  ttlSecs?: number | null;
+  partial?: string;
+};
+export type NoSQLExplain = {
+  stage: string;
+  index: string;
+  returned: number;
+  docsExamined: number;
+  keysExamined: number;
+  millis: number;
+  raw: string;
+};
+
+export type NoSQLAggregateResult = { docs: string[]; truncated: boolean };
+
+export type NoSQLSchemaField = {
+  path: string;
+  count: number;
+  types: { type: string; count: number }[];
+  top: { value: string; count: number }[];
+};
+export type NoSQLSchemaAnalysis = { sampled: number; fields: NoSQLSchemaField[] };
+export type NoSQLValidator = { validator: string; level: string; action: string };
+
+export type NoSQLServerStatus = {
+  host: string;
+  version: string;
+  uptimeSecs: number;
+  connections: Record<string, number>;
+  opCounters: Record<string, number>;
+  memoryMb: Record<string, number>;
+  replica: string;
+};
+export type NoSQLOperation = {
+  id: string;
+  namespace: string;
+  op: string;
+  client: string;
+  secs: number;
+  active: boolean;
+  command: string;
+};
+export type NoSQLDatabase = { name: string; sizeOnDisk: number; collections: number };
+export type NoSQLCollectionInfo = { name: string; type: 'collection' | 'view' | 'timeseries'; capped: boolean };
+export type NoSQLCollectionOptions = {
+  kind: 'collection' | 'capped' | 'timeseries' | 'view';
+  cappedBytes?: number;
+  timeField?: string;
+  metaField?: string;
+  granularity?: string;
+  viewOn?: string;
+  pipeline?: string;
+};
+export type NoSQLUser = { user: string; db: string; roles: string[] | null };
+export type NoSQLGridFile = { id: string; filename: string; length: number; uploadDate: string; contentType: string };
+export type NoSQLChangeMessage = {
+  type: 'change' | 'ping' | 'error';
+  op?: string;
+  key?: string;
+  doc?: string;
+  at?: string;
+  message?: string;
 };

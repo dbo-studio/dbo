@@ -26,6 +26,15 @@ const (
 	maxToolResultLen = 20000
 )
 
+const noSQLAgentInstructions = `Mode: AGENT. You can read with tools and propose writes with preview_write. ` +
+	`A proposal is a list of write statements (MongoDB shell statements, or Redis commands); the user sees how many documents or keys each touches, reviews it, and applies it. Nothing runs until then. ` +
+	`Read first (describe_container, browse_container, run_command) so a filter matches what you mean. Prefer a narrow filter; use updateMany or deleteMany only when asked. ` +
+	`On MongoDB start each statement with use <database>; and write one call. Do not propose a statement that drops a collection or index unless the user asked for it. ` +
+	`Use update_plan for a multi-step task.`
+
+const noSQLModeInstructions = `Mode: ASK. You can list containers, describe them, browse and read items, run read-only commands and (MongoDB) read-only aggregations with tools. ` +
+	`You cannot change the data. When the user wants a change, give the statement in a code block for them to review and run.`
+
 const askModeInstructions = `Mode: ASK. You can inspect the schema and run read-only SELECT queries with tools. ` +
 	`To explain why a query is slow, call explain_query and base any index advice on the plan. ` +
 	`When asked to review or improve the schema, call review_schema. ` +
@@ -49,6 +58,16 @@ const agentModeInstructions = `Mode: AGENT. Work step by step with tools. ` +
 // Agent mode, so the model does not repeat rejected changes or assume pending
 // ones exist.
 func (s *AiServiceImpl) modeInstructions(ctx context.Context, chatID uint, req *dto.AiChatRequest) string {
+	if req.NoSQL {
+		if !req.AgentMode() {
+			return noSQLModeInstructions
+		}
+
+		state, _ := s.changesetService.Describe(ctx, chatID)
+
+		return strings.TrimSpace(noSQLAgentInstructions + "\n\n" + state)
+	}
+
 	if !req.AgentMode() {
 		return askModeInstructions
 	}
@@ -85,7 +104,7 @@ func (s *AiServiceImpl) runAgentLoop(
 		return resp, nil, err
 	}
 
-	toolCtx := serviceDbtools.ToolContext{ConnectionID: req.ConnectionID}
+	toolCtx := serviceDbtools.ToolContext{ConnectionID: req.ConnectionID, NoSQL: req.NoSQL}
 	if req.ContextOpts != nil {
 		toolCtx.Schema = req.ContextOpts.Schema
 		toolCtx.Database = req.ContextOpts.Database
@@ -200,7 +219,9 @@ func (s *AiServiceImpl) runToolCall(
 	)
 
 	switch {
-	case !serviceDbtools.AllowedTool(req.AgentMode(), req.AgentTier, call.Name):
+	case toolCtx.NoSQL && !serviceDbtools.AllowedNoSQLTool(req.AgentMode(), req.AgentTier, call.Name):
+		err = blockedError{fmt.Sprintf("tool %q is not available on this connection", call.Name)}
+	case !toolCtx.NoSQL && !serviceDbtools.AllowedTool(req.AgentMode(), req.AgentTier, call.Name):
 		err = blockedError{fmt.Sprintf("tool %q is not available in %s mode", call.Name, modeName(req.Mode))}
 	case call.Name == serviceDbtools.ToolProposeSchemaChange:
 		var changeset *dto.AiChangesetResponse
@@ -246,7 +267,13 @@ func (s *AiServiceImpl) runToolCall(
 		}
 	case call.Name == serviceDbtools.ToolPreviewWrite:
 		var written *previewWriteResult
-		if written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx); err == nil {
+		if toolCtx.NoSQL {
+			written, err = s.previewNoSQLWrite(ctx, chatID, call.Arguments, toolCtx)
+		} else {
+			written, err = s.previewWrite(ctx, chatID, call.Arguments, toolCtx)
+		}
+
+		if err == nil {
 			result = writePreviewText(written.Previews)
 			msg := traceMessage(model.AiChatMessageTypeDiagramDiff, map[string]uint{"changesetId": written.Changeset.ID})
 			ev := streamEvent("diagram_diff", strconv.FormatUint(uint64(written.Changeset.ID), 10), written.Changeset)
@@ -346,6 +373,10 @@ type saveReportArgs struct {
 	Group   string   `json:"group"`
 	Size    string   `json:"size"`
 	Goal    float64  `json:"goal"`
+	// Container, Pipeline and Command replace SQL on a MongoDB or Redis connection.
+	Container string `json:"container"`
+	Pipeline  string `json:"pipeline"`
+	Command   string `json:"command"`
 	// Params are the default values of the {{filters}} in SQL.
 	Params map[string]string `json:"params"`
 }
@@ -366,6 +397,15 @@ func (s *AiServiceImpl) showChartWithParams(ctx context.Context, rawArgs string,
 		return "", fmt.Errorf("invalid arguments: %w", err)
 	}
 
+	if toolCtx.NoSQL {
+		spec, err := serviceDbtools.NoSQLSpecFromArgs(args.Container, args.Pipeline, args.Command)
+		if err != nil {
+			return "", err
+		}
+
+		args.SQL = spec
+	}
+
 	result, err := s.questionService.Preview(ctx, &dto.QuestionPreviewRequest{
 		ConnectionID: toolCtx.ConnectionID,
 		Database:     toolCtx.Database,
@@ -382,6 +422,15 @@ func (s *AiServiceImpl) saveReport(ctx context.Context, rawArgs string, toolCtx 
 	var args saveReportArgs
 	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
 		return nil, fmt.Errorf("invalid arguments: %w", err)
+	}
+
+	if toolCtx.NoSQL {
+		spec, err := serviceDbtools.NoSQLSpecFromArgs(args.Container, args.Pipeline, args.Command)
+		if err != nil {
+			return nil, err
+		}
+
+		args.SQL = spec
 	}
 
 	req := &dto.QuestionCreateRequest{

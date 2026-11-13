@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -45,6 +46,31 @@ type INoSQLService interface {
 	Window(ctx context.Context, req *dto.NoSQLWindowRequest) (*contract.MemberWindow, error)
 	ApplyMember(ctx context.Context, req *dto.NoSQLMemberRequest) error
 	Stats(ctx context.Context, req *dto.NoSQLContainerRequest) (*contract.ContainerStats, error)
+	ExportOpen(ctx context.Context, req *dto.NoSQLExportRequest) (contract.ExportIter, error)
+	Import(ctx context.Context, req *dto.NoSQLImportRequest) (int, error)
+	ImportStart(ctx context.Context, req *dto.NoSQLImportStartRequest) (uint, error)
+	// ServerCall, GridFSOpen and WatchChanges are the server-level views of MongoDB (status, databases, users, GridFS).
+	ServerCall(ctx context.Context, connectionID int32, kind string, confirmed bool, fn func(contract.ServerTools) (any, error)) (any, error)
+	GridFSOpen(ctx context.Context, connectionID int32, db, bucket, id string) (io.ReadCloser, *contract.GridFSFile, error)
+	WatchChanges(ctx context.Context, connectionID int32, containerID string, emit func(contract.ChangeEvent) error) error
+	CollectionRename(ctx context.Context, req *dto.NoSQLCollectionRenameRequest) (string, error)
+	CollectionDrop(ctx context.Context, req *dto.NoSQLCollectionDropRequest) error
+	// ClassifyWrite, PreviewStatement and ApplyStatement run one write statement for the assistant's changesets.
+	ClassifyWrite(ctx context.Context, connectionID int32, statement string) (contract.SafetyClass, error)
+	PreviewStatement(ctx context.Context, connectionID int32, statement string) (*contract.WritePreview, error)
+	ApplyStatement(ctx context.Context, connectionID int32, statement string, confirmed bool) ([]string, string, error)
+	RequireConfirmed(ctx context.Context, connectionID int32, statements []string, confirmed bool) error
+	Schema(ctx context.Context, req *dto.NoSQLSchemaRequest) (*contract.SchemaAnalysis, error)
+	GetValidator(ctx context.Context, req *dto.NoSQLContainerRequest) (*contract.Validator, error)
+	SetValidator(ctx context.Context, req *dto.NoSQLValidatorRequest) error
+	Aggregate(ctx context.Context, req *dto.NoSQLAggregateRequest) (*contract.AggregateResult, error)
+	Indexes(ctx context.Context, req *dto.NoSQLContainerRequest) ([]contract.IndexDetail, error)
+	IndexCreate(ctx context.Context, req *dto.NoSQLIndexCreateRequest) (string, error)
+	IndexDrop(ctx context.Context, req *dto.NoSQLIndexDropRequest) error
+	Explain(ctx context.Context, req *dto.NoSQLBrowseRequest) (*contract.ExplainResult, error)
+	DocChildren(ctx context.Context, req *dto.NoSQLDocChildrenRequest) (*contract.DocChildren, error)
+	DocSetField(ctx context.Context, req *dto.NoSQLDocFieldRequest) error
+	DocUnsetField(ctx context.Context, req *dto.NoSQLDocFieldRequest) error
 	RecycleList(ctx context.Context, connectionID int32) ([]dto.NoSQLRecycleItem, error)
 	RecycleRestore(ctx context.Context, req *dto.NoSQLRecycleRestoreRequest) error
 	// BulkDeletePreview counts matches (capped) so the UI can show what a bulk delete would remove.

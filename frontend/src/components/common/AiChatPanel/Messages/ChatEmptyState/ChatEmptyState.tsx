@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import AiSetupPopover from '@/components/common/AiSetupPopover/AiSetupPopover';
+import { isMongoDriver, isRedisDriver } from '@/core/db/connectionAliases';
 import { getAiStatus } from '@/core/ai/aiStatus';
 import { canManageAiSettings } from '@/core/auth/permissions';
 import { TabMode } from '@/core/enums';
@@ -249,7 +250,12 @@ export default function ChatEmptyState({ onSelectPrompt }: ChatEmptyStateProps):
 
   const selectedTab = tabs.find((tab) => tab.id === selectedTabId);
   const editorQuery = selectedTab?.mode === TabMode.Query ? (getQuery(selectedTab.id) || '').trim() : '';
-  const promptKeys = useMemo(() => getChatPromptSuggestions(context, editorQuery), [context, editorQuery]);
+  const connectionType = useConnectionStore((state) => state.currentConnection()?.type);
+  const engine = isMongoDriver(connectionType) ? 'mongo' : isRedisDriver(connectionType) ? 'redis' : 'sql';
+  const promptKeys = useMemo(
+    () => getChatPromptSuggestions(context, editorQuery, engine),
+    [context, editorQuery, engine]
+  );
 
   if (!getAiStatus(providers).ready) {
     return <NoProviderState />;

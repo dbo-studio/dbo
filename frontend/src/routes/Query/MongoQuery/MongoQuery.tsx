@@ -6,6 +6,8 @@ import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox';
 import DataGrid from '@/components/common/DataGrid/DataGrid';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useAiBridge } from '@/hooks/useAiBridge';
+import { summarizeDocuments } from '@/core/utils/queryResultSummary';
+import { useAiStore } from '@/store/aiStore/ai.store';
 import QueryEditorActionBar from '../QueryEditorActionBar/QueryEditorActionBar';
 import { canUseCli } from '@/core/auth/permissions';
 import { shortcuts } from '@/core/utils';
@@ -19,14 +21,14 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { useSyncEditorContext } from '@/hooks/useSyncEditorContext';
 import type { ColumnType, EditorTabType, RowType } from '@/types';
 import Editor, { useMonaco, type OnMount } from '@monaco-editor/react';
-import { Box, CircularProgress, Menu, MenuItem } from '@mui/material';
+import { Box, Button, CircularProgress, Menu, MenuItem } from '@mui/material';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import type * as Monaco from 'monaco-editor';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryContainerStyled, QueryEditorBoxStyled } from '../Query.styled';
 
-type Outcome = { text: string; error: boolean; docs?: Record<string, unknown>[] };
+type Outcome = { text: string; error: boolean; docs?: Record<string, unknown>[]; input?: string };
 
 // The server runs one statement per connection at a time, so the editor's own lookups (databases, collections) and the
 // user's run go through one queue instead of racing each other.
@@ -155,7 +157,10 @@ export default function MongoQuery(): JSX.Element {
 
   const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
   const table = useMemo(() => (outcome?.docs ? toTable(outcome.docs) : undefined), [outcome]);
-  const { askAboutSelection } = useAiBridge();
+  const { askAboutSelection, askAboutError } = useAiBridge();
+  // Editor actions are registered once at mount; keep them pointing at the latest bridge.
+  const askRef = useRef(askAboutSelection);
+  askRef.current = askAboutSelection;
 
   const download = (kind: 'json' | 'csv'): void => {
     setExportAnchor(null);
@@ -215,11 +220,16 @@ export default function MongoQuery(): JSX.Element {
       next =
         res === undefined
           ? { text: locales.cli_not_run, error: false }
-          : { text: JSON.stringify(res.output ?? null, null, 2), error: false, docs: asDocs(res.output) };
+          : { text: JSON.stringify(res.output ?? null, null, 2), error: false, docs: asDocs(res.output), input };
+      // The assistant sees what this run returned, like it does for a SQL result.
+      if (res !== undefined) {
+        const ai = useAiStore.getState();
+        ai.updateContext({ ...ai.context, queryResultSummary: summarizeDocuments(res.output) });
+      }
     } catch (e) {
       next = abort.signal.aborted
         ? { text: locales.query_cancelled, error: true }
-        : { text: errorText(e), error: true };
+        : { text: errorText(e), error: true, input };
     }
     controller.current = null;
     outcomes.set(tabId, next);
@@ -251,6 +261,26 @@ export default function MongoQuery(): JSX.Element {
       keybindings: shortcuts.runQuery.monaco ?? [],
       run: (): void => void runRef.current()
     });
+
+    // The same explain / optimize / fix entries the SQL editor has in its right-click menu.
+    const registerAi = (id: string, label: string, action: 'explain' | 'optimize' | 'fix', order: number): void => {
+      editor.addAction({
+        id,
+        label,
+        contextMenuGroupId: 'ai',
+        contextMenuOrder: order,
+        run: (ed): void => {
+          const selection = ed.getSelection();
+          const text = (
+            selection && !selection.isEmpty() ? ed.getModel()?.getValueInRange(selection) : ed.getValue()
+          )?.trim();
+          if (text) askRef.current(text, action);
+        }
+      });
+    };
+    registerAi('ai-explain-selection', locales.ai_explain_selection, 'explain', 1);
+    registerAi('ai-optimize-selection', locales.ai_optimize_selection, 'optimize', 2);
+    registerAi('ai-fix-selection', locales.ai_fix_selection, 'fix', 3);
   };
 
   return (
@@ -285,8 +315,10 @@ export default function MongoQuery(): JSX.Element {
               quickSuggestions: true,
               suggestOnTriggerCharacters: true,
               wordBasedSuggestions: 'off',
-              inlineSuggest: { enabled: false },
-              lineNumbers: 'on'
+              inlineSuggest: { enabled: true },
+              lineNumbers: 'on',
+              folding: true,
+              showFoldingControls: 'always'
             }}
             onMount={handleMount}
             onChange={(v): void => {
@@ -308,20 +340,30 @@ export default function MongoQuery(): JSX.Element {
             ) : table ? (
               <DataGrid standalone editable={false} rows={table.rows} columns={table.columns} loading={running} />
             ) : (
-              <Editor
-                height='100%'
-                width='100%'
-                theme={theme.editorTheme}
-                language={outcome.error ? 'plaintext' : 'json'}
-                value={outcome.text}
-                options={{
-                  ...editorConfig,
-                  readOnly: true,
-                  quickSuggestions: false,
-                  inlineSuggest: { enabled: false },
-                  folding: true
-                }}
-              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+                {outcome.error && outcome.input && (
+                  <Box sx={{ px: 1, py: 0.5, borderBottom: 1, borderColor: 'divider' }}>
+                    <Button data-testid='mongo-fix-with-ai' onClick={(): void => askAboutError(outcome.input)}>
+                      {locales.ai_fix_with_ai}
+                    </Button>
+                  </Box>
+                )}
+                <Editor
+                  height='100%'
+                  width='100%'
+                  theme={theme.editorTheme}
+                  language={outcome.error ? 'plaintext' : 'json'}
+                  value={outcome.text}
+                  options={{
+                    ...editorConfig,
+                    readOnly: true,
+                    quickSuggestions: false,
+                    inlineSuggest: { enabled: false },
+                    folding: true,
+                    showFoldingControls: 'always'
+                  }}
+                />
+              </Box>
             )}
           </Box>
         </ResizableYBox>

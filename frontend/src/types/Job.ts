@@ -1,6 +1,6 @@
 export type JobType = {
   id: string;
-  type: 'import' | 'export' | 'backup' | 'restore' | 'restore_drill' | 'tool_install';
+  type: 'import' | 'export' | 'backup' | 'restore' | 'restore_drill' | 'tool_install' | 'nosql_import';
   status: 'pending' | 'running' | 'completed' | 'failed' | 'canceled';
   progress: number;
   message: string;

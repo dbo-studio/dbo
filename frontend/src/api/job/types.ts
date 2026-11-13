@@ -10,7 +10,7 @@ export type JobResultType = Partial<ImportResultType & ExportResultType> & {
 
 export type JobDetailResponseType = {
   id: number;
-  type: 'import' | 'export' | 'query' | 'backup' | 'restore' | 'restore_drill' | 'tool_install';
+  type: 'import' | 'export' | 'query' | 'backup' | 'restore' | 'restore_drill' | 'tool_install' | 'nosql_import';
   status: 'pending' | 'running' | 'completed' | 'failed' | 'canceled';
   progress: number;
   message: string;

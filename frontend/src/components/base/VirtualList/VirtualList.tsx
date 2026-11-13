@@ -1,6 +1,6 @@
 import { VIRTUAL_LIST_THRESHOLD, useVirtualList } from '@/hooks/useVirtualList';
 import { Box } from '@mui/material';
-import { type JSX, type ReactNode, type RefObject } from 'react';
+import { type JSX, type ReactNode, type RefObject, useEffect } from 'react';
 
 type VirtualListProps<T> = {
   items: T[];
@@ -9,6 +9,8 @@ type VirtualListProps<T> = {
   scrollElementRef: RefObject<HTMLElement | null>;
   getItemKey: (item: T, index: number) => string;
   renderItem: (item: T, index: number) => ReactNode;
+  /** Scrolls this row into view when it changes, for keyboard navigation. */
+  activeIndex?: number;
 };
 
 export default function VirtualList<T>({
@@ -17,13 +19,20 @@ export default function VirtualList<T>({
   gap = 8,
   scrollElementRef,
   getItemKey,
-  renderItem
+  renderItem,
+  activeIndex
 }: VirtualListProps<T>): JSX.Element {
   if (items.length < VIRTUAL_LIST_THRESHOLD) {
     return (
       <>
         {items.map((item, index) => (
-          <Box key={getItemKey(item, index)} sx={{ mb: index < items.length - 1 ? gap / 8 : 0 }}>
+          <Box
+            key={getItemKey(item, index)}
+            ref={(el: HTMLDivElement | null): void => {
+              if (el && index === activeIndex) el.scrollIntoView({ block: 'nearest' });
+            }}
+            sx={{ mb: index < items.length - 1 ? gap / 8 : 0 }}
+          >
             {renderItem(item, index)}
           </Box>
         ))}
@@ -39,6 +48,7 @@ export default function VirtualList<T>({
       scrollElementRef={scrollElementRef}
       getItemKey={getItemKey}
       renderItem={renderItem}
+      activeIndex={activeIndex}
     />
   );
 }
@@ -49,7 +59,8 @@ function VirtualizedList<T>({
   gap,
   scrollElementRef,
   getItemKey,
-  renderItem
+  renderItem,
+  activeIndex
 }: VirtualListProps<T>): JSX.Element {
   const { parentRef, virtualItems, virtualizer } = useVirtualList({
     count: items.length,
@@ -58,6 +69,11 @@ function VirtualizedList<T>({
     overscan: 12,
     scrollElementRef
   });
+
+  // A row far outside the window is not rendered, so the virtualizer has to bring it in.
+  useEffect(() => {
+    if (activeIndex !== undefined && activeIndex >= 0) virtualizer.scrollToIndex(activeIndex, { align: 'auto' });
+  }, [activeIndex, virtualizer]);
 
   return (
     <Box ref={parentRef}>

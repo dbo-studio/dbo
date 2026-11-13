@@ -185,3 +185,197 @@ type (
 		Confirmed    bool                      `json:"confirmed"`
 	}
 )
+
+type (
+	NoSQLDocChildrenRequest struct {
+		ConnectionID int32    `json:"connectionId"`
+		ContainerID  string   `json:"containerId"`
+		ItemID       string   `json:"itemId"`
+		Path         []string `json:"path"`
+		Offset       int      `json:"offset"`
+		Limit        int      `json:"limit"`
+	}
+
+	NoSQLDocFieldRequest struct {
+		ConnectionID int32    `json:"connectionId"`
+		ContainerID  string   `json:"containerId"`
+		ItemID       string   `json:"itemId"`
+		Path         []string `json:"path"`
+		Value        string   `json:"value"`
+		TypeHint     string   `json:"typeHint"`
+		Confirmed    bool     `json:"confirmed"`
+	}
+)
+
+func (req NoSQLDocChildrenRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.ItemID, validation.Required),
+	)
+}
+
+func (req NoSQLDocFieldRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.ItemID, validation.Required),
+		validation.Field(&req.Path, validation.Required),
+	)
+}
+
+type (
+	NoSQLIndexCreateRequest struct {
+		ConnectionID int32                      `json:"connectionId"`
+		ContainerID  string                     `json:"containerId"`
+		Spec         databaseContract.IndexSpec `json:"spec"`
+		Confirmed    bool                       `json:"confirmed"`
+	}
+
+	NoSQLIndexDropRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Name         string `json:"name"`
+		Confirmed    bool   `json:"confirmed"`
+	}
+)
+
+func (req NoSQLIndexCreateRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+	)
+}
+
+func (req NoSQLIndexDropRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.Name, validation.Required),
+	)
+}
+
+type NoSQLAggregateRequest struct {
+	ConnectionID int32  `json:"connectionId"`
+	ContainerID  string `json:"containerId"`
+	Pipeline     string `json:"pipeline"`
+	Limit        int    `json:"limit"`
+}
+
+func (req NoSQLAggregateRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.Pipeline, validation.Required),
+	)
+}
+
+type (
+	NoSQLSchemaRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Sample       int    `json:"sample"`
+	}
+
+	NoSQLValidatorRequest struct {
+		ConnectionID int32                      `json:"connectionId"`
+		ContainerID  string                     `json:"containerId"`
+		Validator    databaseContract.Validator `json:"validator"`
+		Confirmed    bool                       `json:"confirmed"`
+	}
+)
+
+func (req NoSQLSchemaRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+	)
+}
+
+func (req NoSQLValidatorRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+	)
+}
+
+type (
+	NoSQLExportRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Filter       string `json:"filter"`
+	}
+
+	NoSQLImportRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Data         string `json:"data"`
+		Format       string `json:"format"` // ndjson | json
+		Confirmed    bool   `json:"confirmed"`
+	}
+
+	NoSQLCollectionRenameRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		NewName      string `json:"newName"`
+		Confirmed    bool   `json:"confirmed"`
+	}
+
+	NoSQLCollectionDropRequest struct {
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Confirmed    bool   `json:"confirmed"`
+	}
+)
+
+func (req NoSQLExportRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+	)
+}
+
+func (req NoSQLImportRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.Data, validation.Required),
+		validation.Field(&req.Format, validation.In("ndjson", "json")),
+	)
+}
+
+func (req NoSQLCollectionRenameRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+		validation.Field(&req.NewName, validation.Required),
+	)
+}
+
+func (req NoSQLCollectionDropRequest) Validate() error {
+	return validation.ValidateStruct(&req,
+		validation.Field(&req.ConnectionID, validation.Required, validation.Min(1)),
+		validation.Field(&req.ContainerID, validation.Required),
+	)
+}
+
+type (
+	// NoSQLImportStartRequest starts a background import of an uploaded file. Path is a server-side temp file the
+	// handler wrote; clients never name it.
+	NoSQLImportStartRequest struct {
+		ConnectionID int32
+		ContainerID  string
+		Format       string
+		Path         string
+		Confirmed    bool
+	}
+
+	// NoSQLImportJob is the job payload.
+	NoSQLImportJob struct {
+		OwnerID      string `json:"ownerId"`
+		ConnectionID int32  `json:"connectionId"`
+		ContainerID  string `json:"containerId"`
+		Format       string `json:"format"`
+		Path         string `json:"path"`
+	}
+)
