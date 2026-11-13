@@ -1,6 +1,46 @@
 # Frontend performance: current state, fixes, benchmarks, verification
 
-Status: baseline not yet measured. Every "Observed" statement below comes from reading the code on 2026-11-12 (branch `khodemobin/improve-design`) and a production build. Nothing here is a measurement until the benchmark tables in section 4 are filled in.
+Branch: `perf/frontend-performance`. Statements in sections 1 and 2 come from reading the code on 2026-11-12 plus a production build; measured numbers are in sections 2 (per item) and 4.4/4.5.
+
+## Status: done and pending
+
+Last updated 2026-11-13. Each done item is one commit with a before/after number in section 4.5.
+
+### Done
+
+| ID | What | Result |
+| --- | --- | --- |
+| P3 | Debounce tab-query IndexedDB write, flush on `pagehide` | 400 -> 1 transactions per 200 keystrokes |
+| P6 | Grid column windowing | 100 rows x 100 cols: DOM 24.8k -> 3.5k, heap 94.6 -> 39.3 MB, first rows 862 -> 154 ms |
+| P1 | Queue `saveRows` puts, drop duplicate save after a query | 10k rows 291 -> 95 ms, 50k rows 1514 -> 487 ms |
+| P4 (icons) | `CustomIcon` imports only the 85 icons it uses | shared chunk 346 -> 190 KB gzip |
+| P4 (precache) | Monaco workers and diagram chunks load on first use | precache 26.2 -> 15.8 MB |
+| P2 | Tab switch restores cache in memory, no refetch | tab switch sends 0 `/query` requests (test fails on old code) |
+
+### Measured, no change needed
+
+| ID | Finding |
+| --- | --- |
+| P5 | Tree: 5k tables expand in 328 ms, 30k in 547 ms |
+| P7-P10 | Chat: no jank at 1x CPU; 422 ms long tasks at 6x slowdown |
+| B11 | Tab open/close: IndexedDB returns to 0, heap drift about +0.85 MB per 12-tab cycle |
+
+### Pending
+
+| ID | What | Notes |
+| --- | --- | --- |
+| P11 | Wide `tabs` selectors | no measured problem yet; do if profiling shows tab-mutation re-renders |
+| P12-P15 | Small items (footer selector, devtools on data store, `Activity` for tabs, central shortcut dispatcher) | low impact |
+| P4 (rest) | Eager `monaco-editor` import in `main.tsx`; lazy-load heavy routes (Settings, Backup, Dashboard, Question); eager recharts importer; B10 cold-start baseline | cold start not measured |
+| Editor | Typing then reloading immediately loses the last text (`test.fixme` in `editor-persistence.spec.ts`) | fix: localStorage mirror |
+| Guard | Type or build check that every lucide-backed `IconTypes` entry exists in `lucideIcons.ts` | a missing entry renders no icon |
+| Preview | Make e2e preview builds expose `window.monaco` | lets editor tests drive Monaco directly |
+| Engines | Postgres and MySQL specs for the grid, tree and chat benchmarks | need Docker; only SQLite was run |
+| Decision | Keep the table cache across page reload | `useStartup` clears it by design; removing it risks stale rows |
+
+### How to rerun
+
+`PERF=1` gates the perf specs. `E2E_PREVIEW=1` serves a production build. Example: `E2E_PREVIEW=1 PERF=1 npx playwright test tests/sqlite/perf-baseline.spec.ts` from `e2e/`. Results go to `perf-results*.jsonl` (git-ignored).
 
 Scope: `frontend/` (React 19, React Compiler, Zustand, TanStack Query/Virtual, Monaco, MUI, Tauri webview). Three load cases drive this plan: a very large object tree, very large result tables, and a very long AI chat. The SQL editor and bundle size are included because they sit on the same hot paths.
 
