@@ -5,7 +5,7 @@ import locales from '@/locales';
 import api from '@/api';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
-import { CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import { Resizer } from '@/components/common/DataGrid/DataGridTable.styled';
 import { lazy, Suspense, useState, type JSX } from 'react';
 import { toast } from 'sonner';

@@ -123,7 +123,7 @@ export function FkCellEditor({ column, value, onCommitFields, onCancel }: FkCell
     finishSingle(option.value);
   };
 
-  const baseStyles = SelectInputStyles(theme, false, 'small') as StylesConfig<SelectInputOption, false>;
+  const baseStyles = SelectInputStyles(theme, false) as StylesConfig<SelectInputOption, false>;
   const styles: StylesConfig<SelectInputOption, false> = {
     ...baseStyles,
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),

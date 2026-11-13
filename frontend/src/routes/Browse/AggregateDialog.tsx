@@ -113,7 +113,7 @@ export default function AggregateDialog({ connectionId, containerId, onClose }: 
                 <Checkbox
                   checked={s.enabled}
                   onChange={(e): void => update(s.id, { enabled: e.target.checked })}
-                  inputProps={{ 'aria-label': `stage-${i + 1}-enabled` }}
+                  aria-label={`stage-${i + 1}-enabled`}
                 />
                 <Typography variant='subtitle2'>{i + 1}</Typography>
                 <Button

@@ -214,5 +214,6 @@ const setupTitleBar = (): void => {
 
   void streams.window.onFullScreenChange((isFullScreen) => {
     updateTitleBar(isFullScreen ? TITLE_BAR_CONFIG.fullScreen : TITLE_BAR_CONFIG.normal);
+    void commands.setWindowToolbar(!isFullScreen);
   });
 };

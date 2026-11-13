@@ -27,7 +27,7 @@ export const TableCell = styled('td')(({ theme }) => ({
   color: theme.palette.text.text,
   fontSize: theme.typography.subtitle2.fontSize,
   whiteSpace: 'nowrap',
-  overflow: 'hidden',
+  overflow: 'clip', // clip: caret reveal can't scroll the cell, which shifts the content
   textOverflow: 'ellipsis',
   WebkitTransform: 'translateZ(0)',
   transform: 'translateZ(0)',
@@ -155,7 +155,7 @@ export const CellContainer = styled('div')(({ theme }) => ({
   textOverflow: 'ellipsis',
   padding: '2px 8px',
   whiteSpace: 'nowrap',
-  overflow: 'hidden',
+  overflow: 'clip', // clip: caret reveal can't scroll the cell, which shifts the content
   willChange: 'contents',
   userSelect: 'none',
   '.cell-hover &, .editing &': {

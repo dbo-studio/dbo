@@ -76,7 +76,18 @@ export const SETTINGS_SECTIONS: SettingsSectionDef[] = [
     name: locales.backup,
     description: locales.backup_settings_description,
     icon: 'backup',
-    keywords: ['backup', 'restore', 'destination', 'destinations', 'channel', 'notification', 's3', 'slack', 'email', 'drive'],
+    keywords: [
+      'backup',
+      'restore',
+      'destination',
+      'destinations',
+      'channel',
+      'notification',
+      's3',
+      'slack',
+      'email',
+      'drive'
+    ],
     group: 'prefs'
   },
   {
