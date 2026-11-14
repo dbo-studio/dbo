@@ -6,6 +6,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
+	"net"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,7 +45,21 @@ type clientKey struct {
 var (
 	clientsMu sync.Mutex
 	clients   = map[clientKey]*redis.Client{}
+	tunnels   = map[tunnelKey]*tunnel{}
 )
+
+// tunnelKey identifies the SSH tunnel shared by every client of a connection. Unsaved connections (ping)
+// are keyed by their Repository so each throwaway repository owns, and closes, its own tunnel.
+type tunnelKey struct {
+	owner  string
+	connID uint
+	repo   *Repository
+}
+
+type tunnel struct {
+	addr   string // local listener, host:port
+	closer io.Closer
+}
 
 // Register wires client cleanup to the connection manager. Call once at startup.
 func Register(cm *databaseConnection.ConnectionManager) {
@@ -58,6 +74,14 @@ func Register(cm *databaseConnection.ConnectionManager) {
 				_ = c.Close()
 
 				delete(clients, k)
+			}
+		}
+
+		for k, t := range tunnels {
+			if k.owner == owner && k.connID == connID {
+				_ = t.closer.Close()
+
+				delete(tunnels, k)
 			}
 		}
 	})
@@ -92,11 +116,73 @@ func (r *Repository) options(db int) *redis.Options {
 		Password: r.opts.Password,
 		DB:       db,
 	}
+	if databaseConnection.SSHOptions(r.conn) != nil {
+		o.Dialer = r.dialTunnel
+	}
+
 	if r.opts.TLS {
+		// ServerName is the real host even through a tunnel, which is what the certificate is issued for.
 		o.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12, ServerName: r.opts.Host, InsecureSkipVerify: r.opts.TLSInsecure} //nolint:gosec // user opt-in
 	}
 
 	return o
+}
+
+// dialTunnel connects through the connection's SSH tunnel, opening it on first use. The tunnel is opened
+// outside clientsMu so a slow bastion does not block other connections.
+func (r *Repository) dialTunnel(ctx context.Context, network, _ string) (net.Conn, error) {
+	k := tunnelKey{r.owner, r.conn.ID, nil}
+	if r.conn.ID == 0 {
+		k.repo = r
+	}
+
+	clientsMu.Lock()
+	t, ok := tunnels[k]
+	clientsMu.Unlock()
+
+	if !ok {
+		dialConn, closer, err := databaseConnection.OpenTunnel(ctx, r.conn)
+		if err != nil {
+			return nil, err
+		}
+
+		local, err := helper.RawJSONToStruct[dto.RedisConnectionParams](json.RawMessage(dialConn.Options))
+		if err != nil {
+			_ = closer.Close()
+
+			return nil, fmt.Errorf("invalid redis options: %w", err)
+		}
+
+		fresh := &tunnel{addr: net.JoinHostPort(local.Host, strconv.Itoa(int(local.Port))), closer: closer}
+
+		clientsMu.Lock()
+		// A concurrent dial may have opened the tunnel first; keep its tunnel and drop ours.
+		if t, ok = tunnels[k]; ok {
+			_ = fresh.closer.Close()
+		} else {
+			t, tunnels[k] = fresh, fresh
+		}
+		clientsMu.Unlock()
+	}
+
+	return (&net.Dialer{}).DialContext(ctx, network, t.addr)
+}
+
+// closeTunnel frees the tunnel of an unsaved connection; saved connections keep theirs until Close.
+func (r *Repository) closeTunnel() {
+	if r.conn.ID != 0 {
+		return
+	}
+
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+
+	k := tunnelKey{r.owner, 0, r}
+	if t, ok := tunnels[k]; ok {
+		_ = t.closer.Close()
+
+		delete(tunnels, k)
+	}
 }
 
 // client returns the cached client for a db, creating it lazily. Unsaved connections (ping) are not cached.
@@ -123,6 +209,8 @@ func (r *Repository) client(db int) *redis.Client {
 func (r *Repository) release(c *redis.Client) {
 	if r.conn.ID == 0 {
 		_ = c.Close()
+
+		r.closeTunnel()
 	}
 }
 

@@ -286,7 +286,11 @@ func (r *Repository) Publish(ctx context.Context, channel, msg string) (int64, e
 // Subscribe uses a dedicated client (never the shared one) and closes it when ctx is done.
 func (r *Repository) Subscribe(ctx context.Context, channels []string, out chan<- contract.Message) error {
 	c := redis.NewClient(r.options(int(r.opts.Database)))
-	defer func() { _ = c.Close() }()
+	defer func() {
+		_ = c.Close()
+
+		r.closeTunnel()
+	}()
 
 	var exact, patterns []string
 

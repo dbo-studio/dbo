@@ -142,7 +142,7 @@ func (cm *ConnectionManager) GetConnection(ctx context.Context, connection *mode
 
 	var dialect gorm.Dialector
 
-	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	dialTarget, tunnel, err := openTunnelIfNeeded(ctx, connection)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
@@ -245,7 +245,7 @@ func (cm *ConnectionManager) GetConnectionForDatabase(ctx context.Context, conne
 		}
 	}
 
-	dialTarget, tunnel, err := cm.openTunnelIfNeeded(ctx, connection)
+	dialTarget, tunnel, err := openTunnelIfNeeded(ctx, connection)
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}
@@ -489,7 +489,7 @@ func (cm *ConnectionManager) closeConn(c *conn) error {
 // openTunnelIfNeeded returns the connection to dial (rewritten to a local
 // tunnel port when SSH is enabled) and the tunnel owning that port, or the
 // original connection and a nil tunnel.
-func (cm *ConnectionManager) openTunnelIfNeeded(ctx context.Context, connection *model.Connection) (*model.Connection, *sshTunnel, error) {
+func openTunnelIfNeeded(ctx context.Context, connection *model.Connection) (*model.Connection, *sshTunnel, error) {
 	cfg := SSHOptions(connection)
 	if cfg == nil {
 		return connection, nil, nil

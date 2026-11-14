@@ -14,6 +14,8 @@ type RedisConnectionParams struct {
 	TLS      bool  `json:"tls"`
 	// TLSInsecure skips server certificate verification.
 	TLSInsecure bool `json:"tlsInsecure"`
+	// SSH reaches a server that is only routable from a bastion.
+	SSH *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 func (p RedisConnectionParams) Validate() error {
@@ -21,5 +23,6 @@ func (p RedisConnectionParams) Validate() error {
 		validation.Field(&p.Host, validation.Required),
 		validation.Field(&p.Port, validation.Required, validation.Min(1), validation.Max(65535)),
 		validation.Field(&p.Database, validation.Min(0), validation.Max(1023)),
+		validation.Field(&p.SSH),
 	)
 }

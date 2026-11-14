@@ -19,32 +19,21 @@ func CreateRedisConnection(params json.RawMessage) (string, error) {
 		return "", apperror.Validation(err)
 	}
 
+	dto.NormalizeSSH(options.SSH)
+
+	if err := dto.ValidateSSHSecrets(options.SSH); err != nil {
+		return "", apperror.Validation(err)
+	}
+
 	return helper.StructToJSON(options), nil
 }
 
 // UpdateRedisConnection overlays the keys present in newParams on the stored options.
 func UpdateRedisConnection(oldParams json.RawMessage, newParams json.RawMessage) (string, error) {
-	merged := map[string]json.RawMessage{}
-
-	for _, raw := range []json.RawMessage{oldParams, newParams} {
-		if len(raw) == 0 {
-			continue
-		}
-
-		var part map[string]json.RawMessage
-		if err := json.Unmarshal(raw, &part); err != nil {
-			return "", apperror.Validation(errors.New("invalid params"))
-		}
-
-		for k, v := range part {
-			merged[k] = v
-		}
-	}
-
-	out, err := json.Marshal(merged)
+	merged, err := overlayOptions(oldParams, newParams)
 	if err != nil {
-		return "", apperror.Validation(errors.New("invalid params"))
+		return "", err
 	}
 
-	return CreateRedisConnection(out)
+	return CreateRedisConnection(merged)
 }

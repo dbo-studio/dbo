@@ -236,5 +236,9 @@ func (s IConnectionServiceImpl) pingNoSQL(ctx context.Context, connection *model
 		return nil, apperror.DriverError(fmt.Errorf("version check failed: %w", err))
 	}
 
-	return &dto.PingConnectionResponse{LatencyMs: time.Since(start).Milliseconds(), ServerVersion: version}, nil
+	return &dto.PingConnectionResponse{
+		LatencyMs:     time.Since(start).Milliseconds(),
+		ServerVersion: version,
+		SSHTunnel:     databaseConnection.SSHOptions(connection) != nil,
+	}, nil
 }

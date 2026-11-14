@@ -15,6 +15,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
+	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
@@ -256,6 +257,53 @@ func (t *sshTunnel) Close() error {
 	return nil
 }
 
+// overlayOptions merges the keys present in newParams over the stored options (for engines whose
+// options are a flat key set), keeping stored SSH secrets that the update left blank.
+func overlayOptions(oldParams, newParams json.RawMessage) (json.RawMessage, error) {
+	merged := map[string]json.RawMessage{}
+
+	for _, raw := range []json.RawMessage{oldParams, newParams} {
+		if len(raw) == 0 {
+			continue
+		}
+
+		var part map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &part); err != nil {
+			return nil, apperror.Validation(errors.New("invalid params"))
+		}
+
+		for k, v := range part {
+			merged[k] = v
+		}
+	}
+
+	if _, ok := merged["ssh"]; ok {
+		type sshOnly struct {
+			SSH *dto.ConnectionSSHParams `json:"ssh"`
+		}
+
+		newSSH, err := helper.RawJSONToStruct[sshOnly](newParams)
+		oldSSH, oldErr := helper.RawJSONToStruct[sshOnly](oldParams)
+
+		if err == nil && newSSH.SSH != nil {
+			if oldErr != nil && len(oldParams) > 0 {
+				return nil, apperror.Validation(errors.New("invalid params"))
+			}
+
+			if merged["ssh"], err = json.Marshal(mergeSSHParams(newSSH.SSH, oldSSH.SSH)); err != nil {
+				return nil, apperror.Validation(errors.New("invalid params"))
+			}
+		}
+	}
+
+	out, err := json.Marshal(merged)
+	if err != nil {
+		return nil, apperror.Validation(errors.New("invalid params"))
+	}
+
+	return out, nil
+}
+
 func mergeSSHParams(newSSH, oldSSH *dto.ConnectionSSHParams) *dto.ConnectionSSHParams {
 	if newSSH == nil {
 		return oldSSH
@@ -331,6 +379,24 @@ func RedactSSHSecrets(options string, hideTarget bool) string {
 	return options
 }
 
+// OpenTunnel is openTunnelIfNeeded for drivers that dial outside the
+// ConnectionManager. The closer is nil when no tunnel is configured; otherwise
+// the caller must close it when the client using the returned connection ends.
+func OpenTunnel(ctx context.Context, connection *model.Connection) (*model.Connection, io.Closer, error) {
+	dialConn, tunnel, err := openTunnelIfNeeded(ctx, connection)
+	if err != nil || tunnel == nil {
+		return dialConn, nil, err
+	}
+
+	return dialConn, tunnel, nil
+}
+
+// TunnelServerName is the real database host a tunneled connection's TLS
+// certificate must match, or "" when the connection is not tunneled.
+func TunnelServerName(dialConn *model.Connection) string {
+	return gjson.Get(dialConn.Options, tlsServerNameKey).String()
+}
+
 // tlsServerNameKey is set only on the in-memory options of a tunneled
 // connection; it is never persisted.
 const tlsServerNameKey = "tlsServerName"
@@ -338,6 +404,14 @@ const tlsServerNameKey = "tlsServerName"
 func defaultDBPort(connectionType string) string {
 	if databaseContract.IsPostgresFamily(connectionType) {
 		return "5432"
+	}
+
+	if databaseContract.IsMongo(connectionType) {
+		return "27017"
+	}
+
+	if databaseContract.IsRedisFamily(connectionType) {
+		return "6379"
 	}
 
 	return "3306"

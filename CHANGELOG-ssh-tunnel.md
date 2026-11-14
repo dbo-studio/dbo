@@ -4,7 +4,7 @@ Everything on this branch since it split from `dev` at `59cc9ddb` (3 commits, no
 
 ## Tunnel
 
-- Postgres and MySQL connections can go through an SSH tunnel, so a database that is only reachable from a bastion or jumpbox can be used like in TablePlus or DBeaver.
+- Postgres, MySQL, MongoDB and Redis-family (Redis, Valkey, KeyDB, Dragonfly) connections can go through an SSH tunnel, so a database that is only reachable from a bastion or jumpbox can be used like in TablePlus or DBeaver.
 - Authentication is a password, a private key (with an optional passphrase) or the ssh-agent of the machine running DBO.
 - An optional jump host: DBO connects to the jump host, then to the SSH server through it, then to the database.
 - The tunnel opens with the connection and closes with it (disconnect, edit, delete or idle cleanup). It listens on a random port on `127.0.0.1` and frees that port on close.
@@ -20,7 +20,7 @@ Everything on this branch since it split from `dev` at `59cc9ddb` (3 commits, no
 
 ## UI
 
-- New SSH tab in the Postgres and MySQL connection forms: host, port, user, auth method, and an optional jump host.
+- New SSH tab in the Postgres and MySQL connection forms, and an SSH tunnel section in the MongoDB and Redis forms: host, port, user, auth method, and an optional jump host.
 - A field marked "Stored" keeps its value when left blank on edit. Type a new value to replace it, or switch the auth method to drop it.
 - A new tunnel without its password or private key is refused with a clear message. Test Connection now shows the real cause of a validation error instead of "unknown".
 - Turning the jump host off, or the whole tunnel off, sticks. Turning the tunnel off keeps its settings for later.
@@ -33,7 +33,9 @@ Everything on this branch since it split from `dev` at `59cc9ddb` (3 commits, no
 ## Known limits
 
 - ssh-agent login and `verify-full` TLS through the tunnel are implemented but were only checked against the sample setup, not a real agent or a real TLS server.
-- Only Postgres and MySQL. SQLite has no network hop, and other engines are not supported.
+- Postgres, MySQL, MongoDB and the Redis family. SQLite has no network hop, and other engines are not supported.
+- MongoDB: `mongodb+srv://` URIs are refused with a tunnel (SRV discovery returns hosts the tunnel cannot reach), and a multi-host replica-set URI is not supported; use one host. The tunneled client connects directly to that host. No e2e spec yet; checked by hand against the sample bastion and a Mongo reachable only from it.
 - A secret cannot be cleared to empty: replace it, or change the auth method.
 - Host keys are trusted on first use. In Docker, keep the data volume so the saved keys survive a restart.
 - The e2e specs are not wired into CI yet.
+- Redis family: one tunnel is shared by every client of a connection (all databases, the CLI, pub/sub) and opens on first use. Checked by hand against the sample bastion; no e2e spec yet.

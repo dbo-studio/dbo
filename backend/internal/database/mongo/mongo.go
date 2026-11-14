@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"regexp"
 	"slices"
 	"strconv"
@@ -49,11 +50,24 @@ type clientKey struct {
 	connID uint
 }
 
-// clients holds one client (with its own pool) per (owner, connection).
+// clients holds one client (with its own pool) per (owner, connection). tunnels holds the SSH tunnel
+// a client dials through; it lives and dies with that client.
 var (
 	clientsMu sync.Mutex
 	clients   = map[clientKey]*mongo.Client{}
+	tunnels   = map[*mongo.Client]io.Closer{}
 )
+
+// disconnect closes c and the SSH tunnel it used. Callers hold clientsMu.
+func disconnect(ctx context.Context, c *mongo.Client) {
+	_ = c.Disconnect(ctx)
+
+	if t, ok := tunnels[c]; ok {
+		_ = t.Close()
+
+		delete(tunnels, c)
+	}
+}
 
 // Register wires client cleanup to the connection manager. Call once at startup.
 func Register(cm *databaseConnection.ConnectionManager) {
@@ -63,7 +77,7 @@ func Register(cm *databaseConnection.ConnectionManager) {
 
 		k := clientKey{owner, connID}
 		if c, ok := clients[k]; ok {
-			_ = c.Disconnect(context.Background())
+			disconnect(context.Background(), c)
 
 			delete(clients, k)
 		}
@@ -86,38 +100,58 @@ func New(ctx context.Context, connection *model.Connection, cm *databaseConnecti
 		}
 	}
 
-	opts, err := helper.RawJSONToStruct[dto.MongoConnectionParams](json.RawMessage(connection.Options))
+	opts, err := parseOptions(connection.Options)
 	if err != nil {
-		return nil, fmt.Errorf("invalid mongodb options: %w", err)
+		return nil, err
+	}
+
+	return &Repository{conn: connection, owner: helper.CtxOwnerID(ctx), opts: opts}, nil
+}
+
+func parseOptions(raw string) (dto.MongoConnectionParams, error) {
+	opts, err := helper.RawJSONToStruct[dto.MongoConnectionParams](json.RawMessage(raw))
+	if err != nil {
+		return opts, fmt.Errorf("invalid mongodb options: %w", err)
 	}
 
 	if opts.URI != "" {
 		opts.URI = databaseConnection.InjectURIPassword(opts.URI, opts.Password)
 	}
 
-	return &Repository{conn: connection, owner: helper.CtxOwnerID(ctx), opts: opts}, nil
+	return opts, nil
 }
 
-func (r *Repository) clientOptions() *options.ClientOptions {
+// clientOptions builds the driver options. A non-empty tunnelHost means opts point at a local SSH tunnel
+// to that host: the driver must not follow replica-set discovery off the tunnel, and TLS must verify
+// the real host rather than 127.0.0.1.
+func clientOptions(opts dto.MongoConnectionParams, tunnelHost string) *options.ClientOptions {
 	o := options.Client().SetServerSelectionTimeout(connectTimeout).SetConnectTimeout(connectTimeout).SetAppName("dbo")
 
-	if r.opts.URI != "" {
-		o.ApplyURI(r.opts.URI)
+	if opts.URI != "" {
+		o.ApplyURI(opts.URI)
 	} else {
-		port := r.opts.Port
+		port := opts.Port
 		if port == 0 {
 			port = defaultPort
 		}
 
-		o.ApplyURI(fmt.Sprintf("mongodb://%s:%d", r.opts.Host, port))
+		o.ApplyURI(fmt.Sprintf("mongodb://%s:%d", opts.Host, port))
 
-		if r.opts.Username != "" {
-			o.SetAuth(options.Credential{Username: r.opts.Username, Password: r.opts.Password, AuthSource: orDefault(r.opts.AuthSource, "admin")})
+		if opts.Username != "" {
+			o.SetAuth(options.Credential{Username: opts.Username, Password: opts.Password, AuthSource: orDefault(opts.AuthSource, "admin")})
 		}
 	}
 
-	if r.opts.TLS {
-		o.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: r.opts.TLSInsecure}) //nolint:gosec // user opt-in
+	if opts.TLS {
+		o.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: opts.TLSInsecure}) //nolint:gosec // user opt-in
+	}
+
+	if tunnelHost != "" {
+		o.SetDirect(true)
+
+		if o.TLSConfig != nil {
+			o.TLSConfig.ServerName = tunnelHost
+		}
 	}
 
 	return o
@@ -131,23 +165,73 @@ func orDefault(s, d string) string {
 	return s
 }
 
+// connect opens the SSH tunnel when configured and a client through it, without holding clientsMu across
+// the SSH dial. The tunnel is recorded in tunnels and closed by disconnect.
+func (r *Repository) connect() (*mongo.Client, error) {
+	dialConn, tunnel, err := databaseConnection.OpenTunnel(context.Background(), r.conn)
+	if err != nil {
+		return nil, err
+	}
+
+	opts, host := r.opts, ""
+
+	if tunnel != nil {
+		if opts, err = parseOptions(dialConn.Options); err != nil {
+			_ = tunnel.Close()
+
+			return nil, err
+		}
+
+		host = databaseConnection.TunnelServerName(dialConn)
+	}
+
+	c, err := mongo.Connect(clientOptions(opts, host))
+	if err != nil {
+		if tunnel != nil {
+			_ = tunnel.Close()
+		}
+
+		return nil, err
+	}
+
+	if tunnel != nil {
+		clientsMu.Lock()
+		tunnels[c] = tunnel
+		clientsMu.Unlock()
+	}
+
+	return c, nil
+}
+
 // client returns the cached client, creating it lazily. Unsaved connections (ping) get a throwaway client.
 func (r *Repository) client() (*mongo.Client, error) {
 	if r.conn.ID == 0 {
-		return mongo.Connect(r.clientOptions())
+		return r.connect()
+	}
+
+	k := clientKey{r.owner, r.conn.ID}
+
+	clientsMu.Lock()
+	c, ok := clients[k]
+	clientsMu.Unlock()
+
+	if ok {
+		return c, nil
+	}
+
+	c, err := r.connect()
+	if err != nil {
+		return nil, err
 	}
 
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 
-	k := clientKey{r.owner, r.conn.ID}
-	if c, ok := clients[k]; ok {
-		return c, nil
-	}
+	// A concurrent request may have connected first; keep its client and drop ours.
+	if existing, ok := clients[k]; ok {
+		disconnect(context.Background(), c)
 
-	c, err := mongo.Connect(r.clientOptions())
-	if err != nil {
-		return nil, err
+		return existing, nil
 	}
 
 	clients[k] = c
@@ -158,7 +242,10 @@ func (r *Repository) client() (*mongo.Client, error) {
 // release closes clients that are not cached.
 func (r *Repository) release(ctx context.Context, c *mongo.Client) {
 	if r.conn.ID == 0 {
-		_ = c.Disconnect(context.WithoutCancel(ctx))
+		clientsMu.Lock()
+		defer clientsMu.Unlock()
+
+		disconnect(context.WithoutCancel(ctx), c)
 	}
 }
 

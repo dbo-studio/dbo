@@ -21,6 +21,9 @@ type MongoConnectionParams struct {
 	TLS      bool   `json:"tls"`
 	// TLSInsecure skips server certificate verification.
 	TLSInsecure bool `json:"tlsInsecure"`
+	// SSH reaches a server that is only routable from a bastion. Not supported with mongodb+srv:// (SRV
+	// discovery returns hosts the tunnel cannot forward to).
+	SSH *ConnectionSSHParams `json:"ssh,omitempty"`
 }
 
 func (p MongoConnectionParams) Validate() error {
@@ -29,11 +32,16 @@ func (p MongoConnectionParams) Validate() error {
 			return validation.Errors{"uri": errors.New("must start with mongodb:// or mongodb+srv://")}
 		}
 
-		return nil
+		if strings.HasPrefix(p.URI, "mongodb+srv://") && p.SSH != nil && p.SSH.Enabled {
+			return validation.Errors{"ssh": errors.New("ssh tunnel cannot be used with a mongodb+srv:// URI; use a mongodb:// URI or host and port")}
+		}
+
+		return validation.ValidateStruct(&p, validation.Field(&p.SSH))
 	}
 
 	return validation.ValidateStruct(&p,
 		validation.Field(&p.Host, validation.Required),
 		validation.Field(&p.Port, validation.Required, validation.Min(1), validation.Max(65535)),
+		validation.Field(&p.SSH),
 	)
 }
