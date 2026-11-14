@@ -84,7 +84,8 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
         ? target.columnName
         : focusedSelection?.selectedColumn;
   const focusedRow: RowType | undefined = focusedSelection?.row;
-  const rowsToCopy: RowType[] = selectedRows.length > 0 ? selectedRows.map((s) => s.row) : focusedRow ? [focusedRow] : [];
+  const rowsToCopy: RowType[] =
+    selectedRows.length > 0 ? selectedRows.map((s) => s.row) : focusedRow ? [focusedRow] : [];
   const focusedColumn = columns.find((c) => c.name === focusedColumnName);
 
   const resetPaginationIfNeeded = (): void => {

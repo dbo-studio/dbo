@@ -122,7 +122,13 @@ const DataGridTableRow = memo(
               key={`cell-${rowIndex}-${columnId}`}
               data-r={rowIndex}
               data-c={columnIndex}
-              className={cellClassName(columnIndex, isSelected && selectedColumn === columnId, rangeStart, rangeEnd, rangeEdges)}
+              className={cellClassName(
+                columnIndex,
+                isSelected && selectedColumn === columnId,
+                rangeStart,
+                rangeEnd,
+                rangeEdges
+              )}
               onContextMenu={(e): void => {
                 e.stopPropagation();
                 context(e, columnId);

@@ -30,11 +30,7 @@ const escapeCsvField = (value: string): string => {
 };
 
 /** Serialize a rectangular cell range (one line per row) for clipboard. */
-export function serializeCellsForClipboard(
-  rows: RowType[],
-  columnNames: string[],
-  format: 'tsv' | 'csv'
-): string {
+export function serializeCellsForClipboard(rows: RowType[], columnNames: string[], format: 'tsv' | 'csv'): string {
   return rows
     .map((row) => {
       const values = columnNames.map((name) => cellToString(row[name]));

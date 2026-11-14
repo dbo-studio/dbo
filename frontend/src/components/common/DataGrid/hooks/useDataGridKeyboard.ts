@@ -122,9 +122,9 @@ export function useDataGridKeyboard({ containerRef, rows, tableColumns, columnSi
       if (withHeaders) {
         const headerNames = isMultiCellRange(state.cellRange)
           ? rangeColumnNames(state.cellRange)
-          : (state.selectedRows.length === 1 && state.selectedRows[0].selectedColumn
-              ? [state.selectedRows[0].selectedColumn]
-              : names.filter((n) => n !== 'select'));
+          : state.selectedRows.length === 1 && state.selectedRows[0].selectedColumn
+            ? [state.selectedRows[0].selectedColumn]
+            : names.filter((n) => n !== 'select');
         out = `${headerNames.join('\t')}\n${text}`;
       }
       void copy(out).then(() => toast.success(locales.copied));
@@ -171,7 +171,10 @@ export function useDataGridKeyboard({ containerRef, rows, tableColumns, columnSi
       const mod = e.metaKey || e.ctrlKey;
       const key = e.key;
       const cursor = getCursor();
-      const pageRows = Math.max(1, Math.floor(((containerRef.current?.clientHeight ?? 0) - HEADER_HEIGHT) / ROW_HEIGHT));
+      const pageRows = Math.max(
+        1,
+        Math.floor(((containerRef.current?.clientHeight ?? 0) - HEADER_HEIGHT) / ROW_HEIGHT)
+      );
       let handled = true;
 
       if (mod && !e.altKey && key.toLowerCase() === 'c') copySelection(false, e.shiftKey);
@@ -187,7 +190,12 @@ export function useDataGridKeyboard({ containerRef, rows, tableColumns, columnSi
         });
       } else if (key === 'Escape') store.getState().setCellRange(null);
       else if (key === 'Delete' || key === 'Backspace') clearSelection(mod ? null : '');
-      else if (key.startsWith('Arrow') || key === 'Tab' || key === 'Enter' || ['Home', 'End', 'PageUp', 'PageDown'].includes(key)) {
+      else if (
+        key.startsWith('Arrow') ||
+        key === 'Tab' ||
+        key === 'Enter' ||
+        ['Home', 'End', 'PageUp', 'PageDown'].includes(key)
+      ) {
         const from = cursor ?? { row: 0, col: firstCol };
         const back = e.shiftKey && (key === 'Tab' || key === 'Enter');
         let next: Cell;
@@ -228,7 +236,20 @@ export function useDataGridKeyboard({ containerRef, rows, tableColumns, columnSi
 
       if (handled) e.preventDefault();
     },
-    [enabled, getCursor, containerRef, copySelection, paste, store, firstCol, lastRow, lastCol, names, clearSelection, moveTo]
+    [
+      enabled,
+      getCursor,
+      containerRef,
+      copySelection,
+      paste,
+      store,
+      firstCol,
+      lastRow,
+      lastCol,
+      names,
+      clearSelection,
+      moveTo
+    ]
   );
 
   return { onKeyDown };

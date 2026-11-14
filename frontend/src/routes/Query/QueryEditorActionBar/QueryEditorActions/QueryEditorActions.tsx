@@ -146,18 +146,10 @@ export default function QueryEditorActions({
                 <CustomIcon type='databaseZap' color='currentColor' />
               </Box>
             </Tooltip>
-            <Button
-              color='success'
-              data-testid='transaction-commit'
-              onClick={() => void transaction.end(true)}
-            >
+            <Button color='success' data-testid='transaction-commit' onClick={() => void transaction.end(true)}>
               {locales.transaction_commit}
             </Button>
-            <Button
-              color='error'
-              data-testid='transaction-rollback'
-              onClick={() => void transaction.end(false)}
-            >
+            <Button color='error' data-testid='transaction-rollback' onClick={() => void transaction.end(false)}>
               {locales.transaction_rollback}
             </Button>
           </>
