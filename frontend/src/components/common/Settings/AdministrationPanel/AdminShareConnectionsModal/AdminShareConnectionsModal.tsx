@@ -196,7 +196,7 @@ export default function AdminShareConnectionsModal({
       <AdministrationModalContainerStyled data-testid='admin-share-connections-modal'>
         <AdministrationModalContentStyled>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Chip label={userEmail} size='small' variant='outlined' sx={{ alignSelf: 'flex-start' }} />
+            <Chip label={userEmail} variant='outlined' sx={{ alignSelf: 'flex-start' }} />
             <Typography color='textText' variant='caption'>
               {locales.admin_share_connections_hint}
             </Typography>
@@ -277,7 +277,6 @@ export default function AdminShareConnectionsModal({
                 <FieldInput
                   label={locales.search}
                   value={search}
-                  size='small'
                   fullWidth
                   inputProps={{ 'data-testid': 'admin-share-search' }}
                   onChange={(e): void => setSearch(e.target.value)}
@@ -285,10 +284,10 @@ export default function AdminShareConnectionsModal({
               ) : null}
               {grantableConnections.length > 0 ? (
                 <ShareModalToolbarActionsStyled>
-                  <Button size='small' disabled={pending} onClick={selectAllGrantable}>
+                  <Button disabled={pending} onClick={selectAllGrantable}>
                     {locales.admin_share_select_all}
                   </Button>
-                  <Button size='small' disabled={pending || selectedIds.length === 0} onClick={clearSelection}>
+                  <Button disabled={pending || selectedIds.length === 0} onClick={clearSelection}>
                     {locales.admin_share_clear_selection}
                   </Button>
                 </ShareModalToolbarActionsStyled>
@@ -330,12 +329,9 @@ export default function AdminShareConnectionsModal({
               {selectedCountLabel}
             </Typography>
           ) : null}
-          <Button size='small' onClick={handleClose}>
-            {locales.cancel}
-          </Button>
+          <Button onClick={handleClose}>{locales.cancel}</Button>
           <Button
             variant='contained'
-            size='small'
             disabled={selectedIds.length === 0 || pending}
             data-testid='admin-share-submit'
             onClick={(): void => {

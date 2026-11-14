@@ -24,11 +24,11 @@ export function AccountSettings(): JSX.Element {
         }
         control={
           signedIn ? (
-            <Button size='small' variant='outlined' onClick={signOut} data-testid='account-sign-out'>
+            <Button variant='outlined' onClick={signOut} data-testid='account-sign-out'>
               {locales.account_sign_out}
             </Button>
           ) : (
-            <Button size='small' variant='contained' onClick={(): void => setOpen(true)} data-testid='account-sign-in'>
+            <Button variant='contained' onClick={(): void => setOpen(true)} data-testid='account-sign-in'>
               {locales.account_sign_in}
             </Button>
           )

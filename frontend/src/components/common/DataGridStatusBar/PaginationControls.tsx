@@ -90,11 +90,10 @@ export default function PaginationControls({
               onChange={(e): void => {
                 if (/^[0-9]*$/.test(e.target.value)) setDraft(Number(e.target.value));
               }}
-              size='small'
               placeholder={locales.limit}
               label={locales.limit}
             />
-            <Button type='submit' variant='contained' size='small' fullWidth>
+            <Button type='submit' variant='contained' fullWidth>
               {locales.save}
             </Button>
           </SettingStyled>

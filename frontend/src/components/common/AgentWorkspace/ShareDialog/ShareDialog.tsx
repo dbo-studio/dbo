@@ -128,15 +128,10 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
                 : locales.share_expiry_never}
             </Typography>
             {share.hasPassword && (
-              <Chip
-                size='small'
-                variant='outlined'
-                icon={<CustomIcon type='lock' size='xs' />}
-                label={locales.share_password_set}
-              />
+              <Chip variant='outlined' icon={<CustomIcon type='lock' size='xs' />} label={locales.share_password_set} />
             )}
-            {share.allowFilters && <Chip size='small' variant='outlined' label={locales.share_filters_on} />}
-            {state !== 'active' && <Chip size='small' label={locales[`share_status_${state}`]} />}
+            {share.allowFilters && <Chip variant='outlined' label={locales.share_filters_on} />}
+            {state !== 'active' && <Chip label={locales[`share_status_${state}`]} />}
           </Stack>
           <Typography variant='caption' color='textSubdued' noWrap component='div'>
             {details.join(' · ')}
@@ -144,7 +139,6 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
         </Box>
         <Tooltip title={locales.share_activity}>
           <IconButton
-            size='small'
             aria-label={locales.share_activity}
             aria-pressed={showVisits}
             color={showVisits ? 'primary' : 'default'}
@@ -158,7 +152,6 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
           <>
             <Tooltip title={locales.share_edit}>
               <IconButton
-                size='small'
                 aria-label={locales.share_edit}
                 aria-pressed={editing}
                 color={editing ? 'primary' : 'default'}
@@ -169,12 +162,7 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
               </IconButton>
             </Tooltip>
             <Tooltip title={locales.share_revoke}>
-              <IconButton
-                size='small'
-                aria-label={locales.share_revoke}
-                onClick={() => revoke()}
-                data-testid='share-revoke'
-              >
+              <IconButton aria-label={locales.share_revoke} onClick={() => revoke()} data-testid='share-revoke'>
                 <CustomIcon type='stop' size='s' />
               </IconButton>
             </Tooltip>
@@ -219,7 +207,6 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
           </Field>
           <Field label={locales.share_expiry}>
             <InputBase
-              size='small'
               type='date'
               value={date}
               onChange={(event) => setDate(event.target.value)}
@@ -229,7 +216,6 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
           <Field label={locales.share_password}>
             <Box sx={{ flex: 1 }}>
               <FieldInput
-                size='small'
                 type='password'
                 placeholder={share.hasPassword ? locales.share_password_change : locales.share_password_add}
                 value={password}
@@ -245,22 +231,11 @@ function ShareRow({ boardId, share }: { boardId: number; share: DashboardShareTy
           </Field>
           <Stack direction='row' spacing={1} sx={{ justifyContent: 'flex-end' }}>
             {share.hasPassword && (
-              <Button
-                size='small'
-                color='error'
-                onClick={() => removePassword()}
-                data-testid='share-edit-password-remove'
-              >
+              <Button color='error' onClick={() => removePassword()} data-testid='share-edit-password-remove'>
                 {locales.share_password_remove}
               </Button>
             )}
-            <Button
-              size='small'
-              variant='contained'
-              disabled={isPending}
-              onClick={() => save()}
-              data-testid='share-edit-save'
-            >
+            <Button variant='contained' disabled={isPending} onClick={() => save()} data-testid='share-edit-save'>
               {locales.share_save}
             </Button>
           </Stack>
@@ -311,12 +286,9 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
       title={locales.share_title}
       footer={
         <>
-          <Button size='small' onClick={onClose}>
-            {locales.close}
-          </Button>
+          <Button onClick={onClose}>{locales.close}</Button>
           {available && (
             <Button
-              size='small'
               variant='contained'
               disabled={isPending || (days === CUSTOM && !date)}
               onClick={() => create()}
@@ -364,7 +336,6 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
             {days === CUSTOM && (
               <Field label=''>
                 <InputBase
-                  size='small'
                   type='date'
                   value={date}
                   onChange={(event) => setDate(event.target.value)}
@@ -375,7 +346,6 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
             <Field label={locales.share_password}>
               <Box sx={{ flex: 1 }}>
                 <FieldInput
-                  size='small'
                   type='password'
                   placeholder={locales.share_optional}
                   value={password}
@@ -410,14 +380,12 @@ function ShareForm({ board, onClose }: { board: DashboardType; onClose: () => vo
                 <CustomIcon type='link' size='s' />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <InputBase
-                    size='small'
                     value={created}
                     readOnly
                     inputProps={{ 'aria-label': locales.share_link, 'data-testid': 'share-link' }}
                   />
                 </Box>
                 <Button
-                  size='small'
                   variant='outlined'
                   startIcon={<CustomIcon type='copy' size='xs' color='currentColor' />}
                   onClick={() => void copy(created).then((ok) => ok && toast.success(locales.copied))}

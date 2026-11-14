@@ -43,7 +43,6 @@ function Section({
         {action && (
           <Tooltip title={action.label}>
             <IconButton
-              size='small'
               aria-label={action.label}
               data-testid={action.testId}
               onClick={(event) => {

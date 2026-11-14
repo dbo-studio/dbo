@@ -35,7 +35,6 @@ export function AuthSessionSettings(): JSX.Element | null {
       control={
         <Button
           variant='outlined'
-          size='small'
           disabled={isPending}
           onClick={(): void => {
             void mutateAsync();

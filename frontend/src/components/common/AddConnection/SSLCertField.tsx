@@ -40,7 +40,6 @@ export default function SSLCertField({
           {label}
         </Typography>
         <Button
-          size='small'
           variant='text'
           color='inherit'
           data-testid={`ssl-load-file-${name}`}

@@ -220,7 +220,6 @@ export default function ChatDataTable({
         </Typography>
         <Tooltip title={locales.ai_copy_csv}>
           <IconButton
-            size='small'
             data-testid='ai-table-copy-csv'
             onClick={() => void copy(toCsv(allColumns, rows)).then((ok) => ok && toast.success(locales.copied))}
           >
@@ -229,7 +228,6 @@ export default function ChatDataTable({
         </Tooltip>
         <Tooltip title={locales.ai_copy_json}>
           <IconButton
-            size='small'
             data-testid='ai-table-copy-json'
             onClick={() => void copy(JSON.stringify(rows, null, 2)).then((ok) => ok && toast.success(locales.copied))}
           >
@@ -239,7 +237,6 @@ export default function ChatDataTable({
         {chartable && (
           <Tooltip title={locales.ai_chart}>
             <IconButton
-              size='small'
               color={showChart ? 'primary' : 'default'}
               aria-pressed={showChart}
               data-testid='ai-table-chart'
@@ -252,12 +249,7 @@ export default function ChatDataTable({
         {query && (
           <Tooltip title={locales.ai_rerun}>
             <span>
-              <IconButton
-                size='small'
-                data-testid='ai-table-rerun'
-                disabled={isRerunning}
-                onClick={() => void handleRerun()}
-              >
+              <IconButton data-testid='ai-table-rerun' disabled={isRerunning} onClick={() => void handleRerun()}>
                 {isRerunning ? <CircularProgress size={12} /> : <CustomIcon type='refresh' size='xs' />}
               </IconButton>
             </span>
@@ -266,7 +258,6 @@ export default function ChatDataTable({
         {query && (
           <Tooltip title={locales.ai_open_in_grid}>
             <IconButton
-              size='small'
               data-testid='ai-table-open-grid'
               onClick={() => useDataStore.getState().runQueryInEditor(query)}
             >

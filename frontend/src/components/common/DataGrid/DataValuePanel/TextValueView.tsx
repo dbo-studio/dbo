@@ -89,7 +89,6 @@ export default function TextValueView({
           {locales.language}
         </Typography>
         <Select
-          size='small'
           value={languageChoice}
           onChange={(e): void => setLanguageChoice(e.target.value)}
           data-testid='value-panel-language'
@@ -118,13 +117,12 @@ export default function TextValueView({
       )}
       <DataValuePanelFooterStyled>
         {onCancel && (
-          <Button size='small' variant='text' onClick={onCancel} data-testid='value-panel-cancel'>
+          <Button variant='text' onClick={onCancel} data-testid='value-panel-cancel'>
             {locales.cancel}
           </Button>
         )}
         <DataValuePanelFooterActionsStyled>
           <Button
-            size='small'
             variant='outlined'
             data-testid='value-panel-copy'
             onClick={(): void => void copy(draft).then((ok) => ok && toast.success(locales.copied))}
@@ -132,12 +130,12 @@ export default function TextValueView({
             {locales.copy}
           </Button>
           {canFormat && (
-            <Button size='small' variant='outlined' onClick={handleFormat} data-testid='value-panel-format'>
+            <Button variant='outlined' onClick={handleFormat} data-testid='value-panel-format'>
               {locales.format}
             </Button>
           )}
           {showApply && onApply && canEdit && (
-            <Button size='small' variant='contained' onClick={handleApply} data-testid='value-panel-apply'>
+            <Button variant='contained' onClick={handleApply} data-testid='value-panel-apply'>
               {locales.apply}
             </Button>
           )}

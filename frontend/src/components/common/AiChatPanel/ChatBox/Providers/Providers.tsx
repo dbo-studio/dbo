@@ -23,7 +23,7 @@ function CapabilityBadge({ provider, model }: { provider: AiProviderType; model:
   const label = caps.contextWindow
     ? `${locales.ai_tools_supported} · ${formatContextWindow(caps.contextWindow)}`
     : locales.ai_tools_supported;
-  return <Chip size='small' variant='outlined' label={label} sx={badgeSx} />;
+  return <Chip variant='outlined' label={label} sx={badgeSx} />;
 }
 
 /** Composer footer model picker: shows active provider + model and switches both in one step. */

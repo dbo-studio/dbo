@@ -13,8 +13,8 @@ export const withMobileDensity = (outer: Theme): Theme =>
     components: {
       MuiButton: {
         styleOverrides: {
-          // Small buttons are for dense secondary actions; they keep a reduced but still comfortable hit area.
-          root: { minHeight: TOUCH_TARGET, '&.MuiButton-sizeSmall': { minHeight: SMALL_TOUCH_TARGET } }
+          // Buttons are one dense size; they keep a reduced but still comfortable hit area.
+          root: { minHeight: SMALL_TOUCH_TARGET }
         }
       },
       MuiIconButton: { styleOverrides: { root: { minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET } } },

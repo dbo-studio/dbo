@@ -147,22 +147,17 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
   return (
     <Box data-testid='ai-mini-diagram' data-tables={graph.nodes.length}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-        <Button size='small' variant='text' onClick={open} data-testid='ai-mini-diagram-open'>
+        <Button variant='text' onClick={open} data-testid='ai-mini-diagram-open'>
           {locales.ai_changes_open_diagram}
         </Button>
         <Box sx={{ display: 'inline-flex', alignItems: 'center', ml: 'auto', order: 1 }}>
           <Tooltip title={locales.ai_diagram_zoom_out}>
-            <IconButton
-              size='small'
-              onClick={() => setZoom(clampZoom(scale / ZOOM_STEP))}
-              data-testid='ai-mini-diagram-zoom-out'
-            >
+            <IconButton onClick={() => setZoom(clampZoom(scale / ZOOM_STEP))} data-testid='ai-mini-diagram-zoom-out'>
               <CustomIcon type='mines' size='xs' />
             </IconButton>
           </Tooltip>
           <Tooltip title={locales.ai_diagram_zoom_fit}>
             <Button
-              size='small'
               color='inherit'
               onClick={() => setZoom(undefined)}
               sx={{ minWidth: 48, px: 0.5 }}
@@ -172,11 +167,7 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
             </Button>
           </Tooltip>
           <Tooltip title={locales.ai_diagram_zoom_in}>
-            <IconButton
-              size='small'
-              onClick={() => setZoom(clampZoom(scale * ZOOM_STEP))}
-              data-testid='ai-mini-diagram-zoom-in'
-            >
+            <IconButton onClick={() => setZoom(clampZoom(scale * ZOOM_STEP))} data-testid='ai-mini-diagram-zoom-in'>
               <CustomIcon type='plus' size='xs' />
             </IconButton>
           </Tooltip>

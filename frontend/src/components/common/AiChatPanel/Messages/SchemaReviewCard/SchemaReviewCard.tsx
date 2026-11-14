@@ -52,7 +52,6 @@ export default function SchemaReviewCard({ review }: { review: SchemaReview }): 
             </Typography>
             {!!suggestion.ops?.length && chatId !== undefined && (
               <Button
-                size='small'
                 variant='outlined'
                 disabled={isPending || fixed.includes(index)}
                 onClick={() => fix({ suggestion, index })}

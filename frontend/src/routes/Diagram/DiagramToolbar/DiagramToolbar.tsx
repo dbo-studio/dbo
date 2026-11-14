@@ -60,24 +60,23 @@ export default function DiagramToolbar({
         }
       />
       <Tooltip title={locales.diagram_auto_layout}>
-        <IconButton size='small' onClick={onAutoLayout} data-testid='diagram-auto-layout'>
+        <IconButton onClick={onAutoLayout} data-testid='diagram-auto-layout'>
           <CustomIcon type='layout' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.diagram_fit}>
-        <IconButton size='small' onClick={onFit} data-testid='diagram-fit'>
+        <IconButton onClick={onFit} data-testid='diagram-fit'>
           <CustomIcon type='fit' />
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.diagram_open_source}>
-        <IconButton size='small' onClick={onOpenSource} data-testid='diagram-open-source'>
+        <IconButton onClick={onOpenSource} data-testid='diagram-open-source'>
           <CustomIcon type='code' />
         </IconButton>
       </Tooltip>
       <ToolbarSpacerStyled />
       <Tooltip title={locales.diagram_export}>
         <IconButton
-          size='small'
           onClick={openExportMenu}
           data-testid='diagram-export'
           aria-controls={exportAnchor ? 'diagram-export-menu' : undefined}

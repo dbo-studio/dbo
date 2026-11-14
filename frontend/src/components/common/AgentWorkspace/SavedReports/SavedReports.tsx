@@ -131,7 +131,6 @@ function ListRow({
       </Typography>
       <Tooltip title={deleteLabel}>
         <IconButton
-          size='small'
           className='row-delete'
           sx={{ visibility: 'hidden' }}
           onClick={(event) => {

@@ -60,16 +60,8 @@ export default function PlanSummary({
         </Box>
       )}
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 0.5 }}>
-        <Button size='small' onClick={onCancel}>
-          {locales.cancel}
-        </Button>
-        <Button
-          size='small'
-          variant='contained'
-          disabled={busy || problems.length > 0}
-          onClick={onSave}
-          data-testid='schedule-save'
-        >
+        <Button onClick={onCancel}>{locales.cancel}</Button>
+        <Button variant='contained' disabled={busy || problems.length > 0} onClick={onSave} data-testid='schedule-save'>
           {saveLabel}
         </Button>
       </Box>

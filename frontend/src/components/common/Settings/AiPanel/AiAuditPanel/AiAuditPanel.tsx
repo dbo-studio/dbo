@@ -34,7 +34,7 @@ export default function AiAuditPanel(): JSX.Element {
       {entries?.map((entry) => (
         <McpSectionStyled key={entry.id} data-testid='ai-audit-entry'>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-            <Chip size='small' color={STATUS[entry.status].color} label={STATUS[entry.status].label} />
+            <Chip color={STATUS[entry.status].color} label={STATUS[entry.status].label} />
             <Typography color='text.secondary' variant='caption'>
               {new Date(entry.createdAt).toLocaleString()}
             </Typography>

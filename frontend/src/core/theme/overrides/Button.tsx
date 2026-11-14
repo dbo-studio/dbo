@@ -4,9 +4,14 @@ import { variables } from '../variables';
 export default function Button(theme: Theme): Components {
   return {
     MuiButton: {
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          height: 32,
+          textTransform: 'none',
+          fontWeight: 500,
+          height: variables.control,
+          fontSize: theme.typography.caption.fontSize,
+          lineHeight: theme.typography.caption.lineHeight,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.MuiButton-textPrimary, &.MuiButton-outlinedPrimary': {
@@ -25,18 +30,6 @@ export default function Button(theme: Theme): Components {
           },
           ':after': {
             borderBottom: 'none !important'
-          },
-          '&.MuiButton-sizeSmall': {
-            minHeight: 24,
-            height: 'auto',
-            padding: '2px 8px',
-            fontSize: theme.typography.caption.fontSize,
-            lineHeight: theme.typography.caption.lineHeight
-          },
-          '&.MuiButton-sizeLarge': {
-            height: 40,
-            padding: '0 16px',
-            fontSize: theme.typography.body2.fontSize
           },
           '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
             visibility: 'hidden'

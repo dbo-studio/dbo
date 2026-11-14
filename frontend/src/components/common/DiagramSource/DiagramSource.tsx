@@ -71,12 +71,7 @@ export default function DiagramSource(): JSX.Element {
           {locales.dbml}
         </Typography>
         <Tooltip title={locales.copy}>
-          <IconButton
-            size='small'
-            onClick={() => void handleCopy()}
-            data-testid='diagram-source-copy'
-            aria-label={locales.copy}
-          >
+          <IconButton onClick={() => void handleCopy()} data-testid='diagram-source-copy' aria-label={locales.copy}>
             <CustomIcon type='copy' />
           </IconButton>
         </Tooltip>

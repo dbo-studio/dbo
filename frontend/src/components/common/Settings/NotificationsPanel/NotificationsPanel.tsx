@@ -105,12 +105,7 @@ export default function NotificationsPanel(): JSX.Element {
           label={locales.notification_settings_test}
           description={locales.notification_settings_test_hint}
           control={
-            <Button
-              size='small'
-              variant='outlined'
-              onClick={() => void sendTestNotification()}
-              data-testid='notifications-test'
-            >
+            <Button variant='outlined' onClick={() => void sendTestNotification()} data-testid='notifications-test'>
               {locales.notification_settings_test_action}
             </Button>
           }
@@ -121,7 +116,6 @@ export default function NotificationsPanel(): JSX.Element {
           description={locales.notification_settings_background_hint}
           control={
             <InputBase
-              size='small'
               type='number'
               value={general.backgroundAfterSeconds}
               onChange={(event) =>

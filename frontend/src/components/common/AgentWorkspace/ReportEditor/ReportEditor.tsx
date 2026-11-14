@@ -125,7 +125,6 @@ export default function ReportEditor({
       )}
       {edited.spec.type === 'gauge' && (
         <FieldInput
-          size='small'
           type='number'
           placeholder={locales.ai_report_goal}
           value={edited.spec.goal ?? ''}
@@ -150,7 +149,6 @@ export default function ReportEditor({
         </Box>
         <Stack direction='row' spacing={1} sx={{ alignItems: 'center', flexShrink: 0 }}>
           <Button
-            size='small'
             variant='contained'
             disabled={isPending || !sql.trim()}
             onClick={() => run()}
@@ -160,12 +158,11 @@ export default function ReportEditor({
             {locales.ai_report_run}
           </Button>
           {isPending && (
-            <Button size='small' onClick={() => runControllerRef.current?.abort()} data-testid='ai-report-cancel'>
+            <Button onClick={() => runControllerRef.current?.abort()} data-testid='ai-report-cancel'>
               {locales.cancel}
             </Button>
           )}
           <Button
-            size='small'
             variant='outlined'
             disabled={saving || !edited.title.trim()}
             onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}

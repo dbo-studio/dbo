@@ -53,7 +53,6 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
 
     return (
       <Button
-        size='small'
         color='inherit'
         data-testid={`ai-context-${level}`}
         endIcon={<CustomIcon type='chevronDown' size='xs' />}

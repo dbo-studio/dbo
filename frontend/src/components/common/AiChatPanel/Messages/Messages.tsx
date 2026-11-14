@@ -221,7 +221,6 @@ export default function Messages({
         <ScrollToBottomButtonStyled>
           <Chip
             clickable
-            size='small'
             icon={<CustomIcon type='arrowDown' size='xs' />}
             label={locales.ai_jump_to_latest}
             onClick={() => {

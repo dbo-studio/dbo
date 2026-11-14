@@ -15,7 +15,6 @@ export type SelectInputProps = {
   value?: string;
   emptylabel?: string;
   error?: boolean;
-  size?: 'medium' | 'small';
   options: SelectInputOption[];
   onChange: (value: OnChangeValue<SelectInputOption, boolean>) => void;
   isMulti?: boolean;

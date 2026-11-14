@@ -87,7 +87,6 @@ function NoProviderState(): JSX.Element {
       />
       <Stack direction='row' spacing={1}>
         <Button
-          size='small'
           variant='contained'
           onClick={() => openSettings({ section: 3, aiTab: 'providers', highlightId: 'ai.providers' })}
           data-testid='ai-empty-open-settings'
@@ -96,7 +95,6 @@ function NoProviderState(): JSX.Element {
         </Button>
         {canEdit && (
           <Button
-            size='small'
             variant='outlined'
             onClick={(e) => setSetupAnchor(e.currentTarget)}
             data-testid='ai-empty-quick-setup'

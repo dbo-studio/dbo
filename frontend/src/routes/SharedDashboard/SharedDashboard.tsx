@@ -86,7 +86,6 @@ export default function SharedDashboard({ token }: { token: string }): JSX.Eleme
           <Typography variant='h6'>{locales.share_password_title}</Typography>
           <FieldInput
             autoFocus
-            size='small'
             type='password'
             placeholder={locales.password}
             value={typed}
@@ -99,7 +98,7 @@ export default function SharedDashboard({ token }: { token: string }): JSX.Eleme
               {locales.share_password_wrong}
             </Typography>
           )}
-          <Button type='submit' variant='contained' size='small' disabled={!typed} data-testid='shared-password-submit'>
+          <Button type='submit' variant='contained' disabled={!typed} data-testid='shared-password-submit'>
             {locales.share_open}
           </Button>
         </Stack>
@@ -120,7 +119,7 @@ export default function SharedDashboard({ token }: { token: string }): JSX.Eleme
         <Typography variant='caption' color='textSubdued'>
           {new Date(data.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Typography>
-        <Button size='small' disabled={isFetching} onClick={() => void refetch()} data-testid='shared-refresh'>
+        <Button disabled={isFetching} onClick={() => void refetch()} data-testid='shared-refresh'>
           {locales.dashboard_card_refresh}
         </Button>
       </Stack>

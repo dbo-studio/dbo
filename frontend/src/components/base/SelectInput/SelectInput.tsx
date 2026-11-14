@@ -13,7 +13,6 @@ export default function SelectInput({
   label,
   helpertext,
   value,
-  size,
   options,
   onChange,
   emptylabel,
@@ -64,7 +63,7 @@ export default function SelectInput({
         onMenuOpen={onMenuOpen}
         formatOptionLabel={formatOptionLabel}
         classNamePrefix={classNamePrefix}
-        styles={SelectInputStyles(theme, error, size)}
+        styles={SelectInputStyles(theme, error)}
         menuPortalTarget={document.body}
       />
       {helpertext && (

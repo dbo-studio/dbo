@@ -10,7 +10,7 @@ export default function CurrentStructure({ structure }: { structure: TableStruct
 
   return (
     <Box sx={{ px: 1, py: 0.25 }} data-testid='ai-diff-current'>
-      <Button size='small' variant='text' color='inherit' onClick={() => setOpen((value) => !value)}>
+      <Button variant='text' color='inherit' onClick={() => setOpen((value) => !value)}>
         {locales.ai_changes_current}
       </Button>
       <Collapse in={open} unmountOnExit>

@@ -15,7 +15,6 @@ const COLORS: Record<AiToolStatus, 'default' | 'success' | 'error' | 'warning'> 
 export default function ToolStatusPill({ status }: { status: AiToolStatus }): JSX.Element {
   return (
     <Chip
-      size='small'
       variant='outlined'
       color={COLORS[status]}
       label={locales[`ai_tool_status_${status}`]}

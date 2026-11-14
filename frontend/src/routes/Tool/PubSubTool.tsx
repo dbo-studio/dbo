@@ -75,17 +75,16 @@ function MessageRow({ m }: { m: Received }): JSX.Element {
         <Typography variant='caption' color='textSubdued' sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {new Date(m.at).toLocaleTimeString()}
         </Typography>
-        <Chip size='small' label={m.channel} sx={{ fontFamily: MONO, maxWidth: 360 }} />
+        <Chip label={m.channel} sx={{ fontFamily: MONO, maxWidth: 360 }} />
         <Box sx={{ flex: 1 }} />
         {long && (
-          <Button size='small' onClick={(): void => setOpen(!open)}>
+          <Button onClick={(): void => setOpen(!open)}>
             {open ? locales.nosql_pubsub_collapse : locales.nosql_pubsub_expand}
           </Button>
         )}
         <Tooltip title={locales.copy}>
           <IconButton
             className='copy'
-            size='small'
             aria-label={locales.copy}
             sx={{ opacity: 0 }}
             onClick={(): void => {
@@ -244,7 +243,6 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         <Tooltip title={paused ? locales.nosql_pubsub_resume : locales.nosql_pubsub_pause}>
           <span>
             <IconButton
-              size='small'
               disabled={!running}
               onClick={togglePause}
               aria-label={paused ? locales.nosql_pubsub_resume : locales.nosql_pubsub_pause}
@@ -254,7 +252,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
           </span>
         </Tooltip>
         <Tooltip title={locales.nosql_pubsub_clear}>
-          <IconButton size='small' aria-label={locales.nosql_pubsub_clear} onClick={(): void => setMessages([])}>
+          <IconButton aria-label={locales.nosql_pubsub_clear} onClick={(): void => setMessages([])}>
             <CustomIcon type='delete' size='s' />
           </IconButton>
         </Tooltip>
@@ -285,7 +283,6 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
       {!stuck && shown.length > 0 && (
         <Box sx={{ position: 'relative' }}>
           <Button
-            size='small'
             variant='contained'
             sx={{ position: 'absolute', right: 16, bottom: 8, zIndex: 1 }}
             onClick={(): void => setStuck(true)}

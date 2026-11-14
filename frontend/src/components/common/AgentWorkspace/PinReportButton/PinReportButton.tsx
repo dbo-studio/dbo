@@ -61,12 +61,7 @@ export default function PinReportButton({
           </IconButton>
         </Tooltip>
       ) : (
-        <Button
-          size='small'
-          variant='text'
-          onClick={(event) => setAnchorEl(event.currentTarget)}
-          data-testid='ai-report-pin'
-        >
+        <Button variant='text' onClick={(event) => setAnchorEl(event.currentTarget)} data-testid='ai-report-pin'>
           {locales.ai_board_pin}
         </Button>
       )}
@@ -92,14 +87,13 @@ export default function PinReportButton({
           onKeyDown={(event) => event.stopPropagation()}
         >
           <InputBase
-            size='small'
             margin='none'
             placeholder={locales.ai_board_name}
             value={name}
             onChange={(event) => setName(event.target.value)}
             inputProps={{ 'data-testid': 'ai-pin-new-board' }}
           />
-          <Button size='small' type='submit' disabled={!name.trim()} data-testid='ai-pin-new-board-submit'>
+          <Button type='submit' disabled={!name.trim()} data-testid='ai-pin-new-board-submit'>
             {locales.ai_board_new}
           </Button>
         </Box>

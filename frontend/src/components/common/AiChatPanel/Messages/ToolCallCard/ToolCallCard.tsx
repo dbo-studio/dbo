@@ -118,7 +118,6 @@ export default function ToolCallCard({
           )}
           {trace.name === 'execute_sql' && sqlArg && (
             <Button
-              size='small'
               variant='text'
               sx={{ alignSelf: 'flex-start' }}
               data-testid='ai-tool-link'
@@ -129,7 +128,6 @@ export default function ToolCallCard({
           )}
           {describedTable && (
             <Button
-              size='small'
               variant='text'
               sx={{ alignSelf: 'flex-start' }}
               data-testid='ai-tool-link'

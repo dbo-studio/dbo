@@ -5,8 +5,7 @@ import type { SelectInputOption } from './types';
 
 export const SelectInputStyles = (
   theme: Theme,
-  error: undefined | boolean,
-  size?: 'small' | 'medium'
+  error: undefined | boolean
 ): StylesConfig<SelectInputOption, boolean, GroupBase<SelectInputOption>> => ({
   control: (_, { isFocused }): CSSObjectWithLabel => ({
     color: theme.palette.text.text,
@@ -14,7 +13,7 @@ export const SelectInputStyles = (
     marginBottom: 0,
     border: `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
     borderRadius: variables.radius.medium,
-    height: size === 'small' ? '24px' : '32px',
+    height: `${variables.control}px`,
     minWidth: '90px',
     backgroundColor: theme.palette.background.default,
     borderBottom: error
@@ -39,7 +38,7 @@ export const SelectInputStyles = (
     overflow: 'hidden',
     color: theme.palette.text.text,
     borderRadius: variables.radius.small,
-    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
+    fontSize: theme.typography.caption.fontSize,
     backgroundColor: isFocused ? theme.palette.background.paper : theme.palette.background.default,
     ':hover': {
       backgroundColor: theme.palette.background.paper
@@ -50,12 +49,12 @@ export const SelectInputStyles = (
     margin: 0,
     padding: 0,
     color: theme.palette.text.text,
-    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
+    fontSize: theme.typography.caption.fontSize
   }),
   singleValue: (styles): CSSObjectWithLabel => ({
     ...styles,
     color: theme.palette.text.text,
-    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
+    fontSize: theme.typography.caption.fontSize
   }),
   multiValue: (base): CSSObjectWithLabel => ({
     ...base,
@@ -71,7 +70,7 @@ export const SelectInputStyles = (
   multiValueLabel: (styles): CSSObjectWithLabel => ({
     ...styles,
     color: theme.palette.text.text,
-    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize,
+    fontSize: theme.typography.caption.fontSize,
     padding: '0 2px 0 6px',
     lineHeight: '20px',
     fontWeight: 500
@@ -113,7 +112,7 @@ export const SelectInputStyles = (
 
   placeholder: (styles): CSSObjectWithLabel => ({
     ...styles,
-    fontSize: size === 'small' ? theme.typography.caption.fontSize : theme.typography.body2.fontSize
+    fontSize: theme.typography.caption.fontSize
   }),
 
   menuPortal: (styles): CSSObjectWithLabel => ({

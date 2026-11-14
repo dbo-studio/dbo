@@ -48,7 +48,7 @@ export default function RecycleDialog({ connectionId, onClose, onRestored }: Pro
             <ListItem
               key={e.id}
               secondaryAction={
-                <Button size='small' onClick={(): void => void restore(e.id)} data-testid={`recycle-restore-${e.id}`}>
+                <Button onClick={(): void => void restore(e.id)} data-testid={`recycle-restore-${e.id}`}>
                   {locales.nosql_recycle_restore}
                 </Button>
               }

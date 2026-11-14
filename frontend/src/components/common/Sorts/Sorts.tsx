@@ -63,7 +63,6 @@ export default function Sorts({ columns: columnsProp, onApply }: SortsProps = {}
         <SortsApplyBoxStyled>
           <Button
             onClick={(): void => handleApplySorts()}
-            size='small'
             variant='outlined'
             endIcon={<CustomIcon type='check' size='xs' />}
           >

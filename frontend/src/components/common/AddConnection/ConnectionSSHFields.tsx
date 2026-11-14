@@ -2,9 +2,10 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import locales from '@/locales';
-import { Box, Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
 import type { JSX } from 'react';
 
+import { ConnectionFormRowStyled } from './AddConnection.styled';
 import SSLCertField from './SSLCertField';
 import { SSH_AUTH_METHODS, type SSHFormValues, type SSHHopFormValues } from './ssh';
 import type { ConnectionSSHFieldsProps } from './types';
@@ -24,7 +25,7 @@ function HopFields({ prefix, value, onChange }: HopFieldsProps): JSX.Element {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} data-testid={`${prefix}-fields`}>
-      <Stack direction='row' spacing={2}>
+      <ConnectionFormRowStyled>
         <FieldInput
           name={`${prefix}Host`}
           label={locales.ssh_host}
@@ -39,7 +40,7 @@ function HopFields({ prefix, value, onChange }: HopFieldsProps): JSX.Element {
           value={value.port}
           onChange={(e): void => set({ port: e.target.value })}
         />
-      </Stack>
+      </ConnectionFormRowStyled>
       <FieldInput
         name={`${prefix}Username`}
         label={locales.username}

@@ -138,7 +138,6 @@ export default function SafeModePasswordPrompt({
             <Button
               type='button'
               data-testid='safe-mode-biometrics'
-              size='small'
               variant='outlined'
               loading={biometricsPending}
               loadingPosition='start'
@@ -149,13 +148,12 @@ export default function SafeModePasswordPrompt({
           )}
           {!biometricsAvailable && <span />}
           <Stack spacing={1} direction={'row'}>
-            <Button type='button' size='small' onClick={handleClose}>
+            <Button type='button' onClick={handleClose}>
               {locales.cancel}
             </Button>
             <Button
               type='submit'
               data-testid='safe-mode-password-save'
-              size='small'
               variant='contained'
               disabled={validationErrors.length > 0}
             >

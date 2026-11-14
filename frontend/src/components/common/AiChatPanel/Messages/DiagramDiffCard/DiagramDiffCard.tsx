@@ -28,7 +28,6 @@ function OpReview({
     <Box component='span' sx={{ display: 'inline-flex', ml: 0.5, verticalAlign: 'middle' }}>
       <Tooltip title={locales.ai_keep_change}>
         <IconButton
-          size='small'
           sx={{ p: 0.25, color: status === 'accepted' ? 'success.main' : undefined }}
           onClick={() => onReview('accepted')}
           data-testid='ai-card-op-accept'
@@ -37,7 +36,7 @@ function OpReview({
         </IconButton>
       </Tooltip>
       <Tooltip title={locales.ai_drop_change}>
-        <IconButton size='small' sx={{ p: 0.25 }} onClick={() => onReview('rejected')} data-testid='ai-card-op-reject'>
+        <IconButton sx={{ p: 0.25 }} onClick={() => onReview('rejected')} data-testid='ai-card-op-reject'>
           <CustomIcon type='close' size='xs' />
         </IconButton>
       </Tooltip>
@@ -83,7 +82,6 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
           {locales.ai_schema_proposal.replace('{changes}', changeCount(changeset.ops.length))}
         </Typography>
         <Chip
-          size='small'
           variant='outlined'
           color={decision === 'applied' ? 'success' : pending ? 'warning' : 'default'}
           label={decision ? locales[`ai_review_${decision}`] : locales.ai_review_pending}
@@ -114,13 +112,12 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
           ))}
         </Box>
         <CardActionsStyled>
-          <Button size='small' variant='text' onClick={openInDiagram} data-testid='ai-diagram-open'>
+          <Button variant='text' onClick={openInDiagram} data-testid='ai-diagram-open'>
             {locales.ai_open_in_diagram}
           </Button>
           {pending && (
             <>
               <Button
-                size='small'
                 variant='text'
                 color='inherit'
                 onClick={() => void review.review('rejected')}
@@ -129,7 +126,6 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
                 {locales.ai_reject}
               </Button>
               <Button
-                size='small'
                 variant='contained'
                 disabled={review.isPreviewing}
                 onClick={() => void review.openPreview()}
@@ -142,7 +138,6 @@ export default function DiagramDiffCard({ changesetId }: { changesetId: number }
           )}
           {changeset.undoSql.length > 0 && !pending && (
             <Button
-              size='small'
               variant='text'
               disabled={review.isUndoing}
               onClick={() => void review.undo()}

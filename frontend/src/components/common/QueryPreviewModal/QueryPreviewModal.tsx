@@ -44,7 +44,6 @@ export default function QueryPreviewModal({
       footer={
         <>
           <Button
-            size='small'
             variant='text'
             disabled={isExecuting}
             onClick={onCancel}
@@ -53,7 +52,6 @@ export default function QueryPreviewModal({
             {locales.cancel}
           </Button>
           <Button
-            size='small'
             variant='contained'
             disabled={isExecuting || queries.length === 0 || !confirmed}
             onClick={onConfirm}
@@ -71,7 +69,6 @@ export default function QueryPreviewModal({
         </Box>
         {confirmText && (
           <TextField
-            size='small'
             autoComplete='off'
             label={locales.query_preview_type_to_confirm.replace('{name}', confirmText)}
             value={typed}

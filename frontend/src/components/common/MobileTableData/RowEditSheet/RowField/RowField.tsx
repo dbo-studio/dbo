@@ -26,7 +26,7 @@ export default function RowField({ column, value, editable, onChange }: RowField
           </RowFieldMetaStyled>
         </Typography>
         {!readOnly && !column.notNull && (
-          <Button size='small' onClick={(): void => onChange(isNull ? '' : null)}>
+          <Button onClick={(): void => onChange(isNull ? '' : null)}>
             {isNull ? locales.mobile_set_value : locales.mobile_set_null}
           </Button>
         )}

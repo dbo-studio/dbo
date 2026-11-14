@@ -6,10 +6,8 @@ import { variables } from '@/core/theme/variables';
  * attributes reach every toast. Tones come from the palette, never from sonner's rich colors.
  */
 export const ToasterRootStyled = styled('div')(({ theme }) => {
-  const tone = (color: string): Record<string, unknown> => ({
-    boxShadow: `inset 3px 0 0 ${color}, ${theme.shadows[8]}`,
-    '[data-icon]': { color }
-  });
+  // Status shows only as the icon tint: no side bar, no tinted card.
+  const tone = (color: string): Record<string, unknown> => ({ '[data-icon]': { color } });
 
   return {
     '[data-sonner-toast]': {
@@ -17,15 +15,15 @@ export const ToasterRootStyled = styled('div')(({ theme }) => {
       alignItems: 'center',
       gap: theme.spacing(1.25),
       width: 'var(--width)',
-      padding: theme.spacing(1.25, 1.5),
+      padding: theme.spacing(1, 1.5),
       paddingRight: theme.spacing(4.5),
-      borderRadius: variables.radius.medium,
+      borderRadius: variables.radius.large,
       border: `1px solid ${theme.palette.divider}`,
-      background: theme.palette.background.paper,
+      background: theme.palette.background.default,
       color: theme.palette.text.primary,
-      boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}, ${theme.shadows[8]}`,
+      boxShadow: theme.shadows[4],
       fontFamily: theme.typography.fontFamily,
-      fontSize: variables.fontSize.lg
+      fontSize: variables.fontSize.md
     },
     '[data-sonner-toast][data-type="success"]': tone(theme.palette.success.main),
     '[data-sonner-toast][data-type="error"]': tone(theme.palette.error.main),

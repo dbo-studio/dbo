@@ -26,7 +26,6 @@ export default function SqlBlock({ queries, testIdPrefix }: SqlBlockProps): JSX.
       {sql ? <SyntaxHighlighter value={sql} /> : <Typography variant='caption'>{locales.ai_changes_no_sql}</Typography>}
       <Stack direction='row' spacing={1}>
         <Button
-          size='small'
           variant='text'
           disabled={!sql}
           onClick={copy}
@@ -36,7 +35,6 @@ export default function SqlBlock({ queries, testIdPrefix }: SqlBlockProps): JSX.
           {locales.ai_changes_copy}
         </Button>
         <Button
-          size='small'
           variant='text'
           disabled={!sql}
           onClick={() => useTabStore.getState().addEditorTab(sql, { forceNew: true })}

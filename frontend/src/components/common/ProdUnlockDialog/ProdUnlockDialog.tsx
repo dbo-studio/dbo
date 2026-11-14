@@ -18,7 +18,6 @@ export default function ProdUnlockDialog(): JSX.Element | null {
         <Alert severity='warning'>{locales.prod_unlock_hint}</Alert>
         <TextField
           autoFocus
-          size='small'
           fullWidth
           placeholder={name}
           helperText={locales.nosql_bulk_delete_confirm_helper.replace('{name}', name)}

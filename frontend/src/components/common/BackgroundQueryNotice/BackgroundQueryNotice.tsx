@@ -57,7 +57,7 @@ export default function BackgroundQueryNotice({ tabId }: { tabId: string }): JSX
         >
           {formatElapsed(now - query.startedAt)}
         </Typography>
-        <Button size='small' sx={{ mt: 1 }} onClick={cancel} data-testid='background-query-cancel'>
+        <Button sx={{ mt: 1 }} onClick={cancel} data-testid='background-query-cancel'>
           {locales.cancel}
         </Button>
       </Box>

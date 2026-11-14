@@ -172,11 +172,11 @@ export function ExportModal({ show, connectionId, query, table, target, onClose 
             )}
           </Box>
           <ModalFooter>
-            <Button type='button' size='small' onClick={() => onClose()}>
+            <Button type='button' onClick={() => onClose()}>
               {locales.cancel}
             </Button>
 
-            <Button type='submit' size='small' variant='contained' disabled={isTauri && !savePath.trim()}>
+            <Button type='submit' variant='contained' disabled={isTauri && !savePath.trim()}>
               <span>{locales.export}</span>
             </Button>
           </ModalFooter>

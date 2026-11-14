@@ -54,7 +54,7 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
     <>
       <SectionHeadStyled>
         <SectionActionsStyled sx={{ ml: 0 }}>
-          <Button size='small' variant='contained' onClick={() => setEditing({})} data-testid={`connector-add-${kind}`}>
+          <Button variant='contained' onClick={() => setEditing({})} data-testid={`connector-add-${kind}`}>
             {isDestination ? locales.connector_add_destination : locales.connector_add_channel}
           </Button>
         </SectionActionsStyled>
@@ -89,26 +89,23 @@ export default function ConnectorsSection({ kind }: { kind: ConnectorKind }): JS
                     {spec?.label ?? item.type}
                   </Typography>
                 </CardRowMainStyled>
-                {!item.enabled && <Chip size='small' label={locales.connector_disabled} />}
+                {!item.enabled && <Chip label={locales.connector_disabled} />}
                 {spec?.oauth && (
                   <Chip
-                    size='small'
                     color={needsAuth ? 'default' : 'success'}
                     label={needsAuth ? locales.connector_authorize : locales.connector_authorized}
                   />
                 )}
                 {needsAuth && (
-                  <Button size='small' variant='outlined' onClick={() => void authorizeConnector(item)}>
+                  <Button variant='outlined' onClick={() => void authorizeConnector(item)}>
                     {locales.connector_authorize}
                   </Button>
                 )}
-                <Button size='small' onClick={() => void test(item)} disabled={needsAuth}>
+                <Button onClick={() => void test(item)} disabled={needsAuth}>
                   {locales.connector_test}
                 </Button>
-                <Button size='small' onClick={() => setEditing({ connector: item })}>
-                  {locales.connector_edit}
-                </Button>
-                <Button size='small' color='error' onClick={() => remove(item)}>
+                <Button onClick={() => setEditing({ connector: item })}>{locales.connector_edit}</Button>
+                <Button color='error' onClick={() => remove(item)}>
                   {locales.delete}
                 </Button>
               </CardRowStyled>

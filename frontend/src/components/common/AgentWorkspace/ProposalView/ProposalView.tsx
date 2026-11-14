@@ -49,7 +49,6 @@ export default function ProposalView({ changesetId }: { changesetId: number }): 
         <Box sx={{ flex: 1 }} />
         {changeset.undoSql.length > 0 && review.openCount === 0 && (
           <Button
-            size='small'
             variant='text'
             disabled={review.isUndoing}
             onClick={() => void review.undo()}

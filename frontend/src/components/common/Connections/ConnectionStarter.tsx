@@ -61,7 +61,6 @@ export default function ConnectionStarter(): JSX.Element {
           {connections.slice(0, MAX_SHOWN_CONNECTIONS).map((connection) => (
             <Button
               key={connection.id}
-              size='small'
               disabled={switchingId === connection.id}
               onClick={() => void switchConnection(connection)}
               startIcon={<CustomIcon type={engineIconOf(connection)} size='s' />}

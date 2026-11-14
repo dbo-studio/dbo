@@ -183,11 +183,11 @@ function ConnectionBackups({
               onChange={(e) => void handleUpload(e.target.files?.[0])}
             />
             {canWrite && (
-              <Button size='small' variant='outlined' onClick={() => fileInputRef.current?.click()}>
+              <Button variant='outlined' onClick={() => fileInputRef.current?.click()}>
                 {locales.backup_upload}
               </Button>
             )}
-            <Button size='small' variant='contained' onClick={() => void handleBackup()}>
+            <Button variant='contained' onClick={() => void handleBackup()}>
               {locales.backup_now}
             </Button>
           </SectionActionsStyled>
@@ -219,23 +219,17 @@ function ConnectionBackups({
                   {artifact.status === 'failed' ? artifact.error : methodLabel(artifact)}
                 </Typography>
               </CardRowMainStyled>
-              {artifact.encrypted && <Chip size='small' label={locales.backup_encrypted} />}
-              {artifact.remoteStatus === 'uploaded' && (
-                <Chip size='small' color='success' label={locales.backup_remote_uploaded} />
-              )}
+              {artifact.encrypted && <Chip label={locales.backup_encrypted} />}
+              {artifact.remoteStatus === 'uploaded' && <Chip color='success' label={locales.backup_remote_uploaded} />}
               {artifact.remoteStatus === 'failed' && (
-                <Chip size='small' color='error' label={locales.backup_remote_failed} title={artifact.remoteError} />
+                <Chip color='error' label={locales.backup_remote_failed} title={artifact.remoteError} />
               )}
               {artifact.status === 'completed' && (
                 <>
-                  <Button size='small' onClick={() => void handleVerify(artifact)}>
-                    {locales.backup_verify}
-                  </Button>
-                  <Button size='small' onClick={() => void handleDownload(artifact)}>
-                    {locales.backup_download}
-                  </Button>
+                  <Button onClick={() => void handleVerify(artifact)}>{locales.backup_verify}</Button>
+                  <Button onClick={() => void handleDownload(artifact)}>{locales.backup_download}</Button>
                   {canWrite && (
-                    <Button size='small' color='error' onClick={() => setRestoreTarget(artifact)}>
+                    <Button color='error' onClick={() => setRestoreTarget(artifact)}>
                       {locales.backup_restore_action}
                     </Button>
                   )}

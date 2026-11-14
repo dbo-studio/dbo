@@ -29,7 +29,7 @@ export function ResetFactory() {
       label={locales.reset_factory}
       description={locales.reset_factory_description}
       control={
-        <Button variant='outlined' size='small' color='error' onClick={handleOpenConfirm} loading={isPending}>
+        <Button variant='outlined' color='error' onClick={handleOpenConfirm} loading={isPending}>
           {locales.delete}
         </Button>
       }

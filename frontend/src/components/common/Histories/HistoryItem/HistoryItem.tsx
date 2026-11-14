@@ -94,12 +94,12 @@ export default function HistoryItem({ history, selected, onClick, context }: His
       </Tooltip>
       <Box className='history-actions' sx={{ display: 'flex', flexShrink: 0 }}>
         <Tooltip title={locales.run}>
-          <IconButton size='small' aria-label={locales.run} onClick={open}>
+          <IconButton aria-label={locales.run} onClick={open}>
             <CustomIcon type='play' size='s' />
           </IconButton>
         </Tooltip>
         <Tooltip title={locales.copy}>
-          <IconButton size='small' aria-label={locales.copy} onClick={handleCopy}>
+          <IconButton aria-label={locales.copy} onClick={handleCopy}>
             <CustomIcon type='copy' size='s' />
           </IconButton>
         </Tooltip>

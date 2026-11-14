@@ -92,7 +92,6 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
       <TableCell sx={{ width: 148 }}>
         <SelectInput
           value={user.role}
-          size='small'
           disabled={pending}
           options={adminRoleOptions}
           testId={`admin-user-role-${user.email}`}
@@ -119,7 +118,6 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
       <TableCell sx={{ width: 160 }}>
         <Stack spacing={0.25} sx={{ alignItems: 'flex-start' }}>
           <Chip
-            size='small'
             variant='outlined'
             color={disabled ? 'default' : 'success'}
             label={disabled ? locales.admin_disabled : locales.admin_active}
@@ -133,7 +131,6 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
       </TableCell>
       <TableCell sx={{ width: 88 }}>
         <Chip
-          size='small'
           variant='outlined'
           color={user.totpEnabled ? 'info' : 'default'}
           label={user.totpEnabled ? locales.admin_on : locales.admin_off}
@@ -142,7 +139,6 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
       </TableCell>
       <TableCell align='right' sx={{ width: 48, px: 0.5 }}>
         <IconButton
-          size='small'
           aria-label={locales.admin_actions}
           disabled={pending}
           data-testid={`admin-user-menu-${user.email}`}
@@ -224,13 +220,12 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
               {resetError ? <FormError mb={0} errors={[resetError]} /> : null}
             </AdministrationModalContentStyled>
             <ModalFooter>
-              <Button type='button' size='small' onClick={closeReset}>
+              <Button type='button' onClick={closeReset}>
                 {locales.cancel}
               </Button>
               <Button
                 type='submit'
                 variant='contained'
-                size='small'
                 disabled={pending || resetPassword.length === 0}
                 data-testid='admin-reset-password-submit'
               >

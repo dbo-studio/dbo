@@ -50,7 +50,6 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
           placeholder={locales.search}
           value={search.searchTerm}
           onChange={(e): void => search.setSearchTerm(e.target.value)}
-          size='small'
           onKeyDown={handleKeyDown}
         />
 
@@ -63,24 +62,14 @@ export default function SearchDialog({ open, onClose, search }: SearchDialogProp
             gap: 0.5
           }}
         >
-          <IconButton
-            size='small'
-            onClick={search.previousMatch}
-            disabled={search.matches.length === 0}
-            sx={{ padding: '4px' }}
-          >
+          <IconButton onClick={search.previousMatch} disabled={search.matches.length === 0} sx={{ padding: '4px' }}>
             <CustomIcon type='arrowUp' size='xs' />
           </IconButton>
-          <IconButton
-            size='small'
-            onClick={search.nextMatch}
-            disabled={search.matches.length === 0}
-            sx={{ padding: '4px' }}
-          >
+          <IconButton onClick={search.nextMatch} disabled={search.matches.length === 0} sx={{ padding: '4px' }}>
             <CustomIcon type='arrowDown' size='xs' />
           </IconButton>
 
-          <IconButton size='small' onClick={handleClose} sx={{ padding: '4px' }}>
+          <IconButton onClick={handleClose} sx={{ padding: '4px' }}>
             <CustomIcon type='close' size='xs' />
           </IconButton>
         </Box>

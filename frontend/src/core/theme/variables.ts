@@ -1,8 +1,22 @@
+/**
+ * UI baseline contract. Every control and icon takes its size from here.
+ *
+ * There is ONE control height (`control`) for Button, Input, Select and IconButton — in forms,
+ * dialogs, toolbars and grids alike. Do not pass a MUI `size` prop (lint forbids it) and never
+ * hardcode a control height.
+ */
 export const variables = {
   radius: {
     small: '4px',
     medium: '5px',
     large: '12px'
+  },
+  control: 24,
+  icon: {
+    xs: 12,
+    s: 16,
+    m: 20,
+    l: 28
   },
   // Short UI motion; components disable it under prefers-reduced-motion.
   motion: {

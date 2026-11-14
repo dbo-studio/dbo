@@ -179,7 +179,6 @@ function Section({
         {actions.map((action) => (
           <Tooltip key={action.testId} title={action.label}>
             <IconButton
-              size='small'
               aria-label={action.label}
               data-testid={action.testId}
               onClick={(event) => {

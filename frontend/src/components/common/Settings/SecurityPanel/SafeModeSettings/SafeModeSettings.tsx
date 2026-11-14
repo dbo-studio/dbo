@@ -155,7 +155,6 @@ export function SafeModeSettings(): JSX.Element {
             <Button
               data-testid='safe-mode-settings-change-password'
               variant='outlined'
-              size='small'
               loading={isChangingPassword}
               onClick={() => void handleChangePassword()}
             >
@@ -165,7 +164,6 @@ export function SafeModeSettings(): JSX.Element {
             <Button
               data-testid='safe-mode-settings-set-password'
               variant='outlined'
-              size='small'
               loading={isSettingPassword}
               onClick={() => void handleSetPassword()}
             >

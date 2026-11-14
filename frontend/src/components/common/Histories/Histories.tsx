@@ -130,7 +130,7 @@ export default function Histories(): JSX.Element {
             {locales.history_count.replace('{count}', String(filteredHistories.length))}
           </Typography>
           <Tooltip title={locales.refresh}>
-            <IconButton size='small' aria-label={locales.refresh} onClick={() => void handleRefresh()}>
+            <IconButton aria-label={locales.refresh} onClick={() => void handleRefresh()}>
               <CustomIcon size='s' type={'refresh'} />
             </IconButton>
           </Tooltip>
@@ -181,7 +181,6 @@ export default function Histories(): JSX.Element {
                 disabled={isFetchingNextPage}
                 loading={isFetchingNextPage}
                 onClick={() => void handleLoadMore()}
-                size='small'
                 variant='outlined'
               >
                 <span>{locales.load_more}</span>

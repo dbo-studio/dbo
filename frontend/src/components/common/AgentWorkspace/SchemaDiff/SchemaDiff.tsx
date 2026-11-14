@@ -57,7 +57,7 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
               {table === 'write' ? locales.ai_changes_data : table === 'undo' ? locales.ai_changes_undo_title : table}
             </Typography>
             {!ops.some((op) => op.op === 'create_table' || op.op === 'undo' || op.name) && (
-              <Button size='small' variant='text' onClick={() => openForm(ops[0])} data-testid='ai-diff-open-form'>
+              <Button variant='text' onClick={() => openForm(ops[0])} data-testid='ai-diff-open-form'>
                 {locales.ai_changes_open_form}
               </Button>
             )}
@@ -102,7 +102,6 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                 )}
               </Box>
               <Chip
-                size='small'
                 variant='outlined'
                 label={locales[`ai_op_status_${op.status}`]}
                 color={op.status === 'applied' ? 'success' : op.status === 'failed' ? 'error' : 'default'}
@@ -112,14 +111,13 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                 <Stack direction='row'>
                   {EDITABLE.includes(op.op) && (
                     <Tooltip title={locales.ai_changes_edit}>
-                      <IconButton size='small' onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
+                      <IconButton onClick={() => setEditing(op.position)} data-testid='ai-diff-edit'>
                         <CustomIcon type='pen' size='xs' />
                       </IconButton>
                     </Tooltip>
                   )}
                   <Tooltip title={locales.ai_changes_accept}>
                     <IconButton
-                      size='small'
                       disabled={op.status === 'accepted'}
                       onClick={() => onReview('accepted', op.position)}
                       data-testid='ai-diff-accept'
@@ -129,7 +127,6 @@ export default function SchemaDiff({ changeset, before, onReview, onEdit }: Sche
                   </Tooltip>
                   <Tooltip title={locales.ai_reject}>
                     <IconButton
-                      size='small'
                       disabled={op.status === 'rejected'}
                       onClick={() => onReview('rejected', op.position)}
                       data-testid='ai-diff-reject'

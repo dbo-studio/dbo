@@ -140,13 +140,12 @@ export default function SQLite({
             form.state.values.isPing = true;
             void form.handleSubmit().then();
           }}
-          size='small'
           variant='outlined'
         >
           <span>{locales.test}</span>
         </Button>
         <Stack spacing={1} direction={'row'}>
-          <Button type='button' size='small' onClick={onClose}>
+          <Button type='button' onClick={onClose}>
             {locales.cancel}
           </Button>
           <Button
@@ -155,7 +154,6 @@ export default function SQLite({
             loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
-            size='small'
             variant='contained'
           >
             <span>{submitLabel ?? (connection ? locales.update : locales.create)}</span>

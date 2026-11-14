@@ -44,11 +44,10 @@ export default function ChangesetDock({ review, onReview }: ChangesetDockProps):
       <Typography variant='caption' sx={{ flex: 1 }}>
         {locales.ai_changes_dock.replace('{changes}', changeCount(review.openCount))}
       </Typography>
-      <Button size='small' variant='text' onClick={onReview} data-testid='ai-dock-review'>
+      <Button variant='text' onClick={onReview} data-testid='ai-dock-review'>
         {locales.ai_changes_review}
       </Button>
       <Button
-        size='small'
         variant='text'
         color='inherit'
         onClick={() => void review.review('rejected')}
@@ -57,7 +56,6 @@ export default function ChangesetDock({ review, onReview }: ChangesetDockProps):
         {locales.ai_changes_reject_all}
       </Button>
       <Button
-        size='small'
         variant='contained'
         disabled={review.isPreviewing}
         onClick={() => void review.openPreview()}

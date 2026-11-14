@@ -10,7 +10,6 @@ export default function CreatableSelectInput({
   label,
   helpertext,
   value,
-  size,
   options,
   onChange,
   emptylabel,
@@ -109,7 +108,7 @@ export default function CreatableSelectInput({
         options={localOptions}
         menuPlacement={'auto'}
         onChange={handleChange}
-        styles={SelectInputStyles(theme, error, size)}
+        styles={SelectInputStyles(theme, error)}
         menuPortalTarget={document.body}
         onCreateOption={handleCreateOption}
         isClearable={true}

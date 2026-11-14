@@ -89,7 +89,7 @@ export default function NotificationBell(): JSX.Element {
             <Typography variant='subtitle2' color='textTitle' sx={{ flex: 1 }}>
               {locales.notifications}
             </Typography>
-            <Button size='small' disabled={!data?.unread} onClick={() => readAll()} data-testid='notification-read-all'>
+            <Button disabled={!data?.unread} onClick={() => readAll()} data-testid='notification-read-all'>
               {locales.notification_read_all}
             </Button>
           </NotificationHeaderStyled>
@@ -135,7 +135,6 @@ export default function NotificationBell(): JSX.Element {
                   </NotificationBodyStyled>
                   <Tooltip title={locales.dashboard_delete}>
                     <IconButton
-                      size='small'
                       className='notification-delete'
                       aria-label={locales.dashboard_delete}
                       onClick={(event) => {

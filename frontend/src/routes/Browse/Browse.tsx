@@ -290,7 +290,6 @@ export default function Browse(): JSX.Element {
         </Box>
         {spec && has(spec, 'insert') && (
           <Button
-            size='small'
             variant='outlined'
             startIcon={<CustomIcon type='plus' size='s' />}
             onClick={(e): void => setCreateAnchor(e.currentTarget)}
@@ -301,11 +300,7 @@ export default function Browse(): JSX.Element {
         )}
         {moreItems.length > 0 && (
           <Tooltip title={locales.nosql_more_actions}>
-            <IconButton
-              size='small'
-              aria-label={locales.nosql_more_actions}
-              onClick={(e): void => setMoreAnchor(e.currentTarget)}
-            >
+            <IconButton aria-label={locales.nosql_more_actions} onClick={(e): void => setMoreAnchor(e.currentTarget)}>
               <CustomIcon type='ellipsisVertical' size='s' />
             </IconButton>
           </Tooltip>
@@ -360,11 +355,8 @@ export default function Browse(): JSX.Element {
               inputProps={{ 'aria-label': 'new-item-id' }}
             />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 0.5 }}>
-              <Button size='small' onClick={(): void => setCreateAnchor(null)}>
-                {locales.cancel}
-              </Button>
+              <Button onClick={(): void => setCreateAnchor(null)}>{locales.cancel}</Button>
               <Button
-                size='small'
                 variant='contained'
                 disabled={!newId && !idOptional}
                 onClick={(): void => void insert().then(() => setCreateAnchor(null))}

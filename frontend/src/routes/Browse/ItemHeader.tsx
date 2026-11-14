@@ -76,13 +76,10 @@ export default function ItemHeader({
       <Typography sx={{ minWidth: 0, flexShrink: 1, fontWeight: 600 }} noWrap title={item.id}>
         {item.id}
       </Typography>
-      {type && <Chip size='small' label={type} variant='outlined' />}
-      {item.meta?.readonly ? (
-        <Chip size='small' label={locales.nosql_readonly} color='warning' variant='outlined' />
-      ) : null}
+      {type && <Chip label={type} variant='outlined' />}
+      {item.meta?.readonly ? <Chip label={locales.nosql_readonly} color='warning' variant='outlined' /> : null}
       {(ttl !== undefined || canTtl) && (
         <Chip
-          size='small'
           label={formatTtl(ttl ?? -1)}
           variant='outlined'
           data-testid='item-ttl'
@@ -92,14 +89,14 @@ export default function ItemHeader({
       <Box sx={{ flex: 1 }} />
       {canRename && (
         <Tooltip title={locales.nosql_rename}>
-          <IconButton size='small' aria-label='rename-key' onClick={open('rename')}>
+          <IconButton aria-label='rename-key' onClick={open('rename')}>
             <CustomIcon type='edit' size='s' />
           </IconButton>
         </Tooltip>
       )}
       {canDelete && (
         <Tooltip title={locales.nosql_delete_item}>
-          <IconButton size='small' color='error' aria-label={locales.nosql_delete_item} onClick={onDelete}>
+          <IconButton color='error' aria-label={locales.nosql_delete_item} onClick={onDelete}>
             <CustomIcon type='delete' size='s' />
           </IconButton>
         </Tooltip>
@@ -118,7 +115,6 @@ export default function ItemHeader({
         >
           <TextField
             autoFocus
-            size='small'
             fullWidth
             type={editor?.kind === 'ttl' ? 'number' : 'text'}
             label={editor?.kind === 'ttl' ? locales.nosql_ttl : locales.nosql_rename}
@@ -131,10 +127,8 @@ export default function ItemHeader({
             slotProps={{ htmlInput: { 'aria-label': editor?.kind === 'ttl' ? 'ttl-input' : 'rename-input' } }}
           />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-            <Button size='small' onClick={(): void => setEditor(null)}>
-              {locales.cancel}
-            </Button>
-            <Button size='small' variant='contained' disabled={value === ''} onClick={submit}>
+            <Button onClick={(): void => setEditor(null)}>{locales.cancel}</Button>
+            <Button variant='contained' disabled={value === ''} onClick={submit}>
               {editor?.kind === 'ttl' ? locales.nosql_set : locales.nosql_rename}
             </Button>
           </Box>

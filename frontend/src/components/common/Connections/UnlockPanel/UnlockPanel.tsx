@@ -75,7 +75,6 @@ export default function UnlockPanel({
         <UnlockActionsStyled>
           <Button
             type='button'
-            size='small'
             variant='outlined'
             loading={unlock.testing}
             onClick={() => void unlock.test()}
@@ -86,7 +85,6 @@ export default function UnlockPanel({
           </Button>
           <Button
             type='submit'
-            size='small'
             variant='contained'
             loading={unlock.pending && !unlock.testing}
             disabled={unlock.pending || unlock.errors.length > 0}

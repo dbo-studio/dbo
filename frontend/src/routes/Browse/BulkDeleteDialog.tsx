@@ -77,7 +77,6 @@ export default function BulkDeleteDialog({
           {docs ? locales.nosql_bulk_delete_hint_docs : locales.nosql_bulk_delete_hint}
         </Typography>
         <TextField
-          size='small'
           fullWidth
           autoFocus
           placeholder={name}

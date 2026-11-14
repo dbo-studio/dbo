@@ -19,10 +19,21 @@ export const ConnectionFormBodyStyled = styled(Box)(({ theme }) => ({
   flexDirection: 'column'
 }));
 
+// Side-by-side fields share the row equally, like the full-width ones above and below them.
+export const ConnectionFormRowStyled = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  columnGap: theme.spacing(2)
+}));
+
 export const ConnectionFormCheckboxRowStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  marginBottom: theme.spacing(1)
+  marginBottom: theme.spacing(1),
+  // The checkbox's own padding would make this row taller than every field around it.
+  '& .MuiCheckbox-root': { padding: theme.spacing(0.5) },
+  // MUI pulls the label left by the default 9px padding; keep the icon flush with the field edge instead.
+  '& .MuiFormControlLabel-root': { marginLeft: theme.spacing(-0.5) }
 }));
 
 export const ConnectionFormTabsRootStyled = styled(Box)(({ theme }) => ({

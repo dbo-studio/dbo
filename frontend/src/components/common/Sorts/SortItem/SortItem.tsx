@@ -49,7 +49,6 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
           emptylabel={locales.no_column_found}
           value={currentSort.column}
           disabled={columns.length === 0}
-          size='small'
           options={columns.map((c) => ({ value: c.name, label: c.name }))}
           onChange={(e) => handleChange('column', (e as unknown as SelectInputOption).value as string)}
         />
@@ -64,7 +63,6 @@ export default function SortItem({ sort, columns }: SortItemProps): JSX.Element 
         <SelectInput
           classNamePrefix='sort-select'
           value={currentSort.operator}
-          size='small'
           options={PgsqlSorts.map((c) => ({ value: c, label: c }))}
           onChange={(e) => handleChange('operator', (e as unknown as SelectInputOption).value as string)}
         />

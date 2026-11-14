@@ -35,17 +35,11 @@ export default function ReportCard({ report }: { report: ChartReport }): JSX.Ele
         <Typography variant='caption' sx={{ fontWeight: 600, flex: '1 1 140px', minWidth: 0 }} noWrap>
           {report.title}
         </Typography>
-        <Button
-          size='small'
-          variant='text'
-          disabled={saving || !!saved}
-          onClick={() => save(report)}
-          data-testid='ai-report-save'
-        >
+        <Button variant='text' disabled={saving || !!saved} onClick={() => save(report)} data-testid='ai-report-save'>
           {saved ? locales.ai_report_saved : locales.ai_report_save}
         </Button>
         <PinReportButton report={saved ?? report} />
-        <Button size='small' variant='text' onClick={open} data-testid='ai-report-open'>
+        <Button variant='text' onClick={open} data-testid='ai-report-open'>
           {locales.ai_report_open}
         </Button>
       </Stack>

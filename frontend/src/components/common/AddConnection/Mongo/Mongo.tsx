@@ -12,7 +12,8 @@ import * as v from 'valibot';
 import {
   ConnectionFormBodyStyled,
   ConnectionFormCheckboxRowStyled,
-  ConnectionFormContainerStyled
+  ConnectionFormContainerStyled,
+  ConnectionFormRowStyled
 } from '../AddConnection.styled';
 import type { ConnectionEnv } from '@/types';
 import type { ConnectionSettingsProps } from '../types';
@@ -235,12 +236,12 @@ export default function Mongo({
                 text('uri', locales.mongo_uri, { placeholder: 'mongodb+srv://cluster.example.net/app' })
               ) : (
                 <>
-                  <Stack direction='row' spacing={2}>
+                  <ConnectionFormRowStyled>
                     <Box sx={{ flex: 1, minWidth: 0 }}>{text('host', locales.host, { placeholder: 'localhost' })}</Box>
                     <Box sx={{ width: 120 }}>
                       {text('port', locales.port, { placeholder: '27017', type: 'number' })}
                     </Box>
-                  </Stack>
+                  </ConnectionFormRowStyled>
                 </>
               )
             }
@@ -251,10 +252,10 @@ export default function Mongo({
         <Section title={locales.connection_section_auth}>
           <form.Subscribe selector={(state) => state.values.mode}>
             {(mode): JSX.Element => (
-              <Stack direction='row' spacing={2}>
+              <ConnectionFormRowStyled>
                 {mode === 'host' && <Box sx={{ flex: 1, minWidth: 0 }}>{text('username', locales.username)}</Box>}
                 <Box sx={{ flex: 1, minWidth: 0 }}>{text('password', locales.password, { type: 'password' })}</Box>
-              </Stack>
+              </ConnectionFormRowStyled>
             )}
           </form.Subscribe>
           <form.Subscribe selector={(state) => state.values.mode}>
@@ -289,13 +290,12 @@ export default function Mongo({
             form.state.values.isPing = true;
             void form.handleSubmit().then();
           }}
-          size='small'
           variant='outlined'
         >
           {locales.test}
         </Button>
         <Stack spacing={1} direction='row'>
-          <Button type='button' size='small' onClick={onClose}>
+          <Button type='button' onClick={onClose}>
             {locales.cancel}
           </Button>
           <Button
@@ -304,7 +304,6 @@ export default function Mongo({
             loadingPosition='start'
             disabled={submitLoading}
             loading={submitLoading}
-            size='small'
             variant='contained'
           >
             {submitLabel ?? (connection ? locales.update : locales.create)}

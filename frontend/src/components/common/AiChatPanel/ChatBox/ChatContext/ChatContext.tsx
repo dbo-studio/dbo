@@ -52,7 +52,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
         <IconButton
           ref={anchorRef}
           onClick={toggleOpen}
-          size='small'
           data-testid='ai-context-add'
           sx={{ width: 22, height: 22, p: 0 }}
         >
@@ -67,7 +66,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
           title={autoContext ? locales.ai_context_following_desc : locales.ai_context_pinned_desc}
         >
           <IconButton
-            size='small'
             aria-label={autoContext ? locales.ai_context_following : locales.ai_context_pinned}
             onClick={() => setAutoContext(!autoContext)}
             data-testid='ai-context-follow'
@@ -135,7 +133,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
               <InputBase
                 autoFocus
                 fullWidth
-                size='small'
                 margin='none'
                 placeholder={locales.ai_context_search}
                 value={search}

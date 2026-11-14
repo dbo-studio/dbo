@@ -93,7 +93,7 @@ export default function AiChatPanel() {
           <Typography variant='caption' color='textSubdued' sx={{ maxWidth: 260 }}>
             {locales.ai_no_connection_subtitle}
           </Typography>
-          <Button size='small' variant='outlined' onClick={() => updateUI({ showConnectionsDrawer: true })}>
+          <Button variant='outlined' onClick={() => updateUI({ showConnectionsDrawer: true })}>
             {locales.ai_select_connection}
           </Button>
         </Stack>

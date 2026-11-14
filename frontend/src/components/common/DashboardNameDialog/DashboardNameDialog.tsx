@@ -46,11 +46,8 @@ function NameForm({ onDone }: { onDone: () => void }): JSX.Element | null {
       title={target.mode === 'rename' ? locales.dashboard_rename : locales.dashboard_new}
       footer={
         <>
-          <Button size='small' onClick={onDone}>
-            {locales.cancel}
-          </Button>
+          <Button onClick={onDone}>{locales.cancel}</Button>
           <Button
-            size='small'
             variant='contained'
             type='submit'
             form={FORM_ID}

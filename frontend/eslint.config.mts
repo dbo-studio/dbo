@@ -68,6 +68,11 @@ export default defineConfig([
         {
           selector: "Property[key.name='fontSize'][value.type='Literal'][value.raw=/^['\"]?[\\d.]+(px|rem)?['\"]?$/]",
           message: 'Use a typography variant or theme.typography.* instead of a literal fontSize.'
+        },
+        {
+          selector:
+            "JSXOpeningElement[name.name=/^(Button|IconButton|TextField|Select|Autocomplete|Chip|InputBase|FieldInput|SelectInput|CreatableSelectInput)$/] > JSXAttribute[name.name='size']",
+          message: 'Controls have one size (variables.control); drop the size prop.'
         }
       ]
     }

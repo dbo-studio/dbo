@@ -19,8 +19,7 @@ export default function Chip(theme: Theme): Components {
           letterSpacing: '0.01em',
           '& .MuiChip-label': { paddingLeft: 7, paddingRight: 7 },
           '& .MuiChip-icon': { marginLeft: 5, marginRight: -2 }
-        },
-        sizeSmall: { height: 20 }
+        }
       },
       variants: [
         {

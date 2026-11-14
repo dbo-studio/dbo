@@ -28,7 +28,7 @@ export function ShowLogs() {
       label={locales.show_logs}
       description={general.logsPath}
       control={
-        <Button variant='outlined' size='small' onClick={() => void handleOpenLogs()}>
+        <Button variant='outlined' onClick={() => void handleOpenLogs()}>
           {locales.open}
         </Button>
       }

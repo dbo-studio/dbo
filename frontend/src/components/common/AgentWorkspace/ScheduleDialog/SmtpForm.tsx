@@ -58,7 +58,6 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
   const set = (patch: Partial<typeof form>): void => setDraft({ ...form, ...patch });
   const field = (key: 'host' | 'port' | 'username' | 'fromAddress', label: string, type = 'text'): JSX.Element => (
     <InputBase
-      size='small'
       type={type}
       placeholder={label}
       value={form[key]}
@@ -77,7 +76,6 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
       <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
         {field('username', locales.smtp_username)}
         <FieldInput
-          size='small'
           type='password'
           placeholder={data.hasPassword ? locales.smtp_password_keep : locales.smtp_password}
           value={password}
@@ -107,7 +105,6 @@ export default function SmtpForm({ onSaved }: { onSaved: () => void }): JSX.Elem
         </ToggleButtonGroup>
         <div style={{ flex: 1 }} />
         <Button
-          size='small'
           variant='contained'
           disabled={isPending || !form.host || !form.fromAddress}
           onClick={() => save()}

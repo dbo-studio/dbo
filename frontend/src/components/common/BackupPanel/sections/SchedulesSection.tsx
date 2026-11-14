@@ -133,7 +133,7 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
               <Typography variant='subtitle2' sx={{ flex: 1 }}>
                 {locales.backup_jobs}
               </Typography>
-              <Button size='small' variant='contained' onClick={() => open('new')}>
+              <Button variant='contained' onClick={() => open('new')}>
                 {locales.backup_job_new}
               </Button>
             </Box>
@@ -229,7 +229,7 @@ function JobRow({
         </Typography>
       </Box>
       <Box sx={{ flex: 1 }}>
-        <Chip size='small' color={statusColor(job.lastStatus)} label={statusLabel(job.lastStatus)} />
+        <Chip color={statusColor(job.lastStatus)} label={statusLabel(job.lastStatus)} />
       </Box>
       <Box sx={{ flex: 1.4 }}>
         <Typography variant='caption' color='textSubdued' component='p'>
@@ -252,12 +252,8 @@ function JobRow({
       <Typography variant='caption' color='textSubdued' sx={{ flex: 0.9 }}>
         {locales.backup_wizard_local_folder}
       </Typography>
-      <Button size='small' onClick={onRun}>
-        {locales.backup_schedule_run_now}
-      </Button>
-      <Button size='small' onClick={onOpen}>
-        {locales.backup_job_details}
-      </Button>
+      <Button onClick={onRun}>{locales.backup_schedule_run_now}</Button>
+      <Button onClick={onOpen}>{locales.backup_job_details}</Button>
     </Box>
   );
 }
@@ -319,22 +315,16 @@ function JobDetail({
   return (
     <Box data-testid='backup-job-detail'>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Button size='small' onClick={onBack}>
-          {locales.backup_job_back}
-        </Button>
+        <Button onClick={onBack}>{locales.backup_job_back}</Button>
         <Typography variant='subtitle1' sx={{ flex: 1 }}>
           {job.name} · {connection}
         </Typography>
-        <Button size='small' onClick={onRun}>
-          {locales.backup_schedule_run_now}
-        </Button>
-        <Button size='small' onClick={onEdit}>
-          {locales.backup_job_edit}
-        </Button>
-        <Button size='small' onClick={onToggle}>
+        <Button onClick={onRun}>{locales.backup_schedule_run_now}</Button>
+        <Button onClick={onEdit}>{locales.backup_job_edit}</Button>
+        <Button onClick={onToggle}>
           {job.enabled ? locales.backup_schedule_pause : locales.backup_schedule_resume}
         </Button>
-        <Button size='small' color='error' onClick={onDelete}>
+        <Button color='error' onClick={onDelete}>
           {locales.delete}
         </Button>
       </Box>
@@ -377,7 +367,6 @@ function JobDetail({
               </Typography>
             </Box>
             <Chip
-              size='small'
               color={run.status === 'completed' ? 'success' : run.status === 'failed' ? 'error' : 'default'}
               label={
                 run.status === 'completed'
@@ -405,18 +394,17 @@ function JobDetail({
               </Typography>
             </Box>
             {run.log && (
-              <Button size='small' onClick={() => setOpenLog(openLog === run.id ? null : run.id)}>
+              <Button onClick={() => setOpenLog(openLog === run.id ? null : run.id)}>
                 {openLog === run.id ? locales.backup_job_log_hide : locales.backup_job_log_show}
               </Button>
             )}
             {run.status === 'failed' && (
-              <Button size='small' onClick={() => prefillChat(explainFailurePrompt(run, job.name), true)}>
+              <Button onClick={() => prefillChat(explainFailurePrompt(run, job.name), true)}>
                 {locales.backup_explain_ai}
               </Button>
             )}
             {run.drillStatus && (
               <Chip
-                size='small'
                 data-testid={`backup-run-drill-${run.id}`}
                 title={run.drillMessage}
                 color={run.drillStatus === 'passed' ? 'success' : run.drillStatus === 'failed' ? 'error' : 'default'}
@@ -432,19 +420,14 @@ function JobDetail({
             {run.status === 'completed' && (
               <>
                 <Button
-                  size='small'
                   data-testid={`backup-run-drill-run-${run.id}`}
                   onClick={() => onDrill(run, run.encrypted ? passphrase || undefined : undefined)}
                 >
                   {locales.backup_drill}
                 </Button>
-                <Button size='small' onClick={() => void verify(run)}>
-                  {locales.backup_verify}
-                </Button>
-                <Button size='small' onClick={() => void download(run)}>
-                  {locales.backup_download}
-                </Button>
-                <Button size='small' color='error' onClick={() => onRestore(run)}>
+                <Button onClick={() => void verify(run)}>{locales.backup_verify}</Button>
+                <Button onClick={() => void download(run)}>{locales.backup_download}</Button>
+                <Button color='error' onClick={() => onRestore(run)}>
                   {locales.backup_job_open_restore}
                 </Button>
               </>

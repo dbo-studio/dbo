@@ -79,7 +79,6 @@ export function AccountPasswordSettings(): JSX.Element | null {
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     fullWidth
-                    size='small'
                     onChange={(e): void => field.handleChange(e.target.value)}
                     inputProps={{ 'data-testid': 'account-current-password' }}
                   />
@@ -97,7 +96,6 @@ export function AccountPasswordSettings(): JSX.Element | null {
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     fullWidth
-                    size='small'
                     onChange={(e): void => field.handleChange(e.target.value)}
                     inputProps={{ 'data-testid': 'account-new-password' }}
                   />
@@ -116,7 +114,6 @@ export function AccountPasswordSettings(): JSX.Element | null {
                     value={field.state.value}
                     error={field.state.meta.errors.length > 0}
                     fullWidth
-                    size='small'
                     onChange={(e): void => field.handleChange(e.target.value)}
                     inputProps={{ 'data-testid': 'account-confirm-password' }}
                   />
@@ -127,7 +124,6 @@ export function AccountPasswordSettings(): JSX.Element | null {
             {submitError ? <FormError mb={0} errors={[submitError]} /> : null}
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
               <Button
-                size='small'
                 onClick={(): void => {
                   form.reset();
                   setExpanded(false);
@@ -136,24 +132,13 @@ export function AccountPasswordSettings(): JSX.Element | null {
               >
                 {locales.cancel}
               </Button>
-              <Button
-                type='submit'
-                variant='contained'
-                size='small'
-                disabled={isPending}
-                data-testid='account-password-submit'
-              >
+              <Button type='submit' variant='contained' disabled={isPending} data-testid='account-password-submit'>
                 {isPending ? locales.auth_saving_password : locales.auth_change_password}
               </Button>
             </Box>
           </Box>
         ) : (
-          <Button
-            variant='outlined'
-            size='small'
-            data-testid='account-password-change'
-            onClick={(): void => setExpanded(true)}
-          >
+          <Button variant='outlined' data-testid='account-password-change' onClick={(): void => setExpanded(true)}>
             {locales.auth_change_password}
           </Button>
         )

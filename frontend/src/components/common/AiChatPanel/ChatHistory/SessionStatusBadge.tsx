@@ -32,7 +32,6 @@ export default function SessionStatusBadge({ chatId }: { chatId: number }): JSX.
 
   return (
     <Chip
-      size='small'
       variant='outlined'
       color={COLORS[status]}
       label={locales[`ai_session_${status}`]}

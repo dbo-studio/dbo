@@ -100,12 +100,12 @@ export default function WorkspaceCanvas({
           />
         </Box>
         <Tooltip title={fullScreen ? locales.ai_canvas_exit_full_screen : locales.ai_canvas_full_screen}>
-          <IconButton size='small' onClick={onToggleFullScreen} data-testid='ai-canvas-fullscreen'>
+          <IconButton onClick={onToggleFullScreen} data-testid='ai-canvas-fullscreen'>
             <CustomIcon type={fullScreen ? 'collapse' : 'expand'} size='xs' />
           </IconButton>
         </Tooltip>
         <Tooltip title={locales.ai_changes_close}>
-          <IconButton size='small' onClick={onClose} data-testid='ai-changes-close'>
+          <IconButton onClick={onClose} data-testid='ai-changes-close'>
             <CustomIcon type='close' size='xs' />
           </IconButton>
         </Tooltip>

@@ -133,7 +133,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         endAdornment={
           apiKey ? (
             <InputAdornment position='end'>
-              <Button size='small' onClick={() => setShowKey((value) => !value)} data-testid='ai-provider-key-toggle'>
+              <Button onClick={() => setShowKey((value) => !value)} data-testid='ai-provider-key-toggle'>
                 {showKey ? locales.ai_key_hide : locales.ai_key_show}
               </Button>
             </InputAdornment>
@@ -175,7 +175,6 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         <AiPanelFooterStyled>
           <Button
             type='button'
-            size='small'
             variant='outlined'
             loading={testing}
             disabled={saving}
@@ -186,7 +185,6 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
           </Button>
           <Button
             type='submit'
-            size='small'
             variant='contained'
             loading={saving}
             disabled={testing || (touched && invalid)}
