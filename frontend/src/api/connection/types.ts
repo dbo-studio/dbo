@@ -101,6 +101,7 @@ export type RedisOptionsType = {
   database?: number;
   tls?: boolean;
   tlsInsecure?: boolean;
+  ssh?: ConnectionSSHOptionsType;
   isPing?: boolean;
 };
 
@@ -114,6 +115,7 @@ export type MongoOptionsType = {
   database?: string;
   tls?: boolean;
   tlsInsecure?: boolean;
+  ssh?: ConnectionSSHOptionsType;
   isPing?: boolean;
 };
 

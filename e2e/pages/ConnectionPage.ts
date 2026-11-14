@@ -51,7 +51,8 @@ export class ConnectionPage extends BasePage {
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly uriInput: Locator;
-  readonly useUriCheckbox: Locator;
+  readonly uriModeButton: Locator;
+  readonly manualModeButton: Locator;
   readonly copyUriButton: Locator;
 
   constructor(page: Page) {
@@ -71,7 +72,8 @@ export class ConnectionPage extends BasePage {
     this.usernameInput = page.locator('input[name="username"]');
     this.passwordInput = page.locator('input[name="password"]');
     this.uriInput = page.locator('input[name="uri"]');
-    this.useUriCheckbox = page.getByRole("checkbox", { name: "Use URI" });
+    this.uriModeButton = page.getByTestId("connection-mode-uri");
+    this.manualModeButton = page.getByTestId("connection-mode-manual");
     this.copyUriButton = page.getByTestId("copy-connection-uri");
   }
 
@@ -319,11 +321,11 @@ export class ConnectionPage extends BasePage {
   }
 
   async enableUriMode(): Promise<void> {
-    if (await this.useUriCheckbox.isChecked()) {
+    if (await this.uriInput.isVisible()) {
       return;
     }
-    await this.useUriCheckbox.check();
-    await expect(this.uriInput).toBeEnabled();
+    await this.uriModeButton.click();
+    await expect(this.uriInput).toBeVisible();
   }
 
   async fillConnectionUri(uri: string): Promise<void> {

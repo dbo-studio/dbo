@@ -1,10 +1,9 @@
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import type { CreateConnectionRequestType, SQLiteOptionsType } from '@/api/connection/types';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import locales from '@/locales';
-import { Box, Button, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
 import { open } from '@tauri-apps/plugin-dialog';
 import type { JSX } from 'react';
@@ -12,12 +11,15 @@ import { useEffect, useState } from 'react';
 import * as v from 'valibot';
 
 import { tools } from '@/core/utils';
+import ConnectionEnvField from '../ConnectionEnvField';
 import type { ConnectionSettingsProps } from '../types';
-import { ConnectionFormBodyStyled, ConnectionFormContainerStyled, SQLitePathRowStyled } from '../AddConnection.styled';
+import { ConnectionFormBodyStyled, ConnectionFormContainerStyled } from '../AddConnection.styled';
+import ConnectionFormSection from '../ConnectionFormSection';
 const formSchema = v.object({
   isPing: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  path: v.string()
+  env: v.picklist(['', 'dev', 'uat', 'prod']),
+  path: v.pipe(v.string(), v.minLength(1, 'At least 1 character'))
 });
 
 export default function SQLite({
@@ -47,7 +49,8 @@ export default function SQLite({
       const data = {
         name: value.name,
         type: 'sqlite',
-        options: value
+        env: value.env,
+        options: { path: value.path }
       } as CreateConnectionRequestType;
 
       if (value.isPing) {
@@ -60,6 +63,7 @@ export default function SQLite({
     defaultValues: {
       isPing: false,
       name: connection?.name ?? '',
+      env: connection?.env ?? '',
       path: options?.path ?? ''
     }
   });
@@ -104,29 +108,50 @@ export default function SQLite({
           )}
         </form.Field>
 
-        <form.Field name='path'>
+        <form.Field name='env'>
           {(field): JSX.Element => (
-            <SQLitePathRowStyled>
-              <Box
-                sx={{
-                  flex: 1
-                }}
-              >
-                <FieldInput
-                  name='path'
-                  value={field.state.value}
-                  error={field.state.meta.errors.length > 0}
-                  label={locales.file}
-                  onChange={(e): void => field.handleChange(e.target.value)}
-                  endAdornment={
-                    isDesktop && <CustomIcon type='ellipsisVertical' onClick={() => void handleFileSelect()} />
-                  }
-                />
-              </Box>
-              <FormError mb={1} errors={field.state.meta.errors} />
-            </SQLitePathRowStyled>
+            <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
           )}
         </form.Field>
+
+        <ConnectionFormSection title={locales.connection_section_database_file}>
+          <form.Field name='path'>
+            {(field): JSX.Element => (
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <FieldInput
+                      name='path'
+                      value={field.state.value}
+                      error={field.state.meta.errors.length > 0}
+                      fullWidth={true}
+                      label={locales.file}
+                      placeholder='/path/to/database.sqlite'
+                      onChange={(e): void => field.handleChange(e.target.value)}
+                    />
+                  </Box>
+                  {isDesktop && (
+                    <Button
+                      type='button'
+                      variant='outlined'
+                      data-testid='sqlite-browse'
+                      sx={{ mb: 1 }}
+                      onClick={() => void handleFileSelect()}
+                    >
+                      {locales.browse}
+                    </Button>
+                  )}
+                </Box>
+                <FormError mb={1} errors={field.state.meta.errors} />
+                {!isDesktop && (
+                  <Typography variant='caption' color='textSubdued'>
+                    {locales.sqlite_path_hint}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </form.Field>
+        </ConnectionFormSection>
       </ConnectionFormBodyStyled>
       <ModalFooter spread>
         <Button

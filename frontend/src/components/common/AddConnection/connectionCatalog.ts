@@ -32,18 +32,3 @@ export const CATALOG_GROUPS: CatalogGroup[] = [
     types: ['mongodb', 'redis', 'valkey', 'keydb', 'dragonfly']
   }
 ];
-
-const URI_SCHEMES: Record<string, string> = {
-  postgres: 'postgresql',
-  postgresql: 'postgresql',
-  mysql: 'mysql',
-  mariadb: 'mariadb',
-  mongodb: 'mongodb',
-  'mongodb+srv': 'mongodb'
-};
-
-/** Which engine a connection string is for, from its scheme; undefined when DBO has no URI form for it. */
-export function engineForUri(raw: string): string | undefined {
-  const scheme = /^([a-z][a-z0-9+.-]*):\/\//i.exec(raw.trim())?.[1]?.toLowerCase();
-  return scheme ? URI_SCHEMES[scheme] : undefined;
-}

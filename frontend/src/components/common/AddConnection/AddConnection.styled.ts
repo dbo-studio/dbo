@@ -78,9 +78,3 @@ export const ConnectionFormTabStyled = styled(Box, {
   }
 }));
 
-export const SQLitePathRowStyled = styled(Box)(() => ({
-  display: 'flex',
-  flexDirection: 'row',
-  flex: 1,
-  alignItems: 'center'
-}));

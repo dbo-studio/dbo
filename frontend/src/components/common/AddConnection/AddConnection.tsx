@@ -1,6 +1,6 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
-import { CONNECTION_ALIASES, getConnectionAlias, type ConnectionAliasDef } from '@/core/db/connectionAliases';
+import { CONNECTION_ALIASES, type ConnectionAliasDef } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -10,8 +10,6 @@ import { type JSX, useMemo, useState, type ComponentType } from 'react';
 import { toast } from 'sonner';
 import ConnectionCatalog from './ConnectionCatalog/ConnectionCatalog';
 import ConnectionShell from './ConnectionShell';
-import ConnectionUriBar from './ConnectionUriBar';
-import { engineForUri } from './connectionCatalog';
 import Mysql from './Mysql/Mysql';
 import PostgreSQL from './Postgresql/Postgresql';
 import HostSql from './HostSql/HostSql';
@@ -56,9 +54,6 @@ const connectionTypes: SelectionConnectionType[] = CONNECTION_ALIASES.map((alias
   component: formForAlias(alias)
 }));
 
-const sameDriver = (a: SelectionConnectionType, b: SelectionConnectionType): boolean =>
-  getConnectionAlias(a.type)?.driver === getConnectionAlias(b.type)?.driver;
-
 const connectionTypeByEngine = Object.fromEntries(connectionTypes.map((c) => [c.type, c])) as Record<
   ConnectionType['type'],
   SelectionConnectionType
@@ -79,7 +74,6 @@ const initialType = ((): SelectionConnectionType => {
 export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState<SelectionConnectionType>(initialType);
-  const [pastedUri, setPastedUri] = useState<string | undefined>(undefined);
 
   const showAddConnection = useSettingStore((state) => state.ui.showAddConnection);
   const duplicateConnectionId = useSettingStore((state) => state.ui.duplicateConnectionId);
@@ -105,7 +99,6 @@ export default function AddConnection(): JSX.Element {
 
   const selectType = (type: SelectionConnectionType): void => {
     setSelectedType(type);
-    setPastedUri(undefined);
     try {
       localStorage.setItem(LAST_ENGINE_KEY, type.type);
     } catch {
@@ -113,18 +106,7 @@ export default function AddConnection(): JSX.Element {
     }
   };
 
-  const handlePasteUri = (uri: string): void => {
-    const detected = connectionTypeByEngine[engineForUri(uri) as ConnectionType['type']];
-    // Keep a branded pick (Supabase, Neon…) when the string fits its driver.
-    if (detected && detected.component !== selectedType.component && !sameDriver(detected, selectedType)) {
-      setSelectedType(detected);
-    }
-    setPastedUri(uri);
-    toast.success(locales.connection_uri_filled);
-  };
-
   const handleClose = (): void => {
-    setPastedUri(undefined);
     updateUI({ showAddConnection: false, duplicateConnectionId: undefined });
   };
 
@@ -170,11 +152,6 @@ export default function AddConnection(): JSX.Element {
       subtitle={sourceConnection ? undefined : locales.new_connection_hint}
       engine={connectionType ? { name: connectionType.name, logo: connectionType.logo } : undefined}
       onClose={handleClose}
-      top={
-        sourceConnection ? undefined : (
-          <ConnectionUriBar onUri={handlePasteUri} recognises={(uri) => engineForUri(uri) !== undefined} />
-        )
-      }
       rail={
         sourceConnection ? undefined : (
           <ConnectionCatalog connections={connectionTypes} selected={selectedType.type} onSelect={selectType} />
@@ -183,8 +160,7 @@ export default function AddConnection(): JSX.Element {
     >
       {connectionType?.component && (
         <connectionType.component
-          key={sourceConnection ? `duplicate-${sourceConnection.id}` : `new-${connectionType.type}-${pastedUri ?? ''}`}
-          initialUri={pastedUri}
+          key={sourceConnection ? `duplicate-${sourceConnection.id}` : `new-${connectionType.type}`}
           connection={sourceConnection}
           engine={connectionType.type}
           submitLabel={sourceConnection ? locales.save : undefined}

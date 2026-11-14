@@ -47,16 +47,20 @@ test.describe("Connection URI import", () => {
       );
     });
 
-    await test.step("Discrete fields and SSL are filled; URI is redacted", async () => {
-      await expect(connectionPage.hostInput).toHaveValue("ep-cool.aws.neon.tech");
-      await expect(connectionPage.portInput).toHaveValue("5432");
-      await expect(connectionPage.usernameInput).toHaveValue("neon_user");
-      await expect(connectionPage.passwordInput).toHaveValue("s3cret");
-      await expect(page.locator('input[name="database"]')).toHaveValue("neondb");
+    await test.step("URI is redacted and the password is kept apart", async () => {
       await expect(connectionPage.uriInput).toHaveValue(
         /postgres:\/\/neon_user@ep-cool\.aws\.neon\.tech:5432\/neondb/,
       );
       await expect(connectionPage.uriInput).not.toHaveValue(/s3cret/);
+      await expect(connectionPage.passwordInput).toHaveValue("s3cret");
+    });
+
+    await test.step("Manual mode shows the discrete fields and SSL filled in", async () => {
+      await connectionPage.manualModeButton.click();
+      await expect(connectionPage.hostInput).toHaveValue("ep-cool.aws.neon.tech");
+      await expect(connectionPage.portInput).toHaveValue("5432");
+      await expect(connectionPage.usernameInput).toHaveValue("neon_user");
+      await expect(page.locator('input[name="database"]')).toHaveValue("neondb");
       await connectionPage.expectSslMode("require");
     });
 
@@ -105,7 +109,7 @@ test.describe("Connection URI import", () => {
 
       await test.step("Edit form shows URI without password", async () => {
         await connectionPage.editConnection(connectionName);
-        await expect(connectionPage.useUriCheckbox).toBeChecked();
+        await expect(connectionPage.uriModeButton).toHaveAttribute("aria-pressed", "true");
         await expect(connectionPage.uriInput).toBeVisible();
         const storedUri = await connectionPage.uriInput.inputValue();
         expect(storedUri).toContain(config.host);

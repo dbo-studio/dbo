@@ -3,10 +3,10 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import locales from '@/locales';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import type { JSX, ReactNode } from 'react';
+import type { JSX } from 'react';
+import { toast } from 'sonner';
 import * as v from 'valibot';
 
 import {
@@ -15,26 +15,17 @@ import {
   ConnectionFormContainerStyled,
   ConnectionFormRowStyled
 } from '../AddConnection.styled';
-import type { ConnectionEnv } from '@/types';
+import ConnectionEnvField from '../ConnectionEnvField';
+import ConnectionFormSection from '../ConnectionFormSection';
+import ConnectionFormTabs from '../ConnectionFormTabs';
+import ConnectionModeSwitch from '../ConnectionModeSwitch';
+import ConnectionUriInput from '../ConnectionUriInput';
+import ConnectionSSHFields from '../ConnectionSSHFields';
+import ConnectionTLSFields from '../ConnectionTLSFields';
+import { parseConnectionUri, URI_PLACEHOLDER } from '../connectionUri';
+import { applyParsedConnectionUri, copyRedactedUri, switchUriMode, syncFromUri } from '../connectionUriForm';
+import { sshFormDefaults, sshFormSchema, sshOptionsFromForm } from '../ssh';
 import type { ConnectionSettingsProps } from '../types';
-
-const ENV_OPTIONS = [
-  { value: 'none', label: locales.connection_env_none },
-  { value: 'dev', label: locales.connection_env_dev },
-  { value: 'uat', label: locales.connection_env_uat },
-  { value: 'prod', label: locales.connection_env_prod }
-];
-
-function Section({ title, children }: { title: string; children: ReactNode }): JSX.Element {
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Typography variant='overline' color='textSubdued' sx={{ lineHeight: 1.6 }}>
-        {title}
-      </Typography>
-      {children}
-    </Box>
-  );
-}
 
 const number = (min: number, max: number): v.GenericSchema<string> =>
   v.pipe(
@@ -45,18 +36,38 @@ const number = (min: number, max: number): v.GenericSchema<string> =>
     )
   );
 
-const formSchema = v.object({
+const baseShape = {
   isPing: v.boolean(),
   rememberPassword: v.boolean(),
   name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
   env: v.picklist(['', 'dev', 'uat', 'prod']),
-  host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
-  port: number(1, 65535),
   username: v.string(),
   password: v.string(),
   database: v.string(),
-  tls: v.boolean()
-});
+  sslMode: v.string(),
+  ssh: sshFormSchema
+};
+
+// In connection-string mode the host and port come from the string, so only the string is required.
+const formSchema = v.union([
+  v.object({
+    ...baseShape,
+    useUri: v.literal(true),
+    uri: v.pipe(
+      v.string(),
+      v.check((input) => input.trim() !== '', 'At least 1 character')
+    ),
+    host: v.string(),
+    port: v.string()
+  }),
+  v.object({
+    ...baseShape,
+    useUri: v.literal(false),
+    uri: v.string(),
+    host: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
+    port: number(1, 65535)
+  })
+]);
 
 /** Per-engine form defaults. */
 const DEFAULTS: Record<string, { port: string; username: string }> = {
@@ -78,6 +89,7 @@ export default function HostSql({
   const options = connection?.options as MysqlOptionsType | undefined;
   const connectionType = connection?.type ?? engine;
   const defaults = DEFAULTS[connectionType] ?? DEFAULTS.sqlserver;
+  const dialect = connectionType === 'clickhouse' ? 'clickhouse' : 'sqlserver';
 
   const form = useForm({
     validators: { onSubmit: formSchema },
@@ -93,7 +105,8 @@ export default function HostSql({
           username: value.username,
           password: value.password,
           database: value.database,
-          ssl: { mode: value.tls ? 'require' : 'disable' }
+          ssl: { mode: value.sslMode },
+          ssh: sshOptionsFromForm(value.ssh)
         }
       } as CreateConnectionRequestType;
 
@@ -105,6 +118,8 @@ export default function HostSql({
       onSubmit(data);
     },
     defaultValues: {
+      useUri: false,
+      uri: '',
       isPing: false,
       rememberPassword: false,
       name: connection?.name ?? '',
@@ -114,9 +129,15 @@ export default function HostSql({
       username: options?.username ?? defaults.username,
       password: '',
       database: options?.database ?? '',
-      tls: !!options?.ssl?.mode && options.ssl.mode !== 'disable'
+      sslMode: options?.ssl?.mode || 'disable',
+      ssh: sshFormDefaults(options?.ssh)
     }
   });
+
+  const changeMode = (toUri: boolean): void => {
+    switchUriMode(form, dialect, toUri);
+    form.setFieldValue('useUri', toUri);
+  };
 
   const text = (
     name: 'name' | 'host' | 'port' | 'username' | 'password' | 'database',
@@ -141,7 +162,7 @@ export default function HostSql({
     </form.Field>
   );
 
-  const check = (name: 'rememberPassword' | 'tls', label: string): JSX.Element => (
+  const check = (name: 'rememberPassword', label: string): JSX.Element => (
     <form.Field name={name}>
       {(field): JSX.Element => (
         <FormControlLabel
@@ -168,52 +189,89 @@ export default function HostSql({
         void form.handleSubmit().then();
       }}
     >
-      <ConnectionFormBodyStyled sx={{ gap: 2 }}>
-        <Section title={locales.connection_section_general}>
-          {text('name', locales.name)}
+      <ConnectionFormBodyStyled>
+        <ConnectionFormTabs
+          general={
+            <>
+              {text('name', locales.name)}
           <form.Field name='env'>
             {(field): JSX.Element => (
-              <SelectInput
-                label={locales.connection_env}
-                testId='connection-env-select'
-                value={field.state.value || 'none'}
-                options={ENV_OPTIONS}
-                onChange={(o): void =>
-                  field.handleChange(
-                    (String((o as { value: unknown }).value) === 'none'
-                      ? ''
-                      : String((o as { value: unknown }).value)) as ConnectionEnv
-                  )
-                }
-                helpertext={
-                  field.state.value === 'prod' ? locales.connection_env_prod_hint : locales.connection_env_hint
-                }
-              />
+              <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
             )}
           </form.Field>
-        </Section>
-
-        <Section title={locales.connection_section_server}>
-          <ConnectionFormRowStyled>
-            <Box sx={{ flex: 1, minWidth: 0 }}>{text('host', locales.host, { placeholder: 'localhost' })}</Box>
-            <Box sx={{ width: 120 }}>{text('port', locales.port, { placeholder: defaults.port, type: 'number' })}</Box>
-          </ConnectionFormRowStyled>
-          {text('database', locales.database)}
-        </Section>
-
-        <Section title={locales.connection_section_auth}>
-          <ConnectionFormRowStyled>
-            <Box sx={{ flex: 1, minWidth: 0 }}>{text('username', locales.username)}</Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>{text('password', locales.password, { type: 'password' })}</Box>
-          </ConnectionFormRowStyled>
-          <ConnectionFormCheckboxRowStyled>
-            {check('rememberPassword', locales.remember_password)}
-          </ConnectionFormCheckboxRowStyled>
-        </Section>
-
-        <Section title={locales.connection_section_security}>
-          <ConnectionFormCheckboxRowStyled>{check('tls', locales.redis_tls)}</ConnectionFormCheckboxRowStyled>
-        </Section>
+              <form.Subscribe selector={(state) => state.values.useUri}>
+                {(useUri): JSX.Element => (
+                  <>
+                    <ConnectionFormSection title={locales.connection_section_server}>
+                      <ConnectionModeSwitch value={useUri ? 'uri' : 'manual'} onChange={(mode): void => changeMode(mode === 'uri')} />
+                      {useUri ? (
+                        <form.Field name='uri'>
+                          {(field): JSX.Element => (
+                            <ConnectionUriInput
+                              value={field.state.value}
+                              errors={field.state.meta.errors}
+                              placeholder={URI_PLACEHOLDER[dialect]}
+                              onChange={(value): void => {
+                                field.handleChange(value);
+                                const parsed = parseConnectionUri(value, dialect);
+                                if (parsed) {
+                                  applyParsedConnectionUri(form, parsed);
+                                }
+                              }}
+                              onBlur={(): void => {
+                                if (
+                                  field.state.value.trim() &&
+                                  !syncFromUri(form, dialect, field.state.value, { redact: true, warn: true })
+                                ) {
+                                  toast.error(locales.uri_invalid);
+                                }
+                              }}
+                              onCopy={(): void => void copyRedactedUri(form, dialect)}
+                            />
+                          )}
+                        </form.Field>
+                      ) : (
+                        <>
+                          <ConnectionFormRowStyled hostPort>
+                            {text('host', locales.host, { placeholder: 'localhost' })}
+                            {text('port', locales.port, { placeholder: defaults.port, type: 'number' })}
+                          </ConnectionFormRowStyled>
+                          {text('database', locales.database)}
+                        </>
+                      )}
+                    </ConnectionFormSection>
+              <ConnectionFormSection title={locales.connection_section_auth}>
+                <ConnectionFormRowStyled>
+                  {!useUri && text('username', locales.username)}
+                  {text('password', locales.password, { type: 'password' })}
+                </ConnectionFormRowStyled>
+                <ConnectionFormCheckboxRowStyled>
+                  {check('rememberPassword', locales.remember_password)}
+                </ConnectionFormCheckboxRowStyled>
+              </ConnectionFormSection>
+                  </>
+                )}
+              </form.Subscribe>
+            </>
+          }
+          ssl={
+            <form.Subscribe selector={(state) => state.values.sslMode}>
+              {(sslMode): JSX.Element => (
+                <ConnectionTLSFields
+                  enabled={sslMode !== 'disable'}
+                  onEnabledChange={(next): void => form.setFieldValue('sslMode', next ? 'require' : 'disable')}
+                />
+              )}
+            </form.Subscribe>
+          }
+          ssh={
+            <form.Subscribe selector={(state) => state.values.ssh}>
+              {(ssh): JSX.Element => (
+                <ConnectionSSHFields value={ssh} onChange={(next): void => form.setFieldValue('ssh', next)} />
+              )}
+            </form.Subscribe>
+          }
+        />
       </ConnectionFormBodyStyled>
       <ModalFooter spread>
         <Button

@@ -16,8 +16,6 @@ export type ConnectionSettingsProps = {
   connection?: ConnectionType;
   /** Stored connection type / branding alias. */
   engine?: string;
-  /** A pasted connection string to fill the form from (new connections only). */
-  initialUri?: string;
   /** Overrides the submit button text (default: Update when editing, Create otherwise). */
   submitLabel?: string;
   pingLoading: boolean;

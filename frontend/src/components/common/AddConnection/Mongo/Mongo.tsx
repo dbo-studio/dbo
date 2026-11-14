@@ -3,10 +3,9 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import locales from '@/locales';
-import SelectInput from '@/components/base/SelectInput/SelectInput';
-import { Box, Button, Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
+import { Box, Button, Checkbox, FormControlLabel, Stack } from '@mui/material';
 import { useForm } from '@tanstack/react-form';
-import type { JSX, ReactNode } from 'react';
+import type { JSX } from 'react';
 import * as v from 'valibot';
 
 import {
@@ -15,26 +14,14 @@ import {
   ConnectionFormContainerStyled,
   ConnectionFormRowStyled
 } from '../AddConnection.styled';
-import type { ConnectionEnv } from '@/types';
+import ConnectionEnvField from '../ConnectionEnvField';
+import ConnectionFormSection from '../ConnectionFormSection';
+import ConnectionFormTabs from '../ConnectionFormTabs';
+import ConnectionModeSwitch, { type ConnectionMode } from '../ConnectionModeSwitch';
+import ConnectionSSHFields from '../ConnectionSSHFields';
+import ConnectionTLSFields from '../ConnectionTLSFields';
+import { sshFormDefaults, sshFormSchema, sshOptionsFromForm } from '../ssh';
 import type { ConnectionSettingsProps } from '../types';
-
-const ENV_OPTIONS = [
-  { value: 'none', label: locales.connection_env_none },
-  { value: 'dev', label: locales.connection_env_dev },
-  { value: 'uat', label: locales.connection_env_uat },
-  { value: 'prod', label: locales.connection_env_prod }
-];
-
-function Section({ title, children }: { title: string; children: ReactNode }): JSX.Element {
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Typography variant='overline' color='textSubdued' sx={{ lineHeight: 1.6 }}>
-        {title}
-      </Typography>
-      {children}
-    </Box>
-  );
-}
 
 const formSchema = v.pipe(
   v.object({
@@ -42,7 +29,7 @@ const formSchema = v.pipe(
     rememberPassword: v.boolean(),
     name: v.pipe(v.string(), v.minLength(1, 'At least 1 character')),
     env: v.picklist(['', 'dev', 'uat', 'prod']),
-    mode: v.picklist(['host', 'uri']),
+    mode: v.picklist(['manual', 'uri']),
     uri: v.string(),
     host: v.string(),
     port: v.string(),
@@ -51,7 +38,8 @@ const formSchema = v.pipe(
     authSource: v.string(),
     database: v.string(),
     tls: v.boolean(),
-    tlsInsecure: v.boolean()
+    tlsInsecure: v.boolean(),
+    ssh: sshFormSchema
   }),
   v.forward(
     v.partialCheck([['mode'], ['host']], (i) => i.mode === 'uri' || i.host.length > 0, 'At least 1 character'),
@@ -68,7 +56,7 @@ const formSchema = v.pipe(
   v.forward(
     v.partialCheck(
       [['mode'], ['uri']],
-      (i) => i.mode === 'host' || /^mongodb(\+srv)?:\/\//.test(i.uri),
+      (i) => i.mode === 'manual' || /^mongodb(\+srv)?:\/\//.test(i.uri),
       'Must start with mongodb:// or mongodb+srv://'
     ),
     ['uri']
@@ -79,7 +67,6 @@ export default function Mongo({
   connection,
   submitLabel,
   engine = 'mongodb',
-  initialUri,
   onClose,
   onPing,
   onSubmit,
@@ -88,6 +75,7 @@ export default function Mongo({
 }: ConnectionSettingsProps): JSX.Element {
   const options: MongoOptionsType | undefined = connection?.options;
   const connectionType = connection?.type ?? engine;
+  const initialMode: ConnectionMode = options?.uri ? 'uri' : 'manual';
 
   const form = useForm({
     validators: { onSubmit: formSchema },
@@ -96,7 +84,8 @@ export default function Mongo({
         password: value.password,
         database: value.database,
         tls: value.tls,
-        tlsInsecure: value.tls && value.tlsInsecure
+        tlsInsecure: value.tls && value.tlsInsecure,
+        ssh: sshOptionsFromForm(value.ssh)
       };
       const data = {
         name: value.name,
@@ -127,8 +116,8 @@ export default function Mongo({
       rememberPassword: false,
       name: connection?.name ?? '',
       env: connection?.env ?? '',
-      mode: options?.uri || initialUri ? 'uri' : 'host',
-      uri: options?.uri ?? initialUri ?? '',
+      mode: initialMode,
+      uri: options?.uri ?? '',
       host: options?.host ?? '',
       port: options?.port?.toString() ?? '27017',
       username: options?.username ?? '',
@@ -136,7 +125,8 @@ export default function Mongo({
       authSource: options?.authSource ?? '',
       database: options?.database ?? '',
       tls: options?.tls ?? false,
-      tlsInsecure: options?.tlsInsecure ?? false
+      tlsInsecure: options?.tlsInsecure ?? false,
+      ssh: sshFormDefaults(options?.ssh)
     }
   });
 
@@ -190,94 +180,76 @@ export default function Mongo({
         void form.handleSubmit().then();
       }}
     >
-      <ConnectionFormBodyStyled sx={{ gap: 2 }}>
-        <Section title={locales.connection_section_general}>
-          {text('name', locales.name)}
+      <ConnectionFormBodyStyled>
+        <ConnectionFormTabs
+          general={
+            <>
+              {text('name', locales.name)}
           <form.Field name='env'>
             {(field): JSX.Element => (
-              <SelectInput
-                label={locales.connection_env}
-                testId='connection-env-select'
-                value={field.state.value || 'none'}
-                options={ENV_OPTIONS}
-                onChange={(o): void =>
-                  field.handleChange(
-                    (String((o as { value: unknown }).value) === 'none'
-                      ? ''
-                      : String((o as { value: unknown }).value)) as ConnectionEnv
-                  )
-                }
-                helpertext={
-                  field.state.value === 'prod' ? locales.connection_env_prod_hint : locales.connection_env_hint
-                }
-              />
+              <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
             )}
           </form.Field>
-        </Section>
-
-        <Section title={locales.connection_section_server}>
-          <form.Field name='mode'>
-            {(field): JSX.Element => (
-              <SelectInput
-                label={locales.mongo_connect_with}
-                testId='mongo-mode'
-                value={field.state.value}
-                options={[
-                  { value: 'host', label: locales.mongo_mode_host },
-                  { value: 'uri', label: locales.mongo_mode_uri }
-                ]}
-                onChange={(o): void => field.handleChange((o as { value: 'host' | 'uri' }).value)}
-              />
-            )}
-          </form.Field>
-          <form.Subscribe selector={(state) => state.values.mode}>
-            {(mode): JSX.Element =>
-              mode === 'uri' ? (
-                text('uri', locales.mongo_uri, { placeholder: 'mongodb+srv://cluster.example.net/app' })
-              ) : (
-                <>
-                  <ConnectionFormRowStyled>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>{text('host', locales.host, { placeholder: 'localhost' })}</Box>
-                    <Box sx={{ width: 120 }}>
-                      {text('port', locales.port, { placeholder: '27017', type: 'number' })}
-                    </Box>
-                  </ConnectionFormRowStyled>
-                </>
-              )
-            }
-          </form.Subscribe>
-          {text('database', locales.mongo_default_database, { placeholder: 'test' })}
-        </Section>
-
-        <Section title={locales.connection_section_auth}>
-          <form.Subscribe selector={(state) => state.values.mode}>
-            {(mode): JSX.Element => (
-              <ConnectionFormRowStyled>
-                {mode === 'host' && <Box sx={{ flex: 1, minWidth: 0 }}>{text('username', locales.username)}</Box>}
-                <Box sx={{ flex: 1, minWidth: 0 }}>{text('password', locales.password, { type: 'password' })}</Box>
-              </ConnectionFormRowStyled>
-            )}
-          </form.Subscribe>
-          <form.Subscribe selector={(state) => state.values.mode}>
-            {(mode): JSX.Element | null =>
-              mode === 'host' ? text('authSource', locales.mongo_auth_source, { placeholder: 'admin' }) : null
-            }
-          </form.Subscribe>
-          <ConnectionFormCheckboxRowStyled>
-            {check('rememberPassword', locales.remember_password)}
-          </ConnectionFormCheckboxRowStyled>
-        </Section>
-
-        <Section title={locales.connection_section_security}>
-          <ConnectionFormCheckboxRowStyled sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            {check('tls', locales.redis_tls)}
-            <form.Subscribe selector={(state) => state.values.tls}>
-              {(tls): JSX.Element | null =>
-                tls ? <Box sx={{ pl: 3 }}>{check('tlsInsecure', locales.redis_tls_insecure)}</Box> : null
-              }
+              <ConnectionFormSection title={locales.connection_section_server}>
+                <form.Field name='mode'>
+                  {(field): JSX.Element => (
+                    <ConnectionModeSwitch value={field.state.value} onChange={(next): void => field.handleChange(next)} />
+                  )}
+                </form.Field>
+                <form.Subscribe selector={(state) => state.values.mode}>
+                  {(mode): JSX.Element =>
+                    mode === 'uri' ? (
+                      text('uri', locales.connection_mode_uri, { placeholder: 'mongodb+srv://cluster.example.net/app' })
+                    ) : (
+                      <ConnectionFormRowStyled hostPort>
+                        {text('host', locales.host, { placeholder: 'localhost' })}
+                        {text('port', locales.port, { placeholder: '27017', type: 'number' })}
+                      </ConnectionFormRowStyled>
+                    )
+                  }
+                </form.Subscribe>
+                {text('database', locales.mongo_default_database, { placeholder: 'test' })}
+              </ConnectionFormSection>
+              <ConnectionFormSection title={locales.connection_section_auth}>
+                <form.Subscribe selector={(state) => state.values.mode}>
+                  {(mode): JSX.Element => (
+                    <ConnectionFormRowStyled>
+                      {mode === 'manual' ? text('username', locales.username) : <span />}
+                      {text('password', locales.password, { type: 'password' })}
+                    </ConnectionFormRowStyled>
+                  )}
+                </form.Subscribe>
+                <form.Subscribe selector={(state) => state.values.mode}>
+                  {(mode): JSX.Element | null =>
+                    mode === 'manual' ? text('authSource', locales.mongo_auth_source, { placeholder: 'admin' }) : null
+                  }
+                </form.Subscribe>
+                <ConnectionFormCheckboxRowStyled>
+                  {check('rememberPassword', locales.remember_password)}
+                </ConnectionFormCheckboxRowStyled>
+              </ConnectionFormSection>
+            </>
+          }
+          ssl={
+            <form.Subscribe selector={(state) => ({ tls: state.values.tls, tlsInsecure: state.values.tlsInsecure })}>
+              {({ tls, tlsInsecure }): JSX.Element => (
+                <ConnectionTLSFields
+                  enabled={tls}
+                  onEnabledChange={(next): void => form.setFieldValue('tls', next)}
+                  insecure={tlsInsecure}
+                  onInsecureChange={(next): void => form.setFieldValue('tlsInsecure', next)}
+                />
+              )}
             </form.Subscribe>
-          </ConnectionFormCheckboxRowStyled>
-        </Section>
+          }
+          ssh={
+            <form.Subscribe selector={(state) => state.values.ssh}>
+              {(ssh): JSX.Element => (
+                <ConnectionSSHFields value={ssh} onChange={(next): void => form.setFieldValue('ssh', next)} />
+              )}
+            </form.Subscribe>
+          }
+        />
       </ConnectionFormBodyStyled>
       <ModalFooter spread>
         <Button
