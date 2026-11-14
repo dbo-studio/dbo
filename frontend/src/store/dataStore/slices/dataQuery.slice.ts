@@ -18,6 +18,7 @@ import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import { useTransactionStore } from '@/store/transactionStore/transaction.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { getEditorSessionContext } from '@/hooks/useEditorSessionContext';
 import { DataTabType, EditorTabType } from '@/types';
@@ -258,7 +259,8 @@ export const createDataQuerySlice: StateCreator<
             confirmed,
             limit: selectedTab?.pagination?.limit ?? 100,
             page: selectedTab?.pagination?.page ?? 1,
-            backgroundAfterSeconds: useSettingStore.getState().general.backgroundAfterSeconds
+            backgroundAfterSeconds: useSettingStore.getState().general.backgroundAfterSeconds,
+            transactionTab: useTransactionStore.getState().byTab[selectedTabId] ? selectedTabId : undefined
           },
           controller.signal
         );
@@ -332,6 +334,10 @@ export const createDataQuerySlice: StateCreator<
       } catch (error) {
         if (isCanceledError(error) || controller.signal.aborted) {
           return;
+        }
+        // 409: the server rolled the tab's transaction back (idle timeout) or lost it.
+        if ((error as { response?: { status?: number } }).response?.status === 409) {
+          useTransactionStore.getState().clear(selectedTabId);
         }
         if (!getSafeModeError(error)) {
           toast.error(locales.query_failed);

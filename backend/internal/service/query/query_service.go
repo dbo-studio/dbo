@@ -2,6 +2,7 @@ package serviceQuery
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -17,8 +18,10 @@ import (
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
+	"github.com/dbo-studio/dbo/pkg/txsession"
 	"github.com/goccy/go-json"
 	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
 
 type IQueryService interface {
@@ -30,6 +33,10 @@ type IQueryService interface {
 	RawOrBackground(ctx context.Context, req *dto.RawQueryRequest) (result *dto.RawQueryResponse, jobID uint, err error)
 	Update(ctx context.Context, req *dto.UpdateQueryRequest) (*dto.UpdateQueryResponse, error)
 	AutoComplete(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error)
+	// TransactionBegin opens a transaction that the tab's raw queries run in until TransactionEnd.
+	TransactionBegin(ctx context.Context, req *dto.TransactionRequest) error
+	TransactionEnd(ctx context.Context, req *dto.TransactionRequest, commit bool) error
+	TransactionActive(ctx context.Context, req *dto.TransactionRequest) bool
 }
 
 var _ IQueryService = (*IQueryServiceImpl)(nil)
@@ -41,6 +48,7 @@ type IQueryServiceImpl struct {
 	cache          cache.Cache
 	unlockStore    *serviceSafemode.UnlockStore
 	jobs           serviceJob.IJobManager
+	transactions   *txsession.Store
 }
 
 func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repository.IHistoryRepo, cm *databaseConnection.ConnectionManager, appCache cache.Cache, jobs serviceJob.IJobManager) IQueryService {
@@ -53,6 +61,7 @@ func NewQueryService(connectionRepo repository.IConnectionRepo, historyRepo repo
 		cache:          c,
 		unlockStore:    serviceSafemode.NewUnlockStore(c),
 		jobs:           jobs,
+		transactions:   txsession.NewStore(),
 	}
 }
 
@@ -99,6 +108,13 @@ func (i IQueryServiceImpl) RunOrBackground(ctx context.Context, req *dto.RunQuer
 }
 
 func (i IQueryServiceImpl) RawOrBackground(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, uint, error) {
+	// A background job could not share the tab's pinned connection.
+	if req.TransactionTab != "" {
+		result, err := i.Raw(ctx, req)
+
+		return result, 0, err
+	}
+
 	return handover(ctx, i.jobs, backgroundWait(req.BackgroundAfterSeconds), "raw", req, func(runCtx context.Context) (*dto.RawQueryResponse, error) {
 		return i.Raw(runCtx, req)
 	})
@@ -181,7 +197,23 @@ func (i IQueryServiceImpl) Raw(ctx context.Context, req *dto.RawQueryRequest) (*
 	execReq.Limit = &limit
 	execReq.Page = &page
 
-	resp, err := repo.RunRawQuery(ctx, &execReq)
+	var resp *dto.RawQueryResponse
+
+	if req.TransactionTab == "" {
+		resp, err = repo.RunRawQuery(ctx, &execReq)
+	} else {
+		err = i.transactions.Use(txKey(ctx, req.ConnectionID, req.TransactionTab), func(tx *gorm.DB) error {
+			var runErr error
+
+			resp, runErr = repo.RunRawQuery(txsession.WithTx(ctx, tx), &execReq)
+
+			return runErr
+		})
+		if errors.Is(err, txsession.ErrMissing) {
+			return nil, apperror.Conflict(err)
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -280,4 +312,55 @@ func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.Aut
 	}
 
 	return result, nil
+}
+
+func txKey(ctx context.Context, connectionID int32, tab string) txsession.Key {
+	return txsession.Key{Owner: helper.CtxOwnerID(ctx), ConnectionID: connectionID, Tab: tab}
+}
+
+func (i IQueryServiceImpl) TransactionBegin(ctx context.Context, req *dto.TransactionRequest) error {
+	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
+	if err != nil {
+		return apperror.NotFound(apperror.ErrConnectionNotFound)
+	}
+
+	if databaseContract.IsNoSQL(connection.ConnectionType) {
+		return apperror.BadRequest(errors.New("transactions are not supported for this connection"))
+	}
+
+	db, err := i.cm.GetConnection(ctx, connection, true)
+	if databaseContract.IsPostgresFamily(connection.ConnectionType) && req.Database != "" {
+		db, err = i.cm.GetConnectionForDatabase(ctx, connection, req.Database, true)
+	}
+
+	if err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	if err := i.transactions.Begin(txKey(ctx, req.ConnectionID, req.Tab), db); err != nil {
+		if errors.Is(err, txsession.ErrActive) {
+			return apperror.Conflict(err)
+		}
+
+		return apperror.InternalServerError(err)
+	}
+
+	return nil
+}
+
+func (i IQueryServiceImpl) TransactionEnd(ctx context.Context, req *dto.TransactionRequest, commit bool) error {
+	err := i.transactions.End(txKey(ctx, req.ConnectionID, req.Tab), commit)
+	if errors.Is(err, txsession.ErrMissing) {
+		return apperror.Conflict(err)
+	}
+
+	if err != nil {
+		return apperror.InternalServerError(err)
+	}
+
+	return nil
+}
+
+func (i IQueryServiceImpl) TransactionActive(ctx context.Context, req *dto.TransactionRequest) bool {
+	return i.transactions.Active(txKey(ctx, req.ConnectionID, req.Tab))
 }

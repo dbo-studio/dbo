@@ -11,6 +11,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/sqlguard"
+	"github.com/dbo-studio/dbo/pkg/txsession"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
@@ -36,8 +37,12 @@ func (r *BaseRepository) RunRawQuery(ctx context.Context, req *dto.RawQueryReque
 }
 
 func (r *BaseRepository) RunRawQueryOn(ctx context.Context, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	if tx := txsession.FromCtx(ctx); tx != nil {
+		db = tx
+	}
+
 	startTime := time.Now()
-	result, err := runRawQuery(ctx, r, db, req)
+	result, err := runRawScript(ctx, r, db, req)
 	endTime := time.Since(startTime)
 
 	if err != nil {
@@ -79,6 +84,62 @@ func openRows(ctx context.Context, db *gorm.DB, req *dto.RawQueryRequest) (*sql.
 	}
 
 	return db.WithContext(ctx).Statement.ConnPool.QueryContext(ctx, req.Query, req.Args...)
+}
+
+// runRawScript runs a multi-statement script one statement at a time on a single pinned connection, so
+// BEGIN/COMMIT hold and the prepared-statement one-command limit does not apply. The last statement's
+// result is returned. A single statement, or one with bound args, goes straight to runRawQuery. Inside a
+// tab's open transaction (ctx carries it) the statements run on that transaction.
+func runRawScript(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {
+	statements := sqlguard.Split(req.Query)
+	if len(req.Args) > 0 || len(statements) < 2 {
+		return runRawQuery(ctx, r, db, req)
+	}
+
+	inTx := txsession.FromCtx(ctx) != nil
+
+	var result *dto.RawQueryResponse
+
+	scope := db.WithContext(ctx).Connection
+	if inTx {
+		scope = func(fc func(tx *gorm.DB) error) error { return fc(db) }
+	}
+
+	err := scope(func(conn *gorm.DB) error {
+		for i, statement := range statements[:len(statements)-1] {
+			if err := conn.Exec(statement).Error; err != nil {
+				if !inTx {
+					// Leave no aborted transaction on the pooled connection.
+					_ = conn.Exec("ROLLBACK").Error
+				}
+
+				return fmt.Errorf("statement %d of %d: %w", i+1, len(statements), err)
+			}
+		}
+
+		last := *req
+		last.Query = statements[len(statements)-1]
+
+		var err error
+
+		result, err = runRawQuery(ctx, r, conn, &last)
+		if err != nil {
+			if !inTx {
+				_ = conn.Exec("ROLLBACK").Error
+			}
+
+			return fmt.Errorf("statement %d of %d: %w", len(statements), len(statements), err)
+		}
+
+		return nil
+	})
+	if result == nil {
+		result = &dto.RawQueryResponse{Data: []map[string]any{}}
+	}
+
+	result.Query = req.Query
+
+	return result, err
 }
 
 func runRawQuery(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error) {

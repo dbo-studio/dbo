@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { PaddingTableCell } from '../DataGrid.styled';
+import { useCellRangeSelection } from '../hooks/useCellRangeSelection';
 import { useRowStateLookup } from '../hooks/useRowStateLookup';
 import type { DataGridTableBodyRowsProps } from '../types';
 import DataGridTableRow from './DataGridTableRow/DataGridTableRow';
@@ -21,9 +22,10 @@ export default function DataGridTableBodyRows({
   paddingBottom: number;
 }): JSX.Element {
   const { getRowState } = useRowStateLookup();
+  const rangeHandlers = useCellRangeSelection(columns);
 
   return (
-    <tbody>
+    <tbody {...rangeHandlers}>
       {paddingTop > 0 && (
         <tr>
           <PaddingTableCell colSpan={columns.length} height={paddingTop} />
@@ -44,6 +46,10 @@ export default function DataGridTableBodyRows({
             columns={columns}
             context={context}
             isSelected={rowState.isSelected}
+            selectedColumn={rowState.selectedColumn}
+            rangeStart={rowState.rangeStart}
+            rangeEnd={rowState.rangeEnd}
+            rangeEdges={rowState.rangeEdges}
             isEdited={rowState.isEdited}
             isUnsaved={rowState.isUnsaved}
             isRemoved={rowState.isRemoved}

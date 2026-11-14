@@ -23,6 +23,14 @@ export type RunRawQueryRequestType = {
   limit?: number;
   page?: number;
   backgroundAfterSeconds?: number;
+  /** The tab whose open transaction the query runs in. */
+  transactionTab?: string;
+};
+
+export type TransactionRequestType = {
+  connectionId: number;
+  tab: string;
+  database?: string;
 };
 
 /** The answer to a query that outlasted its wait: it keeps running as this job. */

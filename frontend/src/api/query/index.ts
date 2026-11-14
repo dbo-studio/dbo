@@ -6,6 +6,7 @@ import type {
   RunQueryRequestType,
   RunQueryResponseType,
   RunRawQueryRequestType,
+  TransactionRequestType,
   UpdateQueryRequestType,
   UpdateQueryResponseType
 } from './types';
@@ -14,7 +15,8 @@ const endpoint = {
   runQuery: (): string => '/query/run',
   runRawQuery: (): string => '/query/raw',
   updateQuery: (): string => '/query/update',
-  autoComplete: (): string => '/query/autocomplete'
+  autoComplete: (): string => '/query/autocomplete',
+  transaction: (action = ''): string => `/query/transaction${action}`
 };
 
 // The plain calls always wait for the answer; only a tab, which can show a waiting state, lets a slow
@@ -91,4 +93,16 @@ export const updateQuery = async (data: UpdateQueryRequestType): Promise<UpdateQ
       confirmed: data.confirmed
     })
   ).data.data;
+};
+
+export const beginTransaction = async (data: TransactionRequestType): Promise<void> => {
+  await api.post(endpoint.transaction('/begin'), data);
+};
+
+export const endTransaction = async (data: TransactionRequestType, commit: boolean): Promise<void> => {
+  await api.post(endpoint.transaction(commit ? '/commit' : '/rollback'), data);
+};
+
+export const transactionActive = async (data: TransactionRequestType): Promise<boolean> => {
+  return (await api.get<{ data: { active: boolean } }>(endpoint.transaction(), { params: data })).data.data.active;
 };

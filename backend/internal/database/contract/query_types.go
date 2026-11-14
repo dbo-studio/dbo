@@ -56,6 +56,9 @@ type (
 		// BackgroundAfterSeconds is how long the request waits before the query moves to the background
 		// (default 10, 0 keeps it in the request).
 		BackgroundAfterSeconds *int `json:"backgroundAfterSeconds"`
+		// TransactionTab is the editor tab whose open transaction the query runs in (see /query/transaction).
+		// Empty runs outside any transaction.
+		TransactionTab string `json:"transactionTab"`
 		// Args are bound to the placeholders in Query. They are never read from a request body.
 		Args []any `json:"-"`
 	}

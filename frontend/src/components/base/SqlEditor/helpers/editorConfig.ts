@@ -2,6 +2,7 @@ import type { editor } from 'monaco-editor';
 
 export const editorConfig: editor.IStandaloneEditorConstructionOptions = {
   tabSize: 4,
+  contextmenu: false,
   renderValidationDecorations: 'on',
   accessibilitySupport: 'off',
   insertSpaces: true,

@@ -7,6 +7,7 @@ import locales from '@/locales';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
+import { useTabTransaction } from '@/hooks/useTabTransaction';
 import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
@@ -36,6 +37,7 @@ export default function QueryEditorActions({
   const getQuery = useTabStore((state) => state.getQuery);
   const currentConnection = useCurrentConnection();
   const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
+  const transaction = useTabTransaction();
 
   const { mutateAsync: createSavedQueryMutation } = useMutation({
     mutationFn: api.savedQueries.createSavedQuery
@@ -136,6 +138,41 @@ export default function QueryEditorActions({
           <CustomIcon type='sparkles' />
         </IconButton>
       </Tooltip>
+      {!formatQuery &&
+        (transaction.active ? (
+          <>
+            <Tooltip title={locales.transaction_active}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CustomIcon type='databaseZap' color='currentColor' />
+              </Box>
+            </Tooltip>
+            <Button
+              color='success'
+              data-testid='transaction-commit'
+              onClick={() => void transaction.end(true)}
+            >
+              {locales.transaction_commit}
+            </Button>
+            <Button
+              color='error'
+              data-testid='transaction-rollback'
+              onClick={() => void transaction.end(false)}
+            >
+              {locales.transaction_rollback}
+            </Button>
+          </>
+        ) : (
+          <Tooltip title={locales.transaction_begin}>
+            <IconButton
+              aria-label={locales.transaction_begin}
+              data-testid='transaction-begin'
+              color='default'
+              onClick={() => void transaction.begin()}
+            >
+              <CustomIcon type='databaseZap' />
+            </IconButton>
+          </Tooltip>
+        ))}
       <Box
         sx={{
           padding: '3px !important'

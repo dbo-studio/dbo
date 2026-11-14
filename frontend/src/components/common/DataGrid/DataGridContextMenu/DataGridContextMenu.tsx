@@ -13,7 +13,9 @@ import type { ContextMenuType, DataTabType, FilterType, RowType, TabType } from 
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
-import { cellValueForFilter, serializeRowForClipboard } from './clipboard';
+import { applyCells } from '../gridCellActions';
+import { isMultiCellRange, normalizeRange, rangeColumnNames } from '../cellRange';
+import { cellValueForFilter, serializeCellsForClipboard, serializeRowsForClipboard } from './clipboard';
 import type { DataGridContextTarget } from './types';
 import type { ColumnType } from '@/types';
 
@@ -42,6 +44,7 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
   const selectedTab = useSelectedTab<DataTabType>();
   const currentConnection = useCurrentConnection();
   const selectedRows = useDataStore((state) => state.selectedRows);
+  const cellRange = useDataStore((state) => state.cellRange);
   const editedRows = useDataStore((state) => state.editedRows);
   const columns = useDataStore((state) => state.columns ?? NO_COLUMNS);
   const updateEditedRows = useDataStore((state) => state.updateEditedRows);
@@ -81,6 +84,7 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
         ? target.columnName
         : focusedSelection?.selectedColumn;
   const focusedRow: RowType | undefined = focusedSelection?.row;
+  const rowsToCopy: RowType[] = selectedRows.length > 0 ? selectedRows.map((s) => s.row) : focusedRow ? [focusedRow] : [];
   const focusedColumn = columns.find((c) => c.name === focusedColumnName);
 
   const resetPaginationIfNeeded = (): void => {
@@ -128,6 +132,19 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
     updateEditedRows(nextEditedRows).catch((error) => {
       console.error('Error updating edited rows:', error);
     });
+  };
+
+  const rangeReplacer = (newValue: string | null): void => {
+    if (!isMultiCellRange(cellRange) || !selectedTab?.id) return;
+    const { r1, r2 } = normalizeRange(cellRange);
+    applyCells(useDataStore.getState(), r1, r2, rangeColumnNames(cellRange), () => newValue);
+  };
+
+  const rangeText = (format: 'tsv' | 'csv'): string => {
+    if (!isMultiCellRange(cellRange)) return '';
+    const allRows = useDataStore.getState().rows ?? [];
+    const { r1, r2 } = normalizeRange(cellRange);
+    return serializeCellsForClipboard(allRows.slice(r1, r2 + 1), rangeColumnNames(cellRange), format);
   };
 
   const applyFilter = (operator: string, value: string): void => {
@@ -248,6 +265,79 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
         }
       }
     ];
+  } else if (target?.type === 'cell' && isMultiCellRange(cellRange)) {
+    menu = [
+      {
+        name: locales.copy,
+        children: [
+          {
+            name: locales.copy_cells_tsv,
+            closeAfterAction: true,
+            action: (): void => copyText(rangeText('tsv'))
+          },
+          {
+            name: locales.copy_cells_csv,
+            closeAfterAction: true,
+            action: (): void => copyText(rangeText('csv'))
+          }
+        ]
+      },
+      { name: 'separator', separator: true },
+      {
+        name: locales.set_empty,
+        closeBeforeAction: true,
+        disabled: writesBlocked,
+        disabledReason: writeReason,
+        action: (): void => rangeReplacer('')
+      },
+      {
+        name: locales.set_null,
+        closeBeforeAction: true,
+        disabled: writesBlocked,
+        disabledReason: writeReason,
+        action: (): void => rangeReplacer(null)
+      },
+      {
+        name: locales.set_default,
+        closeBeforeAction: true,
+        disabled: writesBlocked,
+        disabledReason: writeReason,
+        action: (): void => rangeReplacer('@DEFAULT')
+      },
+      { name: 'separator', separator: true },
+      ...sharedGridItems()
+    ];
+  } else if (target?.type === 'cell' && selectedRows.length > 1) {
+    menu = [
+      {
+        name: locales.copy,
+        children: [
+          {
+            name: locales.copy_rows_tsv,
+            closeAfterAction: true,
+            action: (): void => copyText(serializeRowsForClipboard(rowsToCopy, columns, 'tsv'))
+          },
+          {
+            name: locales.copy_rows_csv,
+            closeAfterAction: true,
+            action: (): void => copyText(serializeRowsForClipboard(rowsToCopy, columns, 'csv'))
+          }
+        ]
+      },
+      { name: 'separator', separator: true },
+      {
+        name: locales.delete_rows,
+        closeBeforeAction: true,
+        disabled: writesBlocked || fetching,
+        disabledReason: writeReason,
+        destructive: true,
+        action: (): void => {
+          void removeSelectedRows();
+        }
+      },
+      { name: 'separator', separator: true },
+      ...sharedGridItems()
+    ];
   } else if (target?.type === 'cell') {
     const columnEditable = focusedColumn?.editable !== false;
     const cellWriteReason = !columnEditable ? locales.grid_menu_column_not_editable : writeReason;
@@ -284,8 +374,8 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
             name: locales.copy_row_tsv,
             closeAfterAction: true,
             action: (): void => {
-              if (focusedRow) {
-                copyText(serializeRowForClipboard(focusedRow, columns, 'tsv'));
+              if (rowsToCopy.length > 0) {
+                copyText(serializeRowsForClipboard(rowsToCopy, columns, 'tsv'));
               }
             }
           },
@@ -293,8 +383,8 @@ export default function DataGridContextMenu({ contextMenu, onClose, target }: Pr
             name: locales.copy_row_csv,
             closeAfterAction: true,
             action: (): void => {
-              if (focusedRow) {
-                copyText(serializeRowForClipboard(focusedRow, columns, 'csv'));
+              if (rowsToCopy.length > 0) {
+                copyText(serializeRowsForClipboard(rowsToCopy, columns, 'csv'));
               }
             }
           },

@@ -7,6 +7,19 @@ import { DataGridTableCell } from '../../DataGridTableCell/DataGridTableCell';
 import GridCheckbox from '../../GridCheckbox';
 import type { DataGridTableRowProps } from '../../types';
 
+function cellClassName(col: number, focused: boolean, start: number, end: number, edges: number): string | undefined {
+  if (col >= start && col <= end) {
+    return clsx(
+      'range-cell',
+      edges & 1 && 'range-top',
+      edges & 2 && 'range-bottom',
+      col === start && 'range-left',
+      col === end && 'range-right'
+    );
+  }
+  return focused ? 'focused-cell' : undefined;
+}
+
 const DataGridTableRow = memo(
   function DataGridTableRow({
     row,
@@ -14,6 +27,10 @@ const DataGridTableRow = memo(
     columns,
     context,
     isSelected,
+    selectedColumn,
+    rangeStart = -1,
+    rangeEnd = -1,
+    rangeEdges = 0,
     isEdited,
     isUnsaved,
     isRemoved,
@@ -79,7 +96,9 @@ const DataGridTableRow = memo(
 
     return (
       <StyledTableRow className={rowClassName}>
-        {columnWindow && columnWindow.leftPad > 0 && <td aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />}
+        {columnWindow && columnWindow.leftPad > 0 && (
+          <td aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />
+        )}
         {columns.map((column, columnIndex) => {
           if (columnWindow && (columnIndex < columnWindow.start || columnIndex >= columnWindow.end)) return null;
           const columnId = column.name;
@@ -101,10 +120,16 @@ const DataGridTableRow = memo(
           return (
             <TableCell
               key={`cell-${rowIndex}-${columnId}`}
+              data-r={rowIndex}
+              data-c={columnIndex}
+              className={cellClassName(columnIndex, isSelected && selectedColumn === columnId, rangeStart, rangeEnd, rangeEdges)}
               onContextMenu={(e): void => {
                 e.stopPropagation();
                 context(e, columnId);
-                handleSelect(columnId);
+                // Keep a multi-row / multi-cell selection when right-clicking inside it.
+                const state = dataStoreApi.getState();
+                const inRange = columnIndex >= rangeStart && columnIndex <= rangeEnd;
+                if (!inRange && !(isSelected && state.selectedRows.length > 1)) handleSelect(columnId);
               }}
             >
               <DataGridTableCell
@@ -137,6 +162,10 @@ const DataGridTableRow = memo(
     return (
       prevProps.rowIndex === nextProps.rowIndex &&
       prevProps.isSelected === nextProps.isSelected &&
+      prevProps.selectedColumn === nextProps.selectedColumn &&
+      prevProps.rangeStart === nextProps.rangeStart &&
+      prevProps.rangeEnd === nextProps.rangeEnd &&
+      prevProps.rangeEdges === nextProps.rangeEdges &&
       prevProps.isEdited === nextProps.isEdited &&
       prevProps.isUnsaved === nextProps.isUnsaved &&
       prevProps.isRemoved === nextProps.isRemoved &&

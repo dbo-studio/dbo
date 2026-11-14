@@ -1,4 +1,5 @@
 import { useDataStore } from '@/store/dataStore/data.store';
+import { isMultiCellRange, normalizeRange } from '../cellRange';
 import { useMemo } from 'react';
 
 export function useRowStateLookup() {
@@ -6,6 +7,9 @@ export function useRowStateLookup() {
   const removedRows = useDataStore((state) => state.removedRows);
   const unsavedRows = useDataStore((state) => state.unSavedRows);
   const selectedRows = useDataStore((state) => state.selectedRows);
+  const cellRange = useDataStore((state) => state.cellRange);
+
+  const range = useMemo(() => (isMultiCellRange(cellRange) ? normalizeRange(cellRange) : null), [cellRange]);
 
   const removedRowsSet = useMemo(() => {
     const set = new Set<number>();
@@ -45,9 +49,13 @@ export function useRowStateLookup() {
       isUnsaved: unsavedRowsSet.has(dboIndex),
       isEdited: editedRowsSet.has(dboIndex),
       isSelected: selectedRowsMap.has(rowIndex),
-      selectedColumn: selectedRowsMap.get(rowIndex) ?? ''
+      selectedColumn: selectedRowsMap.get(rowIndex) ?? '',
+      // Only rows inside the range get range props, so a drag re-renders just those rows.
+      rangeStart: range && rowIndex >= range.r1 && rowIndex <= range.r2 ? range.c1 : -1,
+      rangeEnd: range && rowIndex >= range.r1 && rowIndex <= range.r2 ? range.c2 : -1,
+      rangeEdges: range ? (rowIndex === range.r1 ? 1 : 0) | (rowIndex === range.r2 ? 2 : 0) : 0
     }),
-    [removedRowsSet, unsavedRowsSet, editedRowsSet, selectedRowsMap]
+    [removedRowsSet, unsavedRowsSet, editedRowsSet, selectedRowsMap, range]
   );
 
   return {

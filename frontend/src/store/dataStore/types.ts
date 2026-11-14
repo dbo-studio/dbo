@@ -1,4 +1,5 @@
 import type { GridMetaType, RunQueryResponseType } from '@/api/query/types';
+import type { CellRange } from '@/components/common/DataGrid/cellRange';
 import type { PaneId } from '@/store/tabStore/tabs';
 import type { EditedRow } from '@/types';
 import type { ColumnType, RowType } from '@/types/Data';
@@ -20,6 +21,9 @@ export type DataRowSlice = {
 export type DataSelectedRowsSlice = {
   selectedRows: SelectedRow[];
   updateSelectedRows: (rows: SelectedRow[], replace?: boolean) => void;
+  /** Multi-cell (Excel-style) selection. Mutually exclusive with selectedRows. */
+  cellRange: CellRange | null;
+  setCellRange: (range: CellRange | null) => void;
 };
 
 export type DataColumnSlice = {

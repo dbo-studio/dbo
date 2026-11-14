@@ -37,6 +37,29 @@ export const TableCell = styled('td')(({ theme }) => ({
     color: theme.palette.text.text
   },
 
+  '&.focused-cell': {
+    boxShadow: `inset 0 0 0 2px ${theme.palette.primary.main}`
+  },
+
+  // Range = tinted cells + a 2px outline on the outer edges only (via per-side shadow variables).
+  '&.range-cell': {
+    backgroundColor: theme.palette.action.selected,
+    '--rt': '0px',
+    '--rb': '0px',
+    '--rl': '0px',
+    '--rr': '0px',
+    boxShadow: [
+      `inset 0 var(--rt) 0 0 ${theme.palette.primary.main}`,
+      `inset 0 calc(-1 * var(--rb)) 0 0 ${theme.palette.primary.main}`,
+      `inset var(--rl) 0 0 0 ${theme.palette.primary.main}`,
+      `inset calc(-1 * var(--rr)) 0 0 0 ${theme.palette.primary.main}`
+    ].join(', ')
+  },
+  '&.range-top': { '--rt': '2px' },
+  '&.range-bottom': { '--rb': '2px' },
+  '&.range-left': { '--rl': '2px' },
+  '&.range-right': { '--rr': '2px' },
+
   '.removed-highlight &': {
     backgroundColor: `${theme.palette.background.danger} !important`,
     color: `${theme.palette.text.danger} !important`

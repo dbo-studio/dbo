@@ -128,7 +128,9 @@ export default function DataGridTableHeaderRow({
   return (
     <StyledTableHead>
       <StyledTableRow>
-        {columnWindow && columnWindow.leftPad > 0 && <th aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />}
+        {columnWindow && columnWindow.leftPad > 0 && (
+          <th aria-hidden style={{ padding: 0, border: 0 }} colSpan={columnWindow.start} />
+        )}
         {columns.slice(columnWindow?.start ?? 0, columnWindow?.end ?? columns.length).map((column) => {
           const isResizing = resizingColumnId === column.name;
 

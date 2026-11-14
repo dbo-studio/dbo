@@ -9,9 +9,16 @@ export const createDataSelectedRowsSlice: StateCreator<
   DataSelectedRowsSlice
 > = (set, get) => ({
   selectedRows: [],
+  cellRange: null,
+  setCellRange: (range): void => {
+    if (!range && !get().cellRange) return;
+    set({ cellRange: range, ...(range ? { selectedRows: [] } : {}) }, undefined, 'setCellRange');
+  },
   updateSelectedRows: (rows: SelectedRow[], replace?: boolean): void => {
     const selectedTabId = selectPaneSelectedTabId(get().paneId);
     if (!selectedTabId) return;
+
+    if (get().cellRange) set({ cellRange: null }, undefined, 'clearCellRange');
 
     const currentSelectedRows = get().selectedRows;
     let newSelectedRows: SelectedRow[];

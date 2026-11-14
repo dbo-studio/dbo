@@ -1064,6 +1064,18 @@
                         "markdownDescription": "This permission allows recursive read functionality on the application\nspecific base directories.\n\n#### This permission set includes:\n\n- `allow-read-dir`\n- `allow-read-file`\n- `allow-read-text-file`\n- `allow-read-text-file-lines`\n- `allow-read-text-file-lines-next`\n- `allow-exists`\n- `scope-app-recursive`"
                       },
                       {
+                        "description": "This enables all write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-mkdir`\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`",
+                        "type": "string",
+                        "const": "fs:write-all",
+                        "markdownDescription": "This enables all write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-mkdir`\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`"
+                      },
+                      {
+                        "description": "This enables all file write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`",
+                        "type": "string",
+                        "const": "fs:write-files",
+                        "markdownDescription": "This enables all file write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`"
+                      },
+                      {
                         "description": "Enables the copy_file command without any pre-configured scope.",
                         "type": "string",
                         "const": "fs:allow-copy-file",
@@ -1878,18 +1890,6 @@
                         "type": "string",
                         "const": "fs:scope-video-recursive",
                         "markdownDescription": "This scope permits recursive access to the complete `$VIDEO` folder, including sub directories and files."
-                      },
-                      {
-                        "description": "This enables all write related commands without any pre-configured accessible paths.",
-                        "type": "string",
-                        "const": "fs:write-all",
-                        "markdownDescription": "This enables all write related commands without any pre-configured accessible paths."
-                      },
-                      {
-                        "description": "This enables all file write related commands without any pre-configured accessible paths.",
-                        "type": "string",
-                        "const": "fs:write-files",
-                        "markdownDescription": "This enables all file write related commands without any pre-configured accessible paths."
                       }
                     ]
                   }
@@ -2535,6 +2535,12 @@
           "markdownDescription": "Enables the write_image command without any pre-configured scope."
         },
         {
+          "description": "Enables the write_secret command without any pre-configured scope.",
+          "type": "string",
+          "const": "clipboard-manager:allow-write-secret",
+          "markdownDescription": "Enables the write_secret command without any pre-configured scope."
+        },
+        {
           "description": "Enables the write_text command without any pre-configured scope.",
           "type": "string",
           "const": "clipboard-manager:allow-write-text",
@@ -2569,6 +2575,12 @@
           "type": "string",
           "const": "clipboard-manager:deny-write-image",
           "markdownDescription": "Denies the write_image command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the write_secret command without any pre-configured scope.",
+          "type": "string",
+          "const": "clipboard-manager:deny-write-secret",
+          "markdownDescription": "Denies the write_secret command without any pre-configured scope."
         },
         {
           "description": "Denies the write_text command without any pre-configured scope.",
@@ -5607,6 +5619,18 @@
           "markdownDescription": "This permission allows recursive read functionality on the application\nspecific base directories.\n\n#### This permission set includes:\n\n- `allow-read-dir`\n- `allow-read-file`\n- `allow-read-text-file`\n- `allow-read-text-file-lines`\n- `allow-read-text-file-lines-next`\n- `allow-exists`\n- `scope-app-recursive`"
         },
         {
+          "description": "This enables all write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-mkdir`\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`",
+          "type": "string",
+          "const": "fs:write-all",
+          "markdownDescription": "This enables all write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-mkdir`\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`"
+        },
+        {
+          "description": "This enables all file write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`",
+          "type": "string",
+          "const": "fs:write-files",
+          "markdownDescription": "This enables all file write related commands without any pre-configured accessible paths.\n#### This permission set includes:\n\n- `allow-create`\n- `allow-copy-file`\n- `allow-remove`\n- `allow-rename`\n- `allow-truncate`\n- `allow-ftruncate`\n- `allow-write`\n- `allow-write-file`\n- `allow-write-text-file`"
+        },
+        {
           "description": "Enables the copy_file command without any pre-configured scope.",
           "type": "string",
           "const": "fs:allow-copy-file",
@@ -6423,22 +6447,10 @@
           "markdownDescription": "This scope permits recursive access to the complete `$VIDEO` folder, including sub directories and files."
         },
         {
-          "description": "This enables all write related commands without any pre-configured accessible paths.",
-          "type": "string",
-          "const": "fs:write-all",
-          "markdownDescription": "This enables all write related commands without any pre-configured accessible paths."
-        },
-        {
-          "description": "This enables all file write related commands without any pre-configured accessible paths.",
-          "type": "string",
-          "const": "fs:write-files",
-          "markdownDescription": "This enables all file write related commands without any pre-configured accessible paths."
-        },
-        {
-          "description": "This permission set configures which\nnotification features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all notification related features.\n\n\n#### This default permission set includes:\n\n- `allow-is-permission-granted`\n- `allow-request-permission`\n- `allow-notify`\n- `allow-register-action-types`\n- `allow-register-listener`\n- `allow-cancel`\n- `allow-get-pending`\n- `allow-remove-active`\n- `allow-get-active`\n- `allow-check-permissions`\n- `allow-show`\n- `allow-batch`\n- `allow-list-channels`\n- `allow-delete-channel`\n- `allow-create-channel`\n- `allow-permission-state`",
+          "description": "This permission set configures which\nnotification features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all notification related features.\n\n\n#### This default permission set includes:\n\n- `allow-is-permission-granted`\n- `allow-request-permission`\n- `allow-notify`\n- `allow-register-action-types`\n- `allow-register-listener`\n- `allow-remove-listener`\n- `allow-cancel`\n- `allow-get-pending`\n- `allow-remove-active`\n- `allow-get-active`\n- `allow-check-permissions`\n- `allow-show`\n- `allow-batch`\n- `allow-list-channels`\n- `allow-delete-channel`\n- `allow-create-channel`\n- `allow-permission-state`",
           "type": "string",
           "const": "notification:default",
-          "markdownDescription": "This permission set configures which\nnotification features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all notification related features.\n\n\n#### This default permission set includes:\n\n- `allow-is-permission-granted`\n- `allow-request-permission`\n- `allow-notify`\n- `allow-register-action-types`\n- `allow-register-listener`\n- `allow-cancel`\n- `allow-get-pending`\n- `allow-remove-active`\n- `allow-get-active`\n- `allow-check-permissions`\n- `allow-show`\n- `allow-batch`\n- `allow-list-channels`\n- `allow-delete-channel`\n- `allow-create-channel`\n- `allow-permission-state`"
+          "markdownDescription": "This permission set configures which\nnotification features are by default exposed.\n\n#### Granted Permissions\n\nIt allows all notification related features.\n\n\n#### This default permission set includes:\n\n- `allow-is-permission-granted`\n- `allow-request-permission`\n- `allow-notify`\n- `allow-register-action-types`\n- `allow-register-listener`\n- `allow-remove-listener`\n- `allow-cancel`\n- `allow-get-pending`\n- `allow-remove-active`\n- `allow-get-active`\n- `allow-check-permissions`\n- `allow-show`\n- `allow-batch`\n- `allow-list-channels`\n- `allow-delete-channel`\n- `allow-create-channel`\n- `allow-permission-state`"
         },
         {
           "description": "Enables the batch command without any pre-configured scope.",
@@ -6523,6 +6535,12 @@
           "type": "string",
           "const": "notification:allow-remove-active",
           "markdownDescription": "Enables the remove_active command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "notification:allow-remove-listener",
+          "markdownDescription": "Enables the remove_listener command without any pre-configured scope."
         },
         {
           "description": "Enables the request_permission command without any pre-configured scope.",
@@ -6619,6 +6637,12 @@
           "type": "string",
           "const": "notification:deny-remove-active",
           "markdownDescription": "Denies the remove_active command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "notification:deny-remove-listener",
+          "markdownDescription": "Denies the remove_listener command without any pre-configured scope."
         },
         {
           "description": "Denies the request_permission command without any pre-configured scope.",

@@ -1,3 +1,6 @@
+import api from '@/api';
+import locales from '@/locales';
+import { useTransactionStore } from '@/store/transactionStore/transaction.store';
 import { TabMode } from '@/core/enums';
 import { indexedDBService } from '@/core/indexedDB/indexedDB.service';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
@@ -19,12 +22,24 @@ export const useRemoveTab = (): useRemoveTabReturn => {
         console.error('Error clearing IndexedDB data for tab:', tabId, error);
       });
 
+      // The server rolls the tab's open transaction back when the tab goes away; free it now.
+      const transaction = useTransactionStore.getState();
+      const connectionId = transaction.byTab[tabId];
+      if (connectionId !== undefined) {
+        transaction.clear(tabId);
+        void api.query.endTransaction({ connectionId, tab: tabId }, false).catch(() => undefined);
+      }
+
       return removeTab(tabId);
     },
     [removeTab]
   );
 
   const needConfirm = async (tab: TabType): Promise<boolean> => {
+    if (tab.id in useTransactionStore.getState().byTab) {
+      return true;
+    }
+
     if (tab.mode === TabMode.Query && useTabStore.getState().getQuery(tab.id) !== '') {
       return true;
     }
@@ -55,9 +70,14 @@ export const useRemoveTab = (): useRemoveTabReturn => {
       }
 
       if (await needConfirm(selectedTab)) {
-        warning(undefined, 'Are you sure you want to close this tab?', () => {
-          performRemove(tabId);
-        });
+        const hasTransaction = selectedTab.id in useTransactionStore.getState().byTab;
+        warning(
+          undefined,
+          hasTransaction ? locales.transaction_close_warning : 'Are you sure you want to close this tab?',
+          () => {
+            performRemove(tabId);
+          }
+        );
       } else {
         performRemove(tabId);
       }

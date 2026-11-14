@@ -34,6 +34,11 @@ export type DataGridTableRowProps = {
   isEdited: boolean;
   isUnsaved: boolean;
   isSelected: boolean;
+  selectedColumn?: string;
+  /** Cell range columns on this row (-1 = none); edges: 1 = first range row, 2 = last. */
+  rangeStart?: number;
+  rangeEnd?: number;
+  rangeEdges?: number;
   isRemoved: boolean;
   editable: boolean;
   searchTerm?: string;

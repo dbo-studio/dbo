@@ -18,6 +18,7 @@ import { useDataGridColumnWindow } from './hooks/useDataGridColumnWindow';
 import { useDataGridSearch } from './hooks/useDataGridSearch';
 import { useDataGridSearchIntegration } from './hooks/useDataGridSearchIntegration';
 import { useDataGridVirtualization } from './hooks/useDataGridVirtualization';
+import { useDataGridKeyboard } from './hooks/useDataGridKeyboard';
 import { useHandleScroll } from './hooks/useHandleScroll';
 import QuickViewDialog from './QuickViewDialog/QuickViewDialog';
 import SearchDialog from './SearchDialog/SearchDialog';
@@ -70,6 +71,14 @@ export default function DataGrid({
     rowVirtualizer
   });
 
+  const { onKeyDown } = useDataGridKeyboard({
+    containerRef: tableContainerRef,
+    rows,
+    tableColumns,
+    columnSizes,
+    enabled: !standalone
+  });
+
   const openContextMenu = useCallback(
     (event: React.MouseEvent, target: DataGridContextTarget): void => {
       if (standalone) return;
@@ -115,7 +124,9 @@ export default function DataGrid({
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
       <TableContainer
         ref={tableContainerRef}
-        sx={{ position: 'relative', flex: 1, minHeight: 0 }}
+        sx={{ position: 'relative', flex: 1, minHeight: 0, outline: 'none' }}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
         onContextMenu={handleEmptyContextMenu}
         data-testid='data-grid-container'
       >

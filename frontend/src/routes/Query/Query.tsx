@@ -15,6 +15,7 @@ import BackgroundQueryNotice from '@/components/common/BackgroundQueryNotice/Bac
 import { useBackgroundQueryStore } from '@/store/backgroundQuery/backgroundQuery.store';
 import { useDataStore, useDataStoreApi } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { useTransactionStore } from '@/store/transactionStore/transaction.store';
 import type { AutoCompleteType, ColumnType, EditorTabType, RowType } from '@/types';
 import { Tab, Tabs } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -64,6 +65,20 @@ export default function Query(): JSX.Element {
   const isDataFetching = useDataStore((state) => state.isDataFetching);
   const cancelRunningQuery = useDataStore((state) => state.cancelRunningQuery);
   const { askAboutSelection } = useAiBridge();
+  const connectionId = currentConnection?.id;
+
+  // The server may still hold this tab's transaction after a reload, or have rolled it back on idle.
+  useEffect(() => {
+    if (!selectedTab?.id || connectionId === undefined) return;
+    const tab = selectedTab.id;
+    void api.query
+      .transactionActive({ connectionId, tab })
+      .then((active) => {
+        if (active) useTransactionStore.getState().set(tab, connectionId);
+        else useTransactionStore.getState().clear(tab);
+      })
+      .catch(() => undefined);
+  }, [selectedTab?.id, connectionId]);
 
   useShortcut(shortcuts.runQuery, () => {
     if (!isDataFetching) {

@@ -86,7 +86,7 @@ import {
   WandSparkles,
   Webhook,
   Wrench,
-  X,
+  X
 } from 'lucide-react';
 
 export const lucideIcons: Record<string, LucideIcon> = {
@@ -174,5 +174,5 @@ export const lucideIcons: Record<string, LucideIcon> = {
   WandSparkles,
   Webhook,
   Wrench,
-  X,
+  X
 };

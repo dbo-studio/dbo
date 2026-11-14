@@ -108,6 +108,10 @@ func (r *Server) routing() {
 	query.Post("/run", clearBody, r.handlers.QueryHandler.Run)
 	query.Post("/raw", clearBody, r.handlers.QueryHandler.Raw)
 	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
+	query.Post("/transaction/begin", clearBody, r.handlers.QueryHandler.TransactionBegin)
+	query.Post("/transaction/commit", clearBody, r.handlers.QueryHandler.TransactionCommit)
+	query.Post("/transaction/rollback", clearBody, r.handlers.QueryHandler.TransactionRollback)
+	query.Get("/transaction", r.handlers.QueryHandler.TransactionStatus)
 	query.Get("/autocomplete", r.handlers.QueryHandler.Autocomplete)
 
 	account := api.Group("v1/account")

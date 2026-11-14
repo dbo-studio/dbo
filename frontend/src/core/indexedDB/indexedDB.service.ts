@@ -162,14 +162,16 @@ class IndexedDBService {
     const puts: Promise<unknown>[] = [];
     for (const row of rows) {
       const key = `${tabId}-${row.dbo_index}`;
-      puts.push(tx.store.put({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        key,
-        tabId,
-        rowIndex: row.dbo_index,
-        data: row
-      }));
+      puts.push(
+        tx.store.put({
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          //@ts-ignore
+          key,
+          tabId,
+          rowIndex: row.dbo_index,
+          data: row
+        })
+      );
     }
     await Promise.all([...puts, tx.done]);
   }
