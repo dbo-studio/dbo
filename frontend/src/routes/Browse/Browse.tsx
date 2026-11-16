@@ -2,7 +2,12 @@ import api from '@/api';
 import ResizableXBox from '@/components/base/ResizableBox/ResizableXBox';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { isMongoDriver } from '@/core/db/connectionAliases';
-import { useCurrentConnection } from '@/hooks';
+import { buildMongoFilter, buildMongoSort } from '@/core/db/mongoQuery';
+import { MongoFilterConditions } from '@/core/constants';
+import Segmented from '@/components/base/Segmented/Segmented';
+import { useContextMenu, useCurrentConnection } from '@/hooks';
+import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
+import type { MenuType } from '@/components/base/ContextMenu/types';
 import { canUseCli } from '@/core/auth/permissions';
 import { openBottomPanel } from '@/core/bottomPanel';
 import { useAuthStore } from '@/store/authStore/auth.store';
@@ -11,6 +16,7 @@ import type {
   NoSQLBrowseSort,
   NoSQLCapability,
   NoSQLContainerSpec,
+  NoSQLItem,
   NoSQLViewKind
 } from '@/api/nosql/types';
 import Filters from '@/components/common/Filters/Filters';
@@ -28,6 +34,7 @@ import InlineSqlEditor from '@/components/base/InlineSqlEditor/InlineSqlEditor';
 import { setMongoContext } from '@/components/base/MongoEditor/mongoCompletions';
 import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import type { IconTypes } from '@/components/base/CustomIcon/types';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -48,6 +55,8 @@ import { tools } from '@/core/utils/tools';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import { useBrowseActionStore } from '@/store/browseAction/browseAction.store';
+import { useTransferStore } from '@/store/transfer/transfer.store';
 import RecycleDialog from './RecycleDialog';
 import MemberWindowView from './MemberWindowView';
 import ItemView from './ItemView';
@@ -148,13 +157,33 @@ export default function Browse(): JSX.Element {
   const [schemaOpen, setSchemaOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
-  const aiAllowed = useFeaturePermissions().ai;
+  const featurePerms = useFeaturePermissions();
+  const aiAllowed = featurePerms.ai;
+  const openMongoExport = useTransferStore((s) => s.openMongoExport);
+  const openMongoImport = useTransferStore((s) => s.openMongoImport);
+  const request = useBrowseActionStore((s) => s.request);
+  const clearRequest = useBrowseActionStore((s) => s.clear);
+
+  // The tree's context menu opens a collection's dialogs by asking here; take the request once this is its page.
+  useEffect(() => {
+    if (!request || request.containerId !== containerId) return;
+    clearRequest();
+    const open = { stats: setStatsOpen, schema: setSchemaOpen, aggregate: setAggOpen, rename: setRenameOpen }[
+      request.action
+    ];
+    open(true);
+  }, [request, containerId, clearRequest]);
   const { prefillChat } = useAiBridge();
   const removeTab = useTabStore((state) => state.removeTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null);
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
   const [statusSlot, setStatusSlot] = useState<HTMLElement | null>(null);
+  const newButtonRef = useRef<HTMLButtonElement>(null);
+  // MongoDB: the filter and sort are typed as JSON, or assembled from rows like the SQL grid's.
+  const [queryMode, setQueryMode] = useState<'query' | 'builder'>('query');
+  const [listMenu, setListMenu] = useState<MenuType[]>([]);
+  const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
   const { data: spec } = useQuery({
     queryKey: ['nosql', 'describe', connectionId, containerId],
@@ -237,14 +266,14 @@ export default function Browse(): JSX.Element {
       locales.nosql_saved
     );
 
-  const remove = (): void => {
-    if (!selectedId) return;
-    confirmDanger(locales.nosql_delete_item, locales.nosql_delete_confirm.replace('{id}', selectedId), () => {
+  const remove = (id: string | null = selectedId): void => {
+    if (!id) return;
+    confirmDanger(locales.nosql_delete_item, locales.nosql_delete_confirm.replace('{id}', id), () => {
       void run(
         () =>
           withSafeModeRetry(async (confirmed) => {
-            await api.nosql.deleteItems({ connectionId, containerId, itemIds: [selectedId], confirmed });
-            setSelectedId(null);
+            await api.nosql.deleteItems({ connectionId, containerId, itemIds: [id], confirmed });
+            setSelectedId((current) => (current === id ? null : current));
             return true;
           }),
         locales.action_executed_successfully
@@ -323,7 +352,7 @@ export default function Browse(): JSX.Element {
       }
     );
 
-  const moreItems: { id: string; label: string; danger?: boolean; run: () => void }[] = [
+  const allItems: { id: string; label: string; danger?: boolean; run: () => void }[] = [
     ...(spec?.tools ?? [])
       .filter((toolId) => toolId !== 'cli' || cliAllowed)
       .map((toolId) => ({
@@ -396,6 +425,174 @@ export default function Browse(): JSX.Element {
       : [])
   ];
 
+  // MongoDB: the everyday tools of a collection are icons here and entries of its context menu in the tree; the
+  // menu keeps what belongs to the connection (terminal, server, recently deleted), the assistant and bulk delete.
+  const mongoToolbar: { id: string; label: string; icon: keyof typeof IconTypes; run: () => void }[] = isMongo
+    ? [
+        ...(has(spec, 'transfer') && featurePerms.export
+          ? [
+              {
+                id: 'export',
+                label: locales.export,
+                icon: 'export' as const,
+                run: (): void => openMongoExport(connectionId, containerId)
+              }
+            ]
+          : []),
+        ...(has(spec, 'transfer') && featurePerms.import
+          ? [
+              {
+                id: 'import',
+                label: locales.import,
+                icon: 'import' as const,
+                run: (): void => openMongoImport(connectionId, containerId)
+              }
+            ]
+          : []),
+        ...(has(spec, 'schema')
+          ? [
+              {
+                id: 'schema',
+                label: locales.nosql_schema,
+                icon: 'structure' as const,
+                run: (): void => setSchemaOpen(true)
+              }
+            ]
+          : []),
+        ...(has(spec, 'aggregate')
+          ? [
+              {
+                id: 'aggregate',
+                label: locales.nosql_aggregate,
+                icon: 'chart' as const,
+                run: (): void => setAggOpen(true)
+              }
+            ]
+          : []),
+        ...(has(spec, 'indexes')
+          ? [
+              {
+                id: 'indexes',
+                label: locales.nosql_indexes_title,
+                icon: 'key' as const,
+                run: (): void => setIndexesOpen(true)
+              },
+              {
+                id: 'explain',
+                label: locales.nosql_explain,
+                icon: 'search' as const,
+                run: (): void => setExplainOpen(true)
+              }
+            ]
+          : [])
+      ]
+    : [];
+  const MONGO_MENU_IDS = new Set(['cli', 'server', 'ai-collection', 'ai-item', 'recycle', 'bulk']);
+  const moreItems = isMongo ? allItems.filter((m) => MONGO_MENU_IDS.has(m.id)) : allItems;
+
+  const copyText = async (text: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(locales.copied);
+    } catch {
+      toast.error(locales.action_failed);
+    }
+  };
+
+  /** What a right-click on one document (or key) offers; the same actions as the footer and toolbar, for that row. */
+  const rowMenu = (target: NoSQLItem): MenuType[] => [
+    {
+      name: isMongo ? locales.nosql_copy_id : locales.nosql_copy_key_name,
+      icon: 'copy',
+      action: (): void => void copyText(target.id)
+    },
+    ...(isMongo
+      ? [
+          {
+            name: locales.nosql_copy_document,
+            icon: 'code' as const,
+            action: (): void =>
+              void api.nosql
+                .getItem({ connectionId, containerId, itemId: target.id })
+                .then((full) =>
+                  copyText(typeof full.value === 'string' ? full.value : JSON.stringify(full.value, null, 2))
+                )
+                .catch(() => toast.error(locales.action_failed))
+          }
+        ]
+      : []),
+    ...(aiAllowed
+      ? [
+          {
+            name: locales.ai_ask_short,
+            icon: 'sparkles' as const,
+            action: (): void => {
+              const message = isMongo
+                ? `Explain the document with _id ${target.id} in ${containerId}.`
+                : `Explain the key ${target.id} in ${containerId}.`;
+              prefillChat(message, true, { input: message });
+            }
+          }
+        ]
+      : []),
+    ...(has(spec, 'delete')
+      ? [
+          { name: 'separator', separator: true },
+          {
+            name: locales.nosql_delete_item,
+            icon: 'delete' as const,
+            destructive: true,
+            action: (): void => remove(target.id)
+          }
+        ]
+      : [])
+  ];
+
+  /** What a right-click on the empty part of the list offers. */
+  const panelMenu = (): MenuType[] => [
+    ...(has(spec, 'insert')
+      ? [
+          {
+            name: isMongo ? locales.nosql_new_document : locales.nosql_new_key,
+            icon: 'plus' as const,
+            action: (): void => setCreateAnchor(newButtonRef.current)
+          }
+        ]
+      : []),
+    ...(!memberView ? [{ name: locales.refresh, icon: 'refresh' as const, action: (): void => void refresh() }] : []),
+    ...(isMongo && has(spec, 'transfer') && (featurePerms.export || featurePerms.import)
+      ? [
+          { name: 'separator', separator: true },
+          ...(featurePerms.export
+            ? [
+                {
+                  name: locales.tree_mongo_export,
+                  icon: 'export' as const,
+                  action: (): void => openMongoExport(connectionId, containerId)
+                }
+              ]
+            : []),
+          ...(featurePerms.import
+            ? [
+                {
+                  name: locales.tree_mongo_import,
+                  icon: 'import' as const,
+                  action: (): void => openMongoImport(connectionId, containerId)
+                }
+              ]
+            : [])
+        ]
+      : [])
+  ];
+
+  const openListMenu = (event: React.MouseEvent, target: NoSQLItem | null): void => {
+    if (target) setSelectedId(target.id);
+    const items = target ? rowMenu(target) : panelMenu();
+    if (items.length === 0) return;
+    setListMenu(items.map((entry) => ({ ...entry, closeBeforeAction: true })));
+    handleContextMenu(event);
+  };
+
   if (!tab) return <></>;
 
   const applyText = (text: string): void => {
@@ -407,13 +604,47 @@ export default function Browse(): JSX.Element {
     }
   };
 
+  /** Builds the filter and sort documents from the builder's rows, shows them in the JSON boxes, and runs them. */
+  const applyBuilder = (): void => {
+    const current = useTabStore.getState().selectedTab<BrowseTabType>() ?? tab;
+    const filterText = buildMongoFilter(current.filters ?? []);
+    const sortJson = buildMongoSort(current.sorts ?? []);
+    setQuery(filterText);
+    setSortText(sortJson);
+    setApplied({ ...NO_FILTER, filter: filterText, sorts: parseSort(sortJson), projection: projectText.trim() });
+  };
+
   const applyFields = (): void => setApplied(toApplied(useTabStore.getState().selectedTab<BrowseTabType>() ?? tab));
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid='browse-tab'>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', p: 1, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
         <Box sx={{ flex: 1 }}>
-          {(spec?.filter === 'pattern' || spec?.filter === 'query') && (
+          {spec?.filter === 'query' && (
+            <Box sx={{ mb: 0.75 }}>
+              <Segmented
+                value={queryMode}
+                onChange={setQueryMode}
+                testId='browse-query-mode'
+                options={[
+                  { value: 'query', label: locales.nosql_mode_query },
+                  { value: 'builder', label: locales.nosql_mode_builder }
+                ]}
+              />
+            </Box>
+          )}
+          {spec?.filter === 'query' && queryMode === 'builder' && (
+            <Box data-testid='browse-query-builder'>
+              <Filters columns={columns} operators={MongoFilterConditions} onApply={applyBuilder} />
+              <Sorts columns={columns} onApply={applyBuilder} />
+              {applied.filter && (
+                <Typography variant='caption' color='text.secondary' data-testid='browse-generated-query'>
+                  {locales.nosql_generated_query}: <code>{applied.filter}</code>
+                </Typography>
+              )}
+            </Box>
+          )}
+          {(spec?.filter === 'pattern' || (spec?.filter === 'query' && queryMode === 'query')) && (
             <InlineQueryStackStyled direction='row' data-testid='browse-filter-bar'>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <InlineSqlEditor
@@ -468,6 +699,13 @@ export default function Browse(): JSX.Element {
             </Box>
           )}
         </Box>
+        {mongoToolbar.map((t) => (
+          <Tooltip key={t.id} title={t.label}>
+            <IconButton aria-label={t.label} data-testid={`browse-action-${t.id}`} onClick={t.run}>
+              <CustomIcon type={t.icon} size='s' />
+            </IconButton>
+          </Tooltip>
+        ))}
         {moreItems.length > 0 && (
           <Tooltip title={locales.nosql_more_actions}>
             <IconButton aria-label={locales.nosql_more_actions} onClick={(e): void => setMoreAnchor(e.currentTarget)}>
@@ -633,6 +871,7 @@ export default function Browse(): JSX.Element {
                 selectedId={selectedId}
                 loading={page.isFetching}
                 onSelect={(it): void => setSelectedId(it.id)}
+                onContextMenu={openListMenu}
                 onToggle={(folder): void => {
                   const next = new Set(expanded);
                   if (!next.delete(folder)) next.add(folder);
@@ -698,6 +937,8 @@ export default function Browse(): JSX.Element {
         </Box>
       </Box>
 
+      <ContextMenu menu={listMenu} contextMenu={contextMenuPosition} onClose={handleCloseContextMenu} />
+
       <StatusBarStyled direction='row' data-testid='browse-footer'>
         <StatusBarActionsStackStyled sx={{ width: 'auto', gap: 0.5 }}>
           {has(spec, 'insert') && (
@@ -705,6 +946,7 @@ export default function Browse(): JSX.Element {
               <IconButton
                 aria-label={isMongo ? locales.nosql_new_document : locales.nosql_new_key}
                 data-testid='new-key-button'
+                ref={newButtonRef}
                 onClick={(e): void => setCreateAnchor(e.currentTarget)}
               >
                 <CustomIcon type='plus' size='s' />
@@ -714,7 +956,7 @@ export default function Browse(): JSX.Element {
           {has(spec, 'delete') && (
             <Tooltip title={locales.nosql_delete_item}>
               <span>
-                <IconButton aria-label={locales.nosql_delete_item} disabled={!item} onClick={remove}>
+                <IconButton aria-label={locales.nosql_delete_item} disabled={!item} onClick={(): void => remove()}>
                   <CustomIcon type='mines' size='s' />
                 </IconButton>
               </span>

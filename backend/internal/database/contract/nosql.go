@@ -214,6 +214,22 @@ type DataTransfer interface {
 	ImportDocs(ctx context.Context, containerID string, docs []string) (inserted int, err error)
 }
 
+// Duplicate-key handling for an import into a collection that may already hold the documents.
+const (
+	// ImportStop stops at the first document whose _id exists (the default).
+	ImportStop = "stop"
+	// ImportSkip leaves documents whose _id exists as they are and adds the rest.
+	ImportSkip = "skip"
+	// ImportReplace overwrites documents whose _id exists and adds the rest.
+	ImportReplace = "replace"
+)
+
+// ModeImporter is an optional interface of a DataTransfer that can import over documents which already exist.
+type ModeImporter interface {
+	// ImportDocsMode is ImportDocs with one of the Import* modes; written counts documents added or replaced.
+	ImportDocsMode(ctx context.Context, containerID string, docs []string, mode string) (written int, err error)
+}
+
 // CollectionAdmin is an optional interface for collection-level structure changes. Declared with CapCollectionAdmin.
 type CollectionAdmin interface {
 	// RenameCollection returns the new container id.

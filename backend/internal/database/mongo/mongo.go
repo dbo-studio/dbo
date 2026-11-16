@@ -42,6 +42,7 @@ var (
 	_ contract.Aggregator      = (*Repository)(nil)
 	_ contract.SchemaTools     = (*Repository)(nil)
 	_ contract.DataTransfer    = (*Repository)(nil)
+	_ contract.ModeImporter    = (*Repository)(nil)
 	_ contract.CollectionAdmin = (*Repository)(nil)
 )
 

@@ -368,6 +368,8 @@ type (
 		Format       string
 		Path         string
 		Confirmed    bool
+		// Mode is how documents whose _id already exists are handled: stop (default), skip or replace.
+		Mode string
 	}
 
 	// NoSQLImportJob is the job payload.
@@ -377,5 +379,6 @@ type (
 		ContainerID  string `json:"containerId"`
 		Format       string `json:"format"`
 		Path         string `json:"path"`
+		Mode         string `json:"mode,omitempty"`
 	}
 )

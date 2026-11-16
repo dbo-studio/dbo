@@ -5,7 +5,10 @@ import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import { IconButton } from '@mui/material';
 import type { JSX } from 'react';
 import type { AddFilterButtonProps } from '../../types.ts';
-export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.Element {
+export default function AddFilterButton({
+  columns,
+  operators = PgsqlFilterConditions
+}: AddFilterButtonProps): JSX.Element {
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const handleAddNewFilter = (): void => {
@@ -15,7 +18,7 @@ export default function AddFilterButton({ columns }: AddFilterButtonProps): JSX.
     upsertFilters({
       index: tools.uuid(),
       column: columns[0].name,
-      operator: PgsqlFilterConditions[0].value,
+      operator: operators[0].value,
       value: '',
       isActive: true,
       next: PgsqlFilterNext[0]

@@ -1,11 +1,13 @@
 import type { MenuType } from '@/components/base/ContextMenu/types';
-import { isMongoDriver, isNoSQLType, isRedisDriver } from '@/core/db/connectionAliases';
+import { isMongoDriver, isNoSQLType, isRedisDriver, supportsBackup } from '@/core/db/connectionAliases';
 import { diagramScopeFromTreeNode } from '@/core/diagram/scopeFromTree';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useCurrentConnection } from '@/hooks/useCurrentConnection';
-import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
+import { PERM } from '@/core/auth/permissions';
+import { useCan, useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { openBackup } from '@/core/backup/openBackup';
+import { type BrowseAction, useBrowseActionStore } from '@/store/browseAction/browseAction.store';
 import { useTransferStore } from '@/store/transfer/transfer.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
@@ -122,10 +124,15 @@ export function useTreeNodeMenuBuilder(
   const currentConnection = useCurrentConnection();
   const addDiagramTab = useTabStore((state) => state.addDiagramTab);
   const perms = useFeaturePermissions();
+  const can = useCan();
+  const canBackup = can(PERM.backupCreate) || can(PERM.backupRestore);
   // Redis has no row import/export or backup; the SQL job path cannot run on it.
   const isNoSQL = isNoSQLType(currentConnection?.type);
   const openExport = useTransferStore((state) => state.openExport);
   const openImport = useTransferStore((state) => state.openImport);
+  const askBrowse = useBrowseActionStore((state) => state.ask);
+  const openMongoExport = useTransferStore((state) => state.openMongoExport);
+  const openMongoImport = useTransferStore((state) => state.openMongoImport);
 
   const run = (node: TreeNodeType, action: TreeNodeActionType): MenuType => ({
     name: action.title,
@@ -241,6 +248,44 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
+    // A MongoDB collection has its own export and import wizards: formats and duplicate handling that fit documents.
+    if (isMongoDriver(currentConnection?.type) && node.type === 'table' && currentConnection) {
+      if (perms.export) {
+        data.push({
+          name: locales.tree_mongo_export,
+          action: () => openMongoExport(currentConnection.id, node.id),
+          closeAfterAction: true
+        });
+      }
+
+      if (perms.import) {
+        data.push({
+          name: locales.tree_mongo_import,
+          action: () => openMongoImport(currentConnection.id, node.id),
+          closeAfterAction: true
+        });
+      }
+    }
+
+    // The collection page's other dialogs: the page opens (or comes forward) and shows the one asked for.
+    if (isMongoDriver(currentConnection?.type) && node.type === 'table' && node.action) {
+      const page = (name: string, action: BrowseAction): MenuType => ({
+        name,
+        action: () => {
+          askBrowse(node.id, action);
+          void actionDetection({ stopPropagation: () => {} } as React.MouseEvent, node);
+        },
+        closeAfterAction: true
+      });
+
+      view.push(
+        page(locales.nosql_stats_title, 'stats'),
+        page(locales.nosql_schema, 'schema'),
+        page(locales.nosql_aggregate, 'aggregate'),
+        page(locales.nosql_rename_collection, 'rename')
+      );
+    }
+
     if (perms.import && !isNoSQL && node.type === 'table' && scope?.focusTables?.[0] && currentConnection) {
       data.push({
         name: locales.import,
@@ -249,7 +294,13 @@ export function useTreeNodeMenuBuilder(
       });
     }
 
-    if (node.type === 'database' && currentConnection && currentConnection.type !== 'sqlite' && !isNoSQL) {
+    if (
+      node.type === 'database' &&
+      currentConnection &&
+      currentConnection.type !== 'sqlite' &&
+      supportsBackup(currentConnection.type) &&
+      canBackup
+    ) {
       data.push({
         name: locales.backup_restore,
         action: () => openBackup({ connectionId: currentConnection.id, database: node.name }),

@@ -140,7 +140,7 @@ func (s *Service) ImportStart(ctx context.Context, req *dto.NoSQLImportStartRequ
 	owner := helper.CtxOwnerID(ctx)
 
 	job, err := s.jobManager.CreateJob(model.JobTypeNoSQLImport, owner, helper.StructToJSON(dto.NoSQLImportJob{
-		OwnerID: owner, ConnectionID: req.ConnectionID, ContainerID: req.ContainerID, Format: req.Format, Path: req.Path,
+		OwnerID: owner, ConnectionID: req.ConnectionID, ContainerID: req.ContainerID, Format: req.Format, Path: req.Path, Mode: req.Mode,
 	}))
 	if err != nil {
 		return 0, apperror.InternalServerError(err)

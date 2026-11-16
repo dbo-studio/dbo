@@ -9,6 +9,8 @@ export type ImportModalProps = {
 
 export type ImportButtonProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  /** File types the picker offers; the SQL import's by default. */
+  accept?: string;
 };
 
 export type ImportButtonStyledProps = {

@@ -2,6 +2,7 @@ package databaseMongo
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -144,6 +145,117 @@ func (r *Repository) Import(ctx context.Context, containerID, data, format strin
 	}
 
 	return r.insertDocs(ctx, containerID, docs)
+}
+
+// ImportDocsMode is ImportDocs for a collection that may already hold some of the documents: skip leaves those with
+// an existing _id alone, replace overwrites them. A document without an _id is always added.
+func (r *Repository) ImportDocsMode(ctx context.Context, containerID string, texts []string, mode string) (int, error) {
+	if mode == "" || mode == contract.ImportStop {
+		return r.ImportDocs(ctx, containerID, texts)
+	}
+
+	if mode != contract.ImportSkip && mode != contract.ImportReplace {
+		return 0, contract.Invalid("mode must be stop, skip or replace")
+	}
+
+	docs := make([]bson.D, 0, len(texts))
+
+	for i, t := range texts {
+		d, err := parseDoc(t)
+		if err != nil {
+			return 0, contract.Invalid("document %d: %v", i+1, err)
+		}
+
+		docs = append(docs, d)
+	}
+
+	c, err := r.client()
+	if err != nil {
+		return 0, err
+	}
+	defer r.release(ctx, c)
+
+	coll, err := r.collection(c, containerID)
+	if err != nil {
+		return 0, err
+	}
+
+	if mode == contract.ImportSkip {
+		return insertSkippingDuplicates(ctx, coll, docs)
+	}
+
+	return replaceByID(ctx, coll, docs)
+}
+
+// insertSkippingDuplicates inserts every document it can: a duplicate _id is the one error that is not a failure.
+func insertSkippingDuplicates(ctx context.Context, coll *mongo.Collection, docs []bson.D) (int, error) {
+	inserted := 0
+
+	for start := 0; start < len(docs); start += importBatch {
+		batch := docs[start:min(start+importBatch, len(docs))]
+
+		many := make([]any, len(batch))
+		for i, d := range batch {
+			many[i] = d
+		}
+
+		res, err := coll.InsertMany(ctx, many, options.InsertMany().SetOrdered(false))
+		if res != nil {
+			inserted += len(res.InsertedIDs)
+		}
+
+		if err != nil && !onlyDuplicateKeys(err) {
+			return inserted, contract.Invalid("stopped after %d documents: %v", inserted, err)
+		}
+	}
+
+	return inserted, nil
+}
+
+func onlyDuplicateKeys(err error) bool {
+	var bulk mongo.BulkWriteException
+	if !errors.As(err, &bulk) || len(bulk.WriteErrors) == 0 {
+		return false
+	}
+
+	for _, we := range bulk.WriteErrors {
+		if we.Code != duplicateKeyCode {
+			return false
+		}
+	}
+
+	return true
+}
+
+const duplicateKeyCode = 11000
+
+// replaceByID writes each document over the one with the same _id, adding it when there is none.
+func replaceByID(ctx context.Context, coll *mongo.Collection, docs []bson.D) (int, error) {
+	written := 0
+
+	for start := 0; start < len(docs); start += importBatch {
+		batch := docs[start:min(start+importBatch, len(docs))]
+		models := make([]mongo.WriteModel, 0, len(batch))
+
+		for _, d := range batch {
+			if id, ok := docID(d); ok {
+				models = append(models, mongo.NewReplaceOneModel().SetFilter(bson.D{{Key: "_id", Value: id}}).SetReplacement(d).SetUpsert(true))
+			} else {
+				models = append(models, mongo.NewInsertOneModel().SetDocument(d))
+			}
+		}
+
+		res, err := coll.BulkWrite(ctx, models, options.BulkWrite().SetOrdered(true))
+		if res != nil {
+			written += int(res.InsertedCount + res.UpsertedCount + res.MatchedCount)
+		}
+
+		if err != nil {
+			return written, contract.Invalid("stopped after %d documents: %v", written, err)
+		}
+	}
+
+	return written, nil
 }
 
 // insertDocs writes documents in batches and stops at the first failure; inserted is what was written before it.

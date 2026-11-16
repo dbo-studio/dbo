@@ -40,6 +40,21 @@ func (p *NoSQLImportProcessor) GetType() model.JobType {
 	return model.JobTypeNoSQLImport
 }
 
+// importBatch writes one batch with the job's duplicate handling when the driver has it; an unknown mode is refused
+// rather than silently run as a plain insert.
+func importBatch(ctx context.Context, transfer databaseContract.DataTransfer, data dto.NoSQLImportJob, batch []string) (int, error) {
+	if data.Mode == "" || data.Mode == databaseContract.ImportStop {
+		return transfer.ImportDocs(ctx, data.ContainerID, batch)
+	}
+
+	modal, ok := transfer.(databaseContract.ModeImporter)
+	if !ok {
+		return 0, errors.New("this connection cannot skip or replace existing documents")
+	}
+
+	return modal.ImportDocsMode(ctx, data.ContainerID, batch, data.Mode)
+}
+
 func (p *NoSQLImportProcessor) Process(ctx context.Context, job *model.Job) error {
 	data, err := helper.ConvertToDTO[dto.NoSQLImportJob]([]byte(job.Data))
 	if err != nil {
@@ -99,7 +114,7 @@ func (p *NoSQLImportProcessor) Process(ctx context.Context, job *model.Job) erro
 			return err
 		}
 
-		n, err := transfer.ImportDocs(ctx, data.ContainerID, batch)
+		n, err := importBatch(ctx, transfer, data, batch)
 		inserted += n
 		batch = batch[:0]
 

@@ -607,12 +607,18 @@ func (h *NoSQLHandler) Export(c fiber.Ctx) error {
 	}
 
 	streamCtx := c.Context()
-	asCSV := c.Query("format") == "csv"
+	format := c.Query("format")
+	asCSV := format == "csv"
+	asJSON := format == "json"
 
-	if asCSV {
+	switch {
+	case asCSV:
 		c.Set("Content-Type", "text/csv")
 		c.Set("Content-Disposition", `attachment; filename="export.csv"`)
-	} else {
+	case asJSON:
+		c.Set("Content-Type", "application/json")
+		c.Set("Content-Disposition", `attachment; filename="export.json"`)
+	default:
 		c.Set("Content-Type", "application/x-ndjson")
 		c.Set("Content-Disposition", `attachment; filename="export.ndjson"`)
 	}
@@ -622,6 +628,12 @@ func (h *NoSQLHandler) Export(c fiber.Ctx) error {
 
 		if asCSV {
 			_, _ = serviceNoSQL.WriteCSV(streamCtx, it, w)
+
+			return
+		}
+
+		if asJSON {
+			writeJSONArray(streamCtx, it, w)
 
 			return
 		}
@@ -637,6 +649,31 @@ func (h *NoSQLHandler) Export(c fiber.Ctx) error {
 			}
 		}
 	})
+}
+
+// writeJSONArray streams the documents as one JSON array, one document per line, so a large collection is never held in memory.
+func writeJSONArray(ctx context.Context, it contract.ExportIter, w *bufio.Writer) {
+	if _, err := w.WriteString("["); err != nil {
+		return
+	}
+
+	for first := true; ; first = false {
+		line, ok, err := it.Next(ctx)
+		if err != nil || !ok {
+			break
+		}
+
+		sep := ",\n"
+		if first {
+			sep = "\n"
+		}
+
+		if _, err := w.WriteString(sep + line); err != nil {
+			return // client went away
+		}
+	}
+
+	_, _ = w.WriteString("\n]\n")
 }
 
 func (h *NoSQLHandler) Import(c fiber.Ctx) error {
@@ -700,6 +737,11 @@ func (h *NoSQLHandler) ImportUpload(c fiber.Ctx) error {
 		ContainerID:  c.FormValue("containerId"),
 		Format:       c.FormValue("format"),
 		Confirmed:    c.FormValue("confirmed") == "true",
+		Mode:         c.FormValue("mode"),
+	}
+
+	if req.Mode != "" && req.Mode != contract.ImportStop && req.Mode != contract.ImportSkip && req.Mode != contract.ImportReplace {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(errors.New("mode must be stop, skip or replace"))).Send(c)
 	}
 
 	if req.ConnectionID < 1 || req.ContainerID == "" {

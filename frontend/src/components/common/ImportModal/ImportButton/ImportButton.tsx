@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import type { ImportButtonProps } from '../types';
 import { ImportButtonStyled, VisuallyHiddenInputStyled } from './ImportButton.styles';
 
-export default function ImportButton({ onChange }: ImportButtonProps) {
+export default function ImportButton({ onChange, accept = '.sql,.json,.csv' }: ImportButtonProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
@@ -74,7 +74,7 @@ export default function ImportButton({ onChange }: ImportButtonProps) {
         </Typography>
       )}
 
-      <VisuallyHiddenInputStyled accept='.sql,.json,.csv' type='file' onChange={handleChange} />
+      <VisuallyHiddenInputStyled accept={accept} type='file' onChange={handleChange} />
     </ImportButtonStyled>
   );
 }

@@ -2,7 +2,7 @@ import { variables } from '@/core/theme/variables';
 import type { NoSQLItem } from '@/api/nosql/types';
 import locales from '@/locales';
 import { alpha, Box, Tooltip, Typography, useTheme } from '@mui/material';
-import type { JSX } from 'react';
+import type { JSX, MouseEvent } from 'react';
 import type { KeyRow } from './keyTree';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -54,12 +54,26 @@ type Props = {
   loading: boolean;
   onSelect: (item: NoSQLItem) => void;
   onToggle: (folder: string) => void;
+  /** Right-click on a key (item set) or on the empty part of the list (item null). */
+  onContextMenu: (event: MouseEvent, item: NoSQLItem | null) => void;
 };
 
 /** The key tree: folders with counts, then keys with a fixed-width type badge so names line up. */
-export default function KeyList({ rows, expanded, selectedId, loading, onSelect, onToggle }: Props): JSX.Element {
+export default function KeyList({
+  rows,
+  expanded,
+  selectedId,
+  loading,
+  onSelect,
+  onToggle,
+  onContextMenu
+}: Props): JSX.Element {
   return (
-    <Box sx={{ height: '100%', overflow: 'auto', py: 0.5 }} data-testid='browse-list'>
+    <Box
+      sx={{ height: '100%', overflow: 'auto', py: 0.5 }}
+      data-testid='browse-list'
+      onContextMenu={(event): void => onContextMenu(event, null)}
+    >
       {rows.length === 0 && !loading && (
         <Typography sx={{ p: 2 }} color='text.secondary'>
           {locales.nosql_no_items}
@@ -76,6 +90,13 @@ export default function KeyList({ rows, expanded, selectedId, loading, onSelect,
               tabIndex={0}
               data-testid={row.item && !row.folder ? 'browse-item' : 'browse-folder'}
               data-item-id={row.item?.id}
+              onContextMenu={(event): void => {
+                // A key has its own menu; a folder falls through to the list's.
+                if (row.item && !row.folder) {
+                  event.stopPropagation();
+                  onContextMenu(event, row.item);
+                }
+              }}
               onClick={(): void => {
                 if (row.item && !row.folder) onSelect(row.item);
                 else if (row.folder) onToggle(row.folder);

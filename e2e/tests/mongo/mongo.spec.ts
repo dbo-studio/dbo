@@ -241,7 +241,8 @@ test.describe("MongoDB driver", () => {
   test("stats dialog shows size and indexes", async ({ page }) => {
     await seed(page);
     await openUsers(page);
-    await page.getByLabel("More actions").click();
+    // Stats live in the collection's context menu in the tree.
+    await page.getByTestId(`tree-node-${coll}`).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Collection stats" }).click();
     const dialog = page.getByTestId("stats-dialog");
     await expect(dialog.getByTestId("stat-Documents")).toHaveText("3");
@@ -257,5 +258,65 @@ test.describe("MongoDB driver", () => {
     expect((await res.json()).message).toBe("safe_mode_prod_locked");
     const read = await page.request.get(`${apiUrl()}/nosql/browse`, { params: { connectionId, containerId: users }, headers });
     expect(read.ok()).toBeTruthy();
+  });
+
+  test("the document list has a context menu: a document copies its _id or is deleted, the empty list adds and refreshes", async ({ page }) => {
+    const [aliceId] = await seed(page);
+    await openUsers(page);
+    await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
+
+    await test.step("a document offers copy, ask AI and delete", async () => {
+      await page.locator(`[data-item-id="${aliceId}"]`).click({ button: "right" });
+      for (const name of ["Copy _id", "Copy document", "Delete item"]) {
+        await expect(page.getByRole("menuitem", { name })).toBeVisible();
+      }
+      await page.keyboard.press("Escape");
+    });
+
+    await test.step("the empty part of the list offers new document and refresh", async () => {
+      await page.getByTestId("browse-list").click({ button: "right", position: { x: 40, y: 400 } });
+      await expect(page.getByRole("menuitem", { name: "New document" })).toBeVisible();
+      await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
+      await page.keyboard.press("Escape");
+    });
+
+    await test.step("Delete from the menu removes only that document after confirming", async () => {
+      await page.locator(`[data-item-id="${aliceId}"]`).click({ button: "right" });
+      await page.getByRole("menuitem", { name: "Delete item" }).click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(page.getByTestId("browse-footer")).toContainText("2 loaded", { timeout: 15000 });
+    });
+  });
+
+  test("the query builder turns rows into a MongoDB filter and sort, and the JSON box shows them", async ({ page }) => {
+    await seed(page);
+    await openUsers(page);
+    await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
+
+    await page.getByTestId("browse-query-mode-builder").click();
+    const builder = page.getByTestId("browse-query-builder");
+    await expect(builder).toBeVisible();
+
+    const pick = async (index: number, label: string): Promise<void> => {
+      await builder.locator(".filter-select__control input").nth(index).click();
+      await page.getByRole("option", { name: label, exact: true }).click();
+    };
+
+    await test.step("a text condition is compiled and applied", async () => {
+      await builder.getByLabel("add-filter-btn").first().click();
+      await pick(0, "name");
+      await pick(1, "starts with");
+      const value = builder.getByTestId("filter-value").locator("input");
+      await value.fill("b");
+      await value.blur();
+      await builder.getByRole("button", { name: "Apply" }).first().click();
+      await expect(page.getByTestId("browse-footer")).toContainText("1 loaded", { timeout: 15000 });
+      await expect(page.getByTestId("browse-generated-query")).toContainText("$regularExpression");
+    });
+
+    await test.step("the same filter is in the Query box as JSON", async () => {
+      await page.getByTestId("browse-query-mode-query").click();
+      await expect(page.getByTestId("browse-filter-bar")).toContainText("regularExpression");
+    });
   });
 });

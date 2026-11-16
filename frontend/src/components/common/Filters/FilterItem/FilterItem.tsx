@@ -1,4 +1,4 @@
-import { filterOperatorRequiresValue, PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
+import { PgsqlFilterConditions, PgsqlFilterNext } from '@/core/constants';
 import { useTabStore } from '@/store/tabStore/tab.store.ts';
 import type { EventFor, FilterType } from '@/types';
 import { Box, Checkbox, InputBase } from '@mui/material';
@@ -12,7 +12,13 @@ import AddFilterButton from './AddFilterButton/AddFilterButton.tsx';
 import { FilterItemStyled } from './FilterItem.styled';
 import RemoveFilterButton from './RemoveFilterButton/RemoveFilterButton.tsx';
 
-export default function FilterItem({ filter, columns, apply }: FilterItemProps): JSX.Element {
+export default function FilterItem({
+  filter,
+  columns,
+  apply,
+  operators = PgsqlFilterConditions
+}: FilterItemProps): JSX.Element {
+  const requires = (operator: string): boolean => operators.find((c) => c.value === operator)?.requiresValue ?? true;
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
@@ -44,7 +50,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
     });
   }
 
-  const requiresValue = filterOperatorRequiresValue(currentFilter.operator);
+  const requiresValue = requires(currentFilter.operator);
 
   const handleChange = useCallback(
     (type: 'column' | 'operator' | 'value' | 'next' | 'isActive', value: string | boolean): FilterType => {
@@ -56,7 +62,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         value:
           type === 'value'
             ? (value as string | number)
-            : type === 'operator' && !filterOperatorRequiresValue(operator)
+            : type === 'operator' && !requires(operator)
               ? ''
               : currentFilter.value,
         next: type === 'next' ? (value as string) : currentFilter.next,
@@ -118,7 +124,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
           style={{
             minWidth: '120px'
           }}
-          options={PgsqlFilterConditions.map((c) => ({ value: c.value, label: c.label }))}
+          options={operators.map((c) => ({ value: c.value, label: c.label }))}
           onChange={(e): void =>
             upsertFilters(handleChange('operator', (e as unknown as SelectInputOption).value as string))
           }
@@ -164,7 +170,7 @@ export default function FilterItem({ filter, columns, apply }: FilterItemProps):
         }}
       >
         <RemoveFilterButton apply={apply} filter={filter} />
-        <AddFilterButton columns={columns} />
+        <AddFilterButton columns={columns} operators={operators} />
       </Box>
     </FilterItemStyled>
   );

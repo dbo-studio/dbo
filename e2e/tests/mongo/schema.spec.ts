@@ -68,8 +68,7 @@ test.describe("MongoDB schema analysis and validation", () => {
     await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
-    await page.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Schema" }).click();
+    await page.getByTestId("browse-action-schema").click();
     await expect(page.getByTestId("schema-sampled")).toContainText("1 documents sampled", { timeout: 15000 });
     await expect(page.getByTestId("schema-row").filter({ hasText: "name" })).toBeVisible();
 

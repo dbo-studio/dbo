@@ -137,7 +137,7 @@ export const exportCollection = async (
   connectionId: number,
   containerId: string,
   filter?: string,
-  format: 'ndjson' | 'csv' = 'ndjson'
+  format: 'ndjson' | 'json' | 'csv' = 'ndjson'
 ): Promise<Blob> =>
   (
     await api.get<Blob>('/nosql/export', {
@@ -152,13 +152,16 @@ export const importFile = async (
   containerId: string,
   file: File,
   format: 'ndjson' | 'json' | 'csv',
-  confirmed?: boolean
+  confirmed?: boolean,
+  /** What to do with a document whose _id already exists. */
+  mode: 'stop' | 'skip' | 'replace' = 'stop'
 ): Promise<number> => {
   const form = new FormData();
   form.append('connectionId', String(connectionId));
   form.append('containerId', containerId);
   form.append('format', format);
   form.append('confirmed', String(!!confirmed));
+  form.append('mode', mode);
   form.append('file', file);
 
   return (

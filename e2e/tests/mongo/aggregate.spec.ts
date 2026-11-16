@@ -39,8 +39,7 @@ test.describe("MongoDB aggregation", () => {
     await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
-    await page.getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Aggregate" }).click();
+    await page.getByTestId("browse-action-aggregate").click();
     await page.getByTestId("agg-add").click();
     await page.getByRole("menuitem", { name: "$match" }).click();
     await page.getByRole("textbox", { name: "stage-1-text" }).fill('{"$match":{"tag":"a"}}');

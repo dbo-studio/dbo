@@ -1,3 +1,4 @@
+import type { FilterOperatorOption } from '@/core/constants';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { useSelectedTab } from '@/hooks/useSelectedTab.ts';
 import locales from '@/locales';
@@ -15,9 +16,11 @@ type FiltersProps = {
   /** Browse tabs pass their own columns and apply handler; Data tabs use the data store. */
   columns?: ColumnType[];
   onApply?: () => void;
+  /** Conditions to offer; the SQL set by default. */
+  operators?: FilterOperatorOption[];
 };
 
-export default function Filters({ columns: columnsProp, onApply }: FiltersProps = {}): JSX.Element {
+export default function Filters({ columns: columnsProp, onApply, operators }: FiltersProps = {}): JSX.Element {
   const selectedTab = useSelectedTab<DataTabType>();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
 
@@ -53,7 +56,7 @@ export default function Filters({ columns: columnsProp, onApply }: FiltersProps 
       }}
     >
       {filterCount === 0 ? (
-        <AddFilterButton columns={columns ?? []} />
+        <AddFilterButton columns={columns ?? []} operators={operators} />
       ) : (
         selectedTab?.filters?.map((filter: FilterType) => {
           return (
@@ -61,6 +64,7 @@ export default function Filters({ columns: columnsProp, onApply }: FiltersProps 
               apply={(): void => handleApplyFilters()}
               key={filter.index}
               columns={columns ?? []}
+              operators={operators}
               filter={filter}
             />
           );

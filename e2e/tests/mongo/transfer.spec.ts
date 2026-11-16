@@ -89,7 +89,7 @@ test.describe("MongoDB import, export and collection admin", () => {
 
     const target = `${m.s.coll}_ui`;
     try {
-      await page.getByRole("button", { name: "More actions" }).click();
+      await page.getByTestId(`tree-node-${m.s.coll}`).click({ button: "right" });
       await page.getByRole("menuitem", { name: "Rename collection" }).click();
       await page.getByRole("textbox", { name: "new-collection-name" }).fill(target);
       await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -105,9 +105,9 @@ test.describe("MongoDB import, export and collection admin", () => {
   });
 
   /** Uploads a file to the background import and waits for its job; returns the job's final state. */
-  async function importFile(page: import("@playwright/test").Page, name: string, format: string, text: string, containerId = m.s.container) {
+  async function importFile(page: import("@playwright/test").Page, name: string, format: string, text: string, containerId = m.s.container, mode = "stop") {
     const res = await page.request.post(`${apiUrl()}/nosql/import/job`, {
-      multipart: { file: { name, mimeType: "text/plain", buffer: Buffer.from(text) }, connectionId: String(m.s.id), containerId, format, confirmed: "true" },
+      multipart: { file: { name, mimeType: "text/plain", buffer: Buffer.from(text) }, connectionId: String(m.s.id), containerId, format, mode, confirmed: "true" },
       headers,
     });
     expect(res.status(), await res.text()).toBe(200);
@@ -182,5 +182,71 @@ test.describe("MongoDB import, export and collection admin", () => {
     const none = await page.request.post(`${apiUrl()}/nosql/import/job`, { multipart: { connectionId: String(m.s.id), containerId: m.s.container, format: "csv" }, headers });
     expect(none.status()).toBe(400);
   });
-});
 
+  test("a JSON export is one array that the JSON import reads back", async ({ page }) => {
+    await m.add(page, '{"name":"a","n":{"$numberLong":"5"}}');
+    await m.add(page, '{"name":"b"}');
+
+    const res = await page.request.get(`${apiUrl()}/nosql/export`, { params: { ...q(), format: "json" }, headers });
+    expect(res.headers()["content-type"]).toContain("application/json");
+    const text = await res.text();
+    expect(JSON.parse(text)).toHaveLength(2);
+
+    const ids = ((await j(await m.api(page).browse())).items as { id: string }[]).map((i) => i.id);
+    await m.api(page).remove(ids);
+    const job = await importFile(page, "all.json", "json", text);
+    expect(job.status, job.error ?? job.message).toBe("completed");
+    expect(job.result?.successRows).toBe(2);
+  });
+
+  test("duplicate _ids: stop fails, skip keeps the existing document, replace overwrites it", async ({ page }) => {
+    const file = '{"_id":1,"v":"file"}\n{"_id":2,"v":"file"}';
+    await post(page, "import", { data: '[{"_id":1,"v":"kept"}]', format: "json" });
+    const value = async (id: number): Promise<string> => {
+      const out = JSON.stringify(await j(await m.api(page).cli(`db.${m.s.coll}.findOne({_id: ${id}}).v`, false)));
+      return out;
+    };
+
+    const stopped = await importFile(page, "d.ndjson", "ndjson", file);
+    expect(stopped.status).toBe("failed");
+
+    const skipped = await importFile(page, "d.ndjson", "ndjson", file, m.s.container, "skip");
+    expect(skipped.status, skipped.error ?? skipped.message).toBe("completed");
+    expect(skipped.result?.successRows).toBe(1);
+    expect(await value(1)).toContain("kept");
+    expect(await value(2)).toContain("file");
+
+    const replaced = await importFile(page, "d.ndjson", "ndjson", file, m.s.container, "replace");
+    expect(replaced.status, replaced.error ?? replaced.message).toBe("completed");
+    expect(await value(1)).toContain("file");
+
+    const bad = await page.request.post(`${apiUrl()}/nosql/import/job`, {
+      multipart: { file: { name: "a.ndjson", mimeType: "text/plain", buffer: Buffer.from("{}") }, connectionId: String(m.s.id), containerId: m.s.container, format: "ndjson", mode: "nope", confirmed: "true" },
+      headers,
+    });
+    expect(bad.status()).toBe(400);
+  });
+
+  test("the tree menu opens the export and import wizards for a collection", async ({ page }) => {
+    await m.add(page, '{"seed":1}');
+    await page.reload();
+    await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
+    const dbNode = page.getByTestId(`tree-node-${db}`);
+    if (!(await dbNode.isVisible().catch(() => false))) await page.getByTestId(`tree-node-${m.s.name.toLowerCase()}`).click();
+    await dbNode.click();
+
+    await page.getByTestId(`tree-node-${m.s.coll}`).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Export…" }).click();
+    await expect(page.getByTestId("mongo-export-dialog")).toBeVisible();
+    const download = page.waitForEvent("download");
+    await page.getByTestId("mongo-export-run").click();
+    expect((await download).suggestedFilename()).toBe(`${m.s.coll}.json`);
+
+    await page.getByTestId(`tree-node-${m.s.coll}`).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Import…" }).click();
+    await page.getByTestId("mongo-import-dialog").locator('input[type="file"]').setInputFiles({ name: "docs.ndjson", mimeType: "application/x-ndjson", buffer: Buffer.from('{"a":1}\n{"a":2}\n') });
+    await page.getByTestId("mongo-import-next").click();
+    await page.getByTestId("mongo-import-run").click();
+    await expect(page.getByText("Imported 2 documents")).toBeVisible({ timeout: 30000 });
+  });
+});
