@@ -7,16 +7,6 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 )
 
-const (
-	PermCreateConnection = "create_connection"
-	PermAiSettings       = "ai_settings"
-	PermMcpSettings      = "mcp_settings"
-	PermCli              = "cli"
-	PermImport           = "import"
-	PermExport           = "export"
-	PermAiUse            = "ai_use"
-)
-
 func CtxWithPermissions(ctx context.Context, perms dto.UserPermissions) context.Context {
 	return context.WithValue(ctx, CtxPermissionsKey, perms)
 }
@@ -24,7 +14,7 @@ func CtxWithPermissions(ctx context.Context, perms dto.UserPermissions) context.
 func CtxPermissions(ctx context.Context) (dto.UserPermissions, bool) {
 	v := ctx.Value(CtxPermissionsKey)
 	if v == nil {
-		return dto.UserPermissions{}, false
+		return nil, false
 	}
 
 	perms, ok := v.(dto.UserPermissions)
@@ -32,6 +22,8 @@ func CtxPermissions(ctx context.Context) (dto.UserPermissions, bool) {
 	return perms, ok
 }
 
+// HasPermission reports whether the caller may use a feature (a key from package permission). A call
+// with no signed-in user (desktop, or login turned off) is open.
 func HasPermission(ctx context.Context, perm string) bool {
 	if CtxUserID(ctx) == "" {
 		return true
@@ -42,24 +34,7 @@ func HasPermission(ctx context.Context, perm string) bool {
 		return CtxUserRole(ctx) == "admin"
 	}
 
-	switch perm {
-	case PermCreateConnection:
-		return perms.CreateConnection
-	case PermAiSettings:
-		return perms.AiSettings
-	case PermMcpSettings:
-		return perms.McpSettings
-	case PermCli:
-		return perms.Cli
-	case PermImport:
-		return perms.Import
-	case PermExport:
-		return perms.Export
-	case PermAiUse:
-		return perms.AiUse
-	default:
-		return false
-	}
+	return perms[perm]
 }
 
 func RequirePermission(ctx context.Context, perm string) error {

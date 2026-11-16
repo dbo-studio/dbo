@@ -191,7 +191,7 @@ func (s *IAuthServiceImpl) Status(ctx context.Context) (*dto.AuthStatusResponse,
 			return nil, apperror.InternalServerError(err)
 		}
 
-		perms := permissionsDTO(user.PermissionFlags())
+		perms := dto.UserPermissions(user.PermissionSet())
 		res.Authenticated = true
 		res.MustChangePassword = user.MustChangePassword
 		res.TotpEnabled = user.TotpEnabled()
@@ -391,16 +391,4 @@ func (s *IAuthServiceImpl) SessionExpired(session *model.WebSession, now time.Ti
 	}
 
 	return false
-}
-
-func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
-	return dto.UserPermissions{
-		CreateConnection: flags.CreateConnection,
-		AiSettings:       flags.AiSettings,
-		McpSettings:      flags.McpSettings,
-		Cli:              flags.Cli,
-		Import:           flags.Import,
-		Export:           flags.Export,
-		AiUse:            flags.AiUse,
-	}
 }

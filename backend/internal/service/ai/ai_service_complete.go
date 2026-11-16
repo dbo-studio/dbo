@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
@@ -15,7 +16,7 @@ import (
 )
 
 func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteRequest) (*dto.AiInlineCompleteResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermAiUse); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiUse); err != nil {
 		return nil, err
 	}
 

@@ -2,6 +2,7 @@ package serviceImportExport
 
 import (
 	"encoding/json"
+	"github.com/dbo-studio/dbo/pkg/permission"
 
 	"github.com/dbo-studio/dbo/internal/service/job/processors"
 	"github.com/dbo-studio/dbo/pkg/logger"
@@ -68,7 +69,7 @@ func (s IImportExportImpl) readUpload(header *multipart.FileHeader) ([]byte, err
 }
 
 func (s IImportExportImpl) ImportPreview(ctx context.Context, req *dto.ImportPreviewRequest) (*dto.ImportPreviewResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataImport); err != nil {
 		return nil, err
 	}
 
@@ -86,7 +87,7 @@ func (s IImportExportImpl) ImportPreview(ctx context.Context, req *dto.ImportPre
 }
 
 func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (*dto.ImportResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermImport); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataImport); err != nil {
 		return nil, err
 	}
 
@@ -126,7 +127,7 @@ func (s IImportExportImpl) Import(ctx context.Context, req *dto.ImportRequest) (
 }
 
 func (s IImportExportImpl) Export(ctx context.Context, req *dto.ExportRequest) (*dto.ExportResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermExport); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataExport); err != nil {
 		return nil, err
 	}
 

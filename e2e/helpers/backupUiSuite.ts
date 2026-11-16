@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { type DbEngine, getDbConfig } from "../fixtures/dbConfigs";
 import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
-import { BackupPage, ObjectTreePage } from "../pages";
+import { BackupPage, ObjectTreePage, SettingsPage } from "../pages";
 import {
   cleanupImportExportSqlite,
   dropTables,
@@ -42,7 +42,10 @@ export function defineBackupUiTests(engine: DbEngine): void {
           });
 
           await test.step("Tool list is shown and offers nothing silently", async () => {
-            await page.getByTestId("backup-nav-tools").click();
+            const settings = new SettingsPage(page);
+            await settings.open();
+            await settings.navigateTo("Backup");
+            await page.getByTestId("settings-tab-tools").click();
             await expect(
               page.getByText("sqlite3", { exact: true }).first(),
             ).toBeVisible();

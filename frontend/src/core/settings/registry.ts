@@ -1,6 +1,5 @@
-import type { UserPermissions } from '@/api/auth/types';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
-import { fullPermissions } from '@/core/auth/permissions';
+import { type Can, PERM } from '@/core/auth/permissions';
 import locales from '@/locales';
 
 export type SettingsNavGroup = 'prefs' | 'workspace';
@@ -178,6 +177,12 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
     keywords: ['backup', 'destination', 's3', 'folder', 'drive', 'dropbox', 'sftp', 'ftp', 'webdav']
   },
   {
+    id: 'backup.tools',
+    sectionId: 8,
+    label: locales.backup_tools,
+    keywords: ['backup', 'tools', 'pg_dump', 'mysqldump', 'mongodump', 'mongorestore', 'download', 'install']
+  },
+  {
     id: 'backup.channels',
     sectionId: 8,
     label: locales.backup_nav_notifications,
@@ -257,15 +262,12 @@ export const SETTINGS_ENTRIES: SettingsEntryDef[] = [
   }
 ];
 
-export function getVisibleSections(
-  isAdmin: boolean,
-  permissions: UserPermissions = fullPermissions
-): SettingsSectionDef[] {
+export function getVisibleSections(isAdmin: boolean, can: Can = () => true): SettingsSectionDef[] {
   return SETTINGS_SECTIONS.filter((section) => {
     if (section.adminOnly && !isAdmin) {
       return false;
     }
-    if (section.id === 3 && !permissions.aiSettings && !permissions.mcpSettings) {
+    if (section.id === 3 && !can(PERM.aiSettings) && !can(PERM.aiMcp)) {
       return false;
     }
     return true;
@@ -275,24 +277,27 @@ export function getVisibleSections(
 export function searchSettingsEntries(
   query: string,
   isAdmin: boolean,
-  permissions: UserPermissions = fullPermissions
+  can: Can = () => true
 ): Array<SettingsEntryDef & { sectionName: string }> {
   const normalized = query.trim().toLowerCase();
   if (!normalized) {
     return [];
   }
 
-  const visibleSectionIds = new Set(getVisibleSections(isAdmin, permissions).map((s) => s.id));
+  const visibleSectionIds = new Set(getVisibleSections(isAdmin, can).map((s) => s.id));
   const sectionNameById = new Map(SETTINGS_SECTIONS.map((s) => [s.id, s.name]));
 
   return SETTINGS_ENTRIES.filter((entry) => {
     if (!visibleSectionIds.has(entry.sectionId)) {
       return false;
     }
-    if (entry.id === 'ai.providers' && !permissions.aiSettings) {
+    if (entry.id === 'ai.providers' && !can(PERM.aiSettings)) {
       return false;
     }
-    if (entry.id === 'ai.mcp' && !permissions.mcpSettings) {
+    if (entry.id === 'backup.tools' && !can(PERM.backupTools)) {
+      return false;
+    }
+    if (entry.id === 'ai.mcp' && !can(PERM.aiMcp)) {
       return false;
     }
     if (entry.instanceAdminOnly && !isAdmin) {

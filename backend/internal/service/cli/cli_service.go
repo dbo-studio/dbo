@@ -6,6 +6,7 @@ package serviceCLI
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"regexp"
 	"strconv"
 	"strings"
@@ -56,7 +57,7 @@ func NewService(cr repository.IConnectionRepo, q serviceQuery.IQueryService, n s
 var _ ICLIService = (*Service)(nil)
 
 func (s *Service) Run(ctx context.Context, req *dto.CliRunRequest) (*dto.CliResult, error) {
-	if err := helper.RequirePermission(ctx, helper.PermCli); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataCli); err != nil {
 		return nil, err
 	}
 

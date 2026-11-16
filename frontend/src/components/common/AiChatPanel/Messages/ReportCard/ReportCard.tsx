@@ -1,4 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { useCan } from '@/hooks/useFeaturePermissions';
+import { PERM } from '@/core/auth/permissions';
 import { useWorkspaceCanvas } from '@/components/common/AgentWorkspace/workspaceCanvas.store';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -13,6 +15,7 @@ const ChartView = lazy(() => import('@/components/common/ChartView/ChartView'));
 
 /** A chart the agent drew, in the chat; Open in canvas shows it large and editable in the workstation. */
 export default function ReportCard({ report }: { report: ChartReport }): JSX.Element {
+  const can = useCan();
   const updateUI = useSettingStore((state) => state.updateUI);
   const showReport = useWorkspaceCanvas((state) => state.showReport);
   const { mutate: save, isPending: saving, data: saved } = useSaveReport();
@@ -35,10 +38,13 @@ export default function ReportCard({ report }: { report: ChartReport }): JSX.Ele
         <Typography variant='caption' sx={{ fontWeight: 600, flex: '1 1 140px', minWidth: 0 }} noWrap>
           {report.title}
         </Typography>
-        <Button variant='text' disabled={saving || !!saved} onClick={() => save(report)} data-testid='ai-report-save'>
-          {saved ? locales.ai_report_saved : locales.ai_report_save}
-        </Button>
-        <PinReportButton report={saved ?? report} />
+        {can(PERM.boardsReports) && (
+          <Button variant='text' disabled={saving || !!saved} onClick={() => save(report)} data-testid='ai-report-save'>
+            {saved ? locales.ai_report_saved : locales.ai_report_save}
+          </Button>
+        )}
+        {/* Pinning saves the report first, so it needs both. */}
+        {can(PERM.boardsReports) && can(PERM.boardsDashboards) && <PinReportButton report={saved ?? report} />}
         <Button variant='text' onClick={open} data-testid='ai-report-open'>
           {locales.ai_report_open}
         </Button>

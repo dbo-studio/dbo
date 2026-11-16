@@ -3,6 +3,7 @@ package serviceAdminUsers
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"strings"
 	"time"
 
@@ -81,23 +82,16 @@ func (s *IAdminUsersServiceImpl) Create(ctx context.Context, req *dto.AdminCreat
 
 	now := time.Now().UTC()
 	role := model.UserRole(req.Role)
-	perms := resolveCreatePermissions(role, req.Permissions)
 	user := &model.User{
-		ID:                   id,
-		Email:                email,
-		PasswordHash:         string(hash),
-		Role:                 role,
-		PermCreateConnection: perms.CreateConnection,
-		PermAiSettings:       perms.AiSettings,
-		PermMcpSettings:      perms.McpSettings,
-		PermCli:              perms.Cli,
-		PermImport:           perms.Import,
-		PermExport:           perms.Export,
-		PermAiUse:            perms.AiUse,
-		MustChangePassword:   true,
-		CreatedAt:            now,
-		UpdatedAt:            now,
+		ID:                 id,
+		Email:              email,
+		PasswordHash:       string(hash),
+		Role:               role,
+		MustChangePassword: true,
+		CreatedAt:          now,
+		UpdatedAt:          now,
 	}
+	user.SetPermissions(resolveCreatePermissions(role, req.Permissions))
 
 	if err := s.users.Create(ctx, user); err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -154,12 +148,12 @@ func (s *IAdminUsersServiceImpl) Update(ctx context.Context, id string, req *dto
 
 		user.Role = newRole
 		if newRole == model.UserRoleAdmin {
-			model.ApplyPermissionFlags(user, model.DefaultAdminPermissionFlags())
+			user.SetPermissions(permission.All())
 		}
 	}
 
 	if req.Permissions != nil && user.Role != model.UserRoleAdmin {
-		model.ApplyPermissionFlags(user, permissionFlagsFromDTO(*req.Permissions))
+		user.SetPermissions(*req.Permissions)
 	}
 
 	if req.Password != nil {
@@ -210,40 +204,16 @@ func (s *IAdminUsersServiceImpl) countAdmins(ctx context.Context) (int, error) {
 	return n, nil
 }
 
-func resolveCreatePermissions(role model.UserRole, requested *dto.UserPermissions) model.UserPermissionFlags {
+func resolveCreatePermissions(role model.UserRole, requested *dto.UserPermissions) map[string]bool {
 	if role == model.UserRoleAdmin {
-		return model.DefaultAdminPermissionFlags()
+		return permission.All()
 	}
 
 	if requested != nil {
-		return permissionFlagsFromDTO(*requested)
+		return *requested
 	}
 
-	return model.DefaultMemberPermissionFlags()
-}
-
-func permissionFlagsFromDTO(perms dto.UserPermissions) model.UserPermissionFlags {
-	return model.UserPermissionFlags{
-		CreateConnection: perms.CreateConnection,
-		AiSettings:       perms.AiSettings,
-		McpSettings:      perms.McpSettings,
-		Cli:              perms.Cli,
-		Import:           perms.Import,
-		Export:           perms.Export,
-		AiUse:            perms.AiUse,
-	}
-}
-
-func permissionsDTO(flags model.UserPermissionFlags) dto.UserPermissions {
-	return dto.UserPermissions{
-		CreateConnection: flags.CreateConnection,
-		AiSettings:       flags.AiSettings,
-		McpSettings:      flags.McpSettings,
-		Cli:              flags.Cli,
-		Import:           flags.Import,
-		Export:           flags.Export,
-		AiUse:            flags.AiUse,
-	}
+	return permission.MemberDefaults()
 }
 
 func toListItem(u *model.User) dto.AdminUserListItem {
@@ -251,7 +221,7 @@ func toListItem(u *model.User) dto.AdminUserListItem {
 		ID:                 u.ID,
 		Email:              u.Email,
 		Role:               string(u.Role),
-		Permissions:        permissionsDTO(u.PermissionFlags()),
+		Permissions:        u.PermissionSet(),
 		MustChangePassword: u.MustChangePassword,
 		TotpEnabled:        u.TotpEnabled(),
 		CreatedAt:          u.CreatedAt.UTC().Format(time.RFC3339),

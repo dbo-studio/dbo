@@ -18,8 +18,9 @@ import {
   CardRowMainStyled,
   CardRowStyled,
   CardStyled,
-  SectionActionsStyled
-} from '../BackupPanel.styled';
+  SectionActionsStyled,
+  SectionHeadStyled
+} from '../../../BackupPanel/BackupPanel.styled';
 
 const DRIVER_LABEL: Record<string, string> = { postgresql: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite' };
 
@@ -45,13 +46,21 @@ export default function ToolsSection(): JSX.Element {
 
   return (
     <>
-      <Box sx={{ display: 'flex' }}>
-        <SectionActionsStyled sx={{ ml: 0 }}>
+      <SectionHeadStyled sx={{ mb: 2 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography color='textTitle' variant='subtitle2' sx={{ fontWeight: 600 }}>
+            {locales.backup_tools}
+          </Typography>
+          <Typography color='textText' variant='body2'>
+            {locales.backup_tools_hint}
+          </Typography>
+        </Box>
+        <SectionActionsStyled>
           <Button variant='outlined' onClick={refresh} data-testid='backup-tools-detect'>
             {locales.backup_tool_detect}
           </Button>
         </SectionActionsStyled>
-      </Box>
+      </SectionHeadStyled>
       {drivers.map((driver) => (
         <DriverCard
           key={driver}

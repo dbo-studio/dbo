@@ -5,7 +5,6 @@ import { FormError } from '@/components/base/FormError/FormError';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import PasswordStrengthMeter from '@/components/common/Auth/PasswordStrengthMeter/PasswordStrengthMeter';
-import { defaultMemberPermissions } from '@/core/auth/defaultPermissions';
 import { adminCreateUserSchema } from '@/core/auth/passwordSchema';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
@@ -15,8 +14,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
 import AdminConnectionShares from './AdminConnectionShares/AdminConnectionShares';
-import AdminUserPermissions from './AdminUserPermissions/AdminUserPermissions';
-import { AdminUserPermissionHeaderCells } from './AdminUserPermissions/AdminUserPermissionCells';
+import PermissionGroups, { usePermissionCatalog, withDefaults } from './AdminUserPermissions/PermissionGroups';
 import AdminUserRow, { adminRoleOptions } from './AdminUserRow/AdminUserRow';
 import {
   AdministrationFormFooterStyled,
@@ -28,6 +26,7 @@ export default function AdministrationPanel(): JSX.Element {
   const selfId = useAuthStore((s) => s.user?.id);
   const applyStatus = useAuthStore((s) => s.applyStatus);
   const queryClient = useQueryClient();
+  const catalog = usePermissionCatalog();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -76,14 +75,14 @@ export default function AdministrationPanel(): JSX.Element {
       email: '',
       password: '',
       role: 'member',
-      permissions: defaultMemberPermissions
+      permissions: {}
     },
     onSubmit: async ({ value, formApi }): Promise<void> => {
       await createMutation.mutateAsync({
         email: value.email,
         password: value.password,
         role: value.role,
-        permissions: value.role === 'admin' ? undefined : value.permissions
+        permissions: value.role === 'admin' || !catalog ? undefined : withDefaults(catalog, value.permissions)
       });
       formApi.reset();
     }
@@ -168,7 +167,7 @@ export default function AdministrationPanel(): JSX.Element {
                     <Typography color='textTitle' variant='caption' sx={{ display: 'block', mb: 0.75 }}>
                       {locales.admin_permissions}
                     </Typography>
-                    <AdminUserPermissions
+                    <PermissionGroups
                       value={field.state.value}
                       testIdPrefix='admin-create-perm'
                       onChange={(next): void => field.handleChange(next)}
@@ -215,7 +214,7 @@ export default function AdministrationPanel(): JSX.Element {
               <TableRow>
                 <TableCell>{locales.email}</TableCell>
                 <TableCell>{locales.admin_role}</TableCell>
-                <AdminUserPermissionHeaderCells />
+                <TableCell>{locales.admin_permissions}</TableCell>
                 <TableCell>{locales.admin_status}</TableCell>
                 <TableCell>{locales.admin_2fa}</TableCell>
                 <TableCell align='right'>{locales.admin_actions}</TableCell>

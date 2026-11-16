@@ -30,6 +30,7 @@ var toolsByDriver = []struct {
 	{"postgresql", []string{"pg_dump", "pg_restore", "psql"}},
 	{"mysql", []string{"mysqldump", "mysql"}},
 	{"sqlite", []string{"sqlite3"}},
+	{"mongodb", []string{"mongodump", "mongorestore"}},
 }
 
 var versionPattern = regexp.MustCompile(`\d+(\.\d+)+`)

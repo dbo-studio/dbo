@@ -5,7 +5,7 @@ import Modal from '@/components/base/Modal/Modal';
 import ModalFooter from '@/components/base/Modal/ModalFooter/ModalFooter';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { SelectInputOption } from '@/components/base/SelectInput/types';
-import { isHostSqlDriver } from '@/core/db/connectionAliases';
+import { isHostSqlDriver, isMongoDriver } from '@/core/db/connectionAliases';
 import { resolveSafeModeGate } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import type { ConnectionType } from '@/types';
@@ -139,7 +139,7 @@ export default function RestoreConfirm({
           onChange={(e) => setTyped(e.target.value)}
         />
         {/* SQL Server and ClickHouse restore into the connection's own database. */}
-        {!isSqlite && !isHostSqlDriver(target?.type) && (
+        {!isSqlite && !isHostSqlDriver(target?.type) && !isMongoDriver(target?.type) && (
           <FormControlLabel
             control={<Checkbox checked={createDatabase} onChange={(e) => setCreateDatabase(e.target.checked)} />}
             label={locales.backup_restore_create_db}

@@ -1,4 +1,6 @@
 import { variables } from '@/core/theme/variables';
+import { useCan } from '@/hooks/useFeaturePermissions';
+import { PERM } from '@/core/auth/permissions';
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { QuestionType } from '@/api/question/types';
@@ -12,6 +14,7 @@ import { useWorkspaceCanvas } from '../workspaceCanvas.store';
 /** Saved reports and boards of the connection; opening a report runs it again on the Report tab, a board opens on the Board tab. */
 export default function SavedReports(): JSX.Element {
   const queryClient = useQueryClient();
+  const can = useCan();
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const showReport = useWorkspaceCanvas((state) => state.showReport);
   const showBoard = useWorkspaceCanvas((state) => state.showBoard);
@@ -20,7 +23,7 @@ export default function SavedReports(): JSX.Element {
     queryFn: () => api.dashboard.getDashboards(Number(connectionId)),
     // Lists change behind this screen (the agent saves and pins), so a stale one reloads on open.
     refetchOnMount: true,
-    enabled: !!connectionId
+    enabled: !!connectionId && can(PERM.boardsDashboards)
   });
   const { mutate: removeBoard } = useMutation({
     mutationFn: (id: number) => api.dashboard.deleteDashboard(id),
@@ -31,7 +34,7 @@ export default function SavedReports(): JSX.Element {
     queryFn: () => api.question.getQuestions(Number(connectionId)),
     // Lists change behind this screen (the agent saves and pins), so a stale one reloads on open.
     refetchOnMount: true,
-    enabled: !!connectionId
+    enabled: !!connectionId && can(PERM.boardsReports)
   });
 
   const { mutate: open } = useMutation({
@@ -58,42 +61,50 @@ export default function SavedReports(): JSX.Element {
 
   return (
     <Box sx={{ px: 1, pb: 1 }} data-testid='ai-saved-reports'>
-      <Typography variant='subtitle2' sx={{ px: 0.5, py: 1 }}>
-        {locales.ai_reports}
-      </Typography>
-      {reports?.length === 0 && (
-        <Typography variant='caption' color='textSubdued' sx={{ px: 0.5 }}>
-          {locales.ai_reports_empty}
-        </Typography>
+      {can(PERM.boardsReports) && (
+        <>
+          <Typography variant='subtitle2' sx={{ px: 0.5, py: 1 }}>
+            {locales.ai_reports}
+          </Typography>
+          {reports?.length === 0 && (
+            <Typography variant='caption' color='textSubdued' sx={{ px: 0.5 }}>
+              {locales.ai_reports_empty}
+            </Typography>
+          )}
+          {reports?.map((report) => (
+            <ListRow
+              key={report.id}
+              label={report.name}
+              onOpen={() => open(report)}
+              onDelete={() => remove(report.id)}
+              deleteLabel={locales.ai_report_delete}
+              testId='ai-saved-report'
+            />
+          ))}
+        </>
       )}
-      {reports?.map((report) => (
-        <ListRow
-          key={report.id}
-          label={report.name}
-          onOpen={() => open(report)}
-          onDelete={() => remove(report.id)}
-          deleteLabel={locales.ai_report_delete}
-          testId='ai-saved-report'
-        />
-      ))}
-      <Typography variant='subtitle2' sx={{ px: 0.5, py: 1 }}>
-        {locales.ai_boards}
-      </Typography>
-      {boards?.length === 0 && (
-        <Typography variant='caption' color='textSubdued' sx={{ px: 0.5 }}>
-          {locales.ai_boards_empty}
-        </Typography>
+      {can(PERM.boardsDashboards) && (
+        <>
+          <Typography variant='subtitle2' sx={{ px: 0.5, py: 1 }}>
+            {locales.ai_boards}
+          </Typography>
+          {boards?.length === 0 && (
+            <Typography variant='caption' color='textSubdued' sx={{ px: 0.5 }}>
+              {locales.ai_boards_empty}
+            </Typography>
+          )}
+          {boards?.map((board) => (
+            <ListRow
+              key={board.id}
+              label={`${board.name} · ${board.cards.length}`}
+              onOpen={() => showBoard(board.id)}
+              onDelete={() => removeBoard(board.id)}
+              deleteLabel={locales.ai_board_delete}
+              testId='ai-board-item'
+            />
+          ))}
+        </>
       )}
-      {boards?.map((board) => (
-        <ListRow
-          key={board.id}
-          label={`${board.name} · ${board.cards.length}`}
-          onOpen={() => showBoard(board.id)}
-          onDelete={() => removeBoard(board.id)}
-          deleteLabel={locales.ai_board_delete}
-          testId='ai-board-item'
-        />
-      ))}
     </Box>
   );
 }

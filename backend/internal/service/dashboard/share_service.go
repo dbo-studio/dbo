@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"net/http"
 	"strconv"
 	"strings"
@@ -149,6 +150,10 @@ func hashPassword(password string) (string, error) {
 }
 
 func (s *IShareServiceImpl) List(ctx context.Context, dashboardID uint) (*dto.DashboardShareListResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	out := &dto.DashboardShareListResponse{Available: s.available(), Items: []dto.DashboardShareResponse{}}
 
 	if _, err := s.requireBoard(ctx, dashboardID); err != nil {
@@ -168,6 +173,10 @@ func (s *IShareServiceImpl) List(ctx context.Context, dashboardID uint) (*dto.Da
 }
 
 func (s *IShareServiceImpl) Create(ctx context.Context, dashboardID uint, req *dto.DashboardShareCreateRequest) (*dto.DashboardShareResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	if !s.available() {
 		return nil, apperror.BadRequest(errShareUnavailable)
 	}
@@ -209,6 +218,10 @@ func (s *IShareServiceImpl) Create(ctx context.Context, dashboardID uint, req *d
 }
 
 func (s *IShareServiceImpl) Update(ctx context.Context, dashboardID, shareID uint, req *dto.DashboardShareUpdateRequest) (*dto.DashboardShareResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	share, err := s.find(ctx, dashboardID, shareID)
 	if err != nil {
 		return nil, err
@@ -248,6 +261,10 @@ func (s *IShareServiceImpl) Update(ctx context.Context, dashboardID, shareID uin
 }
 
 func (s *IShareServiceImpl) Revoke(ctx context.Context, dashboardID, shareID uint) (*dto.DashboardShareResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	share, err := s.find(ctx, dashboardID, shareID)
 	if err != nil {
 		return nil, err
@@ -282,6 +299,10 @@ func (s *IShareServiceImpl) dropCached(shareID uint) {
 }
 
 func (s *IShareServiceImpl) Visits(ctx context.Context, dashboardID, shareID uint) ([]dto.DashboardShareVisitResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	if _, err := s.find(ctx, dashboardID, shareID); err != nil {
 		return nil, err
 	}

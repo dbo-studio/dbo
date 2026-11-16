@@ -110,11 +110,47 @@ func (p *RestoreProcessor) Process(ctx context.Context, job *model.Job) error {
 		return p.restoreSQLite(ctx, job, connection, artifact)
 	}
 
+	if databaseContract.IsMongo(connection.ConnectionType) {
+		return p.restoreMongo(ctx, job, connection, &jobData, artifact)
+	}
+
 	if databaseContract.IsHostSQL(connection.ConnectionType) {
 		return p.restoreHostSQL(ctx, job, connection, &jobData, artifact)
 	}
 
 	return p.restoreSQL(ctx, job, connection, &jobData, artifact)
+}
+
+// restoreMongo loads a mongodump archive with mongorestore. Existing documents with the same _id are
+// kept, not overwritten: a restore adds what is missing.
+func (p *RestoreProcessor) restoreMongo(ctx context.Context, job *model.Job, connection *model.Connection, jobData *dto.RestoreJob, artifact *model.BackupArtifact) error {
+	if !strings.HasSuffix(artifact.FileName, ".archive") {
+		return errors.New("this backup is not a MongoDB archive")
+	}
+
+	password, err := p.secrets.GetConnectionPassword(ctx, jobData.OwnerID, connection.ID)
+	if err != nil {
+		return err
+	}
+
+	cmd, err := serviceBackup.PlanMongoRestore(ctx, connection, password, artifact.Database, jobData.Database, artifact.FilePath)
+	if errors.Is(err, serviceBackup.ErrNativeUnavailable) {
+		return fmt.Errorf("%w: %s", apperror.ErrRestoreToolMissing, err.Error())
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if err := p.jobManager.UpdateJobProgress(ctx, job, 20, fmt.Sprintf("Running %s %s", cmd.Tool, cmd.Version)); err != nil {
+		return err
+	}
+
+	if _, err := cmd.Run(ctx); err != nil {
+		return err
+	}
+
+	return p.jobManager.UpdateJobProgress(ctx, job, 100, "Restore completed successfully")
 }
 
 // maxHostRestoreBytes bounds the script read into memory by the built-in restore.

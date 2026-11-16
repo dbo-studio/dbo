@@ -1,64 +1,49 @@
-import type { AuthUserIdentity, UserPermissions } from '@/api/auth/types';
+import type { AuthUserIdentity } from '@/api/auth/types';
 
-export const fullPermissions: UserPermissions = {
-  createConnection: true,
-  aiSettings: true,
-  mcpSettings: true,
-  cli: true,
-  import: true,
-  export: true,
-  aiUse: true
-};
+/** Permission keys; the backend's package permission is the source of truth for what exists and how it is grouped. */
+export const PERM = {
+  connectionCreate: 'connection.create',
+  dataImport: 'data.import',
+  dataExport: 'data.export',
+  dataCli: 'data.cli',
+  aiUse: 'ai.use',
+  aiSettings: 'ai.settings',
+  aiMcp: 'ai.mcp',
+  backupCreate: 'backup.create',
+  backupRestore: 'backup.restore',
+  backupTools: 'backup.tools',
+  boardsReports: 'boards.reports',
+  boardsDashboards: 'boards.dashboards',
+  boardsShare: 'boards.share'
+} as const;
 
-export const noPermissions: UserPermissions = {
-  createConnection: false,
-  aiSettings: false,
-  mcpSettings: false,
-  cli: false,
-  import: false,
-  export: false,
-  aiUse: false
-};
+export type Can = (key: string) => boolean;
 
-export function resolvePermissions(mode: string, user?: AuthUserIdentity): UserPermissions {
+/**
+ * What the signed-in user may do. Outside login mode (desktop, no accounts) everything is allowed.
+ * The server enforces the same permissions; this only hides what would be refused.
+ */
+export function makeCan(mode: string, user?: AuthUserIdentity): Can {
   if (mode !== 'local') {
-    return fullPermissions;
+    return () => true;
   }
 
   if (!user) {
-    return noPermissions;
+    return () => false;
   }
 
-  return user.permissions ?? (user.role === 'admin' ? fullPermissions : noPermissions);
+  return (key) => user.permissions?.[key] ?? user.role === 'admin';
 }
 
-export function canCreateConnection(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).createConnection;
-}
-
-export function canManageAiSettings(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).aiSettings;
-}
-
-export function canManageMcpSettings(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).mcpSettings;
-}
-
-export function canUseCli(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).cli;
-}
-
-export function canImport(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).import;
-}
-
-export function canExport(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).export;
-}
-
-export function canUseAi(mode: string, user?: AuthUserIdentity): boolean {
-  return resolvePermissions(mode, user).aiUse;
-}
+export const canCreateConnection = (mode: string, user?: AuthUserIdentity): boolean =>
+  makeCan(mode, user)(PERM.connectionCreate);
+export const canManageAiSettings = (mode: string, user?: AuthUserIdentity): boolean =>
+  makeCan(mode, user)(PERM.aiSettings);
+export const canManageMcpSettings = (mode: string, user?: AuthUserIdentity): boolean => makeCan(mode, user)(PERM.aiMcp);
+export const canUseCli = (mode: string, user?: AuthUserIdentity): boolean => makeCan(mode, user)(PERM.dataCli);
+export const canImport = (mode: string, user?: AuthUserIdentity): boolean => makeCan(mode, user)(PERM.dataImport);
+export const canExport = (mode: string, user?: AuthUserIdentity): boolean => makeCan(mode, user)(PERM.dataExport);
+export const canUseAi = (mode: string, user?: AuthUserIdentity): boolean => makeCan(mode, user)(PERM.aiUse);
 
 export function isInstanceAdmin(mode: string, user?: AuthUserIdentity): boolean {
   return mode !== 'local' || user?.role === 'admin';

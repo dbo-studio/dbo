@@ -233,7 +233,7 @@ export default function AppFooter(): JSX.Element {
         <Typography variant='subtitle2' color='textTitle' sx={{ px: 1.5, pt: 1.25 }}>
           {locales.status_jobs}
         </Typography>
-        <RunningJobs jobs={running} />
+        <RunningJobs jobs={running} onSelect={() => setAnchor(null)} />
       </Popover>
     </AppFooterStyled>
   );

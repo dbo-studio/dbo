@@ -3,6 +3,7 @@ import type { BackupArtifactType, BackupScheduleType } from '@/api/backup/types'
 import { openBackup } from '@/core/backup/openBackup';
 import { tools } from '@/core/utils/tools';
 import type { BackupTabType } from '@/types';
+import { supportsBackup } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
@@ -29,7 +30,8 @@ const statusColor = (status: BackupScheduleType['lastStatus']): 'success' | 'err
 export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.Element {
   const queryClient = useQueryClient();
   const confirm = useConfirmModalStore((s) => s.danger);
-  const connections = useConnectionStore((s) => s.connections) ?? [];
+  // Redis has nothing to dump, so it is not offered.
+  const connections = (useConnectionStore((s) => s.connections) ?? []).filter((c) => supportsBackup(c.type));
   // Which schedule is open lives on the tab, so the sidebar list and this page always agree.
   const [editing, setEditing] = useState<number | null>(null);
   const [seen, setSeen] = useState(tab.scheduleId);

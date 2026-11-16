@@ -3,6 +3,7 @@ package serviceAiProvider
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"net/url"
 	"strings"
 
@@ -44,7 +45,7 @@ func (i *IAiProviderServiceImpl) Find(ctx context.Context, id uint) (*dto.AiProv
 }
 
 func (i *IAiProviderServiceImpl) Update(ctx context.Context, id uint, dto *dto.AiProviderUpdateRequest) (*dto.AiProviderDetailResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermAiSettings); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiSettings); err != nil {
 		return nil, err
 	}
 
@@ -110,7 +111,7 @@ func applyDefaultModel(provider *model.AiProvider, req *dto.AiProviderUpdateRequ
 }
 
 func (i *IAiProviderServiceImpl) Models(ctx context.Context, id uint, req *dto.AiProviderModelsRequest) (*dto.AiProviderModelsResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermAiSettings); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiSettings); err != nil {
 		return nil, err
 	}
 

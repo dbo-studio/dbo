@@ -17,6 +17,7 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
+	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceBackup "github.com/dbo-studio/dbo/internal/service/backup"
@@ -262,6 +263,18 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 		return true, p.sqliteVacuumInto(ctx, job, connection, artifact, setFile)
 	}
 
+	if databaseContract.IsMongo(connection.ConnectionType) {
+		setFile("archive")
+
+		dump, err := serviceBackup.PlanMongoDump(ctx, connection, password, jobData.Database, artifact.FilePath)
+		if err != nil {
+			// There is no built-in dump for MongoDB, so a missing tool is a failure, not a fallback.
+			return true, err
+		}
+
+		return true, p.runNativeDump(ctx, job, dump, artifact)
+	}
+
 	setFile("sql")
 
 	dump, err := serviceBackup.PlanNativeDump(ctx, connection, password, jobData.Database, jobData.Schema, artifact.FilePath)
@@ -273,6 +286,11 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 		return true, err
 	}
 
+	return true, p.runNativeDump(ctx, job, dump, artifact)
+}
+
+// runNativeDump runs a planned dump command and completes the artifact it wrote.
+func (p *BackupProcessor) runNativeDump(ctx context.Context, job *model.Job, dump *serviceBackup.NativeCommand, artifact *model.BackupArtifact) error {
 	logLine(artifact, "Using %s %s", dump.Tool, dump.Version)
 
 	artifact.Method = model.BackupMethodNative
@@ -280,19 +298,19 @@ func (p *BackupProcessor) runNative(ctx context.Context, job *model.Job, connect
 	artifact.ToolVersion = dump.Version
 
 	if err := p.jobManager.UpdateJobProgress(ctx, job, 20, fmt.Sprintf("Running %s %s", dump.Tool, dump.Version)); err != nil {
-		return true, err
+		return err
 	}
 
 	stderr, err := dump.Run(ctx)
 	if err != nil {
-		return true, err
+		return err
 	}
 
 	if stderr != "" {
 		logLine(artifact, "%s warnings: %s", dump.Tool, strings.TrimSpace(stderr))
 	}
 
-	return true, p.completeFile(ctx, job, artifact)
+	return p.completeFile(ctx, job, artifact)
 }
 
 // sqliteVacuumInto copies the database with SQLite's own consistent snapshot,

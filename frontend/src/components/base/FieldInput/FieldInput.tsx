@@ -1,5 +1,7 @@
 import type { EventFor } from '@/types';
-import { Box, Typography, useTheme } from '@mui/material';
+import locales from '@/locales';
+import { Box, IconButton, InputAdornment, Typography, useTheme } from '@mui/material';
+import { Eye, EyeOff } from 'lucide-react';
 import type React from 'react';
 import { type JSX, useState } from 'react';
 import { FieldInputInputStyled, FieldInputLabelRowStyled } from './FieldInput.styled';
@@ -31,6 +33,9 @@ export default function FieldInput({
 }: FieldInputProps & { ref?: React.Ref<HTMLInputElement> }): JSX.Element {
   const theme = useTheme();
   const [value, setValue] = useState(() => valueProp as string);
+  const [revealed, setRevealed] = useState(false);
+  // Every password field gets an eye; callers that bring their own end adornment keep it.
+  const hasToggle = type === 'password' && !props.endAdornment;
   const [prevSync, setPrevSync] = useState({ type, value: valueProp });
 
   if (prevSync.type !== type || prevSync.value !== valueProp) {
@@ -76,8 +81,27 @@ export default function FieldInput({
         error={error}
         margin={margin}
         sx={sx}
-        type={type}
+        type={hasToggle && revealed ? 'text' : type}
         {...props}
+        endAdornment={
+          hasToggle ? (
+            <InputAdornment position='end'>
+              <IconButton
+                edge='end'
+                tabIndex={-1}
+                aria-label={revealed ? locales.ai_key_hide : locales.ai_key_show}
+                aria-pressed={revealed}
+                disabled={props.disabled}
+                onMouseDown={(e): void => e.preventDefault()}
+                onClick={(): void => setRevealed((r) => !r)}
+              >
+                {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
+              </IconButton>
+            </InputAdornment>
+          ) : (
+            props.endAdornment
+          )
+        }
         inputProps={{ ...PASSWORD_MANAGER_OFF, ...props.inputProps }}
       />
       {helpertext && (

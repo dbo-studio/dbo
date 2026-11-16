@@ -3,6 +3,8 @@ package serviceQuestion
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/permission"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -71,6 +73,10 @@ func (s IQuestionServiceImpl) find(ctx context.Context, id uint) (*model.Questio
 }
 
 func (s IQuestionServiceImpl) Index(ctx context.Context, req *dto.QuestionListRequest) ([]dto.QuestionResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireConnection(ctx, req.ConnectionID); err != nil {
 		return nil, err
 	}
@@ -84,6 +90,10 @@ func (s IQuestionServiceImpl) Index(ctx context.Context, req *dto.QuestionListRe
 }
 
 func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreateRequest) (*dto.QuestionResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireConnection(ctx, req.ConnectionID); err != nil {
 		return nil, err
 	}
@@ -123,6 +133,10 @@ func (s IQuestionServiceImpl) Create(ctx context.Context, req *dto.QuestionCreat
 }
 
 func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.QuestionUpdateRequest) (*dto.QuestionResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	question, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -168,6 +182,10 @@ func (s IQuestionServiceImpl) Update(ctx context.Context, id uint, req *dto.Ques
 }
 
 func (s IQuestionServiceImpl) Delete(ctx context.Context, id uint) error {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return err
+	}
+
 	question, err := s.find(ctx, id)
 	if err != nil {
 		return err
@@ -181,6 +199,10 @@ func (s IQuestionServiceImpl) Delete(ctx context.Context, id uint) error {
 }
 
 func (s IQuestionServiceImpl) Run(ctx context.Context, id uint, params map[string]string) (json.RawMessage, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	question, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -194,6 +216,10 @@ func (s IQuestionServiceImpl) Run(ctx context.Context, id uint, params map[strin
 }
 
 func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPreviewRequest) (json.RawMessage, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	return s.run(ctx, serviceDbtools.ToolContext{
 		ConnectionID: req.ConnectionID,
 		Database:     req.Database,
@@ -202,6 +228,10 @@ func (s IQuestionServiceImpl) Preview(ctx context.Context, req *dto.QuestionPrev
 }
 
 func (s IQuestionServiceImpl) FieldValues(ctx context.Context, req *dto.QuestionFieldValuesRequest) (json.RawMessage, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsReports); err != nil {
+		return nil, err
+	}
+
 	if conn, err := s.connectionRepo.Find(ctx, req.ConnectionID); err == nil && databaseContract.IsNoSQL(conn.ConnectionType) {
 		return nil, apperror.BadRequest(errNoSQLFilters)
 	}

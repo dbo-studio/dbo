@@ -8,6 +8,8 @@ import { useContextMenu, useCurrentConnection, useSelectedTab } from '@/hooks';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useVirtualList } from '@/hooks/useVirtualList';
 import locales from '@/locales';
+import { useSettingStore } from '@/store/settingStore/setting.store';
+import { useConnectionMenu } from '../Connections/ConnectionItem/ConnectionItemContextMenu/useConnectionMenu';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { TreeNodeType } from '@/types/Tree';
 import { alpha, Box, LinearProgress, useTheme } from '@mui/material';
@@ -119,6 +121,13 @@ export default function ObjectTreeView(): JSX.Element {
       reloadTree(true).catch(() => undefined);
     }
   }, [connectionId, tree, treeError, isLoading, reloadTree]);
+
+  // A failed load of the previous connection must not keep this one's tree empty.
+  useEffect(() => {
+    if (connectionId && useTreeStore.getState().treeError && !useTreeStore.getState().tree[connectionId]) {
+      reloadTree(true).catch(() => undefined);
+    }
+  }, [connectionId, reloadTree]);
 
   const search = useTreeSearch(connectionId, searchTerm);
   // While searching, server hits from unopened folders are merged into the loaded tree; the filter then shows only matches.
@@ -285,6 +294,34 @@ export default function ObjectTreeView(): JSX.Element {
   );
 
   const { actionDetection, renameNode, dropNodes } = useActionDetection(noExpand);
+  const connectionMenu = useConnectionMenu(currentConnection);
+  const updateUI = useSettingStore((state) => state.updateUI);
+  const newConnectionItem = useMemo<MenuType>(
+    () => ({
+      name: locales.new_connection,
+      icon: 'plus',
+      action: (): void => updateUI({ showAddConnection: true }),
+      closeBeforeAction: true
+    }),
+    [updateUI]
+  );
+  const refreshItem = useMemo<MenuType>(
+    () => ({
+      name: locales.refresh,
+      icon: 'refresh',
+      action: (): void => void reloadTree(true).catch(() => undefined),
+      closeBeforeAction: true
+    }),
+    [reloadTree]
+  );
+  const connectionNodeMenu = useMemo<MenuType[]>(
+    () => [
+      ...connectionMenu.filter((item) => item.name === locales.edit || item.name === locales.delete),
+      newConnectionItem,
+      refreshItem
+    ],
+    [connectionMenu, newConnectionItem, refreshItem]
+  );
   const buildMenu = useTreeNodeMenuBuilder(actionDetection, {
     onRename: (node) => setRenamingId(node.id),
     onDropMany: (nodes) => {
@@ -370,10 +407,20 @@ export default function ObjectTreeView(): JSX.Element {
       // Right-clicking outside the multi-selection acts on that one row only.
       const inSelection = selectedIds.has(node.id);
       if (!inSelection) setSelectedIds(EMPTY_SET);
-      setMenu(buildMenu(node, inSelection ? selectedNodes : [node]));
+      // The root node is the connection itself: offer connection actions, not object actions.
+      setMenu(node.id === tree?.id ? connectionNodeMenu : buildMenu(node, inSelection ? selectedNodes : [node]));
       handleContextMenu(event as React.MouseEvent);
     },
-    [buildMenu, handleContextMenu, selectedIds, selectedNodes]
+    [buildMenu, connectionNodeMenu, handleContextMenu, selectedIds, selectedNodes, tree?.id]
+  );
+
+  const handleEmptyContextMenu = useCallback(
+    (event: React.MouseEvent): void => {
+      setMenuFromKeyboard(false);
+      setMenu([newConnectionItem, refreshItem]);
+      handleContextMenu(event);
+    },
+    [handleContextMenu, newConnectionItem, refreshItem]
   );
 
   const openMenuFromKeyboard = useCallback(
@@ -607,6 +654,7 @@ export default function ObjectTreeView(): JSX.Element {
         ref={scrollContainerRef}
         role='tree'
         aria-label={currentConnection?.name}
+        onContextMenu={handleEmptyContextMenu}
         onKeyDown={handleTreeKeyDown}
         onFocus={(event): void => {
           setHasFocus(true);

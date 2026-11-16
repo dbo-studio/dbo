@@ -200,7 +200,10 @@ export default function UriSqlForm({
                                   }
                                 }}
                                 onBlur={(): void => {
-                                  if (field.state.value.trim() && !syncFromUri(form, dialect, field.state.value, { redact: true, warn: true })) {
+                                  if (
+                                    field.state.value.trim() &&
+                                    !syncFromUri(form, dialect, field.state.value, { redact: true, warn: true })
+                                  ) {
                                     toast.error(locales.uri_invalid);
                                   }
                                 }}
@@ -211,82 +214,85 @@ export default function UriSqlForm({
                         </>
                       ) : (
                         <>
-                      <ConnectionFormRowStyled hostPort>
-                        <form.Field name='host'>
-                          {(field): JSX.Element => (
-                            <Box>
-                              <FieldInput
-                                name='host'
-                                placeholder='localhost'
-                                value={field.state.value}
-                                error={field.state.meta.errors.length > 0}
-                                label={locales.host}
-                                onChange={(e): void => field.handleChange(e.target.value)}
-                              />
-                              <FormError mb={1} errors={field.state.meta.errors} />
-                            </Box>
-                          )}
-                        </form.Field>
+                          <ConnectionFormRowStyled hostPort>
+                            <form.Field name='host'>
+                              {(field): JSX.Element => (
+                                <Box>
+                                  <FieldInput
+                                    name='host'
+                                    placeholder='localhost'
+                                    value={field.state.value}
+                                    error={field.state.meta.errors.length > 0}
+                                    label={locales.host}
+                                    onChange={(e): void => field.handleChange(e.target.value)}
+                                  />
+                                  <FormError mb={1} errors={field.state.meta.errors} />
+                                </Box>
+                              )}
+                            </form.Field>
 
-                        <form.Field name='port'>
-                          {(field): JSX.Element => (
-                            <Box>
-                              <FieldInput
-                                name='port'
-                                placeholder={DEFAULT_PORTS[dialect]}
-                                value={field.state.value}
-                                error={field.state.meta.errors.length > 0}
-                                label={locales.port}
-                                type='number'
-                                onChange={(e): void => field.handleChange(e.target.value)}
-                              />
-                              <FormError mb={1} errors={field.state.meta.errors} />
-                            </Box>
-                          )}
-                        </form.Field>
-                      </ConnectionFormRowStyled>
-                      <form.Field name='database'>
-                        {(field): JSX.Element => (
-                          <>
-                            <FieldInput
-                              name='database'
-                              disabled={useUri}
-                              value={field.state.value}
-                              error={field.state.meta.errors.length > 0}
-                              label={locales.database}
-                              fullWidth={true}
-                              onChange={(e): void => field.handleChange(e.target.value)}
-                            />
-                            <FormError mb={1} errors={field.state.meta.errors} />
-                          </>
-                        )}
-                      </form.Field>
-                                            </>
+                            <form.Field name='port'>
+                              {(field): JSX.Element => (
+                                <Box>
+                                  <FieldInput
+                                    name='port'
+                                    placeholder={DEFAULT_PORTS[dialect]}
+                                    value={field.state.value}
+                                    error={field.state.meta.errors.length > 0}
+                                    label={locales.port}
+                                    type='number'
+                                    onChange={(e): void => field.handleChange(e.target.value)}
+                                  />
+                                  <FormError mb={1} errors={field.state.meta.errors} />
+                                </Box>
+                              )}
+                            </form.Field>
+                          </ConnectionFormRowStyled>
+                          <form.Field name='database'>
+                            {(field): JSX.Element => (
+                              <>
+                                <FieldInput
+                                  name='database'
+                                  disabled={useUri}
+                                  value={field.state.value}
+                                  error={field.state.meta.errors.length > 0}
+                                  label={locales.database}
+                                  fullWidth={true}
+                                  onChange={(e): void => field.handleChange(e.target.value)}
+                                />
+                                <FormError mb={1} errors={field.state.meta.errors} />
+                              </>
+                            )}
+                          </form.Field>
+                        </>
                       )}
                     </ConnectionFormSection>
                     <ConnectionFormSection title={locales.connection_section_auth}>
                       <ConnectionFormRowStyled>
-                        {!useUri && (<form.Field name='username'>
-                          {(field): JSX.Element => (
-                            <Box>
-                              <FieldInput
-                                mb={1}
-                                name='username'
-                                value={field.state.value}
-                                error={field.state.meta.errors.length > 0}
-                                label={locales.username}
-                                onChange={(e): void => field.handleChange(e.target.value)}
-                              />
-                              <FormError mb={1} errors={field.state.meta.errors} />
-                            </Box>
-                          )}
-                        </form.Field>)}
+                        {!useUri && (
+                          <form.Field name='username'>
+                            {(field): JSX.Element => (
+                              <Box>
+                                <FieldInput
+                                  mb={1}
+                                  name='username'
+                                  value={field.state.value}
+                                  error={field.state.meta.errors.length > 0}
+                                  label={locales.username}
+                                  onChange={(e): void => field.handleChange(e.target.value)}
+                                />
+                                <FormError mb={1} errors={field.state.meta.errors} />
+                              </Box>
+                            )}
+                          </form.Field>
+                        )}
 
                         <form.Field name='password'>
                           {(field): JSX.Element => (
                             <Box>
                               <FieldInput
                                 name='password'
+                                type='password'
                                 value={field.state.value}
                                 error={field.state.meta.errors.length > 0}
                                 label={locales.password}
@@ -318,7 +324,6 @@ export default function UriSqlForm({
                   </>
                 )}
               </form.Subscribe>
-
             </>
           }
           ssh={

@@ -4,7 +4,9 @@ import type { MenuType } from '@/components/base/ContextMenu/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconProps } from '@/components/base/CustomIcon/types';
 import Search from '@/components/base/Search/Search';
+import { PERM } from '@/core/auth/permissions';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
+import { useCan } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { Box, IconButton, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -19,6 +21,9 @@ type Kind = 'dashboard' | 'report';
 export default function Boards(): JSX.Element {
   const connection = useCurrentConnection();
   const connectionId = connection?.id;
+  const can = useCan();
+  const canDashboards = can(PERM.boardsDashboards);
+  const canReports = can(PERM.boardsReports);
   const run = useDashboardCommands();
   const [search, setSearch] = useState('');
   const [menu, setMenu] = useState<MenuType[]>([]);
@@ -27,17 +32,17 @@ export default function Boards(): JSX.Element {
   const dashboards = useQuery({
     queryKey: ['dashboards', connectionId],
     queryFn: () => api.dashboard.getDashboards(Number(connectionId)),
-    enabled: !!connectionId
+    enabled: !!connectionId && canDashboards
   });
   const reports = useQuery({
     queryKey: ['questions', connectionId],
     queryFn: () => api.question.getQuestions(Number(connectionId)),
-    enabled: !!connectionId
+    enabled: !!connectionId && canReports
   });
 
   const refresh = (): void => {
-    void dashboards.refetch();
-    void reports.refetch();
+    if (canDashboards) void dashboards.refetch();
+    if (canReports) void reports.refetch();
   };
 
   const command = (name: DashboardCommand, item?: Item, kind?: Kind) => (): void =>
@@ -91,48 +96,52 @@ export default function Boards(): JSX.Element {
       </Stack>
 
       <BoardsListStyled>
-        {dashboards.isPending || reports.isPending ? (
+        {(canDashboards && dashboards.isPending) || (canReports && reports.isPending) ? (
           <LinearProgress sx={{ mt: 1 }} />
         ) : (
           <>
-            <Section
-              kind='dashboard'
-              title={locales.dashboards}
-              icon='layout'
-              items={filter(dashboards.data)}
-              actions={[
-                {
-                  label: locales.dashboard_new,
-                  icon: 'plus',
-                  testId: 'boards-new-dashboard',
-                  onClick: command('newDashboard')
-                },
-                {
-                  label: locales.dashboard_import,
-                  icon: 'import',
-                  testId: 'boards-import-dashboard',
-                  onClick: command('importDashboard')
-                }
-              ]}
-              onOpen={(item) => command('openDashboard', item, 'dashboard')()}
-              onMenu={(event, item) => openMenu(event, itemMenu('dashboard', item))}
-            />
-            <Section
-              kind='report'
-              title={locales.reports}
-              icon='chart'
-              items={filter(reports.data)}
-              actions={[
-                {
-                  label: locales.question_new,
-                  icon: 'plus',
-                  testId: 'boards-new-report',
-                  onClick: command('newReport')
-                }
-              ]}
-              onOpen={(item) => command('openReport', item, 'report')()}
-              onMenu={(event, item) => openMenu(event, itemMenu('report', item))}
-            />
+            {canDashboards && (
+              <Section
+                kind='dashboard'
+                title={locales.dashboards}
+                icon='layout'
+                items={filter(dashboards.data)}
+                actions={[
+                  {
+                    label: locales.dashboard_new,
+                    icon: 'plus',
+                    testId: 'boards-new-dashboard',
+                    onClick: command('newDashboard')
+                  },
+                  {
+                    label: locales.dashboard_import,
+                    icon: 'import',
+                    testId: 'boards-import-dashboard',
+                    onClick: command('importDashboard')
+                  }
+                ]}
+                onOpen={(item) => command('openDashboard', item, 'dashboard')()}
+                onMenu={(event, item) => openMenu(event, itemMenu('dashboard', item))}
+              />
+            )}
+            {canReports && (
+              <Section
+                kind='report'
+                title={locales.reports}
+                icon='chart'
+                items={filter(reports.data)}
+                actions={[
+                  {
+                    label: locales.question_new,
+                    icon: 'plus',
+                    testId: 'boards-new-report',
+                    onClick: command('newReport')
+                  }
+                ]}
+                onOpen={(item) => command('openReport', item, 'report')()}
+                onMenu={(event, item) => openMenu(event, itemMenu('report', item))}
+              />
+            )}
           </>
         )}
       </BoardsListStyled>

@@ -134,7 +134,7 @@ export function useCommands(query: string): Command[] {
         group: locales.command_group_backup,
         label: locales.command_backup_tools,
         icon: 'wrench',
-        run: () => openBackup({ section: 'tools' })
+        run: () => openSettings({ section: 8, highlightId: 'backup.tools' })
       }
     ];
 

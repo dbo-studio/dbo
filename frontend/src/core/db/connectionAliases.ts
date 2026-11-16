@@ -100,6 +100,9 @@ export const isNoSQLType = (type: string | undefined): boolean =>
   getConnectionAlias(type)?.driver === 'redis' ||
   getConnectionAlias(type)?.driver === 'mongodb';
 
+/** Backups are dumps of SQL engines and MongoDB; Redis and the fixture have none. */
+export const supportsBackup = (type: string | undefined): boolean => !isNoSQLType(type) || isMongoDriver(type);
+
 /** SQL drivers and MongoDB have a query editor tab; Redis and the fixture do not. */
 export const hasEditorTab = (type: string | undefined): boolean => !isNoSQLType(type) || isMongoDriver(type);
 

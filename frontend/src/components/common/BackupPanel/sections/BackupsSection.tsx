@@ -1,15 +1,17 @@
 import api from '@/api';
 import type { BackupArtifactType } from '@/api/backup/types';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { openSettings } from '@/core/settings/openSettings';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import PassphraseInput from '../PassphraseInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
-import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
+import { isMongoDriver, isMysqlDriver, isPostgresDriver, supportsBackup } from '@/core/db/connectionAliases';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import type { BackupTabType, ConnectionType } from '@/types';
-import { Box, Button, Chip, InputBase, Switch, Typography } from '@mui/material';
+import { Box, Button, Chip, IconButton, InputBase, Switch, Tooltip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type ChangeEvent, type JSX, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -30,8 +32,13 @@ const methodLabel = (a: BackupArtifactType): string =>
       : locales.backup_method_basic;
 
 export default function BackupsSection({ tab }: { tab: BackupTabType }): JSX.Element {
-  const connections = useConnectionStore((s) => s.connections) ?? [];
-  const initial = connections.find((c) => c.id === tab.targetConnectionId) ?? connections[0];
+  // Redis has nothing to dump, so it is not offered.
+  const connections = (useConnectionStore((s) => s.connections) ?? []).filter((c) => supportsBackup(c.type));
+  const currentConnectionId = useConnectionStore((s) => s.currentConnectionId);
+  const initial =
+    connections.find((c) => c.id === tab.targetConnectionId) ??
+    connections.find((c) => c.id === Number(currentConnectionId)) ??
+    connections[0];
   // Re-seed when the tab is reopened on another database (tree menu) or connection.
   const seed = `${tab.targetConnectionId ?? ''}:${tab.database ?? ''}`;
   const [state, setState] = useState<{ seed: string; scope: Scope }>(() => ({
@@ -75,7 +82,8 @@ function ConnectionBackups({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isPostgres = isPostgresDriver(connection.type);
-  const isSqlite = !isPostgres && !isMysqlDriver(connection.type);
+  const isMongo = isMongoDriver(connection.type);
+  const isSqlite = !isPostgres && !isMysqlDriver(connection.type) && !isMongo;
   const canWrite = (connection.access ?? 'owner') !== 'viewer';
 
   const { database, schema } = scope;
@@ -153,16 +161,29 @@ function ConnectionBackups({
           <InputBase name='backup-note' value={note} onChange={(e) => setNote(e.target.value)} margin='none' />
         </FormRow>
         <FormRow label={locales.backup_destination}>
-          <SelectInput
-            emptylabel=''
-            value={String(destinationId)}
-            onChange={(e) => setDestinationId(Number((e as SelectInputOption)?.value))}
-            options={[
-              { label: locales.backup_destination_local, value: '0' },
-              ...destinations.filter((d) => d.enabled).map((d) => ({ label: d.name, value: String(d.id) }))
-            ]}
-            testId='backup-destination-select'
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <SelectInput
+                emptylabel=''
+                value={String(destinationId)}
+                onChange={(e) => setDestinationId(Number((e as SelectInputOption)?.value))}
+                options={[
+                  { label: locales.backup_destination_local, value: '0' },
+                  ...destinations.filter((d) => d.enabled).map((d) => ({ label: d.name, value: String(d.id) }))
+                ]}
+                testId='backup-destination-select'
+              />
+            </Box>
+            <Tooltip title={locales.backup_destination_manage}>
+              <IconButton
+                aria-label={locales.backup_destination_manage}
+                data-testid='backup-destination-settings'
+                onClick={() => openSettings({ section: 8, highlightId: 'backup.destinations' })}
+              >
+                <CustomIcon type='externalLink' size='s' />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </FormRow>
         <FormRow label={locales.backup_compress}>
           <Switch checked={compress} onChange={(e: ChangeEvent<HTMLInputElement>) => setCompress(e.target.checked)} />
@@ -179,7 +200,7 @@ function ConnectionBackups({
               ref={fileInputRef}
               hidden
               type='file'
-              accept={isSqlite ? '.sqlite' : '.sql'}
+              accept={isSqlite ? '.sqlite' : isMongo ? '.archive' : '.sql'}
               onChange={(e) => void handleUpload(e.target.files?.[0])}
             />
             {canWrite && (

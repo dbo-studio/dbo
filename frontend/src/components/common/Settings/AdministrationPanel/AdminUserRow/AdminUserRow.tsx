@@ -14,7 +14,7 @@ import { Button, Chip, IconButton, Menu, MenuItem, Stack, TableCell, TableRow, T
 import { type JSX, type MouseEvent, useState } from 'react';
 import * as v from 'valibot';
 import AdminShareConnectionsModal from '../AdminShareConnectionsModal/AdminShareConnectionsModal';
-import AdminUserPermissionCells from '../AdminUserPermissions/AdminUserPermissionCells';
+import AdminUserPermissions from '../AdminUserPermissions/AdminUserPermissions';
 import { AdministrationModalContainerStyled, AdministrationModalContentStyled } from './AdminUserRow.styled';
 
 export const adminRoleOptions: SelectInputOption[] = [
@@ -104,17 +104,17 @@ export default function AdminUserRow({ user, selfId, pending, onUpdate }: AdminU
           }}
         />
       </TableCell>
-      <AdminUserPermissionCells
-        value={user.permissions}
-        disabled={pending || isAdmin}
-        testIdPrefix={`admin-user-perm-${user.email}`}
-        onChange={(next): void => {
-          if (isAdmin) {
-            return;
-          }
-          void onUpdate(user.id, { permissions: next });
-        }}
-      />
+      <TableCell sx={{ width: 96 }}>
+        <AdminUserPermissions
+          value={user.permissions}
+          isAdmin={isAdmin}
+          disabled={pending}
+          testIdPrefix={`admin-user-perm-${user.email}`}
+          onSave={(next): void => {
+            void onUpdate(user.id, { permissions: next });
+          }}
+        />
+      </TableCell>
       <TableCell sx={{ width: 160 }}>
         <Stack spacing={0.25} sx={{ alignItems: 'flex-start' }}>
           <Chip

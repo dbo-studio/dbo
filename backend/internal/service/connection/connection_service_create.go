@@ -2,6 +2,7 @@ package serviceConnection
 
 import (
 	"context"
+	"github.com/dbo-studio/dbo/pkg/permission"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/database"
@@ -17,7 +18,7 @@ import (
 )
 
 func (s IConnectionServiceImpl) Create(ctx context.Context, req *dto.CreateConnectionRequest) error {
-	if err := helper.RequirePermission(ctx, helper.PermCreateConnection); err != nil {
+	if err := helper.RequirePermission(ctx, permission.ConnectionCreate); err != nil {
 		return err
 	}
 

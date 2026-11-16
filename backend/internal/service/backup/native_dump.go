@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
+	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/pkg/helper"
@@ -38,6 +40,30 @@ type NativeCommand struct {
 	// StdinPath, when set, is a file fed to the tool's standard input.
 	StdinPath string
 	secret    string
+	// cleanup lists temporary files removed when the command ends.
+	cleanup []string
+	// closers are released when the command ends: the SSH tunnel it runs through.
+	closers []io.Closer
+}
+
+// withTunnel hands the SSH tunnel (nil when the connection has none) to the planned command, which closes it
+// when it ends; when planning failed the tunnel is closed here.
+func withTunnel(cmd *NativeCommand, err error) func(tunnel io.Closer) (*NativeCommand, error) {
+	return func(tunnel io.Closer) (*NativeCommand, error) {
+		if err != nil {
+			if tunnel != nil {
+				_ = tunnel.Close()
+			}
+
+			return nil, err
+		}
+
+		if tunnel != nil {
+			cmd.closers = append(cmd.closers, tunnel)
+		}
+
+		return cmd, nil
+	}
 }
 
 // requireNativeFamily keeps pg_dump, mysqldump, psql and mysql away from servers they do not speak to:
@@ -60,6 +86,15 @@ type dumpTarget struct {
 // from the best detected tool. database and schema come from the request; an
 // empty database falls back to the connection's own.
 func PlanNativeDump(ctx context.Context, connection *model.Connection, password, database, schema, destPath string) (*NativeCommand, error) {
+	dial, tunnel, err := databaseConnection.OpenTunnel(ctx, connection)
+	if err != nil {
+		return nil, err
+	}
+
+	return withTunnel(planNativeDump(ctx, dial, password, database, schema, destPath))(tunnel)
+}
+
+func planNativeDump(ctx context.Context, connection *model.Connection, password, database, schema, destPath string) (*NativeCommand, error) {
 	if err := requireNativeFamily(connection); err != nil {
 		return nil, err
 	}
@@ -154,6 +189,15 @@ func nativeClient(ctx context.Context, connection *model.Connection, password st
 // PlanNativeQuery builds the psql or mysql command that runs one statement against database (the
 // connection's own when empty) and prints bare values, so the caller can read a number back.
 func PlanNativeQuery(ctx context.Context, connection *model.Connection, password, database, statement string) (*NativeCommand, error) {
+	dial, tunnel, err := databaseConnection.OpenTunnel(ctx, connection)
+	if err != nil {
+		return nil, err
+	}
+
+	return withTunnel(planNativeQuery(ctx, dial, password, database, statement))(tunnel)
+}
+
+func planNativeQuery(ctx context.Context, connection *model.Connection, password, database, statement string) (*NativeCommand, error) {
 	cmd, target, err := nativeClient(ctx, connection, password)
 	if err != nil {
 		return nil, err
@@ -202,6 +246,16 @@ func (d *NativeCommand) Output(ctx context.Context) (string, error) {
 func (d *NativeCommand) exec(ctx context.Context) (string, string, error) {
 	var stdout, stderr bytes.Buffer
 
+	defer func() {
+		for _, f := range d.cleanup {
+			_ = os.Remove(f)
+		}
+
+		for _, c := range d.closers {
+			_ = c.Close()
+		}
+	}()
+
 	cmd := exec.CommandContext(ctx, d.Path, d.Args...) //nolint:gosec // path comes from tool detection, args are built here
 	cmd.Env = append(cmd.Environ(), d.Env...)
 	cmd.Stdout = &stdout
@@ -231,7 +285,10 @@ func (d *NativeCommand) exec(ctx context.Context) (string, string, error) {
 
 func (d *NativeCommand) redactAll(output string) string {
 	if d.secret != "" {
-		output = strings.ReplaceAll(output, d.secret, "***")
+		// A URI carries the password percent-encoded.
+		for _, form := range []string{d.secret, url.QueryEscape(d.secret), url.PathEscape(d.secret)} {
+			output = strings.ReplaceAll(output, form, "***")
+		}
 	}
 
 	return output
@@ -394,6 +451,15 @@ func majorOf(version string) string {
 // PlanNativeRestore builds the psql or mysql command that replays a plain SQL
 // artifact into database. Missing tools report ErrNativeUnavailable.
 func PlanNativeRestore(ctx context.Context, connection *model.Connection, password, database, filePath string) (*NativeCommand, error) {
+	dial, tunnel, err := databaseConnection.OpenTunnel(ctx, connection)
+	if err != nil {
+		return nil, err
+	}
+
+	return withTunnel(planNativeRestore(ctx, dial, password, database, filePath))(tunnel)
+}
+
+func planNativeRestore(ctx context.Context, connection *model.Connection, password, database, filePath string) (*NativeCommand, error) {
 	cmd, target, err := nativeClient(ctx, connection, password)
 	if err != nil {
 		return nil, err

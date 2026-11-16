@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"strings"
 	"time"
 
@@ -49,6 +50,10 @@ func NewBackupScheduleService(jobManager serviceJob.IJobManager, connectionRepo 
 }
 
 func (s IBackupScheduleServiceImpl) List(ctx context.Context) ([]dto.BackupScheduleResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	schedules, err := s.scheduleRepo.ListByOwner(ctx, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -60,6 +65,10 @@ func (s IBackupScheduleServiceImpl) List(ctx context.Context) ([]dto.BackupSched
 }
 
 func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupScheduleRequest) (*dto.BackupScheduleResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	ownerID := helper.CtxOwnerID(ctx)
 
 	if err := s.requireWrite(ctx, req.ConnectionID, ownerID); err != nil {
@@ -117,6 +126,10 @@ func (s IBackupScheduleServiceImpl) Create(ctx context.Context, req *dto.BackupS
 }
 
 func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupScheduleUpdateRequest) (*dto.BackupScheduleResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	ownerID := helper.CtxOwnerID(ctx)
 
 	schedule, err := s.scheduleRepo.FindByOwner(ctx, req.ID, ownerID)
@@ -169,6 +182,10 @@ func (s IBackupScheduleServiceImpl) Update(ctx context.Context, req *dto.BackupS
 }
 
 func (s IBackupScheduleServiceImpl) Delete(ctx context.Context, req *dto.BackupScheduleIDRequest) error {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return err
+	}
+
 	ownerID := helper.CtxOwnerID(ctx)
 
 	schedule, err := s.scheduleRepo.FindByOwner(ctx, req.ID, ownerID)
@@ -190,6 +207,10 @@ func (s IBackupScheduleServiceImpl) Delete(ctx context.Context, req *dto.BackupS
 
 // Run queues a backup for the schedule now, without moving its next run.
 func (s IBackupScheduleServiceImpl) Run(ctx context.Context, req *dto.BackupScheduleIDRequest) (*dto.BackupResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	ownerID := helper.CtxOwnerID(ctx)
 
 	schedule, err := s.scheduleRepo.FindByOwner(ctx, req.ID, ownerID)

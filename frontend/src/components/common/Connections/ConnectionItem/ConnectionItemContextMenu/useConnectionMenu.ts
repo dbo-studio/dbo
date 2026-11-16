@@ -1,7 +1,9 @@
 import api from '@/api';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
-import { canCreateConnection } from '@/core/auth/permissions';
+import { canCreateConnection, PERM } from '@/core/auth/permissions';
+import { useCan } from '@/hooks/useFeaturePermissions';
+import { supportsBackup } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { openBackup } from '@/core/backup/openBackup';
@@ -15,7 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 /** Actions available on a connection (edit, duplicate, close, delete, leave, refresh), shared by the desktop context menu and the mobile action sheet. */
-export function useConnectionMenu(connection: ConnectionType): MenuType[] {
+export function useConnectionMenu(connection: ConnectionType | undefined): MenuType[] {
   const queryClient = useQueryClient();
   const updateUI = useSettingStore((state) => state.updateUI);
 
@@ -30,11 +32,13 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
   const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === 'admin';
-  const access = connection.access ?? 'owner';
+  const access = connection?.access ?? 'owner';
   const canEdit = access === 'owner' || access === 'editor';
   const canDelete = access === 'owner' || isAdmin;
-  const canLeave = connection.shared === true && access !== 'owner';
+  const canLeave = connection?.shared === true && access !== 'owner';
   const canDuplicate = canCreateConnection(mode, user);
+  const can = useCan();
+  const canBackup = can(PERM.backupCreate) || can(PERM.backupRestore);
 
   const showModal = useConfirmModalStore((state) => state.danger);
   const showWarningModal = useConfirmModalStore((state) => state.warning);
@@ -174,6 +178,8 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
     });
   };
 
+  if (!connection) return [];
+
   const menu: MenuType[] = [
     ...(canEdit
       ? [
@@ -195,12 +201,16 @@ export function useConnectionMenu(connection: ConnectionType): MenuType[] {
           }
         ]
       : []),
-    {
-      name: locales.backup_restore,
-      icon: 'database' as const,
-      action: (): void => openBackup({ connectionId: connection.id }),
-      closeBeforeAction: true
-    },
+    ...(supportsBackup(connection.type) && canBackup
+      ? [
+          {
+            name: locales.backup_restore,
+            icon: 'database' as const,
+            action: (): void => openBackup({ connectionId: connection.id }),
+            closeBeforeAction: true
+          }
+        ]
+      : []),
     {
       name: locales.close_connection,
       icon: 'close',

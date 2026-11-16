@@ -3,9 +3,9 @@ import NavRail from '@/components/base/NavRail/NavRail';
 import ScreenHeader from '@/components/base/ScreenHeader/ScreenHeader';
 import GeneralPanel from '@/components/common/Settings/GeneralPanel/GeneralPanel';
 import { TabMode } from '@/core/enums';
-import { resolvePermissions } from '@/core/auth/permissions';
 import { getVisibleSections, searchSettingsEntries } from '@/core/settings/registry';
 import { useSelectedTab } from '@/hooks';
+import { useCan } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -76,10 +76,9 @@ export default function Settings(): JSX.Element {
   const theme = useTheme();
   // Same breakpoint at which the desktop NavRail stops fitting.
   const compact = useMediaQuery(theme.breakpoints.down('md'));
-  const mode = useAuthStore((s) => s.mode);
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === 'admin';
-  const permissions = useMemo(() => resolvePermissions(mode, user), [mode, user]);
+  const can = useCan();
   const selectedTab = useSelectedTab();
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -87,7 +86,7 @@ export default function Settings(): JSX.Element {
 
   const settingsTab = selectedTab?.mode === TabMode.Settings ? (selectedTab as SettingsTabType) : undefined;
 
-  const sections = useMemo(() => getVisibleSections(isAdmin, permissions), [isAdmin, permissions]);
+  const sections = useMemo(() => getVisibleSections(isAdmin, can), [isAdmin, can]);
 
   const menuTabs: MenuPanelTabType[] = useMemo(
     () =>
@@ -116,8 +115,8 @@ export default function Settings(): JSX.Element {
   const appliedExternalQueryRef = useRef<string | undefined>(settingsTab?.query);
 
   const searchResults = useMemo(
-    () => searchSettingsEntries(normalizedQuery, isAdmin, permissions),
-    [normalizedQuery, isAdmin, permissions]
+    () => searchSettingsEntries(normalizedQuery, isAdmin, can),
+    [normalizedQuery, isAdmin, can]
   );
 
   const sectionId = settingsTab?.section ?? 0;

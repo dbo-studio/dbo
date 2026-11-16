@@ -1,7 +1,9 @@
 package serviceBackup
 
 import (
+	"archive/tar"
 	"archive/zip"
+	"compress/gzip"
 	"context"
 	"crypto/sha256"
 	_ "embed"
@@ -172,6 +174,8 @@ func InstallTool(ctx context.Context, driver, version string, progress func(perc
 	switch entry.Archive {
 	case "zip":
 		err = extractZip(archivePath, extracted, entry.Tools)
+	case "tgz":
+		err = extractTgz(archivePath, extracted, entry.Tools)
 	default:
 		err = ErrToolUnsupported
 	}
@@ -276,6 +280,55 @@ func extractZip(archivePath, dest string, tools []string) error {
 	return nil
 }
 
+// extractTgz is extractZip for a gzipped tar: only the wanted regular files, flattened into dest.
+func extractTgz(archivePath, dest string, tools []string) error {
+	f, err := os.Open(archivePath)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = f.Close() }()
+
+	gz, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = gz.Close() }()
+
+	want := lo.SliceToMap(tools, func(t string) (string, bool) { return toolFileName(t), true })
+	found := 0
+	tr := tar.NewReader(gz)
+
+	for {
+		hdr, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		base := filepath.Base(hdr.Name)
+		if hdr.Typeflag != tar.TypeReg || !want[base] {
+			continue
+		}
+
+		if err := writeToolFile(tr, filepath.Join(dest, base)); err != nil {
+			return err
+		}
+
+		found++
+	}
+
+	if found != len(tools) {
+		return fmt.Errorf("%w: expected %d tool(s), found %d", ErrToolUnsupported, len(tools), found)
+	}
+
+	return nil
+}
+
 func extractZipFile(f *zip.File, dest string) error {
 	rc, err := f.Open()
 	if err != nil {
@@ -284,12 +337,17 @@ func extractZipFile(f *zip.File, dest string) error {
 
 	defer func() { _ = rc.Close() }()
 
+	return writeToolFile(rc, dest)
+}
+
+// writeToolFile copies one extracted tool binary to dest, refusing a file larger than maxToolFileSize.
+func writeToolFile(in io.Reader, dest string) error {
 	out, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err
 	}
 
-	n, err := io.Copy(out, io.LimitReader(rc, maxToolFileSize+1))
+	n, err := io.Copy(out, io.LimitReader(in, maxToolFileSize+1))
 	if closeErr := out.Close(); err == nil {
 		err = closeErr
 	}

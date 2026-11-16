@@ -83,22 +83,14 @@ func (s *IAuthServiceImpl) createFirstAdmin(ctx context.Context, email, password
 	}
 
 	now := time.Now().UTC()
-	adminPerms := model.DefaultAdminPermissionFlags()
 	user := &model.User{
-		ID:                   id,
-		Email:                strings.ToLower(strings.TrimSpace(email)),
-		PasswordHash:         string(hash),
-		Role:                 model.UserRoleAdmin,
-		PermCreateConnection: adminPerms.CreateConnection,
-		PermAiSettings:       adminPerms.AiSettings,
-		PermMcpSettings:      adminPerms.McpSettings,
-		PermCli:              adminPerms.Cli,
-		PermImport:           adminPerms.Import,
-		PermExport:           adminPerms.Export,
-		PermAiUse:            adminPerms.AiUse,
-		MustChangePassword:   mustChangePassword,
-		CreatedAt:            now,
-		UpdatedAt:            now,
+		ID:                 id,
+		Email:              strings.ToLower(strings.TrimSpace(email)),
+		PasswordHash:       string(hash),
+		Role:               model.UserRoleAdmin,
+		MustChangePassword: mustChangePassword,
+		CreatedAt:          now,
+		UpdatedAt:          now,
 	}
 
 	if err := s.users.Create(ctx, user); err != nil {

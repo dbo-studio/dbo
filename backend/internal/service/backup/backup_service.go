@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"io"
 	"mime/multipart"
 	"os"
@@ -36,7 +37,7 @@ type IBackupService interface {
 	Verify(ctx context.Context, req *dto.BackupVerifyRequest) (*dto.BackupVerifyResponse, error)
 	// Drill queues a restore test: the backup is restored into a scratch database that is dropped afterwards.
 	Drill(ctx context.Context, req *dto.BackupDrillRequest) (*dto.BackupDrillResponse, error)
-	Tools(ctx context.Context) []dto.BackupTool
+	Tools(ctx context.Context) ([]dto.BackupTool, error)
 	ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error)
 	InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error)
 	RemoveTool(ctx context.Context, req *dto.ToolRemoveRequest) error
@@ -70,6 +71,10 @@ func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo reposito
 // Create queues a backup job. Backups only read, so Safe Mode does not gate
 // them. The job data holds ids only, never credentials.
 func (s IBackupServiceImpl) Create(ctx context.Context, req *dto.BackupRequest) (*dto.BackupResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	if _, err := s.connectionRepo.Find(ctx, req.ConnectionID); err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
@@ -108,6 +113,10 @@ func (s IBackupServiceImpl) Create(ctx context.Context, req *dto.BackupRequest) 
 // Restore queues a restore job after the typed confirmation and Safe Mode
 // check. A restore overwrites data, so it is classified like destructive DDL.
 func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest) (*dto.RestoreResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupRestore); err != nil {
+		return nil, err
+	}
+
 	connection, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
@@ -192,6 +201,10 @@ func (s IBackupServiceImpl) Restore(ctx context.Context, req *dto.RestoreRequest
 }
 
 func (s IBackupServiceImpl) History(ctx context.Context, req *dto.BackupHistoryRequest) ([]dto.BackupArtifactResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	artifacts, err := s.artifactRepo.ListByOwner(ctx, helper.CtxOwnerID(ctx), req.ConnectionID)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -207,6 +220,10 @@ func (s IBackupServiceImpl) History(ctx context.Context, req *dto.BackupHistoryR
 }
 
 func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloadRequest) (*response.FileDownload, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ID, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrBackupNotFound)
@@ -241,11 +258,19 @@ func (s IBackupServiceImpl) Download(ctx context.Context, req *dto.BackupDownloa
 	}, nil
 }
 
-func (s IBackupServiceImpl) Tools(ctx context.Context) []dto.BackupTool {
-	return DetectTools(ctx)
+func (s IBackupServiceImpl) Tools(ctx context.Context) ([]dto.BackupTool, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupTools); err != nil {
+		return nil, err
+	}
+
+	return DetectTools(ctx), nil
 }
 
-func (s IBackupServiceImpl) ToolDownloads(_ context.Context) ([]dto.BackupToolDownload, error) {
+func (s IBackupServiceImpl) ToolDownloads(ctx context.Context) ([]dto.BackupToolDownload, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupTools); err != nil {
+		return nil, err
+	}
+
 	downloads, err := ToolDownloads()
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
@@ -257,7 +282,7 @@ func (s IBackupServiceImpl) ToolDownloads(_ context.Context) ([]dto.BackupToolDo
 // InstallTool queues a download of one pinned tool. Tools are host-wide, so
 // signed-in users need the admin role.
 func (s IBackupServiceImpl) InstallTool(ctx context.Context, req *dto.ToolInstallRequest) (*dto.ToolInstallResponse, error) {
-	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+	if err := helper.RequirePermission(ctx, permission.BackupTools); err != nil {
 		return nil, err
 	}
 
@@ -281,7 +306,7 @@ func (s IBackupServiceImpl) InstallTool(ctx context.Context, req *dto.ToolInstal
 }
 
 func (s IBackupServiceImpl) RemoveTool(ctx context.Context, req *dto.ToolRemoveRequest) error {
-	if err := helper.RequireInstanceAdmin(ctx); err != nil {
+	if err := helper.RequirePermission(ctx, permission.BackupTools); err != nil {
 		return err
 	}
 
@@ -349,13 +374,26 @@ func familyOf(driver string) string {
 // Upload stores a backup file the user brought, so it can be restored like any
 // recorded backup. The file type must match the connection's driver.
 func (s IBackupServiceImpl) Upload(ctx context.Context, req *dto.BackupUploadRequest) (*dto.BackupArtifactResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupRestore); err != nil {
+		return nil, err
+	}
+
 	connection, err := s.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
 	ext := strings.ToLower(filepath.Ext(req.File.Filename))
-	if (ext != ".sql" && ext != ".sqlite") || (ext == ".sqlite") != (connection.ConnectionType == databaseContract.Sqlite) {
+	want := ".sql"
+
+	switch {
+	case connection.ConnectionType == databaseContract.Sqlite:
+		want = ".sqlite"
+	case databaseContract.IsMongo(connection.ConnectionType):
+		want = ".archive"
+	}
+
+	if ext != want {
 		return nil, apperror.BadRequest(apperror.ErrBackupFileType)
 	}
 
@@ -495,6 +533,10 @@ func withoutPassphrase(req dto.RestoreRequest) dto.RestoreRequest {
 // Drill queues a restore test of one backup. It creates and drops a scratch database on the
 // connection's server, so it needs the same right as a restore.
 func (s IBackupServiceImpl) Drill(ctx context.Context, req *dto.BackupDrillRequest) (*dto.BackupDrillResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupRestore); err != nil {
+		return nil, err
+	}
+
 	ownerID := helper.CtxOwnerID(ctx)
 
 	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ID, ownerID)
@@ -531,6 +573,10 @@ func (s IBackupServiceImpl) Drill(ctx context.Context, req *dto.BackupDrillReque
 // recorded when it was made and, when it is compressed or the passphrase is
 // given, that it reads back completely.
 func (s IBackupServiceImpl) Verify(ctx context.Context, req *dto.BackupVerifyRequest) (*dto.BackupVerifyResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BackupCreate); err != nil {
+		return nil, err
+	}
+
 	artifact, err := s.artifactRepo.FindByOwner(ctx, req.ID, helper.CtxOwnerID(ctx))
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrBackupNotFound)

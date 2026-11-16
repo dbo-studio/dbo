@@ -2,7 +2,7 @@ import { InputBase } from '@mui/material';
 import api from '@/api';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
-import { isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
+import { isMongoDriver, isMysqlDriver, isPostgresDriver } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import type { ConnectionType } from '@/types';
 import { useQuery } from '@tanstack/react-query';
@@ -36,7 +36,9 @@ type Props = {
 export default function ScopePicker({ connections, value, onChange, connectionLocked }: Props): JSX.Element {
   const connection = connections.find((c) => c.id === value.connectionId);
   const isPostgres = connection ? isPostgresDriver(connection.type) : false;
-  const hasDatabase = connection ? isPostgres || isMysqlDriver(connection.type) : false;
+  const hasDatabase = connection
+    ? isPostgres || isMysqlDriver(connection.type) || isMongoDriver(connection.type)
+    : false;
 
   const { data: catalog } = useQuery({
     queryKey: ['backup-catalog', value.connectionId, value.database],

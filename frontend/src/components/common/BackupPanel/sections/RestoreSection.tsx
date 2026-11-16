@@ -3,6 +3,7 @@ import type { BackupArtifactType } from '@/api/backup/types';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
+import { supportsBackup } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Button, Chip, Typography } from '@mui/material';
@@ -22,7 +23,8 @@ type Progress = { jobId: string };
 export default function RestoreSection(): JSX.Element {
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
-  const connections = useConnectionStore((s) => s.connections) ?? [];
+  // Redis has nothing to dump, so it is not offered.
+  const connections = (useConnectionStore((s) => s.connections) ?? []).filter((c) => supportsBackup(c.type));
   const writable = connections.filter((c) => (c.access ?? 'owner') !== 'viewer');
 
   const [filter, setFilter] = useState(0);
@@ -87,7 +89,7 @@ export default function RestoreSection(): JSX.Element {
           ref={fileInput}
           hidden
           type='file'
-          accept='.sql,.sqlite,.gz,.enc'
+          accept='.sql,.sqlite,.archive,.gz,.enc'
           onChange={(e) => void handleUpload(e.target.files?.[0])}
         />
         <Button

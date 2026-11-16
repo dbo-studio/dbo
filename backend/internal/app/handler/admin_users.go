@@ -4,7 +4,9 @@ import (
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	serviceAdminUsers "github.com/dbo-studio/dbo/internal/service/admin_users"
 	"github.com/dbo-studio/dbo/pkg/apperror"
+	"github.com/dbo-studio/dbo/pkg/helper"
 	"github.com/dbo-studio/dbo/pkg/logger"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
 )
@@ -26,6 +28,15 @@ func (h AdminUsersHandler) List(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder().WithData(items).Send(c)
+}
+
+// Permissions lists every permission and its group, so the admin screen is built from the backend's own catalog.
+func (h AdminUsersHandler) Permissions(c fiber.Ctx) error {
+	if err := helper.RequireInstanceAdmin(c); err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(permission.Catalog).Send(c)
 }
 
 func (h AdminUsersHandler) Create(c fiber.Ctx) error {

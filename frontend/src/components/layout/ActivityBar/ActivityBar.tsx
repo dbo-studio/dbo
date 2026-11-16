@@ -1,6 +1,8 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
 import ConnectionsHost from '@/components/common/Connections/ConnectionsHost';
+import { PERM } from '@/core/auth/permissions';
+import { useCan } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { type ExplorerArea, useExplorerAreaStore } from '@/store/explorerArea/explorerArea.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -8,10 +10,31 @@ import { Tooltip } from '@mui/material';
 import type { JSX } from 'react';
 import { ActivityBarStyled, ActivityItemStyled } from './ActivityBar.styled';
 
-const AREAS: { id: ExplorerArea; label: string; icon: keyof typeof IconTypes; testId: string }[] = [
+type Area = {
+  id: ExplorerArea;
+  label: string;
+  icon: keyof typeof IconTypes;
+  testId: string;
+  /** The area shows when the user has any of these permissions; none listed means everyone. */
+  anyOf?: string[];
+};
+
+const AREAS: Area[] = [
   { id: 'explorer', label: locales.rail_explorer, icon: 'layoutList', testId: 'activity-explorer' },
-  { id: 'boards', label: locales.boards, icon: 'layout', testId: 'sidebar-tab-boards' },
-  { id: 'backup', label: locales.rail_backup, icon: 'backup', testId: 'activity-backup' }
+  {
+    id: 'boards',
+    label: locales.boards,
+    icon: 'layout',
+    testId: 'sidebar-tab-boards',
+    anyOf: [PERM.boardsReports, PERM.boardsDashboards]
+  },
+  {
+    id: 'backup',
+    label: locales.rail_backup,
+    icon: 'backup',
+    testId: 'activity-backup',
+    anyOf: [PERM.backupCreate, PERM.backupRestore]
+  }
 ];
 
 /**
@@ -20,6 +43,7 @@ const AREAS: { id: ExplorerArea; label: string; icon: keyof typeof IconTypes; te
  * area: it is the scope of the explorer and is chosen in the sidebar (ConnectionSwitcher).
  */
 export default function ActivityBar(): JSX.Element {
+  const can = useCan();
   const area = useExplorerAreaStore((s) => s.area);
   const setArea = useExplorerAreaStore((s) => s.setArea);
   const showLeft = useSettingStore((s) => s.ui.sidebar.showLeft);
@@ -39,7 +63,7 @@ export default function ActivityBar(): JSX.Element {
   return (
     <ActivityBarStyled role='navigation' aria-label={locales.rail_areas}>
       <ConnectionsHost />
-      {AREAS.map((a) => {
+      {AREAS.filter((a) => !a.anyOf || a.anyOf.some(can)).map((a) => {
         const selected = showLeft && area === a.id;
 
         return (

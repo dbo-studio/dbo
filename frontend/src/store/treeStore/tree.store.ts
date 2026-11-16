@@ -211,7 +211,10 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           const currentConnection = getCurrentConnectionId();
           if (!currentConnection) return;
 
-          set({ isLoading: true });
+          // The user may switch connection while a request is in flight; its result must not land on the new one.
+          const isStale = (): boolean => getCurrentConnectionId() !== currentConnection;
+
+          set({ isLoading: true, treeError: undefined });
 
           try {
             const treeData = await getTree({
@@ -220,7 +223,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
               fromCache
             });
 
-            if (!treeData) {
+            if (!treeData || isStale()) {
               set({ isLoading: false, treeError: undefined });
               return;
             }
@@ -237,6 +240,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
                   fromCache
                 });
 
+                if (isStale()) break;
                 if (childrenData?.children) {
                   get().setNodeChildren(parentId, childrenData.children);
                 }
@@ -248,7 +252,7 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
             set({ isLoading: false, treeError: undefined });
           } catch (error) {
             console.error('Failed to reload tree:', error);
-            set({ isLoading: false, treeError: error as Error });
+            set({ isLoading: false, treeError: isStale() ? undefined : (error as Error) });
           }
         },
         toggleIsLoading(isLoading: boolean): void {

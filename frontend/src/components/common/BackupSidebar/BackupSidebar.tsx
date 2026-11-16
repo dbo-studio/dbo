@@ -8,7 +8,9 @@ import {
   SidebarSectionHeaderStyled
 } from '@/components/base/SidebarList/SidebarList.styled';
 import { openBackup } from '@/core/backup/openBackup';
+import { PERM } from '@/core/auth/permissions';
 import { TabMode } from '@/core/enums';
+import { useCan } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { BackupSection, BackupTabType } from '@/types';
@@ -66,7 +68,12 @@ function Section({
  */
 export default function BackupSidebar(): JSX.Element {
   const tab = useTabStore(selectTabs).find((t): t is BackupTabType => t.mode === TabMode.Backup);
-  const { data: schedules = [] } = useQuery({ queryKey: ['backup-schedules'], queryFn: api.backup.schedules });
+  const can = useCan();
+  const { data: schedules = [] } = useQuery({
+    queryKey: ['backup-schedules'],
+    queryFn: api.backup.schedules,
+    enabled: can(PERM.backupCreate)
+  });
 
   const section = tab?.section;
 
@@ -95,43 +102,44 @@ export default function BackupSidebar(): JSX.Element {
   return (
     <SidebarListStyled>
       <Section title={locales.backup_sidebar_data}>
-        {page('backups', locales.backup_nav_backups, 'backup')}
-        {page('restore', locales.backup_nav_restore, 'undo')}
-        {page('tools', locales.backup_tools, 'wrench')}
+        {can(PERM.backupCreate) && page('backups', locales.backup_nav_backups, 'backup')}
+        {can(PERM.backupRestore) && page('restore', locales.backup_nav_restore, 'undo')}
       </Section>
 
-      <Section
-        title={locales.backup_jobs}
-        count={schedules.length}
-        action={{
-          label: locales.backup_job_new,
-          testId: 'backup-sidebar-new-schedule',
-          onClick: () => openBackup({ section: 'schedules', scheduleId: 'new' })
-        }}
-      >
-        {page('schedules', locales.backup_sidebar_all_schedules, 'clock')}
-        {schedules.map((s) => (
-          <SidebarItemStyled
-            key={s.id}
-            tabIndex={0}
-            role='button'
-            selected={section === 'schedules' && tab?.scheduleId === s.id}
-            data-testid={`backup-sidebar-schedule-${s.name}`}
-            onClick={() => openBackup({ section: 'schedules', scheduleId: s.id })}
-            onKeyDown={(event) => event.key === 'Enter' && openBackup({ section: 'schedules', scheduleId: s.id })}
-          >
-            <ScheduleDotStyled tone={dotTone(s)} />
-            <Typography variant='body2' noWrap sx={{ flex: 1, minWidth: 0 }}>
-              {s.name}
-            </Typography>
-            {!s.enabled && (
-              <Typography variant='caption' color='textSubdued'>
-                {locales.backup_schedule_paused}
+      {can(PERM.backupCreate) && (
+        <Section
+          title={locales.backup_jobs}
+          count={schedules.length}
+          action={{
+            label: locales.backup_job_new,
+            testId: 'backup-sidebar-new-schedule',
+            onClick: () => openBackup({ section: 'schedules', scheduleId: 'new' })
+          }}
+        >
+          {page('schedules', locales.backup_sidebar_all_schedules, 'clock')}
+          {schedules.map((s) => (
+            <SidebarItemStyled
+              key={s.id}
+              tabIndex={0}
+              role='button'
+              selected={section === 'schedules' && tab?.scheduleId === s.id}
+              data-testid={`backup-sidebar-schedule-${s.name}`}
+              onClick={() => openBackup({ section: 'schedules', scheduleId: s.id })}
+              onKeyDown={(event) => event.key === 'Enter' && openBackup({ section: 'schedules', scheduleId: s.id })}
+            >
+              <ScheduleDotStyled tone={dotTone(s)} />
+              <Typography variant='body2' noWrap sx={{ flex: 1, minWidth: 0 }}>
+                {s.name}
               </Typography>
-            )}
-          </SidebarItemStyled>
-        ))}
-      </Section>
+              {!s.enabled && (
+                <Typography variant='caption' color='textSubdued'>
+                  {locales.backup_schedule_paused}
+                </Typography>
+              )}
+            </SidebarItemStyled>
+          ))}
+        </Section>
+      )}
     </SidebarListStyled>
   );
 }

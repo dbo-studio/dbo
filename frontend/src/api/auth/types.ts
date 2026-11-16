@@ -1,13 +1,8 @@
-export type UserPermissions = {
-  createConnection: boolean;
-  aiSettings: boolean;
-  mcpSettings: boolean;
-  /** Database terminal (SQL and NoSQL). Never granted by default. */
-  cli: boolean;
-  import: boolean;
-  export: boolean;
-  aiUse: boolean;
-};
+/** Every permission key mapped to whether the user has it. */
+export type UserPermissions = Record<string, boolean>;
+
+/** One permission as the backend lists it: its group is how the admin screen sorts it. */
+export type PermissionDef = { key: string; group: string; default: boolean };
 
 export type AuthUserIdentity = {
   id: string;

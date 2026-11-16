@@ -30,6 +30,7 @@ func (r *Server) routing() {
 	api.Post("/auth/logout", r.handlers.Auth.Logout)
 	api.Get("/users", r.handlers.Auth.Directory)
 
+	api.Get("/admin/permissions", r.handlers.AdminUsers.Permissions)
 	api.Get("/admin/users", r.handlers.AdminUsers.List)
 	api.Post("/admin/users", r.handlers.AdminUsers.Create)
 	api.Patch("/admin/users/:id", r.handlers.AdminUsers.Update)

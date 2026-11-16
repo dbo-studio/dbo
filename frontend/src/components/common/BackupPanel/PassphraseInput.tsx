@@ -57,7 +57,7 @@ export default function PassphraseInput({ name, value, onChange }: Props): JSX.E
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, width: '100%' }}>
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
         <FieldInput
           name={name}
           type={revealed ? 'text' : 'password'}

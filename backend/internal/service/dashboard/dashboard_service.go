@@ -3,6 +3,8 @@ package serviceDashboard
 import (
 	"context"
 	"errors"
+	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/permission"
 
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -83,6 +85,10 @@ func (s IDashboardServiceImpl) reload(ctx context.Context, id uint) (*dto.Dashbo
 }
 
 func (s IDashboardServiceImpl) Index(ctx context.Context, req *dto.DashboardListRequest) ([]dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireConnection(ctx, uint(req.ConnectionID)); err != nil {
 		return nil, err
 	}
@@ -96,6 +102,10 @@ func (s IDashboardServiceImpl) Index(ctx context.Context, req *dto.DashboardList
 }
 
 func (s IDashboardServiceImpl) Create(ctx context.Context, req *dto.DashboardCreateRequest) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireConnection(ctx, uint(req.ConnectionID)); err != nil {
 		return nil, err
 	}
@@ -111,6 +121,10 @@ func (s IDashboardServiceImpl) Create(ctx context.Context, req *dto.DashboardCre
 }
 
 func (s IDashboardServiceImpl) Rename(ctx context.Context, id uint, req *dto.DashboardRenameRequest) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	dashboard, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -125,6 +139,10 @@ func (s IDashboardServiceImpl) Rename(ctx context.Context, id uint, req *dto.Das
 }
 
 func (s IDashboardServiceImpl) Duplicate(ctx context.Context, id uint) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	source, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -146,6 +164,10 @@ func (s IDashboardServiceImpl) Duplicate(ctx context.Context, id uint) (*dto.Das
 }
 
 func (s IDashboardServiceImpl) Delete(ctx context.Context, id uint) error {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return err
+	}
+
 	dashboard, err := s.find(ctx, id)
 	if err != nil {
 		return err
@@ -159,6 +181,10 @@ func (s IDashboardServiceImpl) Delete(ctx context.Context, id uint) error {
 }
 
 func (s IDashboardServiceImpl) Pin(ctx context.Context, id uint, req *dto.DashboardPinRequest) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	dashboard, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -189,6 +215,10 @@ func (s IDashboardServiceImpl) Pin(ctx context.Context, id uint, req *dto.Dashbo
 }
 
 func (s IDashboardServiceImpl) PinByName(ctx context.Context, name string, questionID uint) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	question, err := s.questionRepo.Find(ctx, questionID)
 	if err != nil {
 		return nil, apperror.NotFound(errQuestionNotFound)
@@ -222,6 +252,10 @@ func (s IDashboardServiceImpl) card(ctx context.Context, id, cardID uint) (*mode
 }
 
 func (s IDashboardServiceImpl) UpdateCard(ctx context.Context, id, cardID uint, req *dto.DashboardCardUpdateRequest) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	card, err := s.card(ctx, id, cardID)
 	if err != nil {
 		return nil, err
@@ -236,6 +270,10 @@ func (s IDashboardServiceImpl) UpdateCard(ctx context.Context, id, cardID uint, 
 }
 
 func (s IDashboardServiceImpl) ReorderCards(ctx context.Context, id uint, req *dto.DashboardCardOrderRequest) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	dashboard, err := s.find(ctx, id)
 	if err != nil {
 		return nil, err
@@ -263,6 +301,10 @@ func (s IDashboardServiceImpl) ReorderCards(ctx context.Context, id uint, req *d
 }
 
 func (s IDashboardServiceImpl) Unpin(ctx context.Context, id, cardID uint) (*dto.DashboardResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsDashboards); err != nil {
+		return nil, err
+	}
+
 	card, err := s.card(ctx, id, cardID)
 	if err != nil {
 		return nil, err

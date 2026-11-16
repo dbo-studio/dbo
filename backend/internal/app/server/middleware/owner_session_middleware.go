@@ -232,16 +232,7 @@ func setSessionID(c fiber.Ctx, sessionID string) {
 }
 
 func setUser(c fiber.Ctx, user *model.User) {
-	flags := user.PermissionFlags()
-	perms := dto.UserPermissions{
-		CreateConnection: flags.CreateConnection,
-		AiSettings:       flags.AiSettings,
-		McpSettings:      flags.McpSettings,
-		Cli:              flags.Cli,
-		Import:           flags.Import,
-		Export:           flags.Export,
-		AiUse:            flags.AiUse,
-	}
+	perms := dto.UserPermissions(user.PermissionSet())
 	// Fiber Ctx.Value reads Locals (UserValue), not SetContext — put auth
 	// fields on Locals so services that receive fiber.Ctx see them.
 	c.Locals(helper.CtxUserIDKey, user.ID)

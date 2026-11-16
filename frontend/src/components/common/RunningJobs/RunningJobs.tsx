@@ -1,6 +1,7 @@
 import ProgressBar from '@/components/base/ProgressBar/ProgressBar';
 import { parseTransfer, transferDetail, transferLabel } from '@/core/utils/transferProgress';
 import locales from '@/locales';
+import { useJobResultModalStore } from '@/store/jobResultModal/jobResultModal.store';
 import { type JobEvent, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
 import { Typography } from '@mui/material';
 import { useShallow } from 'zustand/react/shallow';
@@ -24,7 +25,20 @@ const isRunning = (job: JobEvent): boolean => job.status === 'running' || job.st
 export const useRunningJobs = (): JobEvent[] =>
   useJobEventsStore(useShallow((s) => Object.values(s.jobs).filter(isRunning)));
 
-export default function RunningJobs({ jobs }: { jobs: JobEvent[] }): JSX.Element | null {
+/** `onSelect` runs when a job is opened, so a popover holding the list can close itself. */
+export default function RunningJobs({
+  jobs,
+  onSelect
+}: {
+  jobs: JobEvent[];
+  onSelect?: () => void;
+}): JSX.Element | null {
+  const open = useJobResultModalStore((s) => s.open);
+  const select = (job: JobEvent): void => {
+    open(job.id, TYPE_LABEL[job.type] ?? job.type);
+    onSelect?.();
+  };
+
   if (jobs.length === 0) return null;
 
   return (
@@ -33,7 +47,15 @@ export default function RunningJobs({ jobs }: { jobs: JobEvent[] }): JSX.Element
         const transfer = parseTransfer(job.message);
 
         return (
-          <RunningJobRowStyled key={job.id}>
+          <RunningJobRowStyled
+            key={job.id}
+            role='button'
+            tabIndex={0}
+            title={locales.job_show_progress}
+            data-testid={`running-job-${job.id}`}
+            onClick={() => select(job)}
+            onKeyDown={(event) => event.key === 'Enter' && select(job)}
+          >
             <Typography variant='body2' color='textTitle'>
               {TYPE_LABEL[job.type] ?? job.type}
             </Typography>

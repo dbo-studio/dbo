@@ -94,7 +94,7 @@ export default function NotificationBell(): JSX.Element {
             </Button>
           </NotificationHeaderStyled>
           <NotificationListStyled>
-            <RunningJobs jobs={running} />
+            <RunningJobs jobs={running} onSelect={() => setAnchor(null)} />
             {(data?.items ?? []).length === 0 && (
               <div data-testid='notification-empty'>
                 <EmptyState icon='bell' title={locales.notification_empty} />

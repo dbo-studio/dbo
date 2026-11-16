@@ -70,7 +70,7 @@ export default function SelectInput({
         <Typography
           color={theme.palette.error.main}
           variant='caption'
-          sx={{ marginBottom: (theme) => theme.spacing(1) }}
+          sx={{ marginTop: (theme) => theme.spacing(1), marginBottom: (theme) => theme.spacing(1) }}
         >
           {helpertext}
         </Typography>

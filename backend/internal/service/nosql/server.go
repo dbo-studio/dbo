@@ -3,6 +3,7 @@ package serviceNoSQL
 import (
 	"context"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"io"
 
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
@@ -24,7 +25,7 @@ const (
 func (s *Service) serverTools(ctx context.Context, connectionID int32) (contract.NoSQLRepository, contract.ServerTools, error) {
 	// The server views reach beyond one collection (every database, running operations, users), so they need the same
 	// permission as the command line.
-	if err := helper.RequirePermission(ctx, helper.PermCli); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataCli); err != nil {
 		return nil, nil, err
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"io"
 	"sync"
 	"time"
@@ -382,7 +383,7 @@ func (s *Service) BulkDelete(ctx context.Context, req *dto.NoSQLBulkDeleteReques
 }
 
 func (s *Service) RunCommand(ctx context.Context, req *dto.NoSQLCommandRequest) (*contract.CommandResult, error) {
-	if err := helper.RequirePermission(ctx, helper.PermCli); err != nil {
+	if err := helper.RequirePermission(ctx, permission.DataCli); err != nil {
 		return nil, err
 	}
 

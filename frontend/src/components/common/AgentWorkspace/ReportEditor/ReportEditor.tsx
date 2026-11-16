@@ -1,4 +1,6 @@
 import { variables } from '@/core/theme/variables';
+import { useCan } from '@/hooks/useFeaturePermissions';
+import { PERM } from '@/core/auth/permissions';
 import Segmented from '@/components/base/Segmented/Segmented';
 import api from '@/api';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
@@ -32,6 +34,7 @@ export default function ReportEditor({
   /** Database and schema to run in. The workstation omits it and follows the chat's context. */
   scope?: { database?: string; schema?: string };
 }): JSX.Element {
+  const can = useCan();
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   // A MongoDB or Redis report is a JSON pipeline or command: no SQL editor. Its {{filters}} still take values.
   const noSql = isNoSQLType(useCurrentConnection()?.type);
@@ -159,15 +162,19 @@ export default function ReportEditor({
               {locales.cancel}
             </Button>
           )}
-          <Button
-            variant='outlined'
-            disabled={saving || !edited.title.trim()}
-            onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}
-            data-testid='ai-report-save-canvas'
-          >
-            {locales.ai_report_save}
-          </Button>
-          <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
+          {can(PERM.boardsReports) && (
+            <Button
+              variant='outlined'
+              disabled={saving || !edited.title.trim()}
+              onClick={() => save({ ...edited, sql, params }, { onSuccess: (saved) => setEdited(saved) })}
+              data-testid='ai-report-save-canvas'
+            >
+              {locales.ai_report_save}
+            </Button>
+          )}
+          {can(PERM.boardsReports) && can(PERM.boardsDashboards) && (
+            <PinReportButton report={{ ...edited, sql, params }} onSaved={setEdited} />
+          )}
         </Stack>
       </Stack>
       <Segmented

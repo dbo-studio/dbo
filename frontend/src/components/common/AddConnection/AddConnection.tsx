@@ -1,6 +1,7 @@
 import api from '@/api';
 import type { CreateConnectionRequestType, PingConnectionRequestType } from '@/api/connection/types';
 import { CONNECTION_ALIASES, type ConnectionAliasDef } from '@/core/db/connectionAliases';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -73,6 +74,7 @@ const initialType = ((): SelectionConnectionType => {
 
 export default function AddConnection(): JSX.Element {
   const queryClient = useQueryClient();
+  const { switchConnection } = useSwitchConnection();
   const [selectedType, setSelectedType] = useState<SelectionConnectionType>(initialType);
 
   const showAddConnection = useSettingStore((state) => state.ui.showAddConnection);
@@ -134,10 +136,13 @@ export default function AddConnection(): JSX.Element {
     }
 
     try {
+      const knownIds = new Set((useConnectionStore.getState().connections ?? []).map((c) => c.id));
       await createConnectionMutation(data);
       await queryClient.invalidateQueries({
         queryKey: ['connections']
       });
+      const created = useConnectionStore.getState().connections?.find((c) => !knownIds.has(c.id));
+      if (created) await switchConnection(created);
       handleClose();
       toast.success(locales.connection_create_success);
     } catch {

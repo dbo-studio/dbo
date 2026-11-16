@@ -2,11 +2,15 @@ import api from '@/api';
 import locales from '@/locales';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
+import { PERM } from '@/core/auth/permissions';
+import { useCan } from '@/hooks/useFeaturePermissions';
 import SettingsTabs from '../SettingsTabs/SettingsTabs';
 import ConnectorsSection from './connectors/ConnectorsSection';
+import ToolsSection from './tools/ToolsSection';
 
 /** Where backups are sent and who is told about them. Schedules pick from these. */
 export default function BackupSettingsPanel(): JSX.Element {
+  const can = useCan();
   const { data: destinations = [] } = useQuery({
     queryKey: ['backup-connectors', 'destination'],
     queryFn: () => api.backup.connectors('destination')
@@ -44,7 +48,17 @@ export default function BackupSettingsPanel(): JSX.Element {
               description={locales.backup_nav_notifications_hint}
             />
           )
-        }
+        },
+        ...(can(PERM.backupTools)
+          ? [
+              {
+                id: 'tools',
+                label: locales.backup_tools,
+                ids: ['backup.tools'],
+                content: <ToolsSection />
+              }
+            ]
+          : [])
       ]}
     />
   );

@@ -2,6 +2,7 @@ package serviceMCP
 
 import (
 	"github.com/dbo-studio/dbo/config"
+	"github.com/dbo-studio/dbo/pkg/permission"
 
 	"context"
 	"crypto/rand"
@@ -53,7 +54,7 @@ func NewMcpService(
 }
 
 func (s *McpServiceImpl) Status(ctx context.Context) (*dto.McpStatusResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiMcp); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +67,7 @@ func (s *McpServiceImpl) Status(ctx context.Context) (*dto.McpStatusResponse, er
 }
 
 func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) (*dto.McpUpdateResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiMcp); err != nil {
 		return nil, err
 	}
 
@@ -110,7 +111,7 @@ func (s *McpServiceImpl) Update(ctx context.Context, req *dto.McpUpdateRequest) 
 }
 
 func (s *McpServiceImpl) RegenerateToken(ctx context.Context) (*dto.McpRegenerateTokenResponse, error) {
-	if err := helper.RequirePermission(ctx, helper.PermMcpSettings); err != nil {
+	if err := helper.RequirePermission(ctx, permission.AiMcp); err != nil {
 		return nil, err
 	}
 

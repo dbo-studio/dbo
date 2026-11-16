@@ -98,7 +98,7 @@ export type SettingsTabType = BaseTab & {
   highlightId?: string;
 };
 
-export type BackupSection = 'backups' | 'restore' | 'schedules' | 'tools';
+export type BackupSection = 'backups' | 'restore' | 'schedules';
 
 /** Global singleton like Settings; `targetConnectionId`/`database` pick what the Backups section shows. */
 export type BackupTabType = BaseTab & {

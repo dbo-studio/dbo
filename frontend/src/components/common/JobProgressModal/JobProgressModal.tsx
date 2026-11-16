@@ -71,6 +71,9 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
           const totalRows = result?.totalRows || 0;
           return `${locales.import_completed}: ${successRows} ${locales.successful}, ${failedRows} ${locales.failed} (${totalRows} ${locales.total_rows})`;
         }
+        if (job.type === 'nosql_import') {
+          return locales.mongo_import_completed.replace('{n}', String(job.result?.successRows ?? 0));
+        }
         if (job.type === 'backup') return locales.backup_completed_successfully;
         if (job.type === 'restore') return locales.restore_completed_successfully;
         if (job.type === 'tool_install') return locales.backup_tool_install_completed;
@@ -100,13 +103,20 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
       onClose={onClose}
       title={title}
       padding='24px'
+      compact
       footer={
         (job?.status === 'running' || finished) && (
           <>
             {job?.status === 'running' && (
-              <Button variant='outlined' onClick={() => void cancelJob()}>
-                {locales.cancel_job}
-              </Button>
+              <>
+                <Button variant='outlined' onClick={() => void cancelJob()}>
+                  {locales.cancel_job}
+                </Button>
+                {/* The job keeps running; it stays in the status bar and the bell, and ends as a notification. */}
+                <Button variant='contained' onClick={onClose} data-testid='job-run-background'>
+                  {locales.job_run_background}
+                </Button>
+              </>
             )}
             {finished && <Button onClick={onClose}>{locales.close}</Button>}
             {onRetry && job && job.type !== 'query' && (job.status === 'failed' || job.status === 'canceled') && (

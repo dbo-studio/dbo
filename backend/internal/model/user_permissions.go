@@ -1,67 +1,32 @@
 package model
 
-type UserPermissionFlags struct {
-	CreateConnection bool
-	AiSettings       bool
-	McpSettings      bool
-	// Cli opens a database terminal; it is never granted by default.
-	Cli bool
-	// Import, Export and AiUse gate those features for the user.
-	Import bool
-	Export bool
-	AiUse  bool
-}
+import (
+	"encoding/json"
 
-func (u *User) PermissionFlags() UserPermissionFlags {
+	"github.com/dbo-studio/dbo/pkg/permission"
+)
+
+// PermissionSet is what the user may do: every permission for an admin, otherwise the stored set. A
+// stored set that is empty or unreadable grants nothing, never more than was stored.
+func (u *User) PermissionSet() map[string]bool {
 	if u == nil || u.Role == UserRoleAdmin {
-		return DefaultAdminPermissionFlags()
+		return permission.All()
 	}
 
-	return UserPermissionFlags{
-		CreateConnection: u.PermCreateConnection,
-		AiSettings:       u.PermAiSettings,
-		McpSettings:      u.PermMcpSettings,
-		Cli:              u.PermCli,
-		Import:           u.PermImport,
-		Export:           u.PermExport,
-		AiUse:            u.PermAiUse,
+	var granted map[string]bool
+	if u.Permissions != "" {
+		_ = json.Unmarshal([]byte(u.Permissions), &granted)
 	}
+
+	return permission.Normalize(granted)
 }
 
-func DefaultMemberPermissionFlags() UserPermissionFlags {
-	return UserPermissionFlags{
-		CreateConnection: false,
-		AiSettings:       true,
-		McpSettings:      false,
-		Cli:              false,
-		Import:           true,
-		Export:           true,
-		AiUse:            true,
-	}
-}
-
-func DefaultAdminPermissionFlags() UserPermissionFlags {
-	return UserPermissionFlags{
-		CreateConnection: true,
-		AiSettings:       true,
-		McpSettings:      true,
-		Cli:              true,
-		Import:           true,
-		Export:           true,
-		AiUse:            true,
-	}
-}
-
-func ApplyPermissionFlags(u *User, flags UserPermissionFlags) {
+// SetPermissions stores the set; keys outside the catalog are dropped.
+func (u *User) SetPermissions(granted map[string]bool) {
 	if u == nil {
 		return
 	}
 
-	u.PermCreateConnection = flags.CreateConnection
-	u.PermAiSettings = flags.AiSettings
-	u.PermMcpSettings = flags.McpSettings
-	u.PermCli = flags.Cli
-	u.PermImport = flags.Import
-	u.PermExport = flags.Export
-	u.PermAiUse = flags.AiUse
+	raw, _ := json.Marshal(permission.Normalize(granted)) //nolint:errchkjson // a map of bools always marshals
+	u.Permissions = string(raw)
 }

@@ -1,13 +1,18 @@
 import { api } from '@/core/api';
-import type { UserPermissions } from '@/api/auth/types';
+import type { PermissionDef, UserPermissions } from '@/api/auth/types';
 import type { AdminUserType } from './types';
 
 export type { AdminUserType } from './types';
 
 const endpoint = {
+  permissions: (): string => '/admin/permissions',
   list: (): string => '/admin/users',
   create: (): string => '/admin/users',
   update: (id: string): string => `/admin/users/${id}`
+};
+
+export const listPermissions = async (): Promise<PermissionDef[]> => {
+  return (await api.get<{ data: PermissionDef[] }>(endpoint.permissions())).data.data;
 };
 
 export const listUsers = async (): Promise<AdminUserType[]> => {

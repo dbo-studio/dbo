@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dbo-studio/dbo/pkg/permission"
 	"strings"
 	"time"
 
@@ -129,6 +130,10 @@ func (s *ISubscriptionServiceImpl) smtpReady(ctx context.Context) bool {
 }
 
 func (s *ISubscriptionServiceImpl) List(ctx context.Context, dashboardID uint) (*dto.DashboardSubscriptionListResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireBoard(ctx, dashboardID); err != nil {
 		return nil, err
 	}
@@ -177,6 +182,10 @@ func (s *ISubscriptionServiceImpl) apply(sub *model.DashboardSubscription, req *
 }
 
 func (s *ISubscriptionServiceImpl) Create(ctx context.Context, dashboardID uint, req *dto.DashboardSubscriptionRequest) (*dto.DashboardSubscriptionResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	if err := s.requireBoard(ctx, dashboardID); err != nil {
 		return nil, err
 	}
@@ -202,6 +211,10 @@ func (s *ISubscriptionServiceImpl) Create(ctx context.Context, dashboardID uint,
 }
 
 func (s *ISubscriptionServiceImpl) Update(ctx context.Context, dashboardID, id uint, req *dto.DashboardSubscriptionRequest) (*dto.DashboardSubscriptionResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	sub, err := s.find(ctx, dashboardID, id)
 	if err != nil {
 		return nil, err
@@ -234,6 +247,10 @@ func (s *ISubscriptionServiceImpl) Update(ctx context.Context, dashboardID, id u
 }
 
 func (s *ISubscriptionServiceImpl) Delete(ctx context.Context, dashboardID, id uint) error {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return err
+	}
+
 	sub, err := s.find(ctx, dashboardID, id)
 	if err != nil {
 		return err
@@ -256,6 +273,10 @@ func toRunResponse(run *model.DashboardSubscriptionRun) dto.DashboardSubscriptio
 }
 
 func (s *ISubscriptionServiceImpl) RunNow(ctx context.Context, dashboardID, id uint) (*dto.DashboardSubscriptionRunResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	sub, err := s.find(ctx, dashboardID, id)
 	if err != nil {
 		return nil, err
@@ -268,6 +289,10 @@ func (s *ISubscriptionServiceImpl) RunNow(ctx context.Context, dashboardID, id u
 }
 
 func (s *ISubscriptionServiceImpl) Runs(ctx context.Context, dashboardID, id uint) ([]dto.DashboardSubscriptionRunResponse, error) {
+	if err := helper.RequirePermission(ctx, permission.BoardsShare); err != nil {
+		return nil, err
+	}
+
 	if _, err := s.find(ctx, dashboardID, id); err != nil {
 		return nil, err
 	}

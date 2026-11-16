@@ -1,4 +1,6 @@
 import { variables } from '@/core/theme/variables';
+import { useCan } from '@/hooks/useFeaturePermissions';
+import { PERM } from '@/core/auth/permissions';
 import api from '@/api';
 import type { DashboardCardType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -226,6 +228,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   const queryClient = useQueryClient();
   const setBoard = useSetBoard(board.connectionId);
   const [editing, setEditing] = useState(false);
+  const can = useCan();
   const [sharing, setSharing] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [refreshMs, setRefreshMs] = useLocalStorage(`dashboard-refresh-${board.id}`, 0);
@@ -284,20 +287,28 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
               <CustomIcon type='refresh' />
             </IconButton>
           </Tooltip>
-          <Tooltip title={locales.share_title}>
-            <IconButton aria-label={locales.share_title} onClick={() => setSharing(true)} data-testid='dashboard-share'>
-              <CustomIcon type='share' />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={locales.schedule_title}>
-            <IconButton
-              aria-label={locales.schedule_title}
-              onClick={() => setScheduling(true)}
-              data-testid='dashboard-schedule'
-            >
-              <CustomIcon type='clock' />
-            </IconButton>
-          </Tooltip>
+          {can(PERM.boardsShare) && (
+            <Tooltip title={locales.share_title}>
+              <IconButton
+                aria-label={locales.share_title}
+                onClick={() => setSharing(true)}
+                data-testid='dashboard-share'
+              >
+                <CustomIcon type='share' />
+              </IconButton>
+            </Tooltip>
+          )}
+          {can(PERM.boardsShare) && (
+            <Tooltip title={locales.schedule_title}>
+              <IconButton
+                aria-label={locales.schedule_title}
+                onClick={() => setScheduling(true)}
+                data-testid='dashboard-schedule'
+              >
+                <CustomIcon type='clock' />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title={locales.dashboard_export}>
             <IconButton
               aria-label={locales.dashboard_export}
