@@ -2,11 +2,13 @@ package aiProvider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/dbo-studio/dbo/internal/model"
@@ -101,6 +103,10 @@ func ProviderError(err error) error {
 		return ErrRequestTooLong
 	}
 
+	if msg, ok := streamErrorMessage(err); ok {
+		return fmt.Errorf("the provider failed while answering: %s; try again, or rephrase the request", msg)
+	}
+
 	// What the network said (refused, no such host, bad response) helps more than a guess.
 	var netErr net.Error
 	if errors.As(err, &netErr) {
@@ -108,4 +114,25 @@ func ProviderError(err error) error {
 	}
 
 	return err
+}
+
+const streamErrorPrefix = "received error while streaming: "
+
+// streamErrorMessage extracts the provider's own message from an error event
+// sent mid-stream (e.g. llama.cpp aborting on a runaway tool call), which the
+// SDK reports as plain text rather than an API error.
+func streamErrorMessage(err error) (string, bool) {
+	text, ok := strings.CutPrefix(err.Error(), streamErrorPrefix)
+	if !ok {
+		return "", false
+	}
+
+	var payload struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal([]byte(text), &payload) == nil && payload.Message != "" {
+		return payload.Message, true
+	}
+
+	return text, true
 }
