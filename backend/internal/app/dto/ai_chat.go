@@ -16,6 +16,8 @@ type (
 		AgentTier string `json:"-"`
 		// NoSQL is set by the server for MongoDB and Redis connections, which get their own read-only tools.
 		NoSQL bool `json:"-"`
+		// Redis is set by the server for the Redis family, which has no reports.
+		Redis bool `json:"-"`
 	}
 
 	AiContextOptions struct {

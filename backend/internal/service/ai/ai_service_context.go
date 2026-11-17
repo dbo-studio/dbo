@@ -54,7 +54,16 @@ func (s *AiServiceImpl) aiContext(ctx context.Context, conn *model.Connection, r
 			return "", err
 		}
 
-		return serviceDbtools.ListContainers(ctx, repo)
+		containers, err := serviceDbtools.ListContainers(ctx, repo)
+		if err != nil {
+			return "", err
+		}
+
+		if req.ContextOpts == nil {
+			return containers, nil
+		}
+
+		return containers + serviceDbtools.DescribeAttached(ctx, repo, req.ContextOpts.Tables), nil
 	}
 
 	repo, err := database.NewAIContextRepository(ctx, conn, s.cm)

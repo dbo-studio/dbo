@@ -12,6 +12,7 @@ import (
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
+	serviceDbtools "github.com/dbo-studio/dbo/internal/service/dbtools"
 	serviceJob "github.com/dbo-studio/dbo/internal/service/job"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -264,9 +265,8 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	// A NoSQL connection has no SQL schema to complete from; answer with nothing instead of failing the editor.
 	if databaseContract.IsNoSQL(connection.ConnectionType) {
-		return &dto.AutoCompleteResponse{Databases: []string{}, Schemas: []string{}, Tables: []string{}, Views: []string{}, Columns: map[string][]string{}}, nil
+		return i.noSQLAutoComplete(ctx, connection), nil
 	}
 
 	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
@@ -296,6 +296,40 @@ func (i IQueryServiceImpl) AutoComplete(ctx context.Context, req *dto.AutoComple
 	}
 
 	return autocomplete, nil
+}
+
+// noSQLAutoComplete lists the connection's containers as tables: MongoDB collections (database/collection) with their
+// databases, Redis databases (db0). There is no SQL schema to complete from, so a driver that cannot answer gives an
+// empty list instead of failing the editor.
+func (i IQueryServiceImpl) noSQLAutoComplete(ctx context.Context, connection *model.Connection) *dto.AutoCompleteResponse {
+	res := &dto.AutoCompleteResponse{Databases: []string{}, Schemas: []string{}, Tables: []string{}, Views: []string{}, Columns: map[string][]string{}}
+
+	repo, err := database.NewNoSQLRepository(ctx, connection, i.cm)
+	if err != nil {
+		return res
+	}
+
+	names, err := serviceDbtools.ContainerNames(ctx, repo, serviceDbtools.MaxPickerContainers)
+	if err != nil {
+		return res
+	}
+
+	res.Tables = names
+
+	if databaseContract.IsMongo(connection.ConnectionType) {
+		res.Databases = databasesOf(names)
+	}
+
+	return res
+}
+
+// databasesOf is the distinct databases of MongoDB containers named database/collection, in listed order.
+func databasesOf(containers []string) []string {
+	return lo.Uniq(lo.FilterMap(containers, func(name string, _ int) (string, bool) {
+		db, _, found := strings.Cut(name, "/")
+
+		return db, found
+	}))
 }
 
 func (i IQueryServiceImpl) findResultFromCache(ctx context.Context, req *dto.AutoCompleteRequest) (*dto.AutoCompleteResponse, error) {

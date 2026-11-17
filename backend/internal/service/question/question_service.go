@@ -270,6 +270,10 @@ func (s IQuestionServiceImpl) guardQuery(ctx context.Context, connectionID int32
 		return apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
+	if databaseContract.IsRedisFamily(conn.ConnectionType) {
+		return apperror.BadRequest(errors.New("reports are not available on Redis"))
+	}
+
 	if databaseContract.IsNoSQL(conn.ConnectionType) {
 		if err := s.toolRegistry.ValidateNoSQLQuery(ctx, connectionID, text); err != nil {
 			return apperror.BadRequest(err)

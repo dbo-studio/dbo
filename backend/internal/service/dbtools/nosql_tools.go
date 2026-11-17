@@ -3,6 +3,7 @@ package serviceDbtools
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -42,8 +43,15 @@ var noSQLReportTools = map[string]bool{ToolListReports: true, ToolPinReport: tru
 // user reviews and applies them. A read-only connection never gets them.
 var noSQLAgentTools = map[string]bool{ToolPreviewWrite: true, ToolUpdatePlan: true}
 
-// AllowedNoSQLTool is the server-side list of tools a NoSQL chat turn may call.
-func AllowedNoSQLTool(agent bool, tier, name string) bool {
+// isNoSQLReportTool is true for the tools that draw, save or pin reports. Redis has no reports, so it gets none of them.
+func isNoSQLReportTool(name string) bool { return noSQLChartTools[name] || noSQLReportTools[name] }
+
+// AllowedNoSQLTool is the server-side list of tools a NoSQL chat turn may call. reports is false on Redis.
+func AllowedNoSQLTool(agent bool, tier string, reports bool, name string) bool {
+	if isNoSQLReportTool(name) && !reports {
+		return false
+	}
+
 	if noSQLAgentTools[name] {
 		return agent && tier != TierReadOnly
 	}
@@ -60,8 +68,8 @@ const (
 	describeSample   = 200
 )
 
-// NoSQLChatTools returns the tool definitions for a NoSQL connection.
-func NoSQLChatTools(agent bool, tier string) []openai.ChatCompletionToolUnionParam {
+// NoSQLChatTools returns the tool definitions for a NoSQL connection; reports is false on Redis.
+func NoSQLChatTools(agent bool, tier string, reports bool) []openai.ChatCompletionToolUnionParam {
 	container := map[string]any{"type": "string", "description": "Container id as returned by list_containers (MongoDB: database/collection, Redis: db0)."}
 
 	chartTypes := []string{"bar", "row", "line", "area", "pie", "number", "table", "combo", "scatter", "funnel", "gauge", "heatmap", "pivot", "trend"}
@@ -175,6 +183,12 @@ func NoSQLChatTools(agent bool, tier string) []openai.ChatCompletionToolUnionPar
 		}))
 	}
 
+	if !reports {
+		tools = slices.DeleteFunc(tools, func(t openai.ChatCompletionToolUnionParam) bool {
+			return t.OfFunction != nil && isNoSQLReportTool(t.OfFunction.Function.Name)
+		})
+	}
+
 	return tools
 }
 
@@ -229,17 +243,27 @@ func (r *Registry) executeNoSQL(ctx context.Context, name string, args map[strin
 	return truncateText(out, maxToolOutput), true, err
 }
 
-// ListContainers walks the driver's tree: a node with no children of its own that opens in Browse is a container.
-func ListContainers(ctx context.Context, repo databaseContract.NoSQLRepository) (string, error) {
+// MaxPickerContainers bounds the containers offered for attaching to a chat; the model's own list stays at maxContainers.
+const MaxPickerContainers = 2000
+
+// maxAttachedContainers and maxAttachedText bound how much schema the user's attachments add to a prompt.
+const (
+	maxAttachedContainers = 5
+	maxAttachedText       = 3000
+)
+
+// ContainerNames walks the driver's tree: a node with no children of its own that opens in Browse is a container
+// (MongoDB: database/collection, Redis: db0). At most limit names come back.
+func ContainerNames(ctx context.Context, repo databaseContract.NoSQLRepository, limit int) ([]string, error) {
 	root, err := repo.Tree(ctx, "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var names []string
 
 	for _, n := range root.Children {
-		if len(names) >= maxContainers {
+		if len(names) >= limit {
 			break
 		}
 
@@ -259,13 +283,65 @@ func ListContainers(ctx context.Context, repo databaseContract.NoSQLRepository) 
 		}
 
 		for _, c := range sub.Children {
-			if c.Type == databaseContract.TableNodeType && len(names) < maxContainers {
+			if c.Type == databaseContract.TableNodeType && len(names) < limit {
 				names = append(names, c.ID)
 			}
 		}
 	}
 
+	return names, nil
+}
+
+// ListContainers is the container list the assistant is told about.
+func ListContainers(ctx context.Context, repo databaseContract.NoSQLRepository) (string, error) {
+	names, err := ContainerNames(ctx, repo, maxContainers)
+	if err != nil {
+		return "", err
+	}
+
 	return formatStringList(names), nil
+}
+
+// DescribeAttached describes the containers the user attached to the chat, the way a SQL chat is given the
+// definitions of attached tables. A name the driver does not list is skipped: the client may not name its own containers.
+func DescribeAttached(ctx context.Context, repo databaseContract.NoSQLRepository, attached []string) string {
+	if len(attached) == 0 {
+		return ""
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	defer cancel()
+
+	names, err := ContainerNames(ctx, repo, MaxPickerContainers)
+	if err != nil {
+		return ""
+	}
+
+	var (
+		b     strings.Builder
+		count int
+	)
+
+	for _, name := range attached {
+		if count >= maxAttachedContainers {
+			break
+		}
+
+		if !slices.Contains(names, name) {
+			continue
+		}
+
+		out, err := describeContainer(ctx, repo, name)
+		if err != nil {
+			continue
+		}
+
+		count++
+
+		fmt.Fprintf(&b, "\n\nThe user attached %s:\n%s", name, truncateText(out, maxAttachedText))
+	}
+
+	return b.String()
 }
 
 func describeContainer(ctx context.Context, repo databaseContract.NoSQLRepository, container string) (string, error) {

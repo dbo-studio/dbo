@@ -219,7 +219,7 @@ func (s *AiServiceImpl) runToolCall(
 	)
 
 	switch {
-	case toolCtx.NoSQL && !serviceDbtools.AllowedNoSQLTool(req.AgentMode(), req.AgentTier, call.Name):
+	case toolCtx.NoSQL && !serviceDbtools.AllowedNoSQLTool(req.AgentMode(), req.AgentTier, !req.Redis, call.Name):
 		err = blockedError{fmt.Sprintf("tool %q is not available on this connection", call.Name)}
 	case !toolCtx.NoSQL && !serviceDbtools.AllowedTool(req.AgentMode(), req.AgentTier, call.Name):
 		err = blockedError{fmt.Sprintf("tool %q is not available in %s mode", call.Name, modeName(req.Mode))}

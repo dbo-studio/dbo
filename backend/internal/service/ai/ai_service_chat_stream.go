@@ -53,6 +53,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 
 	// MongoDB and Redis have their own tool set; a read-only connection already runs in Ask above.
 	req.NoSQL = databaseContract.IsNoSQL(conn.ConnectionType)
+	req.Redis = databaseContract.IsRedisFamily(conn.ConnectionType)
 
 	if err := emitEvent(aiProvider.StreamEvent{
 		Type:  "status",
@@ -82,7 +83,7 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
 	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
 	if req.NoSQL {
-		providerReq.Tools = serviceDbtools.NoSQLChatTools(req.AgentMode(), req.AgentTier)
+		providerReq.Tools = serviceDbtools.NoSQLChatTools(req.AgentMode(), req.AgentTier, !req.Redis)
 	}
 	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
