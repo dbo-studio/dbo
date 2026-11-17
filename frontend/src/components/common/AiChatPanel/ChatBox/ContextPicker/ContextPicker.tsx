@@ -3,7 +3,7 @@ import type { IconTypes } from '@/components/base/CustomIcon/types';
 import locales from '@/locales';
 import { Typography } from '@mui/material';
 import { Fragment, useEffect, useRef, type JSX } from 'react';
-import { CONTEXT_GROUP_LABEL, type ContextOption, type ContextOptionKind } from '../../utils/contextOptions';
+import { type ContextOption, type ContextOptionKind, groupOf } from '../../utils/contextOptions';
 import {
   ContextPickerGroupStyled,
   ContextPickerItemStyled,
@@ -56,8 +56,8 @@ export default function ContextPicker({
           </Typography>
         )}
         {options.map((option, index) => {
-          const group = CONTEXT_GROUP_LABEL[option.kind];
-          const newGroup = index === 0 || CONTEXT_GROUP_LABEL[options[index - 1].kind] !== group;
+          const group = groupOf(option);
+          const newGroup = index === 0 || groupOf(options[index - 1]) !== group;
 
           return (
             <Fragment key={`${option.kind}-${option.label}`}>

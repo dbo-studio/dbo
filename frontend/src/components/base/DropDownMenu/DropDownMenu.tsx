@@ -36,7 +36,10 @@ export default function DropDownMenu({ open, onClose, anchorRef, children }: Dro
           }}
         >
           <Paper>
-            <ClickAwayListener onClickAway={handleClose}>{children}</ClickAwayListener>
+            {/* ClickAwayListener needs a child that holds a ref; a plain function component as children would never close. */}
+            <ClickAwayListener onClickAway={handleClose}>
+              <div>{children}</div>
+            </ClickAwayListener>
           </Paper>
         </Grow>
       )}

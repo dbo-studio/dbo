@@ -4,6 +4,7 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import type { ChatBoxProps } from '../types';
 import { ChatBoxStyled, ComposerFooterStyled, SendButtonStyled } from './ChatBox.styled';
 import ChatContext from './ChatContext/ChatContext';
+import ContextAdd from './ChatContext/ContextAdd';
 import ContextBudget from './ContextBudget';
 import PinnedPlan from './PinnedPlan';
 import QueuedMessage from './QueuedMessage';
@@ -19,6 +20,7 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
   const queued = useAiStore((state) => state.sessions[chatId]?.queued?.text);
   const settled = useAiStore((state) => state.sessions[chatId]?.settled ?? 0);
   const setQueued = useAiStore((state) => state.setQueued);
+  const hasText = useAiStore((state) => state.context.input.trim() !== '');
 
   // While a turn runs, Enter queues the message instead of dropping it, like Cursor.
   const send = (): void => {
@@ -45,7 +47,15 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
   if (!aiReady) return null;
 
   return (
-    <ChatBoxStyled>
+    <ChatBoxStyled
+      onMouseDown={(e) => {
+        // Clicks on the padding or empty footer space land in the textarea, like every chat composer.
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+          e.currentTarget.querySelector('textarea')?.focus();
+        }
+      }}
+    >
       <PinnedPlan />
       {queued !== undefined && (
         <QueuedMessage message={queued} onCancel={() => setQueued(chatId, undefined)} onSendNow={onCancel} />
@@ -53,15 +63,17 @@ export default function ChatBox({ autocomplete, loading, onSend, onCancel }: Cha
       {autocomplete && <ChatContext autocomplete={autocomplete} />}
       <ChatTextInput loading={loading} onSend={send} onCancel={onCancel} autocomplete={autocomplete} />
       <ComposerFooterStyled>
+        {autocomplete && <ContextAdd autocomplete={autocomplete} />}
         <ModeBar />
         <Providers />
         <ContextBudget />
-        {loading ? (
+        {loading && !hasText ? (
           <SendButtonStyled onClick={onCancel} variant='contained' color='primary' data-testid='ai-chat-cancel'>
             <CustomIcon type='pause' size='xs' />
           </SendButtonStyled>
         ) : (
-          <SendButtonStyled onClick={() => onSend()} variant='contained' color='primary'>
+          // While a turn runs, a typed message is queued, exactly as Enter does.
+          <SendButtonStyled onClick={send} disabled={!hasText} variant='contained' color='primary'>
             <CustomIcon type='arrowUp' size='xs' />
           </SendButtonStyled>
         )}

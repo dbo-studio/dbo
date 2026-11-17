@@ -1,3 +1,4 @@
+import { isMongoDriver, isRedisDriver } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
@@ -12,6 +13,8 @@ export type ContextOption = {
   /** Text sent for query / selection options. */
   text?: string;
   attached: boolean;
+  /** Group title when it is not the kind's own: a MongoDB table is a collection, a Redis one a database. */
+  group?: string;
 };
 
 export const CONTEXT_GROUP_LABEL: Record<ContextOptionKind, string> = {
@@ -20,6 +23,16 @@ export const CONTEXT_GROUP_LABEL: Record<ContextOptionKind, string> = {
   table: locales.ai_context_group_tables,
   view: locales.ai_context_group_views
 };
+
+/** The title of the group that holds an option. */
+export const groupOf = (option: ContextOption): string => option.group ?? CONTEXT_GROUP_LABEL[option.kind];
+
+/** What the connection calls the things a chat can attach in place of tables. */
+export function tableGroupLabel(connectionType: string | undefined): string {
+  if (isMongoDriver(connectionType)) return locales.ai_context_group_collections;
+  if (isRedisDriver(connectionType)) return locales.ai_context_group_databases;
+  return CONTEXT_GROUP_LABEL.table;
+}
 
 function editorSelection(): string {
   for (const instance of editor.getEditors()) {
@@ -42,7 +55,8 @@ function activeQuery(): string {
 export function buildContextOptions(
   autocomplete: AutoCompleteType | undefined,
   context: AiContextType,
-  search: string
+  search: string,
+  tablesGroup?: string
 ): ContextOption[] {
   const needle = search.trim().toLowerCase();
   const options: ContextOption[] = [];
@@ -62,7 +76,8 @@ export function buildContextOptions(
       ...autocomplete.tables.map((label) => ({
         kind: 'table' as const,
         label,
-        attached: context.tables.includes(label)
+        attached: context.tables.includes(label),
+        group: tablesGroup
       })),
       ...autocomplete.views.map((label) => ({ kind: 'view' as const, label, attached: context.views.includes(label) }))
     );

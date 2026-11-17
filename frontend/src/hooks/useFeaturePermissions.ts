@@ -1,4 +1,6 @@
 import { type Can, makeCan, PERM } from '@/core/auth/permissions';
+import { isRedisDriver } from '@/core/db/connectionAliases';
+import { useCurrentConnection } from './useCurrentConnection';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useMemo } from 'react';
 
@@ -17,4 +19,12 @@ export function useFeaturePermissions(): FeaturePermissions {
   const can = useCan();
 
   return { cli: can(PERM.dataCli), import: can(PERM.dataImport), export: can(PERM.dataExport), ai: can(PERM.aiUse) };
+}
+
+/** Reports are for SQL and MongoDB; Redis has none. Also needs the reports permission. */
+export function useCanReports(): boolean {
+  const can = useCan();
+  const type = useCurrentConnection()?.type;
+
+  return can(PERM.boardsReports) && !isRedisDriver(type);
 }

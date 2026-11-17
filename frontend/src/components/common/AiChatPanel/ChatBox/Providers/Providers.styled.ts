@@ -6,7 +6,9 @@ export const ProvidersStyled = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(0.5),
   flex: 1,
-  minWidth: 0
+  minWidth: 0,
+  // The model sits next to the send button, like Claude's composer; the mode stays on the left.
+  justifyContent: 'flex-end'
 }));
 
 export const ModelButtonStyled = styled(Button)(({ theme }) => ({
@@ -47,3 +49,13 @@ export const VisuallyHidden = styled('span')({
   clip: 'rect(0 0 0 0)',
   whiteSpace: 'nowrap'
 });
+
+/** The same hiding as VisuallyHidden, for an element that already has its own styles. */
+export const visuallyHiddenSx = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap'
+} as const;

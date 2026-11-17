@@ -15,6 +15,9 @@ export default function ContextBudget(): JSX.Element {
   const label = locales.ai_context_budget.replace('{used}', formatTokens(used)).replace('{limit}', formatTokens(limit));
   const ratio = Math.min(used / limit, 1);
 
+  // An idle ring reads as a loading spinner; show it only once the context is filling up.
+  if (ratio < 0.5) return <></>;
+
   return (
     <Tooltip title={`${label} · ${locales.ai_context_budget_desc}`} enterDelay={500}>
       {/* A ring like Cursor's context meter; the numbers are in the tooltip. */}

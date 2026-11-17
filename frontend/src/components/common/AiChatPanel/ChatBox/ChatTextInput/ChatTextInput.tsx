@@ -3,7 +3,8 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box } from '@mui/material';
 import { useMemo, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
-import { buildContextOptions, toggleContextOption, type ContextOption } from '../../utils/contextOptions';
+import { buildContextOptions, type ContextOption, tableGroupLabel, toggleContextOption } from '../../utils/contextOptions';
+import { useCurrentConnection } from '@/hooks';
 import ContextPicker from '../ContextPicker/ContextPicker';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
 
@@ -41,9 +42,10 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
     setInput('');
   }
 
+  const tablesGroup = tableGroupLabel(useCurrentConnection()?.type);
   const mentionOptions = useMemo(
-    () => (mention ? buildContextOptions(autocomplete, context, mention.query) : []),
-    [autocomplete, context, mention]
+    () => (mention ? buildContextOptions(autocomplete, context, mention.query, tablesGroup) : []),
+    [autocomplete, context, mention, tablesGroup]
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -70,6 +72,8 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
   const selectedOption = Math.min(activeOption, mentionOptions.length - 1);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter that confirms an IME candidate (Persian, Arabic, CJK keyboards) must not send the message.
+    if (e.nativeEvent.isComposing) return;
     if (mentionOpen) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
@@ -135,10 +139,13 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         <ChatTextInputStyled
           data-testid='ai-chat-input'
+          dir='auto'
           placeholder={locales.ask_anything}
           value={input}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          // Picker options keep the focus on mouse down, so a blur means the user went elsewhere.
+          onBlur={() => setMention(null)}
           onSelect={(e) => {
             const target = e.target as HTMLTextAreaElement;
             setCursorPos(target.selectionStart ?? 0);

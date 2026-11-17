@@ -4,19 +4,24 @@ import { alpha, Box, Button, styled } from '@mui/material';
 export const ChatBoxStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(0.75),
+  gap: theme.spacing(1),
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: variables.radius.medium,
-  padding: theme.spacing(1),
+  borderRadius: 16,
+  padding: theme.spacing(1.25, 1.5, 1),
   backgroundColor: theme.palette.background.paper,
   width: '100%',
-  maxHeight: '280px',
-  boxShadow: theme.palette.mode === 'light' ? `0 1px 3px ${alpha(theme.palette.common.black, 0.04)}` : 'none'
+  maxHeight: '320px',
+  boxShadow: theme.palette.mode === 'light' ? `0 1px 3px ${alpha(theme.palette.common.black, 0.04)}` : 'none',
+  transition: 'border-color 120ms ease, box-shadow 120ms ease',
+  '&:focus-within': {
+    borderColor: theme.palette.primary.main,
+    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}`
+  }
 }));
 
 export const SendButtonStyled = styled(Button)(({ theme }) => ({
-  width: '28px',
-  height: '28px',
+  width: '32px',
+  height: '32px',
   padding: theme.spacing(0.5),
   minWidth: 'unset',
   flexShrink: 0,
@@ -30,7 +35,7 @@ export const SendButtonStyled = styled(Button)(({ theme }) => ({
 export const ComposerFooterStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
-  alignItems: 'flex-end',
+  alignItems: 'center',
   justifyContent: 'space-between',
   gap: theme.spacing(0.5),
   minWidth: 0

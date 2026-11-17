@@ -319,6 +319,8 @@
   "ai_provider_not_set_up": "Not set up",
   "ai_context_group_editor": "Editor",
   "ai_context_group_tables": "Tables",
+  "ai_context_group_collections": "Collections",
+  "ai_context_group_databases": "Databases",
   "ai_context_group_views": "Views",
   "ai_context_remove": "Remove from context",
   "ai_context_no_matches": "Nothing matches",

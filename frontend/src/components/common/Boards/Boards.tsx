@@ -6,7 +6,7 @@ import type { IconProps } from '@/components/base/CustomIcon/types';
 import Search from '@/components/base/Search/Search';
 import { PERM } from '@/core/auth/permissions';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
-import { useCan } from '@/hooks/useFeaturePermissions';
+import { useCan, useCanReports } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { Box, IconButton, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
@@ -23,7 +23,7 @@ export default function Boards(): JSX.Element {
   const connectionId = connection?.id;
   const can = useCan();
   const canDashboards = can(PERM.boardsDashboards);
-  const canReports = can(PERM.boardsReports);
+  const canReports = useCanReports();
   const run = useDashboardCommands();
   const [search, setSearch] = useState('');
   const [menu, setMenu] = useState<MenuType[]>([]);

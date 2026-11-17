@@ -1,6 +1,7 @@
 import api from '@/api';
 import { importBoard } from '@/components/common/AgentWorkspace/BoardView/boardJson';
 import { contextScope } from '@/components/common/AiChatPanel/utils/contextScope';
+import { isMongoDriver, isNoSQLType } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { useCurrentConnection } from '@/hooks';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
@@ -26,6 +27,13 @@ export type DashboardCommand =
   | 'deleteReport';
 
 export type DashboardCommandParams = { dashboardId?: number; questionId?: number; name?: string };
+
+/** A new report starts as a valid read: MongoDB and Redis reports are a JSON command, not SQL. */
+const starterReportQuery = (type: string | undefined): string => {
+  if (isMongoDriver(type)) return JSON.stringify({ command: 'show dbs' });
+  if (isNoSQLType(type)) return JSON.stringify({ command: 'DBSIZE' });
+  return 'SELECT 1';
+};
 
 const isDashboardTab = (tab: TabType): tab is DashboardTabType => tab.mode === TabMode.Dashboard;
 const isQuestionTab = (tab: TabType): tab is QuestionTabType => tab.mode === TabMode.Question;
@@ -131,7 +139,7 @@ export const useDashboardCommands = (): ((
             const question = await api.question.createQuestion({
               connectionId: Number(currentConnection?.id),
               name: locales.question_untitled,
-              sql: 'SELECT 1',
+              sql: starterReportQuery(currentConnection?.type),
               chart: { type: 'table', y: [] },
               ...scope
             });

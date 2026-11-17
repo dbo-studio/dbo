@@ -62,7 +62,7 @@ export function reportFromTrace(trace: AiToolTrace): ChartReport | undefined {
     return {
       id: trace.id,
       title: args.title ?? '',
-      sql: args.sql ?? nosqlQueryText(args),
+      sql: nosqlQueryText(args) || (args.sql ?? ''),
       rows,
       columns,
       spec: {

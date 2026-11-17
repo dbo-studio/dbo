@@ -11,7 +11,13 @@ import { Chip, Divider, ListSubheader, Menu, MenuItem, Tooltip, Typography } fro
 import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { useAiChatMode } from '../../hooks/useAiChatMode';
-import { CapabilityIconStyled, ModelButtonStyled, ProvidersStyled, VisuallyHidden } from './Providers.styled';
+import {
+  CapabilityIconStyled,
+  ModelButtonStyled,
+  ProvidersStyled,
+  VisuallyHidden,
+  visuallyHiddenSx
+} from './Providers.styled';
 import { variables } from '@/core/theme/variables';
 
 const badgeSx = { height: 18, fontSize: variables.fontSize.xxs, '& .MuiChip-label': { px: 0.75 } };
@@ -74,7 +80,8 @@ export default function Providers(): JSX.Element {
           onClick={(event) => setAnchorEl(event.currentTarget)}
           data-testid='ai-model-picker'
         >
-          <span className='model-label'>{active ? active.model : locales.ai_select_model}</span>
+          {/* The org prefix (unsloth/) wastes the little room there is; the tooltip keeps the full id. */}
+          <span className='model-label'>{active ? active.model.split('/').pop() : locales.ai_select_model}</span>
           <CustomIcon type='chevronDown' size='xs' />
         </ModelButtonStyled>
       </Tooltip>
@@ -92,6 +99,8 @@ export default function Providers(): JSX.Element {
             data-testid='ai-model-capability'
             data-tools={activeCaps.tools}
             warn={!activeCaps.tools}
+            // A model that does support tools needs no badge: only a warning earns the space.
+            sx={activeCaps.tools ? visuallyHiddenSx : undefined}
           >
             <CustomIcon type={activeCaps.tools ? 'check' : 'stop'} size='xs' />
             <VisuallyHidden>

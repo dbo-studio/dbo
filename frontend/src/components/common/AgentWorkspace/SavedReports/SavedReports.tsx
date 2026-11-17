@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { useCan } from '@/hooks/useFeaturePermissions';
+import { useCan, useCanReports } from '@/hooks/useFeaturePermissions';
 import { PERM } from '@/core/auth/permissions';
 import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
@@ -15,6 +15,7 @@ import { useWorkspaceCanvas } from '../workspaceCanvas.store';
 export default function SavedReports(): JSX.Element {
   const queryClient = useQueryClient();
   const can = useCan();
+  const canReports = useCanReports();
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const showReport = useWorkspaceCanvas((state) => state.showReport);
   const showBoard = useWorkspaceCanvas((state) => state.showBoard);
@@ -34,7 +35,7 @@ export default function SavedReports(): JSX.Element {
     queryFn: () => api.question.getQuestions(Number(connectionId)),
     // Lists change behind this screen (the agent saves and pins), so a stale one reloads on open.
     refetchOnMount: true,
-    enabled: !!connectionId && can(PERM.boardsReports)
+    enabled: !!connectionId && canReports
   });
 
   const { mutate: open } = useMutation({
@@ -61,7 +62,7 @@ export default function SavedReports(): JSX.Element {
 
   return (
     <Box sx={{ px: 1, pb: 1 }} data-testid='ai-saved-reports'>
-      {can(PERM.boardsReports) && (
+      {canReports && (
         <>
           <Typography variant='subtitle2' sx={{ px: 0.5, py: 1 }}>
             {locales.ai_reports}

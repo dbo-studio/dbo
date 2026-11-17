@@ -13,7 +13,7 @@ export const ChatTextInputStyled = styled(TextareaAutosize)(({ theme }) => ({
   outline: 'none',
   resize: 'none',
   maxHeight: '160px',
-  minHeight: '40px',
+  minHeight: '48px',
   color: theme.palette.text.text,
   padding: 0
 }));
