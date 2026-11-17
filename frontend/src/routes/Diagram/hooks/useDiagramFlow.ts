@@ -7,15 +7,7 @@ import {
   type DiagramPosition
 } from '@/core/diagram/layout';
 import type { ViewGraph } from '@/core/diagram/types';
-import {
-  applyEdgeChanges,
-  applyNodeChanges,
-  useReactFlow,
-  type Edge,
-  type EdgeChange,
-  type Node,
-  type NodeChange
-} from '@xyflow/react';
+import { useReactFlow, type Edge, type Node, type OnEdgesChange, type OnNodesChange } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TableFlowNode } from '../TableNode/TableNode';
 
@@ -82,8 +74,8 @@ export function useDiagramFlow({
 }: Args): {
   nodes: TableFlowNode[];
   edges: Edge[];
-  onNodesChange: (changes: NodeChange[]) => void;
-  onEdgesChange: (changes: EdgeChange[]) => void;
+  onNodesChange: OnNodesChange<TableFlowNode>;
+  onEdgesChange: OnEdgesChange;
   autoLayout: () => void;
   fit: () => void;
   exportImage: (format: 'png' | 'svg') => Promise<void>;
@@ -198,11 +190,11 @@ export function useDiagramFlow({
     [layoutKey]
   );
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]): void => {
+  const onNodesChange = useCallback<OnNodesChange<TableFlowNode>>(
+    (changes): void => {
       setNodes((current) => {
-        const next = applyNodeChanges(changes, current) as TableFlowNode[];
-        const moved = changes.some((change) => change.type === 'position' && change.dragging === false);
+        const next = changes.applyTo(current);
+        const moved = changes.getByType('position').some((change) => change.dragging === false);
         if (moved) {
           persistPositions(next);
         }
@@ -212,8 +204,8 @@ export function useDiagramFlow({
     [persistPositions]
   );
 
-  const onEdgesChange = useCallback((changes: EdgeChange[]): void => {
-    setEdges((current) => applyEdgeChanges(changes, current));
+  const onEdgesChange = useCallback<OnEdgesChange>((changes): void => {
+    setEdges((current) => changes.applyTo(current));
   }, []);
 
   const autoLayout = useCallback((): void => {

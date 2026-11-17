@@ -1,4 +1,3 @@
-import { variables } from '@/core/theme/variables';
 import { alpha, Box, Button, styled } from '@mui/material';
 
 export const ChatBoxStyled = styled(Box)(({ theme }) => ({

@@ -6,7 +6,7 @@ import { useCurrentConnection, useSelectedTab } from '@/hooks';
 import locales from '@/locales';
 import type { DiagramTabType } from '@/types/Tab';
 import { CircularProgress, useTheme } from '@mui/material';
-import { Background, ReactFlow, ReactFlowProvider, type Node } from '@xyflow/react';
+import { Background, ReactFlow, ReactFlowProvider } from '@xyflow/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 import ChangesetPanel from './ChangesetPanel/ChangesetPanel';
 import { DiagramCanvasStyled, DiagramLoadingStyled, DiagramPanelStyled } from './Diagram.styled';
@@ -113,12 +113,13 @@ function DiagramCanvas(): JSX.Element {
           />
         ) : (
           <ReactFlow
+            className={theme.palette.mode}
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            onNodeClick={(_event, node: Node): void => setSelectedNodeId(node.id)}
+            onNodeClick={(_event, node): void => setSelectedNodeId(node.id)}
             onPaneClick={(): void => setSelectedNodeId(null)}
             nodesConnectable={false}
             nodesDraggable

@@ -23,7 +23,6 @@
     "@monaco-editor/react": "^4.7.0",
     "@mui/material": "^9.1.1",
     "@mui/system": "^9.1.1",
-    "@swc/core": "^1.15.0",
     "@tanstack/react-form": "^1.33.0",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-virtual": "^3.14.3",
@@ -32,8 +31,8 @@
     "@tauri-apps/plugin-haptics": "^2.4.2",
     "@tauri-apps/plugin-opener": "^2.5.4",
     "@tauri-apps/plugin-os": "^2.3.2",
-    "@wterm/react": "^0.5.9",
-    "@xyflow/react": "^12.11.3",
+    "@wterm/react": "^0.6.0",
+    "@xyflow/react": "^13.0.2",
     "axios": "^1.18.0",
     "clsx": "^2.1.1",
     "deep-object-diff": "^1.1.9",
@@ -41,7 +40,7 @@
     "idb": "^8.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.21.0",
-    "mermaid": "11.17.2",
+    "mermaid": "12.3.0",
     "monaco-editor": "^0.57.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
@@ -58,10 +57,11 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.13",
     "@eslint-react/eslint-plugin": "^5.9.2",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^10.0.1",
-    "@rolldown/plugin-babel": "^0.2.3",
+    "@rolldown/plugin-babel": "^0.3.1",
     "@shikijs/monaco": "^4.2.0",
     "@tanstack/eslint-plugin-query": "^5.101.0",
     "@types/babel__core": "^7.20.5",
@@ -71,11 +71,10 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.2",
     "@types/uuid": "^10.0.0",
-    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-react": "^6.3.0",
     "babel-plugin-react-compiler": "1.0.0",
     "eruda": "^3.4.3",
     "eslint": "^10.5.0",
-    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jiti": "^2.7.0",
@@ -89,6 +88,13 @@
     "@rollup/rollup-linux-x64-gnu": "*"
   },
   "overrides": {
-    "zod-validation-error": "^4.0.2"
-  }
+    "dompurify": "^3.4.18",
+    "workbox-build": {
+      "glob": "^14.0.6"
+    }
+  },
+  "allowScripts": {
+    "fsevents": false
+  },
+  "type": "module"
 }

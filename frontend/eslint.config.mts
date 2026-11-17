@@ -1,7 +1,6 @@
 import eslintReact from '@eslint-react/eslint-plugin';
 import js from '@eslint/js';
 import pluginQuery from '@tanstack/eslint-plugin-query';
-import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -29,7 +28,8 @@ export default defineConfig([
       js.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
       eslintReact.configs['recommended-typescript'],
-      ...pluginQuery.configs['flat/recommended']
+      ...pluginQuery.configs['flat/recommended'],
+      reactHooks.configs.flat.recommended
     ],
     languageOptions: {
       parser: tseslint.parser,
@@ -39,15 +39,11 @@ export default defineConfig([
       },
       globals: globals.browser
     },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-compiler': reactCompiler
-    },
     rules: {
       'no-console': ['error', { allow: ['error'] }],
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-compiler/react-compiler': 'warn'
+      // Compiler diagnostics stay warnings, as with the former react-compiler/react-compiler rule.
+      ...Object.fromEntries(Object.keys(reactHooks.configs.flat.recommended.rules).map((rule) => [rule, 'warn'])),
+      'react-hooks/rules-of-hooks': 'error'
     }
   },
   {

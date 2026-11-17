@@ -86,7 +86,7 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
         }
         return locales.export_completed_successfully;
       case 'failed':
-        return `${locales.job_failed}: ${job.error}`;
+        return locales.job_failed;
       case 'canceled':
         return locales.job_cancelled;
       default:
@@ -178,13 +178,38 @@ export function JobProgressModal({ open, jobId, onClose, title, onRetry }: JobPr
               </Box>
             )}
 
-            <ProgressBar
-              testId='job-progress'
-              value={job.status === 'pending' ? undefined : job.progress}
-              status={job.status === 'failed' ? 'error' : job.status === 'completed' ? 'success' : 'active'}
-              label={`${locales.progress}: ${job.progress}%`}
-              detail={transfer ? transferDetail(transfer) : undefined}
-            />
+            {job.status !== 'failed' && job.status !== 'canceled' && (
+              <ProgressBar
+                testId='job-progress'
+                value={job.status === 'pending' ? undefined : job.progress}
+                status={job.status === 'completed' ? 'success' : 'active'}
+                label={`${locales.progress}: ${job.progress}%`}
+                detail={transfer ? transferDetail(transfer) : undefined}
+              />
+            )}
+
+            {job.status === 'failed' && job.error && (
+              <Typography
+                component='pre'
+                variant='caption'
+                data-testid='job-error'
+                sx={{
+                  m: 0,
+                  mt: 1,
+                  p: 1.5,
+                  maxHeight: 160,
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  fontFamily: 'monospace',
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                  color: 'text.secondary'
+                }}
+              >
+                {job.error}
+              </Typography>
+            )}
 
             {job.status === 'completed' &&
               job.type === 'import' &&
