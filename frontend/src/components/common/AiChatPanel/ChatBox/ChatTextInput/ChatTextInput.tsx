@@ -3,7 +3,12 @@ import { useAiStore } from '@/store/aiStore/ai.store';
 import { Box } from '@mui/material';
 import { useMemo, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
-import { buildContextOptions, type ContextOption, tableGroupLabel, toggleContextOption } from '../../utils/contextOptions';
+import {
+  buildContextOptions,
+  type ContextOption,
+  tableGroupLabel,
+  toggleContextOption
+} from '../../utils/contextOptions';
 import { useCurrentConnection } from '@/hooks';
 import ContextPicker from '../ContextPicker/ContextPicker';
 import { ChatTextInputStyled } from './ChatTextInput.styled';

@@ -157,11 +157,11 @@ export default function Redis({
           general={
             <>
               {text('name', locales.name)}
-          <form.Field name='env'>
-            {(field): JSX.Element => (
-              <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
-            )}
-          </form.Field>
+              <form.Field name='env'>
+                {(field): JSX.Element => (
+                  <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
+                )}
+              </form.Field>
               <ConnectionFormSection title={locales.connection_section_server}>
                 <ConnectionFormRowStyled hostPort>
                   {text('host', locales.host, { placeholder: 'localhost' })}

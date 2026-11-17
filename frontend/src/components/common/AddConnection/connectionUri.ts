@@ -97,7 +97,10 @@ export function parseConnectionUri(raw: string, engine: ConnectionUriEngine): Pa
   // File-path SSL params in URI cannot round-trip into our PEM fields.
   const lossy =
     unsupported.length > 0 ||
-    (engine === 'sqlserver' && url.pathname.replace(/^\//, '') !== '') || params.has('sslrootcert') || params.has('sslcert') || params.has('sslkey');
+    (engine === 'sqlserver' && url.pathname.replace(/^\//, '') !== '') ||
+    params.has('sslrootcert') ||
+    params.has('sslcert') ||
+    params.has('sslkey');
 
   const sslMode = sslModeFromQuery(params, engine) || (HOST_ENGINES.has(engine) ? 'disable' : DEFAULT_SSL_MODE);
   // SQL Server's path names an instance, not a database, so its database travels in the query.

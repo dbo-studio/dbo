@@ -77,4 +77,3 @@ export const ConnectionFormTabStyled = styled(Box, {
     outlineOffset: -1
   }
 }));
-

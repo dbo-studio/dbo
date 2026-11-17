@@ -11,7 +11,12 @@ type Props = {
 };
 
 /** The SSL / TLS section of engines without certificate files: on/off, and optionally skip-verify. */
-export default function ConnectionTLSFields({ enabled, onEnabledChange, insecure, onInsecureChange }: Props): JSX.Element {
+export default function ConnectionTLSFields({
+  enabled,
+  onEnabledChange,
+  insecure,
+  onInsecureChange
+}: Props): JSX.Element {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
       <FormControlLabel

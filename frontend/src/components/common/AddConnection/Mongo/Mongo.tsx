@@ -185,15 +185,18 @@ export default function Mongo({
           general={
             <>
               {text('name', locales.name)}
-          <form.Field name='env'>
-            {(field): JSX.Element => (
-              <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
-            )}
-          </form.Field>
+              <form.Field name='env'>
+                {(field): JSX.Element => (
+                  <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
+                )}
+              </form.Field>
               <ConnectionFormSection title={locales.connection_section_server}>
                 <form.Field name='mode'>
                   {(field): JSX.Element => (
-                    <ConnectionModeSwitch value={field.state.value} onChange={(next): void => field.handleChange(next)} />
+                    <ConnectionModeSwitch
+                      value={field.state.value}
+                      onChange={(next): void => field.handleChange(next)}
+                    />
                   )}
                 </form.Field>
                 <form.Subscribe selector={(state) => state.values.mode}>

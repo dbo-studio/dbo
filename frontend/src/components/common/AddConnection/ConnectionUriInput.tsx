@@ -16,7 +16,14 @@ type Props = {
 };
 
 /** The connection-string field of the "Connection string" mode, with its copy button. */
-export default function ConnectionUriInput({ value, errors, placeholder, onChange, onBlur, onCopy }: Props): JSX.Element {
+export default function ConnectionUriInput({
+  value,
+  errors,
+  placeholder,
+  onChange,
+  onBlur,
+  onCopy
+}: Props): JSX.Element {
   return (
     <>
       <Box>

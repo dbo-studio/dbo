@@ -194,16 +194,19 @@ export default function HostSql({
           general={
             <>
               {text('name', locales.name)}
-          <form.Field name='env'>
-            {(field): JSX.Element => (
-              <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
-            )}
-          </form.Field>
+              <form.Field name='env'>
+                {(field): JSX.Element => (
+                  <ConnectionEnvField value={field.state.value} onChange={(next): void => field.handleChange(next)} />
+                )}
+              </form.Field>
               <form.Subscribe selector={(state) => state.values.useUri}>
                 {(useUri): JSX.Element => (
                   <>
                     <ConnectionFormSection title={locales.connection_section_server}>
-                      <ConnectionModeSwitch value={useUri ? 'uri' : 'manual'} onChange={(mode): void => changeMode(mode === 'uri')} />
+                      <ConnectionModeSwitch
+                        value={useUri ? 'uri' : 'manual'}
+                        onChange={(mode): void => changeMode(mode === 'uri')}
+                      />
                       {useUri ? (
                         <form.Field name='uri'>
                           {(field): JSX.Element => (
@@ -240,15 +243,15 @@ export default function HostSql({
                         </>
                       )}
                     </ConnectionFormSection>
-              <ConnectionFormSection title={locales.connection_section_auth}>
-                <ConnectionFormRowStyled>
-                  {!useUri && text('username', locales.username)}
-                  {text('password', locales.password, { type: 'password' })}
-                </ConnectionFormRowStyled>
-                <ConnectionFormCheckboxRowStyled>
-                  {check('rememberPassword', locales.remember_password)}
-                </ConnectionFormCheckboxRowStyled>
-              </ConnectionFormSection>
+                    <ConnectionFormSection title={locales.connection_section_auth}>
+                      <ConnectionFormRowStyled>
+                        {!useUri && text('username', locales.username)}
+                        {text('password', locales.password, { type: 'password' })}
+                      </ConnectionFormRowStyled>
+                      <ConnectionFormCheckboxRowStyled>
+                        {check('rememberPassword', locales.remember_password)}
+                      </ConnectionFormCheckboxRowStyled>
+                    </ConnectionFormSection>
                   </>
                 )}
               </form.Subscribe>
