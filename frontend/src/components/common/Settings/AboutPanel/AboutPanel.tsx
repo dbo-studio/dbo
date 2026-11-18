@@ -1,5 +1,6 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { constants } from '@/core/constants';
+import { openExternal } from '@/core/help/openExternal';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Box, Typography, useTheme } from '@mui/material';
@@ -34,6 +35,10 @@ export default function AboutPanel(): JSX.Element {
               textDecoration: 'none',
               color: theme.palette.text.link
             }}
+            onClick={(event) => {
+              event.preventDefault();
+              void openExternal(constants.releasesUrl);
+            }}
           >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>
               {locales.releases_url}
@@ -50,6 +55,10 @@ export default function AboutPanel(): JSX.Element {
               textDecoration: 'none',
               marginRight: theme.spacing(1),
               color: theme.palette.text.link
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              void openExternal(constants.reportIssueUrl);
             }}
           >
             <Typography style={{ marginRight: theme.spacing(1) }} variant='caption'>

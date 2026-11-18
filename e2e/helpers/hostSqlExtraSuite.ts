@@ -411,7 +411,11 @@ export function defineHostSqlExtraTests(engine: HostSqlEngine): void {
         test("there are no routine containers (ClickHouse has no stored procedures)", async ({ page }, testInfo) => {
           await withTables(page, testInfo, async ({ id: cid }) => {
             const ids = (await treeNodes(page, cid, meta.namespace)).children.map((c) => c.id);
-            expect(ids).toEqual([`${meta.namespace}.tableContainer`, `${meta.namespace}.viewContainer`]);
+            expect(ids).toEqual([
+              `${meta.namespace}.tableContainer`,
+              `${meta.namespace}.viewContainer`,
+              `${meta.namespace}.materializedViewContainer`,
+            ]);
           });
         });
         return;

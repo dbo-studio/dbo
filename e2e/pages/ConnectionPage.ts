@@ -4,6 +4,7 @@ import {
   apiRoute,
   waitForResponseDuring,
 } from "../helpers/network";
+import { headerSqlEditorButton } from "../helpers/openSqlEditor";
 import { BasePage } from "./BasePage";
 
 export interface ConnectionSslConfig {
@@ -413,14 +414,13 @@ export class ConnectionPage extends BasePage {
   }
 
   async waitForConnectionActive(): Promise<void> {
-    await expect(
-      this.page.getByRole("button", { name: "sql", exact: true }),
-    ).toBeEnabled({
-      timeout: 30000,
-    });
     await expect(this.page.getByRole("treeitem").first()).toBeVisible({
       timeout: 30000,
     });
+    const sql = headerSqlEditorButton(this.page);
+    if ((await sql.count()) > 0) {
+      await expect(sql).toBeEnabled({ timeout: 30000 });
+    }
   }
 
   /** A locked connection asks for its password inline in the explorer, not in a dialog. */

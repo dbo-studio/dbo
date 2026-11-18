@@ -38,7 +38,7 @@ Entrypoints and seeds bind-mounted by `docker-compose.dev.yml` (the `docker/` di
 | `mongo-seed.js` | `sample-mongo` |
 | `mssql-entrypoint.sh` | `sample-mssql` |
 | `pgsql-ssl-entrypoint.sh`, `certs/server.crt`, `certs/server.key` | `sample-pgsql-ssl` |
-| `sshd-enable-forwarding.sh` | `sample-sshd` |
+| `sshd-enable-forwarding.sh` | `sample-sshd` (must be executable: `chmod +x`; linuxserver custom-init skips non-+x scripts) |
 
 ## Refresh `product` on an existing volume
 

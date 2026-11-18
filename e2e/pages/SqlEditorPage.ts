@@ -1,5 +1,6 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 import { API_DB_TIMEOUT, apiRoute, waitForResponseDuring } from "../helpers/network";
+import { openSqlEditorFromHeader } from "../helpers/openSqlEditor";
 import { BasePage } from "./BasePage";
 
 /**
@@ -41,12 +42,7 @@ export class SqlEditorPage extends BasePage {
       return;
     }
 
-    const queryTabs = this.page.getByTestId("workspace-tab-icon-query");
-    if ((await queryTabs.count()) > 0) {
-      await queryTabs.first().click();
-    } else {
-      await this.page.getByRole("button", { name: "sql", exact: true }).click();
-    }
+    await openSqlEditorFromHeader(this.page);
 
     await expect(this.editor).toBeVisible({ timeout: 15000 });
     await expect(run).toBeVisible({ timeout: 15000 });

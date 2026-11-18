@@ -1,3 +1,4 @@
+import { openExternal } from '@/core/help/openExternal';
 import Markdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import type { JSX, ReactNode } from 'react';
@@ -24,7 +25,16 @@ const baseComponents: Components = {
     }
 
     return (
-      <a href={href} rel='noopener noreferrer' target='_blank' {...props}>
+      <a
+        href={href}
+        rel='noopener noreferrer'
+        target='_blank'
+        {...props}
+        onClick={(event) => {
+          event.preventDefault();
+          void openExternal(href);
+        }}
+      >
         {children}
       </a>
     );

@@ -144,6 +144,7 @@ export async function startStack() {
 
   const dbPath = path.join(dataDir, 'dbo.db');
   const secretPath = path.join(dataDir, 'app_secret.key');
+  const sshKnownHostsPath = path.join(dataDir, 'ssh_known_hosts');
   const logPath = path.join(dataDir, 'logs');
   fs.mkdirSync(logPath, { recursive: true });
 
@@ -162,6 +163,9 @@ export async function startStack() {
     DBO_ENABLE_NOSQL_FIXTURE: '1',
     APP_DATABASE_PATH: dbPath,
     APP_SECRET_KEY_PATH: secretPath,
+    // Ephemeral TOFU file only for this run — never write to <user config>/dbo/ssh_known_hosts
+    // (desktop/docker dev keeps that file; bastion container recreation would otherwise MITM-fail e2e).
+    SSH_KNOWN_HOSTS_PATH: sshKnownHostsPath,
     APP_LOG_PATH: logPath,
     // Pin login settings so backend/.env cannot change them (or fail Bootstrap on a
     // non-policy password) during e2e runs. godotenv does not override these.
@@ -236,7 +240,7 @@ export async function startStack() {
     });
   }
 
-  return { apiPort, fePort, baseURL, apiURL, dataDir, runEnvPath, stop };
+  return { apiPort, fePort, baseURL, apiURL, dataDir, runEnvPath, sshKnownHostsPath, stop };
 }
 
 export { E2E_ROOT, REPO_ROOT };

@@ -786,7 +786,13 @@ export function defineHostSqlTests(engine: HostSqlEngine): void {
           if (engine === "mssql") {
             expect(tabs).toEqual(["table_columns", "table_keys", "table_indexes", "table_foreign_keys", "table_checks", "table_triggers"]);
           } else {
-            expect(tabs).toEqual(["table_columns", "table_keys", "table_indexes", "table_checks"]);
+            expect(tabs).toEqual([
+              "table_columns",
+              "table_keys",
+              "table_indexes",
+              "table_checks",
+              "table_storage",
+            ]);
           }
         });
       });

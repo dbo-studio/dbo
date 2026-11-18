@@ -1,11 +1,10 @@
 import api from '@/api';
 import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
-import { tools } from '@/core/utils';
+import { openExternal } from '@/core/help/openExternal';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { Button } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { openUrl } from '@tauri-apps/plugin-opener';
 import { useState } from 'react';
 
 export function CheckUpdate() {
@@ -33,11 +32,8 @@ export function CheckUpdate() {
   };
 
   const handleUpdate = async () => {
-    if (await tools.isTauri()) {
-      await openUrl(general.release?.url ?? '');
-    } else {
-      window.open(general.release?.url, '_blank');
-    }
+    const url = general.release?.url;
+    if (url) await openExternal(url);
   };
 
   return (

@@ -4,7 +4,7 @@ import { variables } from '../variables';
 export default function Button(theme: Theme): Components {
   return {
     MuiButton: {
-      defaultProps: { disableElevation: true },
+      defaultProps: { disableElevation: true, loadingPosition: 'start' },
       styleOverrides: {
         root: {
           textTransform: 'none',
@@ -31,15 +31,20 @@ export default function Button(theme: Theme): Components {
           ':after': {
             borderBottom: 'none !important'
           },
-          '&.MuiButton-loading.MuiButton-loadingPositionCenter > *:not(.MuiButton-loadingWrapper)': {
-            visibility: 'hidden'
-          },
           '&.MuiButton-loading.MuiButton-loadingPositionStart .MuiButton-startIcon': {
             visibility: 'hidden'
           },
           '&.MuiButton-loading.MuiButton-loadingPositionEnd .MuiButton-endIcon': {
             visibility: 'hidden'
           }
+        },
+        // MUI centers the spinner, and on a full-width button it drops back into the flex row,
+        // so a long label puts the spinner in the middle. Keep it at the start, beside the text.
+        loadingIndicator: {
+          position: 'absolute',
+          left: 6,
+          right: 'auto',
+          transform: 'none'
         }
       }
     }

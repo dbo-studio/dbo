@@ -7,6 +7,8 @@ dotenv.config({ path: process.env.E2E_RUN_ENV ?? path.resolve(__dirname, ".run-e
 
 const chromeUse = {
   ...devices["Desktop Chrome"],
+  // Stay above LAYOUT_BREAKPOINTS.tablet (1024) so header sql/refresh exist in the DOM.
+  viewport: { width: 1440, height: 900 },
   ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}),
 };
 

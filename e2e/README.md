@@ -27,7 +27,7 @@ npm test
 | Go toolchain        | Builds/runs backend via `go run . serve`                                   |
 | Frontend deps       | `cd frontend && npm install` (Vite is started from there)                  |
 | Sample DBs          | `docker compose -f docker-compose.dev.yml up -d sample-pgsql sample-mysql sample-redis sample-mongo` (Redis on 46379 `REDIS_TEST_PORT`, MongoDB on 47017 `MONGO_TEST_PORT`) |
-| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 42222; set `SSH_KNOWN_HOSTS_PATH` for the host-key test) |
+| SSH bastion (SSH e2e)| `docker compose -p dbo -f docker-compose.dev.yml up -d sample-sshd` (port 42222; `run-e2e` pins `SSH_KNOWN_HOSTS_PATH` in the ephemeral data dir) |
 | TLS sample (SSL e2e)| `docker compose -f docker-compose.dev.yml up -d sample-pgsql-ssl` (port 45433) |
 | Playwright browsers | `cd e2e && npx playwright install chromium`                                |
 

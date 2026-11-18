@@ -1,12 +1,16 @@
 import { useRemoveTab } from '@/components/common/Panels/hooks/useRemoveTab';
+import api from '@/api';
+import { openExternal } from '@/core/help/openExternal';
 import { openDocs } from '@/core/help/openDocs';
 import { openSettings } from '@/core/settings/openSettings';
 import { streams } from '@/core/tauri';
 import { tools } from '@/core/utils';
+import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { pickAndOpenSqlFile } from './useDesktopOpenFiles';
 
 /**
@@ -55,7 +59,23 @@ export const useDesktopMenu = (): void => {
             openSettings({ section: 5 });
             break;
           case 'checkUpdates':
-            openSettings({ section: 0 });
+            void (async () => {
+              const known = useSettingStore.getState().general.release;
+              if (known?.url) {
+                await openExternal(known.url);
+                return;
+              }
+              try {
+                const response = await api.config.getCheckUpdate();
+                if (response.name !== useSettingStore.getState().general.version) {
+                  useSettingStore.getState().updateGeneral({ release: response });
+                  return;
+                }
+                toast.success(locales.you_are_up_to_date);
+              } catch {
+                toast.error(locales.action_failed);
+              }
+            })();
             break;
           case 'refreshTree':
             void reloadTree(false).catch(() => undefined);

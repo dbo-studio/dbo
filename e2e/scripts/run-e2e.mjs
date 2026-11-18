@@ -41,6 +41,7 @@ async function main() {
     // App data of the ephemeral backend (app DB, logs), for specs that read the log.
     E2E_DATA_DIR: stack.dataDir,
     E2E_RUN_ENV: stack.runEnvPath,
+    SSH_KNOWN_HOSTS_PATH: stack.sshKnownHostsPath,
     ...(isUi ? { E2E_UI_MODE: "1" } : {}),
   };
 
