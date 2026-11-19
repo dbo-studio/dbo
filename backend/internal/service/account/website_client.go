@@ -92,9 +92,11 @@ func send[T any](
 	if err != nil {
 		return nil, apperror.InternalServerError(errWebsiteUnreachable)
 	}
+
 	defer resp.Close()
 
 	var envelope websiteEnvelope[T]
+
 	_ = json.Unmarshal(resp.Body(), &envelope)
 
 	if status := resp.StatusCode(); status != http.StatusOK && status != http.StatusCreated {

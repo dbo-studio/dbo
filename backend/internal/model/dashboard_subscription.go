@@ -52,8 +52,8 @@ type DashboardSubscriptionRun struct {
 	Manual         bool      `gorm:"not null;default:false"`
 }
 
-// SmtpSettings is the instance's one outgoing mail account for subscriptions (row id 1).
-type SmtpSettings struct {
+// SMTPSettings is the instance's one outgoing mail account for subscriptions (row id 1).
+type SMTPSettings struct {
 	ID          uint   `gorm:"primaryKey"`
 	Host        string `gorm:"not null;default:''"`
 	Port        int    `gorm:"not null;default:587"`

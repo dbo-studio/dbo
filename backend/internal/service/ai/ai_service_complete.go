@@ -70,10 +70,15 @@ func (s *AiServiceImpl) Complete(ctx context.Context, req *dto.AiInlineCompleteR
 		return nil, apperror.QueryCanceled()
 	}
 
+	completeModel := dbProvider.CompletionModel
+	if completeModel == "" {
+		completeModel = dbProvider.Model
+	}
+
 	providerReq := &aiProvider.CompletionRequest{
 		Prompt:  req.ContextOpts.Prompt,
 		Suffix:  req.ContextOpts.Suffix,
-		Model:   dbProvider.Model,
+		Model:   completeModel,
 		Context: contextStr,
 		Engine:  conn.ConnectionType,
 	}

@@ -22,6 +22,7 @@ export async function createDatabase(page: Page, connectionName: string, databas
   const objectForm = new ObjectFormPage(page);
 
   await objectForm.closeAllWorkspaceTabs();
+  await tree.waitForTreeLoad();
   await tree.runTreeAction(connectionName, 'Create database');
   await objectForm.waitForReady();
   await objectForm.ensureWorkspaceTab('Create database');

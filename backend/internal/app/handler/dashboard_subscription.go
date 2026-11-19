@@ -84,14 +84,14 @@ func (h DashboardSubscriptionHandler) Runs(c fiber.Ctx) error {
 	return h.send(c, runs, err)
 }
 
-func (h DashboardSubscriptionHandler) GetSmtp(c fiber.Ctx) error {
-	settings, err := h.service.GetSmtp(c)
+func (h DashboardSubscriptionHandler) GetSMTP(c fiber.Ctx) error {
+	settings, err := h.service.GetSMTP(c)
 
 	return h.send(c, settings, err)
 }
 
-func (h DashboardSubscriptionHandler) SaveSmtp(c fiber.Ctx) error {
-	req := new(dto.SmtpSettingsRequest)
+func (h DashboardSubscriptionHandler) SaveSMTP(c fiber.Ctx) error {
+	req := new(dto.SMTPSettingsRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
 	}
@@ -100,7 +100,7 @@ func (h DashboardSubscriptionHandler) SaveSmtp(c fiber.Ctx) error {
 		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
 	}
 
-	settings, err := h.service.SaveSmtp(c, req)
+	settings, err := h.service.SaveSMTP(c, req)
 
 	return h.send(c, settings, err)
 }

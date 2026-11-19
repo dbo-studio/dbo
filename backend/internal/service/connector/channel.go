@@ -127,12 +127,13 @@ func (s *service) sendEmail(ctx context.Context, f fields, e Event, text string)
 		return errMissingField("recipients")
 	}
 
-	settings, err := s.dashboardRepo.GetSmtp(ctx)
+	settings, err := s.dashboardRepo.GetSMTP(ctx)
 	if err != nil || settings.Host == "" || settings.FromAddress == "" {
 		return errEmailNotConfigured
 	}
 
 	password := ""
+
 	if settings.PasswordEnc != "" {
 		plain, err := cryptoutil.DecryptAESGCM(s.cipherKey, settings.PasswordEnc)
 		if err != nil {

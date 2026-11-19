@@ -87,7 +87,7 @@ test.describe("Connection SSH tunnel", () => {
     await test.step("Auth method switches credential fields", async () => {
       const root = page.getByTestId("ssh-fields");
       await expect(root.locator('input[name="sshPassword"]')).toBeVisible();
-      await root.locator(".ssh-auth__control").click();
+      await page.getByTestId("ssh-auth-select").click();
       await page
         .getByRole("option", { name: "Private key", exact: true })
         .click();

@@ -107,6 +107,7 @@ func (r AiProviderRepoImpl) Update(ctx context.Context, provider *model.AiProvid
 	provider.Timeout = lo.FromPtr(helper.Optional(dto.Timeout, lo.ToPtr(provider.Timeout)))
 	provider.IsActive = lo.FromPtr(helper.Optional(dto.IsActive, lo.ToPtr(provider.IsActive)))
 	provider.Model = lo.FromPtr(helper.Optional(dto.Model, lo.ToPtr(provider.Model)))
+	provider.CompletionModel = lo.FromPtr(helper.OptionalOrKeep(dto.CompletionModel, lo.ToPtr(provider.CompletionModel)))
 
 	if dto.Models != nil {
 		provider.Models = lo.FromPtr(dto.Models)

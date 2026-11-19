@@ -125,7 +125,7 @@ func idString(v any) string {
 // Browse pages documents by _id, or by offset when sorted. Paging by _id compares within one BSON type, so a collection that mixes _id
 // types pages only through the first type; shortcut: switch to skip paging if that shows up in practice.
 func (r *Repository) Browse(ctx context.Context, containerID string, q contract.BrowseQuery) (*contract.BrowsePage, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func isFalsy(v any) bool {
 }
 
 func (r *Repository) Get(ctx context.Context, containerID, itemID string) (*contract.Item, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}

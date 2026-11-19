@@ -407,8 +407,13 @@ export default function ObjectTreeView(): JSX.Element {
       // Right-clicking outside the multi-selection acts on that one row only.
       const inSelection = selectedIds.has(node.id);
       if (!inSelection) setSelectedIds(EMPTY_SET);
-      // The root node is the connection itself: offer connection actions, not object actions.
-      setMenu(node.id === tree?.id ? connectionNodeMenu : buildMenu(node, inSelection ? selectedNodes : [node]));
+      const rowMenu = buildMenu(node, inSelection ? selectedNodes : [node]);
+      // Root row is the connection: connection edit/delete stay up top, server DDL (Create database, …) below.
+      setMenu(
+        node.id === tree?.id
+          ? [...connectionNodeMenu, { name: 'separator-root', separator: true }, ...rowMenu]
+          : rowMenu
+      );
       handleContextMenu(event as React.MouseEvent);
     },
     [buildMenu, connectionNodeMenu, handleContextMenu, selectedIds, selectedNodes, tree?.id]

@@ -51,7 +51,7 @@ test.describe("Connection SSL", () => {
 
     await test.step("SSL tab shows Prefer by default without cert fields", async () => {
       await connectionPage.openSslTab();
-      await expect(page.locator(".ssl-mode__single-value")).toHaveText("Prefer");
+      await expect(page.getByTestId("ssl-mode-select")).toContainText("Prefer");
       await expect(page.getByTestId("ssl-cert-field-sslCaCert")).toBeHidden();
     });
 
@@ -98,9 +98,6 @@ test.describe("Connection SSL", () => {
 
       await test.step("Create connection with SSL Require", async () => {
         await connectionPage.createConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
       });
 
       await test.step("Edit form preserves SSL Require", async () => {

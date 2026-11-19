@@ -47,7 +47,7 @@ const renderSegments = (text: string, theme: Theme): JSX.Element[] => {
     }
 
     return (
-      <Typography key={key} component='div' variant='body2' sx={messageMarkdownSx(theme)}>
+      <Typography key={key} component='div' variant='body2' dir='auto' sx={messageMarkdownSx(theme)}>
         <AppMarkdown renderCodeBlock={renderCodeBlock}>{segment.content}</AppMarkdown>
       </Typography>
     );
@@ -86,7 +86,14 @@ export default function ChatMarkdown({
           <Typography
             component='div'
             variant='body2'
-            sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.65, wordBreak: 'break-word', mt: 0.5 }}
+            dir='auto'
+            sx={{
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.65,
+              wordBreak: 'break-word',
+              mt: 0.5,
+              unicodeBidi: 'plaintext'
+            }}
           >
             {pending}
           </Typography>
@@ -94,6 +101,7 @@ export default function ChatMarkdown({
           <Typography
             component='div'
             variant='body2'
+            dir='auto'
             sx={{
               ...messageMarkdownSx(theme),
               ...(showCursor ? inlineCaretSx(theme.palette.primary.main) : undefined)

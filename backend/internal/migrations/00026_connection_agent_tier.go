@@ -17,6 +17,7 @@ func upConnectionAgentTier(ctx context.Context, tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
 	if has {
 		return nil
 	}

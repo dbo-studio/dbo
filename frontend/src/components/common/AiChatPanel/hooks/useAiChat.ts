@@ -304,6 +304,7 @@ export const useAiChat = (active = true): useAiChatReturnType => {
     const message = (messageOverride ?? context.input).trim();
 
     if (!message || chatPending || !getAiStatus(useAiStore.getState().providers).ready) return;
+    useAiStore.getState().endMessageEdit();
 
     if (!currentChat) {
       await handleCreateChat();

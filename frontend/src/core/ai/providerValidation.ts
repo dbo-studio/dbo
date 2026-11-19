@@ -4,6 +4,11 @@ import type { AiProviderType } from '@/types';
 export type ProviderDraft = Pick<AiProviderType, 'type' | 'url' | 'apiKey' | 'timeout' | 'model'>;
 export type ProviderErrors = Partial<Record<'url' | 'apiKey' | 'timeout' | 'model', string>>;
 
+/** Anthropic and Gemini need a key; Ollama and OpenAI-compatible servers do not. */
+export function providerRequiresApiKey(type: AiProviderType['type']): boolean {
+  return type !== 'ollama' && type !== 'openai';
+}
+
 const MAX_TIMEOUT = 1000;
 
 function isHttpUrl(value: string): boolean {
@@ -26,7 +31,7 @@ export function validateProvider(draft: ProviderDraft): ProviderErrors {
     errors.url = locales.url_invalid;
   }
 
-  if (draft.type !== 'ollama' && !draft.apiKey?.trim()) {
+  if (providerRequiresApiKey(draft.type) && !draft.apiKey?.trim()) {
     errors.apiKey = locales.api_key_required;
   }
 

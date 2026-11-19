@@ -62,11 +62,13 @@ export default function ThinkingMessage({
         <Typography
           variant='body2'
           color='textSubdued'
+          dir='auto'
           sx={{
             whiteSpace: 'pre-wrap',
             fontStyle: 'italic',
             lineHeight: 1.55,
-            fontSize: variables.fontSize.md
+            fontSize: variables.fontSize.md,
+            unicodeBidi: 'plaintext'
           }}
         >
           {content || (isLive ? '...' : '')}

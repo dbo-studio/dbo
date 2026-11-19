@@ -23,9 +23,11 @@ func upAiChatSummary(ctx context.Context, tx *sql.Tx) error {
 		if err != nil {
 			return err
 		}
+
 		if has {
 			continue
 		}
+
 		if _, err := tx.ExecContext(ctx, col.ddl); err != nil {
 			return err
 		}

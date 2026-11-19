@@ -555,15 +555,15 @@ func reviewCollection(ctx context.Context, repo databaseContract.NoSQLRepository
 					}
 				}
 
-				real := 0
+				kinds := 0
 
 				for _, n := range family {
 					if float64(n)/float64(f.Count) >= reviewMixedShare {
-						real++
+						kinds++
 					}
 				}
 
-				if real >= 2 {
+				if kinds >= 2 {
 					names := make([]string, 0, len(family))
 					for ty, n := range family {
 						names = append(names, fmt.Sprintf("%s (%d)", ty, n))

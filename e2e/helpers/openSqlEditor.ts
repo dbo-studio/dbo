@@ -6,6 +6,9 @@ export function headerSqlEditorButton(page: Page) {
 }
 
 export async function openSqlEditorFromHeader(page: Page): Promise<void> {
+  if (page.isClosed()) {
+    return;
+  }
   const queryTabs = page.getByTestId("workspace-tab-icon-query");
   if ((await queryTabs.count()) > 0) {
     await queryTabs.first().click();

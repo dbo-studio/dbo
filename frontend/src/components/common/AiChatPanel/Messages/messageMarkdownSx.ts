@@ -2,16 +2,21 @@ import type { Theme } from '@mui/material';
 
 export const messageMarkdownSx = (theme: Theme) => ({
   flex: 1,
-  lineHeight: 1.65,
+  lineHeight: 1.7,
   fontSize: theme.typography.body2.fontSize,
   wordBreak: 'break-word' as const,
+  unicodeBidi: 'plaintext' as const,
+  textAlign: 'start' as const,
+  '& p, & li, & h1, & h2, & h3, & h4': {
+    unicodeBidi: 'plaintext' as const
+  },
   '& p': {
     margin: '0 0 0.6em',
     '&:last-child': { marginBottom: 0 }
   },
   '& ul, & ol': {
     margin: '0.25em 0 0.7em',
-    paddingLeft: '1.35em'
+    paddingInlineStart: '1.35em'
   },
   '& li': {
     marginBottom: '0.25em',
@@ -52,8 +57,8 @@ export const messageMarkdownSx = (theme: Theme) => ({
   },
   '& blockquote': {
     margin: '0.5em 0',
-    paddingLeft: theme.spacing(1),
-    borderLeft: `3px solid ${theme.palette.divider}`,
+    paddingInlineStart: theme.spacing(1),
+    borderInlineStart: `3px solid ${theme.palette.divider}`,
     color: theme.palette.text.subdued
   },
   '& a': {

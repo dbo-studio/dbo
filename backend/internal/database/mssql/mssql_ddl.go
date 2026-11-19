@@ -132,7 +132,7 @@ func (m mssql) ChangeColumn(ns, table string, old, next generic.ColSpec) ([]stri
 	name := old.Name
 
 	if old.Name != next.Name {
-		statements = append(statements, fmt.Sprintf("EXEC sp_rename N'%s', N'%s', N'COLUMN'",
+		statements = append(statements, fmt.Sprintf("EXEC sp_rename N'%[1]s', N'%[2]s', N'COLUMN'",
 			strings.ReplaceAll(m.table(ns, table)+"."+m.Quote(old.Name), "'", "''"), strings.ReplaceAll(next.Name, "'", "''")))
 		name = next.Name
 	}

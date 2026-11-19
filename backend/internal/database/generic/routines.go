@@ -51,7 +51,8 @@ var createRoutine = regexp.MustCompile(`(?is)^\s*CREATE\s+(OR\s+ALTER\s+)?(PROCE
 var batchSeparator = regexp.MustCompile(`(?im)^\s*GO\s*$`)
 
 func (r *Repository) routineForm(ctx context.Context, nodeID string, procedure bool) (*contract.FormResponse, error) {
-	row := map[string]any{}
+	var row map[string]any
+
 	ns, name := object(nodeID)
 
 	if name != "" {

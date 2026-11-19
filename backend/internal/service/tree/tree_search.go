@@ -51,6 +51,7 @@ func (i ITreeServiceImpl) Search(ctx context.Context, req *dto.TreeSearchRequest
 	ownerID := helper.CtxOwnerID(ctx)
 	fetch := func(ctx context.Context, parentID string) (*contract.TreeNode, error) {
 		key := cache.TreeKey(ownerID, connection.ID, parentID)
+
 		var cached *contract.TreeNode
 		if err := i.cache.Get(ctx, key, &cached); err == nil && cached != nil {
 			return cached, nil
@@ -60,7 +61,9 @@ func (i ITreeServiceImpl) Search(ctx context.Context, req *dto.TreeSearchRequest
 		if err != nil {
 			return nil, err
 		}
+
 		_ = i.cache.Set(ctx, key, node, lo.ToPtr(treeLevelCacheTTL))
+
 		return node, nil
 	}
 
@@ -91,12 +94,14 @@ func searchTree(ctx context.Context, fetch treeLevelFetcher, query string, limit
 
 	// Breadth-first, so shallow matches (databases, schemas) come before deep ones when the limit cuts in.
 	queue := []item{}
+
 	rootPath := []contract.TreeNode{shallow(*root)}
 	for _, child := range root.Children {
 		queue = append(queue, item{node: child, path: rootPath})
 	}
 
 	fetches := 1
+
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
@@ -119,12 +124,15 @@ func searchTree(ctx context.Context, fetch treeLevelFetcher, query string, limit
 				result.Truncated = true
 				continue
 			}
+
 			fetches++
+
 			level, err := fetch(ctx, current.node.ID)
 			if err != nil {
 				// One unreadable database or schema must not hide matches from the rest of the server.
 				continue
 			}
+
 			children = level.Children
 		}
 

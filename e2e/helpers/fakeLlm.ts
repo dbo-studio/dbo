@@ -30,6 +30,8 @@ export class FakeLlm {
     null;
   /** Model ids GET /models lists. */
   models = ["fake-model", "fake-model-mini"];
+  /** Model id from each chat/completions body, including non-stream Complete(). */
+  readonly requestedModels: string[] = [];
   /** When set, requests without this bearer key get 401, like a provider that rejects a wrong key. */
   requiredKey: string | null = null;
   private server: Server | null = null;
@@ -91,10 +93,14 @@ export class FakeLlm {
 
   private handle(rawBody: string, res: ServerResponse): void {
     const body = JSON.parse(rawBody || "{}") as {
+      model?: string;
       tools?: Array<{ function?: { name?: string } }>;
       messages?: Array<{ role: string; content?: unknown }>;
       stream?: boolean;
     };
+    if (typeof body.model === "string" && body.model) {
+      this.requestedModels.push(body.model);
+    }
     this.systemPrompts.push(
       (body.messages ?? [])
         .filter((message) => message.role === "system")

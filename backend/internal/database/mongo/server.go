@@ -31,7 +31,7 @@ var namePattern = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_.-]{0,62}$`)
 
 // adminCommand runs a command on the admin database and returns the reply as plain maps.
 func (r *Repository) adminCommand(ctx context.Context, cmd bson.D) (map[string]any, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (r *Repository) KillOperation(ctx context.Context, id string) error {
 }
 
 func (r *Repository) Databases(ctx context.Context) ([]contract.DatabaseInfo, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (r *Repository) CreateDatabase(ctx context.Context, name, firstCollection s
 		return err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (r *Repository) DropDatabase(ctx context.Context, name string) error {
 		return contract.Invalid("this database cannot be dropped")
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (r *Repository) Collections(ctx context.Context, db string) ([]contract.Col
 		return nil, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (r *Repository) CreateCollectionWith(ctx context.Context, db, name string, 
 		return err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -399,7 +399,7 @@ func (r *Repository) GridFSFiles(ctx context.Context, db, bucket string, limit i
 		limit = maxFiles
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +463,7 @@ func (g gridFSStream) Close() error {
 }
 
 func (r *Repository) GridFSOpen(ctx context.Context, db, bucket, id string) (io.ReadCloser, *contract.GridFSFile, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -491,7 +491,7 @@ func (r *Repository) GridFSOpen(ctx context.Context, db, bucket, id string) (io.
 }
 
 func (r *Repository) GridFSDelete(ctx context.Context, db, bucket, id string) error {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -512,7 +512,7 @@ func (r *Repository) GridFSDelete(ctx context.Context, db, bucket, id string) er
 // ---- change stream -----------------------------------------------------------------------------------------------
 
 func (r *Repository) WatchChanges(ctx context.Context, containerID string, emit func(contract.ChangeEvent) error) error {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}

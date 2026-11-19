@@ -25,6 +25,9 @@ export type ChatTextInputProps = {
   onSend: () => void;
   onCancel: () => void;
   autocomplete?: AutoCompleteType;
+  autoFocus?: boolean;
+  /** Footer composer writes `context.input`; the in-place edit composer writes `editingDraft`. */
+  variant?: 'footer' | 'edit';
 };
 
 export type ChatContextProps = {
@@ -64,6 +67,8 @@ export type ChatBoxProps = {
   onCancel: () => void;
   loading: boolean;
   autocomplete?: AutoCompleteType;
+  autoFocus?: boolean;
+  variant?: 'footer' | 'edit';
 };
 
 export type StreamingPreviewProps = {

@@ -168,8 +168,8 @@ func orDefault(s, d string) string {
 
 // connect opens the SSH tunnel when configured and a client through it, without holding clientsMu across
 // the SSH dial. The tunnel is recorded in tunnels and closed by disconnect.
-func (r *Repository) connect() (*mongo.Client, error) {
-	dialConn, tunnel, err := databaseConnection.OpenTunnel(context.Background(), r.conn)
+func (r *Repository) connect(ctx context.Context) (*mongo.Client, error) {
+	dialConn, tunnel, err := databaseConnection.OpenTunnel(ctx, r.conn)
 	if err != nil {
 		return nil, err
 	}
@@ -205,9 +205,9 @@ func (r *Repository) connect() (*mongo.Client, error) {
 }
 
 // client returns the cached client, creating it lazily. Unsaved connections (ping) get a throwaway client.
-func (r *Repository) client() (*mongo.Client, error) {
+func (r *Repository) client(ctx context.Context) (*mongo.Client, error) {
 	if r.conn.ID == 0 {
-		return r.connect()
+		return r.connect(ctx)
 	}
 
 	k := clientKey{r.owner, r.conn.ID}
@@ -220,7 +220,7 @@ func (r *Repository) client() (*mongo.Client, error) {
 		return c, nil
 	}
 
-	c, err := r.connect()
+	c, err := r.connect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (r *Repository) client() (*mongo.Client, error) {
 
 	// A concurrent request may have connected first; keep its client and drop ours.
 	if existing, ok := clients[k]; ok {
-		disconnect(context.Background(), c)
+		disconnect(ctx, c)
 
 		return existing, nil
 	}
@@ -288,7 +288,7 @@ func (r *Repository) collection(c *mongo.Client, containerID string) (*mongo.Col
 }
 
 func (r *Repository) Version(ctx context.Context) (string, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -312,7 +312,7 @@ var (
 
 // Tree lists databases at the root and a database's collections when it is expanded.
 func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeNode, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ const sampleSize = 50
 
 // sampleFields lists the top-level fields of a sample of the collection with the value types seen for each.
 func (r *Repository) sampleFields(ctx context.Context, db, coll string) []contract.FieldInfo {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil
 	}

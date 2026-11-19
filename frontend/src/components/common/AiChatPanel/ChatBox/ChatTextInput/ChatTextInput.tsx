@@ -1,83 +1,154 @@
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { cancelMessageEditOf, editingDraftOf, setEditingDraftOf } from '@/store/aiStore/editDraft';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ChatTextInputProps } from '../../types';
 import {
   buildContextOptions,
+  contextAfterConnectionPick,
   type ContextOption,
   tableGroupLabel,
   toggleContextOption
 } from '../../utils/contextOptions';
 import { useCurrentConnection } from '@/hooks';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import ContextPicker from '../ContextPicker/ContextPicker';
 import { ChatTextInputStyled } from './ChatTextInput.styled';
+import {
+  composerIsEmpty,
+  createInlineChip,
+  deleteMentionTrigger,
+  hasChip,
+  insertChipAtCaret,
+  mentionAtCaret,
+  readComposer,
+  reconcileChips,
+  stripTextKeepChips
+} from './inlineChips';
 
-type MentionState = {
-  start: number;
-  query: string;
-};
-
-function getMentionState(value: string, cursor: number): MentionState | null {
-  const before = value.slice(0, cursor);
-  const atIndex = before.lastIndexOf('@');
-  // An @ inside a word (an email address) is not a mention.
-  if (atIndex < 0 || (atIndex > 0 && !/\s/.test(before[atIndex - 1]))) return null;
-  const fragment = before.slice(atIndex + 1);
-  if (fragment.includes(' ') || fragment.includes('\n')) return null;
-  return { start: atIndex, query: fragment.toLowerCase() };
-}
-
-export default function ChatTextInput({ loading, onSend, onCancel, autocomplete }: ChatTextInputProps) {
+export default function ChatTextInput({
+  loading,
+  onSend,
+  onCancel,
+  autocomplete,
+  autoFocus,
+  variant = 'footer'
+}: ChatTextInputProps) {
+  const isEdit = variant === 'edit';
   const context = useAiStore((state) => state.context);
+  const editingDraft = useAiStore(editingDraftOf);
   const updateContext = useAiStore((state) => state.updateContext);
-  const messageEdit = useAiStore((state) => state.messageEdit);
   const currentChat = useAiStore((state) => state.currentChat);
-
-  const [input, setInput] = useState(() => context.input);
-  const [mention, setMention] = useState<MentionState | null>(null);
-  const [cursorPos, setCursorPos] = useState(0);
+  const setEditingDraft = useAiStore(setEditingDraftOf);
+  const cancelMessageEdit = useAiStore(cancelMessageEditOf);
+  const draft = isEdit ? editingDraft : context.input;
+  const editorRef = useRef<HTMLDivElement>(null);
+  const lastTextRef = useRef(draft);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [activeOption, setActiveOption] = useState(0);
-  const [prevMessageEdit, setPrevMessageEdit] = useState(messageEdit);
 
-  if (messageEdit !== prevMessageEdit) {
-    setPrevMessageEdit(messageEdit);
-    setInput(context.input);
-  } else if (context.input === '' && input !== '') {
-    setInput('');
-  }
-
+  const { switchConnection } = useSwitchConnection();
+  const connections = useConnectionStore((state) => state.connections);
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
   const tablesGroup = tableGroupLabel(useCurrentConnection()?.type);
   const mentionOptions = useMemo(
-    () => (mention ? buildContextOptions(autocomplete, context, mention.query, tablesGroup) : []),
-    [autocomplete, context, mention, tablesGroup]
+    () =>
+      mentionQuery !== null
+        ? buildContextOptions(autocomplete, context, mentionQuery, tablesGroup, connections ?? [], currentConnectionId)
+        : [],
+    [autocomplete, context, mentionQuery, tablesGroup, connections, currentConnectionId]
   );
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    setCursorPos(e.target.selectionStart ?? 0);
-    updateContext({ ...context, input: e.target.value });
-    setMention(getMentionState(e.target.value, e.target.selectionStart ?? 0));
+  const syncFromEditor = (): void => {
+    const root = editorRef.current;
+    if (!root) return;
+    const next = readComposer(root);
+    lastTextRef.current = next.text;
+    root.dataset.empty = composerIsEmpty(root) ? 'true' : 'false';
+    root.dataset.composerText = next.text;
+    const current = useAiStore.getState().context;
+    if (isEdit) {
+      setEditingDraft(next.text);
+      updateContext({ ...current, tables: next.tables, views: next.views });
+    } else {
+      updateContext({ ...current, input: next.text, tables: next.tables, views: next.views });
+    }
+    const mention = mentionAtCaret(root);
+    setMentionQuery(mention ? mention.query : null);
     setActiveOption(0);
   };
 
-  // The attached item shows as a chip, so the @ text is taken out of the message.
+  useLayoutEffect(() => {
+    const root = editorRef.current;
+    if (!root) return;
+    if (composerIsEmpty(root) && draft) {
+      lastTextRef.current = draft;
+      root.append(document.createTextNode(draft));
+    } else if (draft !== lastTextRef.current) {
+      lastTextRef.current = draft;
+      stripTextKeepChips(root);
+      if (draft !== '') {
+        root.append(document.createTextNode(draft));
+      }
+    }
+    reconcileChips(root, context.tables, context.views, locales.ai_context_remove);
+    root.dataset.empty = composerIsEmpty(root) ? 'true' : 'false';
+    root.dataset.composerText = readComposer(root).text;
+  }, [draft, context.tables, context.views]);
+
+  useLayoutEffect(() => {
+    if (autoFocus) editorRef.current?.focus();
+  }, [autoFocus]);
+
   const applyMention = (option: ContextOption) => {
-    if (!mention) return;
-    const next = input.slice(0, mention.start) + input.slice(cursorPos);
-    setInput(next);
+    const root = editorRef.current;
+    if (!root) return;
+    const mention = mentionAtCaret(root);
+    if (mention) deleteMentionTrigger(mention);
+
+    if (option.kind === 'connection' && option.connection) {
+      setMentionQuery(null);
+      const text = readComposer(root).text;
+      const current = useAiStore.getState().context;
+      if (isEdit) {
+        setEditingDraft(text);
+        updateContext(contextAfterConnectionPick(current, current.input));
+      } else {
+        updateContext(contextAfterConnectionPick(current, text));
+      }
+      void switchConnection(option.connection);
+      return;
+    }
+
+    if (option.kind === 'table' || option.kind === 'view') {
+      if (!hasChip(root, option.label)) {
+        const chip = createInlineChip(option.kind, option.label, locales.ai_context_remove);
+        insertChipAtCaret(chip);
+      }
+      setMentionQuery(null);
+      syncFromEditor();
+      root.focus();
+      return;
+    }
+
+    setMentionQuery(null);
+    const text = readComposer(root).text;
+    const current = useAiStore.getState().context;
     updateContext({
-      ...toggleContextOption(useAiStore.getState().context, { ...option, attached: false }),
-      input: next
+      ...toggleContextOption(current, { ...option, attached: false }),
+      input: isEdit ? current.input : text
     });
-    setMention(null);
+    
+    if (isEdit) setEditingDraft(text);
+    lastTextRef.current = text;
   };
 
-  const mentionOpen = mention !== null && mentionOptions.length > 0;
+  const mentionOpen = mentionQuery !== null && mentionOptions.length > 0;
   const selectedOption = Math.min(activeOption, mentionOptions.length - 1);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter that confirms an IME candidate (Persian, Arabic, CJK keyboards) must not send the message.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.nativeEvent.isComposing) return;
     if (mentionOpen) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -93,29 +164,43 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
       }
       if (e.key === 'Escape') {
         e.preventDefault();
-        setMention(null);
+        setMentionQuery(null);
         return;
       }
     }
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Backspace') {
       e.preventDefault();
-      setInput('');
-      updateContext({ ...context, input: '' });
+      const root = editorRef.current;
+      if (!root) return;
+      stripTextKeepChips(root);
+      syncFromEditor();
       return;
     }
-    if (e.key === 'ArrowUp' && input === '' && !loading && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    const root = editorRef.current;
+    const emptyText = root ? readComposer(root).text === '' : true;
+    if (
+      !isEdit &&
+      e.key === 'ArrowUp' &&
+      emptyText &&
+      !loading &&
+      !e.shiftKey &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey
+    ) {
       const userMessages = currentChat?.messages.filter((message) => message.role === 'user') ?? [];
       const lastUser = userMessages[userMessages.length - 1];
       if (lastUser) {
         e.preventDefault();
-        setInput(lastUser.content);
-        updateContext({ ...context, input: lastUser.content });
+        updateContext({ ...useAiStore.getState().context, input: lastUser.content });
       }
       return;
     }
     if (e.key === 'Escape') {
       e.preventDefault();
-      if (loading) {
+      if (isEdit) {
+        cancelMessageEdit();
+      } else if (loading) {
         onCancel();
       } else {
         e.currentTarget.blur();
@@ -128,11 +213,10 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
     }
   };
 
-  // The list sits outside the scrolling box: inside it, the box would clip a list that opens upward.
   return (
-    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      {mention !== null && (
-        <Box sx={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 10, mb: 1 }}>
+    <Box sx={{ width: '100%', minWidth: 0, position: 'relative' }}>
+      {mentionQuery !== null && (
+        <Box sx={{ position: 'absolute', bottom: '100%', insetInlineStart: 0, zIndex: 10, mb: 1 }}>
           <ContextPicker
             options={mentionOptions}
             activeIndex={selectedOption}
@@ -141,23 +225,55 @@ export default function ChatTextInput({ loading, onSend, onCancel, autocomplete 
           />
         </Box>
       )}
-      <Box sx={{ flex: 1, overflowY: 'auto' }}>
-        <ChatTextInputStyled
-          data-testid='ai-chat-input'
-          dir='auto'
-          placeholder={locales.ask_anything}
-          value={input}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          // Picker options keep the focus on mouse down, so a blur means the user went elsewhere.
-          onBlur={() => setMention(null)}
-          onSelect={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            setCursorPos(target.selectionStart ?? 0);
-            setMention(getMentionState(target.value, target.selectionStart ?? 0));
-          }}
-        />
-      </Box>
+      <ChatTextInputStyled
+        ref={editorRef}
+        role='textbox'
+        aria-multiline='true'
+        contentEditable
+        suppressContentEditableWarning
+        spellCheck={false}
+        data-testid={isEdit ? 'ai-edit-input' : 'ai-chat-input'}
+        data-empty='true'
+        dir='auto'
+        placeholder={locales.ask_anything}
+        onInput={syncFromEditor}
+        onKeyDown={handleKeyDown}
+        onKeyUp={() => {
+          const root = editorRef.current;
+          if (!root) return;
+          const mention = mentionAtCaret(root);
+          setMentionQuery(mention ? mention.query : null);
+        }}
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          const remove = target.closest('[data-testid="ai-context-chip-remove"]');
+          if (remove) {
+            e.preventDefault();
+            remove.closest('[data-testid="ai-context-chip"]')?.remove();
+            syncFromEditor();
+            editorRef.current?.focus();
+            return;
+          }
+          const root = editorRef.current;
+          if (!root) return;
+          const mention = mentionAtCaret(root);
+          setMentionQuery(mention ? mention.query : null);
+        }}
+        onPaste={(e) => {
+          e.preventDefault();
+          const text = e.clipboardData.getData('text/plain');
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount) return;
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          syncFromEditor();
+        }}
+        onBlur={() => setMentionQuery(null)}
+      />
     </Box>
   );
 }

@@ -94,7 +94,7 @@ func providerReadinessError(provider *model.AiProvider) error {
 		return apperror.BadRequest(apperror.ErrAiMissingModel)
 	}
 
-	if provider.Type != model.AIProviderTypeOllama && (provider.APIKey == nil || *provider.APIKey == "") {
+	if model.RequiresAPIKey(provider.Type) && (provider.APIKey == nil || *provider.APIKey == "") {
 		return apperror.BadRequest(apperror.ErrAiMissingKey)
 	}
 

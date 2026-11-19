@@ -38,11 +38,11 @@ func TestStore(t *testing.T) {
 	}
 
 	for _, commit := range []bool{false, true} {
-		if err := s.Begin(key, db); err != nil {
+		if err := s.Begin(t.Context(), key, db); err != nil {
 			t.Fatal(err)
 		}
 
-		if err := s.Begin(key, db); !errors.Is(err, ErrActive) {
+		if err := s.Begin(t.Context(), key, db); !errors.Is(err, ErrActive) {
 			t.Fatalf("second Begin: %v", err)
 		}
 

@@ -139,7 +139,7 @@ func (h ConnectorHandler) OAuthCallback(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/html; charset=utf-8")
 
 	if c.Query("error") != "" || c.Query("code") == "" {
-		return c.Status(fiber.StatusBadRequest).SendString("<p>Authorization was cancelled. You can close this window.</p>")
+		return c.Status(fiber.StatusBadRequest).SendString("<p>Authorization was canceled. You can close this window.</p>")
 	}
 
 	connType, err := h.service.OAuthExchange(c, c.Query("state"), c.Query("code"))

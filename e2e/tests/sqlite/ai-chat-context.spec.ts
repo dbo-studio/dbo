@@ -109,10 +109,9 @@ test.describe("AI chat context chips", () => {
           await expect(chipsBar).toHaveAttribute("data-following", "true");
         });
 
-        await test.step("Token budget meter is shown", async () => {
-          await expect(page.getByTestId("ai-context-budget")).toContainText(
-            "/",
-          );
+        await test.step("Token budget meter stays hidden until context is large", async () => {
+          // The ring is omitted below half the window so it is not mistaken for a spinner.
+          await expect(page.getByTestId("ai-context-budget")).toHaveCount(0);
         });
 
         await test.step("Removing the query chip stops sending the editor query", async () => {
@@ -194,10 +193,14 @@ test.describe("AI chat context chips", () => {
               .filter({ hasText: usersTable }),
           ).toBeVisible();
           await composer.press("Tab");
-          await expect(chip(usersTable)).toBeVisible();
+          const input = page.getByTestId("ai-chat-input");
+          await expect(
+            input.getByTestId("ai-context-chip").filter({ hasText: usersTable }),
+          ).toBeVisible();
 
           const sentBefore = requests.length;
-          await composer.fill("what is in this table?");
+          // fill() would replace the whole composer and wipe the in-text chip.
+          await page.keyboard.type("what is in this table?");
           await composer.press("Enter");
           await expect(
             page.getByText("ok", { exact: true }).first(),
@@ -229,7 +232,7 @@ test.describe("AI chat context chips", () => {
           ).toBeVisible();
           await composer.press("Tab");
           const sentBefore = requests.length;
-          await composer.fill("and the orders?");
+          await page.keyboard.type("and the orders?");
           await composer.press("Enter");
           await expect.poll(() => requests.length).toBeGreaterThan(sentBefore);
           expect(requests.at(-1)?.contextOpts?.tables).toContain(ordersTable);
@@ -246,6 +249,101 @@ test.describe("AI chat context chips", () => {
             .first()
             .click();
           await expect(chip(ordersTable)).toBeVisible({ timeout: 15000 });
+        });
+      });
+    } finally {
+      await llm.stop();
+    }
+  });
+
+  test("@ mention switches connection and drops table chips from the previous database", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    const suffix = uniqueTestSuffix(testInfo);
+    const firstName = `ai-ctx-a-${suffix}`;
+    const secondName = `ai-ctx-b-${suffix}`;
+    const usersTable = `e2e_ctx_switch_${suffix}`;
+    const firstPath = `/tmp/dbo-e2e-ai-ctx-a-${suffix}.db`;
+    const secondPath = `/tmp/dbo-e2e-ai-ctx-b-${suffix}.db`;
+    ensureSqliteDbFile(firstPath);
+    ensureSqliteDbFile(secondPath);
+
+    const llm = new FakeLlm();
+    const llmUrl = await llm.start();
+
+    try {
+      await withConnectionCleanup(page, firstName, async () => {
+        await withConnectionCleanup(page, secondName, async () => {
+          const connectionPage = new ConnectionPage(page);
+          const sqlEditor = new SqlEditorPage(page);
+          const composer = page.getByPlaceholder(/ask anything/i);
+          const chip = (name: string) =>
+            page
+              .getByTestId("ai-context-chip")
+              .filter({ has: page.getByText(name, { exact: true }) });
+
+          await clearActiveAiProfile(page);
+          await connectionPage.goto();
+          await connectionPage.waitForReady();
+          await connectionPage.setupConnection(
+            getDbConfig("sqlite", secondName, secondPath),
+          );
+          await connectionPage.setupConnection(
+            getDbConfig("sqlite", firstName, firstPath),
+          );
+          await pointProviderAtFakeLlm(page, llmUrl);
+
+          const connections = (await (
+            await page.request.get("/api/connections")
+          ).json()) as { data: Array<{ id: number; name: string }> };
+          const firstId = connections.data.find((item) => item.name === firstName)
+            ?.id as number;
+
+          const created = await applyChangeset(
+            page,
+            await proposeChangeset(page, llm, firstId, [
+              {
+                op: "create_table",
+                table: usersTable,
+                columns: [{ name: "id", type: "INTEGER", primary: true }],
+              },
+            ]),
+          );
+          expect(created.status()).toBe(200);
+          await page.reload();
+          await sqlEditor.open();
+          await sqlEditor.typeAndRun("SELECT 1 AS one");
+          await openAssistant(page);
+
+          await test.step("A table chip from the first connection is attached", async () => {
+            await composer.fill(`@${usersTable.slice(0, 12)}`);
+            const option = page
+              .getByTestId("ai-mention-option")
+              .filter({ hasText: usersTable });
+            await expect(option).toBeVisible();
+            await option.click();
+            await expect(chip(usersTable)).toBeVisible();
+            await expect(page.getByTestId("ai-context-target")).toContainText(
+              firstName,
+            );
+          });
+
+          await test.step("@ the other connection switches to it and drops the table chip", async () => {
+            await composer.focus();
+            await page.keyboard.type(`@${secondName}`);
+            const option = page
+              .getByTestId("ai-mention-option")
+              .filter({ hasText: secondName });
+            await expect(option).toHaveAttribute("data-kind", "connection");
+            await option.click();
+            await expect(page.getByTestId("ai-context-target")).toContainText(
+              secondName,
+              { timeout: 15000 },
+            );
+            await expect(chip(usersTable)).toHaveCount(0);
+            await expect(composer).not.toContainText("@");
+          });
         });
       });
     } finally {

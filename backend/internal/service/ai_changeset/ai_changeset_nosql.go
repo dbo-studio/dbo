@@ -85,6 +85,7 @@ func (s IAiChangesetServiceImpl) applyNoSQL(
 		undo, note, err := s.nosql.ApplyStatement(ctx, int32(changeset.ConnectionID), op.SQL, confirmed)
 		if err != nil {
 			applyErr = err
+
 			result.Failed = append(result.Failed, i)
 
 			break

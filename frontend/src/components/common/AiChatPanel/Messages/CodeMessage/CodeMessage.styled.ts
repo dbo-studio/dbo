@@ -2,6 +2,7 @@ import { variables } from '@/core/theme/variables';
 import { Box, styled } from '@mui/material';
 
 export const CodeMessageStyled = styled(Box)(({ theme }) => ({
+  direction: 'ltr',
   display: 'flex',
   flexDirection: 'column',
   border: `1px solid ${theme.palette.divider}`,

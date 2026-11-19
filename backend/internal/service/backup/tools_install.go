@@ -235,6 +235,7 @@ func downloadVerified(ctx context.Context, entry toolManifestEntry, dest string,
 
 	// Read one byte past the pinned size so a longer body is caught.
 	meter := &progressWriter{total: entry.Size, start: time.Now(), report: progress}
+
 	n, err := io.Copy(io.MultiWriter(f, h, meter), io.LimitReader(resp.Body, entry.Size+1))
 	if err != nil {
 		return fmt.Errorf("download failed: %w", err)

@@ -2,10 +2,10 @@ import { isMongoDriver, isRedisDriver } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import locales from '@/locales';
 import { useTabStore } from '@/store/tabStore/tab.store';
-import type { AiContextType, AutoCompleteType } from '@/types';
+import type { AiContextType, AutoCompleteType, ConnectionType } from '@/types';
 import { editor } from 'monaco-editor';
 
-export type ContextOptionKind = 'query' | 'selection' | 'table' | 'view';
+export type ContextOptionKind = 'query' | 'selection' | 'table' | 'view' | 'connection';
 
 export type ContextOption = {
   kind: ContextOptionKind;
@@ -15,13 +15,15 @@ export type ContextOption = {
   attached: boolean;
   /** Group title when it is not the kind's own: a MongoDB table is a collection, a Redis one a database. */
   group?: string;
+  connection?: ConnectionType;
 };
 
 export const CONTEXT_GROUP_LABEL: Record<ContextOptionKind, string> = {
   query: locales.ai_context_group_editor,
   selection: locales.ai_context_group_editor,
   table: locales.ai_context_group_tables,
-  view: locales.ai_context_group_views
+  view: locales.ai_context_group_views,
+  connection: locales.ai_context_group_connections
 };
 
 /** The title of the group that holds an option. */
@@ -56,7 +58,9 @@ export function buildContextOptions(
   autocomplete: AutoCompleteType | undefined,
   context: AiContextType,
   search: string,
-  tablesGroup?: string
+  tablesGroup?: string,
+  connections: ConnectionType[] = [],
+  currentConnectionId?: string | number
 ): ContextOption[] {
   const needle = search.trim().toLowerCase();
   const options: ContextOption[] = [];
@@ -83,7 +87,32 @@ export function buildContextOptions(
     );
   }
 
+  options.push(
+    ...connections.map((connection) => ({
+      kind: 'connection' as const,
+      label: connection.name,
+      attached: Number(currentConnectionId) === connection.id,
+      connection
+    }))
+  );
+
   return options.filter((option) => option.label.toLowerCase().includes(needle));
+}
+
+/** Chips from another database do not belong after the user switches connection. */
+export function contextAfterConnectionPick(context: AiContextType, input: string): AiContextType {
+  return {
+    ...context,
+    input,
+    database: undefined,
+    schema: undefined,
+    tables: [],
+    views: [],
+    querySnippet: '',
+    selectedQuery: undefined,
+    queryResultSummary: undefined,
+    objectDefinition: undefined
+  };
 }
 
 function toggled(names: string[], option: ContextOption): string[] {
@@ -109,5 +138,7 @@ export function toggleContextOption(context: AiContextType, option: ContextOptio
       return { ...context, querySnippet: option.attached ? '' : option.text };
     case 'selection':
       return { ...context, selectedQuery: option.attached ? undefined : option.text };
+    case 'connection':
+      return context;
   }
 }

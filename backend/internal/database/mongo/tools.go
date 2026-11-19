@@ -73,7 +73,7 @@ func (r *Repository) CountMatching(ctx context.Context, containerID, pattern str
 		return 0, false, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return 0, false, err
 	}
@@ -99,7 +99,7 @@ func (r *Repository) DeleteMatching(ctx context.Context, containerID, pattern st
 		return 0, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -150,7 +150,7 @@ func (r *Repository) DeleteMatching(ctx context.Context, containerID, pattern st
 
 // Snapshot keeps the document as canonical Extended JSON, so a restore brings back every BSON type.
 func (r *Repository) Snapshot(ctx context.Context, containerID, itemID string) ([]byte, int64, bool, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, 0, false, err
 	}
@@ -184,7 +184,7 @@ func (r *Repository) Restore(ctx context.Context, containerID, _ string, payload
 		return err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func int64Of(v any) int64 {
 
 // Stats reports size and indexes of a collection.
 func (r *Repository) Stats(ctx context.Context, containerID string) (*contract.ContainerStats, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +574,7 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 		return nil, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}

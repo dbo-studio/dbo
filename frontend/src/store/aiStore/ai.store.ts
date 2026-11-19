@@ -5,9 +5,7 @@ import { createAiChatSlice } from './slices/aiChat.slice';
 import { createAiContextSlice } from './slices/aiContext.slice';
 import { createAiProviderSlice } from './slices/aiProvider.slice';
 import { createAiSessionSlice } from './slices/aiSession.slice';
-import type { AiBridgeSlice, AiChatSlice, AiContextSlice, AiProviderSlice, AiSessionSlice } from './types';
-
-type AiState = AiProviderSlice & AiChatSlice & AiContextSlice & AiSessionSlice & AiBridgeSlice;
+import type { AiState } from './types';
 
 export const useAiStore: UseBoundStore<StoreApi<AiState>> = create<AiState>()(
   devtools(

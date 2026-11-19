@@ -27,14 +27,14 @@ const answer = (from: number, count: number): string =>
 
 async function distanceFromBottom(page: Page): Promise<number> {
   return page.evaluate(() => {
-    const el = document.querySelector("[data-density]") as HTMLElement;
+    const el = document.querySelector("[data-testid='ai-messages']") as HTMLElement;
     return Math.round(el.scrollHeight - el.scrollTop - el.clientHeight);
   });
 }
 
 /** Puts the pointer over the conversation so a wheel scroll reaches it (hover() would scroll programmatically). */
 async function hoverConversation(page: Page): Promise<void> {
-  const box = await page.locator("[data-density]").boundingBox();
+  const box = await page.getByTestId("ai-messages").boundingBox();
   await page.mouse.move(
     (box?.x ?? 0) + (box?.width ?? 0) / 2,
     (box?.y ?? 0) + (box?.height ?? 0) / 2,
@@ -128,7 +128,7 @@ test.describe("AI chat streaming follow", () => {
                 page.evaluate(() =>
                   [
                     ...document.querySelectorAll(
-                      "[data-density] p, [data-density] li",
+                      "[data-testid='ai-messages'] p, [data-testid='ai-messages'] li",
                     ),
                   ].some(
                     (el) =>

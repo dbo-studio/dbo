@@ -119,6 +119,10 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | AI chat panel            | `shared/ai-chat-panel.spec.ts`                | In-place setup then composer (no LLM)                   |
 | AI in-place setup        | `shared/ai-setup.spec.ts`                     | Query AI switch opens setup popover; save makes ready   |
 | AI chat cancel           | `shared/ai-chat-cancel.spec.ts`               | Abort in-flight stream/fallback via cancel control        |
+| AI provider settings     | `sqlite/ai-provider-settings.spec.ts`         | form validation; OpenAI saves without a key; chat vs autocomplete model; footer picker leaves autocomplete alone |
+| AI provider models API   | `sqlite/ai-provider-models.spec.ts`           | list/test connection; Ollama and OpenAI activate without a key; Gemini still needs one |
+| AI chat context          | `sqlite/ai-chat-context.spec.ts`              | @ mention inserts a chip in the typed text; follow/pin; history restore; @ connection switches and drops stale table chips |
+| AI chat composer         | `sqlite/ai-chat-composer.spec.ts`             | shortcuts, fences, table actions; Persian dir=auto; last user prompt stays pinned; edit turns it into a second composer; SQL fence dir=ltr |
 | Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |

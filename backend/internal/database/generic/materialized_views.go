@@ -34,7 +34,7 @@ type MaterializedViewDialect interface {
 	DropMaterializedView(namespace, name string) string
 }
 
-var mvTarget = regexp.MustCompile("^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?$")
+var mvTarget = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$`)
 
 func (r *Repository) materializedViewDialect() (MaterializedViewDialect, bool) {
 	d, ok := r.d.(MaterializedViewDialect)

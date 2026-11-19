@@ -5,22 +5,13 @@ import locales from '@/locales';
 import type { ExplanationMessageProps } from '../../types';
 import { sanitizeAssistantContent } from '../../utils/assistantContent';
 import ChatMarkdown from '../ChatMarkdown/ChatMarkdown';
-import { ExplanationMessageStyled, UserMessageActionsStyled, UserMessageRowStyled } from './ExplanationMessage.styled';
+import { ExplanationMessageStyled, UserMessageEditStyled, UserMessageRowStyled } from './ExplanationMessage.styled';
 
 export default function ExplanationMessage({ message }: ExplanationMessageProps) {
   const isUser = message.role === 'user';
 
   const handleEditButton = () => {
-    const context = useAiStore.getState().context;
-    const updateContext = useAiStore.getState().updateContext;
-    const toggleMessageEdit = useAiStore.getState().toggleMessageEdit;
-
-    updateContext({
-      ...context,
-      input: message.content
-    });
-
-    toggleMessageEdit();
+    useAiStore.getState().beginMessageEdit(message.createdAt, message.content);
   };
 
   const displayContent = isUser
@@ -35,8 +26,14 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
     <Typography
       variant='body2'
       component='div'
+      dir='auto'
+      data-testid={isUser ? 'ai-user-message' : undefined}
       // Only what the user typed keeps its line breaks; markdown has its own.
-      sx={isUser ? { whiteSpace: 'pre-wrap', lineHeight: 1.55 } : undefined}
+      sx={
+        isUser
+          ? { flex: 1, minWidth: 0, whiteSpace: 'pre-wrap', lineHeight: 1.55, unicodeBidi: 'plaintext' }
+          : { lineHeight: 1.7 }
+      }
     >
       {isUser ? displayContent : <ChatMarkdown content={displayContent} />}
     </Typography>
@@ -45,14 +42,16 @@ export default function ExplanationMessage({ message }: ExplanationMessageProps)
   if (isUser) {
     return (
       <UserMessageRowStyled $isNew={message.isNew}>
-        <UserMessageActionsStyled className='user-message-actions'>
-          <Tooltip title={locales.edit}>
-            <IconButton onClick={handleEditButton}>
-              <CustomIcon size='xs' type='pen' />
-            </IconButton>
-          </Tooltip>
-        </UserMessageActionsStyled>
-        <ExplanationMessageStyled $isUser>{content}</ExplanationMessageStyled>
+        <ExplanationMessageStyled $isUser>
+          <UserMessageEditStyled>
+            <Tooltip title={locales.edit}>
+              <IconButton onClick={handleEditButton} aria-label={locales.edit} data-testid='ai-edit-message'>
+                <CustomIcon size='xs' type='pen' />
+              </IconButton>
+            </Tooltip>
+          </UserMessageEditStyled>
+          {content}
+        </ExplanationMessageStyled>
       </UserMessageRowStyled>
     );
   }

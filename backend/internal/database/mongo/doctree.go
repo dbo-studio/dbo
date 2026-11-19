@@ -20,7 +20,7 @@ const (
 // Children lists one level of the document. Only the first path segment is projected from the server, so a huge
 // sibling field is not read.
 func (r *Repository) Children(ctx context.Context, containerID, itemID string, path []string, offset, limit int) (*contract.DocChildren, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +32,7 @@ func (r *Repository) Children(ctx context.Context, containerID, itemID string, p
 	}
 
 	opts := options.FindOne()
+
 	if len(path) > 0 {
 		if strings.HasPrefix(path[0], "$") {
 			return nil, contract.Invalid("invalid path")
@@ -55,6 +56,7 @@ func (r *Repository) Children(ctx context.Context, containerID, itemID string, p
 	}
 
 	offset = max(offset, 0)
+
 	if limit <= 0 || limit > maxChildren {
 		limit = maxChildren
 	}
@@ -230,7 +232,7 @@ func keepWidth(v any, hint string) any {
 }
 
 func (r *Repository) updateByID(ctx context.Context, containerID, itemID string, change bson.D) error {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}

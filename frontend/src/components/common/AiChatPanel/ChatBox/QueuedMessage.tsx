@@ -18,7 +18,7 @@ export default function QueuedMessage({
       <Typography variant='caption' color='textSubdued' sx={{ flexShrink: 0 }}>
         {locales.ai_queued}
       </Typography>
-      <Typography variant='caption' noWrap sx={{ flex: 1, minWidth: 0 }}>
+      <Typography variant='caption' noWrap dir='auto' sx={{ flex: 1, minWidth: 0, unicodeBidi: 'plaintext' }}>
         {message}
       </Typography>
       <Button color='inherit' onClick={onCancel} data-testid='ai-queued-cancel'>

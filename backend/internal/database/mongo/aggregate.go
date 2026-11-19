@@ -17,7 +17,7 @@ func (r *Repository) Aggregate(ctx context.Context, containerID, pipeline string
 
 	limit = contract.BrowseQuery{Limit: limit}.ClampLimit(50)
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}

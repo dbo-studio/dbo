@@ -15,7 +15,7 @@ import (
 )
 
 // devConnection is one sample server of docker-compose.dev.yml. Ports come from the same *_TEST_* variables
-// the compose file and the e2e suite read, so a changed port in .env is honoured here.
+// the compose file and the e2e suite read, so a changed port in .env is honored here.
 type devConnection struct {
 	name    string
 	typ     string

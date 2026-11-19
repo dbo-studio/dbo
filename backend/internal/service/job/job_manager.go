@@ -363,9 +363,10 @@ func (jm *IJobManagerImpl) RunWithHandover(ctx context.Context, opts HandoverOpt
 		Data: opts.Data, StartedAt: &now,
 	}
 
-	if err := jm.jobRepo.Create(jm.workerCtx, job); err != nil {
+	if err := jm.jobRepo.Create(context.WithoutCancel(ctx), job); err != nil {
 		// No job to hand over to: keep the request open for the answer.
 		done := <-outcome
+
 		cancel()
 
 		return done.value, 0, done.err
@@ -378,7 +379,7 @@ func (jm *IJobManagerImpl) RunWithHandover(ctx context.Context, opts HandoverOpt
 	jm.workerWg.Add(1)
 	jm.announceRunning(job)
 
-	go func() {
+	go func(ctx context.Context) {
 		defer jm.workerWg.Done()
 
 		done := <-outcome
@@ -388,16 +389,15 @@ func (jm *IJobManagerImpl) RunWithHandover(ctx context.Context, opts HandoverOpt
 		jm.mu.Unlock()
 		cancel()
 
-		jm.finishHandover(job, done)
-	}()
+		jm.finishHandover(ctx, job, done)
+	}(context.WithoutCancel(ctx))
 
 	return nil, job.ID, nil
 }
 
 // finishHandover ends a handed-over job the way processJob ends a queued one.
-func (jm *IJobManagerImpl) finishHandover(job *model.Job, done handoverOutcome) {
-	// Writes must survive the shutdown that may have cancelled the work.
-	ctx := context.WithoutCancel(jm.workerCtx)
+func (jm *IJobManagerImpl) finishHandover(ctx context.Context, job *model.Job, done handoverOutcome) {
+	// Writes must survive the shutdown that may have canceled the work.
 
 	// A cancel by the user already set the status; it wins over whatever the driver reported.
 	if fresh, err := jm.jobRepo.Find(ctx, int32(job.ID)); err == nil && fresh.Status == model.JobStatusCancelled {

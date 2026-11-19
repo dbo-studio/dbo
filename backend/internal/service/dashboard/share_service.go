@@ -522,9 +522,11 @@ func runCards(ctx context.Context, questions serviceQuestion.IQuestionService, l
 		result, err := questions.Run(ctx, card.QuestionID, mergeParams(question.Params, overrides))
 		if err != nil {
 			log.Warn(fmt.Sprintf("%s: report %d failed: %v", label, card.QuestionID, err))
+
 			out.Error = errShareReportFailed.Error()
 		} else if out.Result, err = publicResult(result); err != nil {
 			log.Warn(fmt.Sprintf("%s: report %d result: %v", label, card.QuestionID, err))
+
 			out.Error = errShareReportFailed.Error()
 		}
 

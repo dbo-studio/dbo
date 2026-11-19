@@ -1,10 +1,14 @@
-import { FieldInputInputStyled } from '@/components/base/FieldInput/FieldInput.styled';
+import { PASSWORD_MANAGER_OFF } from '@/components/base/FieldInput/FieldInput';
+import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
+import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled';
+import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import locales from '@/locales';
 import type { AiProviderType } from '@/types';
-import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { Autocomplete, Box, Chip, IconButton, Typography, createFilterOptions } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
+import { components, type InputProps } from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
 type ModelPickerProps = {
   providerType: AiProviderType['type'];
@@ -15,12 +19,27 @@ type ModelPickerProps = {
   onRemove?: (model: string) => void;
   disabled?: boolean;
   error?: string;
+  label?: string;
+  placeholder?: string;
+  clearable?: boolean;
+  inputTestId?: string;
   onChange: (model: string) => void;
 };
 
-const filter = createFilterOptions<string>();
+const ModelSearchInput = (testId: string) =>
+  function ModelSearchInputInner(props: InputProps<SelectInputOption, false>): JSX.Element {
+    return <components.Input {...props} autoComplete='off' data-testid={testId} {...PASSWORD_MANAGER_OFF} />;
+  };
 
-/** Searchable model list that also accepts a model id the provider did not list. */
+function capabilityLabel(providerType: AiProviderType['type'], model: string): string | null {
+  const caps = getModelCapabilities(providerType, model);
+  if (!caps.tools) return null;
+  return caps.contextWindow
+    ? `${locales.ai_tools_supported} · ${formatContextWindow(caps.contextWindow)}`
+    : locales.ai_tools_supported;
+}
+
+/** Searchable model list, same control as the rest of the app, that also accepts an unlisted model id. */
 export default function ModelPicker({
   providerType,
   value,
@@ -29,74 +48,82 @@ export default function ModelPicker({
   onRemove,
   disabled,
   error,
+  label = locales.model,
+  placeholder = locales.ai_model_search,
+  clearable = false,
+  inputTestId = 'ai-model-input',
   onChange
 }: ModelPickerProps): JSX.Element {
+  const theme = useTheme();
+  const selectOptions: SelectInputOption[] = options.map((model) => ({ value: model, label: model }));
+  const selected = value ? (selectOptions.find((option) => option.value === value) ?? { value, label: value }) : null;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Typography color='textText' variant='caption' sx={{ mb: '4px' }}>
-        {locales.model}
+        {label}
       </Typography>
-      <Autocomplete
-        freeSolo
-        selectOnFocus
-        clearOnBlur
-        handleHomeEndKeys
-        disabled={disabled}
-        value={value}
-        options={options}
-        filterOptions={(all, state) => {
-          const filtered = filter(all, state);
-          const typed = state.inputValue.trim();
-          if (typed && !all.includes(typed)) {
-            filtered.push(typed);
-          }
-          return filtered;
-        }}
-        getOptionLabel={(option) => option}
-        onChange={(_, next) => onChange((next ?? '').trim())}
-        renderOption={({ key, ...props }, option) => {
-          const caps = getModelCapabilities(providerType, option);
-          const custom = !options.includes(option);
+      <CreatableSelect
+        placeholder={placeholder}
+        isDisabled={disabled}
+        isClearable={clearable}
+        components={{ IndicatorSeparator: null, Input: ModelSearchInput(inputTestId) }}
+        value={selected}
+        options={selectOptions}
+        menuPlacement='auto'
+        menuPortalTarget={document.body}
+        styles={SelectInputStyles(theme, !!error)}
+        formatCreateLabel={(input) => locales.ai_model_use_custom.replace('{{model}}', input)}
+        formatOptionLabel={(option, { context }) => {
+          if (context !== 'menu' || option.__isNew__) return option.label;
+          const model = typeof option.value === 'string' ? option.value : '';
+          const meta = capabilityLabel(providerType, model);
+          const canRemove = removable.includes(model) && onRemove;
           return (
-            <li key={key} {...props} data-testid='ai-model-option'>
-              <Typography variant='body2' noWrap sx={{ flex: 1 }}>
-                {custom ? locales.ai_model_use_custom.replace('{{model}}', option) : option}
-              </Typography>
-              {!custom && removable.includes(option) && onRemove ? (
-                <IconButton
+            <Box data-testid='ai-model-option' sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+              <Box component='span' sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {option.label}
+              </Box>
+              {canRemove ? (
+                <Box
+                  component='button'
+                  type='button'
                   aria-label={locales.ai_model_remove}
                   data-testid='ai-model-remove'
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(option);
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onRemove(model);
+                  }}
+                  sx={{
+                    display: 'inline-flex',
+                    p: 0,
+                    border: 0,
+                    bgcolor: 'transparent',
+                    color: 'text.secondary',
+                    cursor: 'pointer'
                   }}
                 >
                   <CustomIcon type='close' size='xs' />
-                </IconButton>
+                </Box>
               ) : null}
-              {!custom && caps.tools ? (
-                <Chip
-                  variant='outlined'
-                  label={
-                    caps.contextWindow
-                      ? `${locales.ai_tools_supported} · ${formatContextWindow(caps.contextWindow)}`
-                      : locales.ai_tools_supported
-                  }
-                />
+              {meta ? (
+                <Typography variant='caption' color='textSecondary' sx={{ flexShrink: 0 }}>
+                  {meta}
+                </Typography>
               ) : null}
-            </li>
+            </Box>
           );
         }}
-        renderInput={(params) => (
-          <FieldInputInputStyled
-            ref={params.slotProps.input.ref}
-            inputProps={{ ...params.slotProps.htmlInput, 'data-testid': 'ai-model-input' }}
-            placeholder={locales.ai_model_search}
-            error={!!error}
-            fullWidth
-          />
-        )}
+        onChange={(next) => {
+          const picked = (next as SelectInputOption | null)?.value;
+          onChange(typeof picked === 'string' ? picked.trim() : '');
+        }}
+        onCreateOption={(input) => onChange(input.trim())}
       />
       {error ? (
         <Typography color='error' variant='caption'>

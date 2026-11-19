@@ -371,7 +371,7 @@ func (i IQueryServiceImpl) TransactionBegin(ctx context.Context, req *dto.Transa
 		return apperror.InternalServerError(err)
 	}
 
-	if err := i.transactions.Begin(txKey(ctx, req.ConnectionID, req.Tab), db); err != nil {
+	if err := i.transactions.Begin(ctx, txKey(ctx, req.ConnectionID, req.Tab), db); err != nil {
 		if errors.Is(err, txsession.ErrActive) {
 			return apperror.Conflict(err)
 		}

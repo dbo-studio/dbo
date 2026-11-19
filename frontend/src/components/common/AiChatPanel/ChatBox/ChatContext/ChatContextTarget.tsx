@@ -70,13 +70,13 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
   };
 
   return (
-    <>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', minWidth: 0, maxWidth: 220, flex: '0 1 auto' }}>
       <Typography
         variant='caption'
         color='textSubdued'
         noWrap
         component='div'
-        sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flex: '0 1 auto', minWidth: 0, maxWidth: '100%' }}
+        sx={{ display: 'flex', alignItems: 'center', gap: 0.25, minWidth: 0, maxWidth: '100%' }}
         data-testid='ai-context-target'
       >
         <CustomIcon type='database' size='xs' />
@@ -110,6 +110,6 @@ export default function ChatContextTarget({ autocomplete }: { autocomplete: Auto
           </ContextPickerListStyled>
         </ContextPickerStyled>
       </DropDownMenu>
-    </>
+    </Box>
   );
 }

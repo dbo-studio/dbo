@@ -1,13 +1,15 @@
 import type { FontEntry, FontFaceSpec } from './types';
 
-const ARABIC_FALLBACK = '"Noto Sans Arabic"';
+const ARABIC_FALLBACK = '"Vazirmatn"';
+/** Arabic + Persian letters; with this range the face can lead the stack. */
+const ARABIC_UNICODE_RANGE = 'U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF';
 
 function appStack(cssFamily: string): string {
-  return `"${cssFamily}", ${ARABIC_FALLBACK}, sans-serif`;
+  return `${ARABIC_FALLBACK}, "${cssFamily}", sans-serif`;
 }
 
 function editorStack(cssFamily: string): string {
-  return `"${cssFamily}", ${ARABIC_FALLBACK}, monospace`;
+  return `${ARABIC_FALLBACK}, "${cssFamily}", monospace`;
 }
 
 function variableFaces(id: string): FontFaceSpec[] {
@@ -57,16 +59,21 @@ export const SYSTEM_UI_FONT: FontEntry = {
   id: 'system-ui',
   label: 'System UI',
   cssFamily: 'system-ui',
-  stack: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", ${ARABIC_FALLBACK}, sans-serif`
+  stack: `${ARABIC_FALLBACK}, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
 };
 
 export const ARABIC_FALLBACK_FONT: FontEntry = {
-  id: 'noto-sans-arabic',
-  label: 'Noto Sans Arabic',
-  cssFamily: 'Noto Sans Arabic',
-  stack: `"Noto Sans Arabic", sans-serif`,
-  // Arabic variable coverage varies; keep a reliable static regular.
-  faces: staticFaces('noto-sans-arabic', ['400'])
+  id: 'vazirmatn',
+  label: 'Vazirmatn',
+  cssFamily: 'Vazirmatn',
+  stack: `"Vazirmatn", sans-serif`,
+  faces: [
+    {
+      weight: '100 900',
+      path: 'vazirmatn/variable.woff2',
+      unicodeRange: ARABIC_UNICODE_RANGE
+    }
+  ]
 };
 
 /** Curated core UI fonts — keep this list intentional and small. */

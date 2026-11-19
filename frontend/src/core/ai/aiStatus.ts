@@ -1,3 +1,4 @@
+import { providerRequiresApiKey } from '@/core/ai/providerValidation';
 import type { AiProviderType } from '@/types';
 
 export type AiStatusReason = 'missing_key' | 'missing_url' | 'missing_model' | 'none';
@@ -23,7 +24,7 @@ function providerGap(provider: AiProviderType): AiStatusReason {
     return 'missing_model';
   }
 
-  if (provider.type !== 'ollama' && !hasApiKey(provider)) {
+  if (providerRequiresApiKey(provider.type) && !hasApiKey(provider)) {
     return 'missing_key';
   }
 

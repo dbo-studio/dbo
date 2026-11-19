@@ -12,6 +12,7 @@ import { variables } from '@/core/theme/variables';
 import { Box, styled, Typography } from '@mui/material';
 
 export const ChatDataTableWrapper = styled(Box)(({ theme }) => ({
+  direction: 'ltr',
   margin: `${theme.spacing(1)} 0`,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: variables.radius.medium,

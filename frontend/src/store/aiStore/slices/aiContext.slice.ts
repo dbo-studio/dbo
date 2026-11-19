@@ -1,8 +1,8 @@
 import type { AiContextType } from '@/types';
 import type { StateCreator } from 'zustand';
-import type { AiContextSlice } from '../types';
+import type { AiContextSlice, AiState } from '../types';
 
-export const createAiContextSlice: StateCreator<AiContextSlice, [['zustand/devtools', never]], [], AiContextSlice> = (
+export const createAiContextSlice: StateCreator<AiState, [['zustand/devtools', never]], [], AiContextSlice> = (
   set,
   get
 ) => ({
@@ -13,7 +13,8 @@ export const createAiContextSlice: StateCreator<AiContextSlice, [['zustand/devto
     tables: [],
     views: []
   },
-  messageEdit: false,
+  editingUserAt: null,
+  editingDraft: '',
   autoContext: true,
   setAutoContext: (autoContext: boolean) => {
     set({ autoContext }, undefined, 'setAutoContext');
@@ -21,7 +22,18 @@ export const createAiContextSlice: StateCreator<AiContextSlice, [['zustand/devto
   updateContext: (context: AiContextType) => {
     set({ context }, undefined, 'updateContext');
   },
-  toggleMessageEdit: (): void => {
-    set({ messageEdit: !get().messageEdit }, undefined, 'toggleMessageEdit');
+  beginMessageEdit: (createdAt, content): void => {
+    set({ editingUserAt: createdAt, editingDraft: content }, undefined, 'beginMessageEdit');
+  },
+  setEditingDraft: (editingDraft): void => {
+    set({ editingDraft }, undefined, 'setEditingDraft');
+  },
+  endMessageEdit: (): void => {
+    if (get().editingUserAt === null) return;
+    set({ editingUserAt: null, editingDraft: '' }, undefined, 'endMessageEdit');
+  },
+  cancelMessageEdit: (): void => {
+    if (get().editingUserAt === null) return;
+    set({ editingUserAt: null, editingDraft: '' }, undefined, 'cancelMessageEdit');
   }
 });

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,14 +28,14 @@ type dropboxDestination struct {
 	dir          string
 }
 
-func newDropbox(f fields) (Destination, error) {
+func newDropbox(ctx context.Context, f fields) (Destination, error) {
 	conf, token, err := refreshClient(TypeDropbox, f)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dropboxDestination{
-		client:  conf.Client(context.Background(), &oauth2.Token{RefreshToken: token}),
+		client:  conf.Client(ctx, &oauth2.Token{RefreshToken: token}),
 		api:     dropboxAPI,
 		content: dropboxContent,
 		dir:     strings.Trim(f.str("path"), "/"),
@@ -69,7 +70,7 @@ func (d *dropboxDestination) call(ctx context.Context, content bool, endpoint st
 		base = d.content
 	}
 
-	var reader io.Reader = body
+	reader := body
 
 	if !content && arg != nil {
 		raw, _ := json.Marshal(arg)
@@ -121,14 +122,14 @@ func (d *dropboxDestination) Test(ctx context.Context) error {
 }
 
 // Put uploads in chunks through an upload session, so a large backup is streamed and never held in memory.
-func (d *dropboxDestination) Put(ctx context.Context, name string, r io.Reader, size int64) (string, error) {
+func (d *dropboxDestination) Put(ctx context.Context, name string, r io.Reader, _ int64) (string, error) {
 	remote := "/" + path.Join(d.dir, path.Base(name))
 	commit := map[string]any{"path": remote, "mode": "overwrite", "mute": true}
 
 	buf := make([]byte, dropboxChunk)
 
 	n, err := io.ReadFull(r, buf)
-	if err == io.EOF || err == io.ErrUnexpectedEOF {
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 		// The whole file fit in one chunk.
 		res, err := d.call(ctx, true, "files/upload", commit, bytes.NewReader(buf[:n]), int64(n))
 		if err != nil {
@@ -164,7 +165,7 @@ func (d *dropboxDestination) Put(ctx context.Context, name string, r io.Reader, 
 
 	for {
 		n, err = io.ReadFull(r, buf)
-		last := err == io.EOF || err == io.ErrUnexpectedEOF
+		last := errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF)
 
 		if err != nil && !last {
 			return "", err

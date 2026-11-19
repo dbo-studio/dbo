@@ -83,11 +83,17 @@ export type AiChatSlice = {
 
 export type AiContextSlice = {
   context: AiContextType;
-  messageEdit: boolean;
+  /** `createdAt` of the user message currently opened as a composer. */
+  editingUserAt: string | null;
+  /** Draft for the in-place edit composer; the footer composer keeps `context.input`. */
+  editingDraft: string;
   /** When true the context chips follow the active explorer/editor tab; false = pinned. */
   autoContext: boolean;
   setAutoContext: (value: boolean) => void;
-  toggleMessageEdit: () => void;
+  beginMessageEdit: (createdAt: string, content: string) => void;
+  setEditingDraft: (draft: string) => void;
+  endMessageEdit: () => void;
+  cancelMessageEdit: () => void;
   updateContext: (context: AiContextType) => void;
 };
 
@@ -95,3 +101,5 @@ export type AiBridgeSlice = {
   bridgeRequest: AiBridgeRequest | null;
   setBridgeRequest: (request: AiBridgeRequest | null) => void;
 };
+
+export type AiState = AiProviderSlice & AiChatSlice & AiContextSlice & AiSessionSlice & AiBridgeSlice;

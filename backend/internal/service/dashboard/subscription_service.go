@@ -44,8 +44,8 @@ type ISubscriptionService interface {
 	// RunNow sends one snapshot now, without moving the schedule; it is how a delivery is tested.
 	RunNow(ctx context.Context, dashboardID, id uint) (*dto.DashboardSubscriptionRunResponse, error)
 	Runs(ctx context.Context, dashboardID, id uint) ([]dto.DashboardSubscriptionRunResponse, error)
-	GetSmtp(ctx context.Context) (*dto.SmtpSettingsResponse, error)
-	SaveSmtp(ctx context.Context, req *dto.SmtpSettingsRequest) (*dto.SmtpSettingsResponse, error)
+	GetSMTP(ctx context.Context) (*dto.SMTPSettingsResponse, error)
+	SaveSMTP(ctx context.Context, req *dto.SMTPSettingsRequest) (*dto.SMTPSettingsResponse, error)
 	// Start runs the scheduler until ctx ends. Runs missed while the app was off are skipped.
 	Start(ctx context.Context)
 }
@@ -124,7 +124,7 @@ func toSubscriptionResponse(sub *model.DashboardSubscription) dto.DashboardSubsc
 }
 
 func (s *ISubscriptionServiceImpl) smtpReady(ctx context.Context) bool {
-	settings, err := s.subRepo.GetSmtp(ctx)
+	settings, err := s.subRepo.GetSMTP(ctx)
 
 	return err == nil && settings.Host != "" && settings.FromAddress != ""
 }
@@ -398,12 +398,13 @@ func (s *ISubscriptionServiceImpl) deliver(ctx context.Context, sub *model.Dashb
 
 	switch sub.Kind {
 	case model.SubscriptionKindEmail:
-		settings, err := s.subRepo.GetSmtp(ctx)
+		settings, err := s.subRepo.GetSMTP(ctx)
 		if err != nil || settings.Host == "" || settings.FromAddress == "" {
 			return 0, errEmailNotConfigured
 		}
 
 		password := ""
+
 		if settings.PasswordEnc != "" {
 			plain, err := cryptoutil.DecryptAESGCM(s.cipherKey, settings.PasswordEnc)
 			if err != nil {
@@ -427,6 +428,7 @@ func (s *ISubscriptionServiceImpl) deliver(ctx context.Context, sub *model.Dashb
 		return okCards(cards), sendMail(cfg, dto.Recipients(sub.Target), subject, body, csvFiles(cards))
 	default:
 		secret := ""
+
 		if sub.SecretEnc != "" {
 			plain, err := cryptoutil.DecryptAESGCM(s.cipherKey, sub.SecretEnc)
 			if err != nil {
@@ -449,12 +451,12 @@ func (s *ISubscriptionServiceImpl) deliver(ctx context.Context, sub *model.Dashb
 	}
 }
 
-func (s *ISubscriptionServiceImpl) GetSmtp(ctx context.Context) (*dto.SmtpSettingsResponse, error) {
+func (s *ISubscriptionServiceImpl) GetSMTP(ctx context.Context) (*dto.SMTPSettingsResponse, error) {
 	if err := helper.RequireInstanceAdmin(ctx); err != nil {
 		return nil, err
 	}
 
-	settings, err := s.subRepo.GetSmtp(ctx)
+	settings, err := s.subRepo.GetSMTP(ctx)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -462,19 +464,19 @@ func (s *ISubscriptionServiceImpl) GetSmtp(ctx context.Context) (*dto.SmtpSettin
 	return smtpResponse(settings), nil
 }
 
-func smtpResponse(settings *model.SmtpSettings) *dto.SmtpSettingsResponse {
-	return &dto.SmtpSettingsResponse{
+func smtpResponse(settings *model.SMTPSettings) *dto.SMTPSettingsResponse {
+	return &dto.SMTPSettingsResponse{
 		Host: settings.Host, Port: settings.Port, Username: settings.Username, HasPassword: settings.PasswordEnc != "",
 		FromAddress: settings.FromAddress, Security: settings.Security, Configured: settings.Host != "" && settings.FromAddress != "",
 	}
 }
 
-func (s *ISubscriptionServiceImpl) SaveSmtp(ctx context.Context, req *dto.SmtpSettingsRequest) (*dto.SmtpSettingsResponse, error) {
+func (s *ISubscriptionServiceImpl) SaveSMTP(ctx context.Context, req *dto.SMTPSettingsRequest) (*dto.SMTPSettingsResponse, error) {
 	if err := helper.RequireInstanceAdmin(ctx); err != nil {
 		return nil, err
 	}
 
-	settings, err := s.subRepo.GetSmtp(ctx)
+	settings, err := s.subRepo.GetSMTP(ctx)
 	if err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
@@ -496,7 +498,7 @@ func (s *ISubscriptionServiceImpl) SaveSmtp(ctx context.Context, req *dto.SmtpSe
 		settings.PasswordEnc = ""
 	}
 
-	if err := s.subRepo.SaveSmtp(ctx, settings); err != nil {
+	if err := s.subRepo.SaveSMTP(ctx, settings); err != nil {
 		return nil, apperror.InternalServerError(err)
 	}
 

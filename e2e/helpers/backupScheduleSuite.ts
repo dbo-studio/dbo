@@ -216,11 +216,17 @@ export function defineBackupScheduleTests(engine: DbEngine): void {
             expect(mine?.lastError).not.toBe("");
           });
 
-          await test.step("The app shows a failure toast after reload", async () => {
+          await test.step("The app shows a failure notification after reload", async () => {
             await page.reload();
-            await expect(
-              page.getByText(`Scheduled backup "${scheduleName}" failed`),
-            ).toBeVisible({ timeout: 20_000 });
+            await expect(page.getByTestId("notification-unread")).toBeVisible({
+              timeout: 20_000,
+            });
+            await page.getByTestId("notification-bell").click();
+            const item = page
+              .getByTestId("notification-item")
+              .filter({ hasText: /Backup failed/i });
+            await expect(item.first()).toBeVisible();
+            await expect(item.first()).toHaveAttribute("data-kind", "job_failed");
           });
         });
       });

@@ -157,6 +157,7 @@ func (s *service) apply(c *model.BackupConnector, kind string, req *dto.Connecto
 	}
 
 	cfg := map[string]any{}
+
 	for _, k := range spec.config {
 		if v, ok := req.Config[k]; ok {
 			cfg[k] = v
@@ -268,7 +269,7 @@ func (s *service) Delete(ctx context.Context, kind string, id uint) error {
 // pinner is implemented by destinations that pin a server identity.
 type pinner interface{ Pinned() string }
 
-func (s *service) open(c *model.BackupConnector) (Destination, error) {
+func (s *service) open(ctx context.Context, c *model.BackupConnector) (Destination, error) {
 	if !c.Enabled {
 		return nil, ErrNotUsable
 	}
@@ -278,7 +279,7 @@ func (s *service) open(c *model.BackupConnector) (Destination, error) {
 		return nil, err
 	}
 
-	return OpenDestination(c.Type, f)
+	return OpenDestination(ctx, c.Type, f)
 }
 
 // pin records an SFTP host key the first time one is seen, so later connections must match it.
@@ -348,7 +349,7 @@ func (s *service) check(ctx context.Context, c *model.BackupConnector) error {
 		return nil
 	}
 
-	d, err := s.open(c)
+	d, err := s.open(ctx, c)
 	if err != nil {
 		return apperror.BadRequest(err)
 	}
@@ -368,7 +369,7 @@ func (s *service) destination(ctx context.Context, ownerID string, id uint) (Des
 		return nil, nil, errNotFound
 	}
 
-	d, err := s.open(c)
+	d, err := s.open(ctx, c)
 
 	return d, c, err
 }

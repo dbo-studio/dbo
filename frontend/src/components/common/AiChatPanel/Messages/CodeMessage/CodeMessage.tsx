@@ -64,7 +64,7 @@ export default function CodeMessage({ message }: CodeMessageProps) {
   };
 
   return (
-    <CodeMessageStyled>
+    <CodeMessageStyled dir='ltr' data-testid='ai-code-block'>
       <CodeMessageHeaderStyled isdark={isDark?.toString() ?? 'false'}>
         <Box sx={{ ml: 1, display: 'flex', alignItems: 'center', gap: 0.75 }}>
           <CustomIcon type='code' />

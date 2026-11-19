@@ -111,6 +111,7 @@ func editMaterializedViewQueries(node contract.DBNode, params *dto.PostgresMater
 
 		ref = quote.PostgresQualifiedTable(node.Schema, newName)
 		create := "CREATE MATERIALIZED VIEW " + ref
+
 		if tablespace := lo.FromPtr(newData.Tablespace); tablespace != "" {
 			create += " TABLESPACE " + quote.PostgresIdent(tablespace)
 		}

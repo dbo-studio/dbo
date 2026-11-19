@@ -17,7 +17,7 @@ func extJSON(v any) string {
 }
 
 func (r *Repository) Indexes(ctx context.Context, containerID string) ([]contract.IndexDetail, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (r *Repository) CreateIndex(ctx context.Context, containerID string, spec c
 		opts.SetPartialFilterExpression(p)
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -142,7 +142,7 @@ func (r *Repository) DropIndex(ctx context.Context, containerID, name string) er
 		return contract.Invalid("the _id index cannot be dropped")
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (r *Repository) Explain(ctx context.Context, containerID string, q contract
 		find = append(find, bson.E{Key: "sort", Value: sort})
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}

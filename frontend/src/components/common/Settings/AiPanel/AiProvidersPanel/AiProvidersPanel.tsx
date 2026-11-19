@@ -42,6 +42,7 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
   const [apiKey, setApiKey] = useState('');
   const [timeout, setTimeout] = useState(provider.timeout?.toString() ?? '');
   const [model, setModel] = useState(provider.model);
+  const [completionModel, setCompletionModel] = useState(provider.completionModel ?? '');
   const [saved, setSaved] = useState(provider.models);
   const [listed, setListed] = useState<string[]>([]);
   const [showKey, setShowKey] = useState(false);
@@ -60,8 +61,9 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         url: url.trim(),
         apiKey: effectiveKey,
         timeout: timeoutValue,
-        models: saved.includes(model) ? saved : [...saved, model],
+        models: [...new Set([...saved, ...listed, model, completionModel].filter(Boolean))],
         model,
+        completionModel,
         isActive: true
       }),
     onSuccess: (updated) => {
@@ -159,10 +161,30 @@ function ProviderForm({ provider, canEdit }: ProviderFormProps): JSX.Element {
         value={model}
         options={[...new Set([...saved, ...listed])]}
         removable={saved}
-        onRemove={(removed) => setSaved((list) => list.filter((item) => item !== removed))}
+        onRemove={(removed) => {
+          setSaved((list) => list.filter((item) => item !== removed));
+          if (completionModel === removed) setCompletionModel('');
+        }}
         disabled={!canEdit}
         error={shown('model')}
         onChange={setModel}
+      />
+
+      <ModelPicker
+        providerType={provider.type}
+        value={completionModel}
+        options={[...new Set([...saved, ...listed])]}
+        removable={saved}
+        onRemove={(removed) => {
+          setSaved((list) => list.filter((item) => item !== removed));
+          if (completionModel === removed) setCompletionModel('');
+        }}
+        disabled={!canEdit}
+        label={locales.ai_completion_model}
+        placeholder={locales.ai_completion_model_same}
+        clearable
+        inputTestId='ai-completion-model-input'
+        onChange={setCompletionModel}
       />
 
       {connection ? (

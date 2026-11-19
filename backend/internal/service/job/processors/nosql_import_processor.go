@@ -138,7 +138,6 @@ func (p *NoSQLImportProcessor) Process(ctx context.Context, job *model.Job) erro
 
 		return flush()
 	}, progress)
-
 	if err == nil {
 		err = flush()
 	}

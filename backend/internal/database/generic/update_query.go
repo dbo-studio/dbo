@@ -94,6 +94,7 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 	} else {
 		err = run(r.base.DB().WithContext(ctx))
 	}
+
 	if err != nil {
 		return nil, apperror.DriverError(err)
 	}

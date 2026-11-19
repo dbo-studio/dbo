@@ -122,15 +122,21 @@ export class ObjectTreePage extends BasePage {
   }
 
   async openContextMenu(nodeName: string): Promise<void> {
+    if (await this.page.getByRole("menu").isVisible().catch(() => false)) {
+      await this.page.keyboard.press("Escape");
+      await expect(this.page.getByRole("menu")).toBeHidden({ timeout: 5000 });
+    }
     const node = await this.expectNodeVisible(nodeName);
     await node.click({ button: "right" });
-    await this.wait(300);
+    await expect(this.page.getByRole("menu")).toBeVisible({ timeout: 10000 });
   }
 
   async clickContextMenuAction(actionTitle: string): Promise<void> {
     const slug = toTestIdSlug(actionTitle);
-    await this.page.getByTestId(`context-menu-item-${slug}`).click();
-    await this.wait(500);
+    const item = this.page.getByTestId(`context-menu-item-${slug}`);
+    await expect(item).toBeVisible({ timeout: 10000 });
+    await item.click();
+    await expect(this.page.getByRole("menu")).toBeHidden({ timeout: 5000 });
   }
 
   async runTreeAction(nodeName: string, actionTitle: string): Promise<void> {

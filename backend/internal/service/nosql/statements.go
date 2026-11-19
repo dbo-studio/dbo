@@ -126,7 +126,11 @@ func (s *Service) ApplyStatement(ctx context.Context, connectionID int32, statem
 		return nil, "", driverErr(err)
 	}
 
-	if capErr != nil || capture == nil {
+	if capErr != nil {
+		return nil, "it could not be read before it ran", capErr
+	}
+
+	if capture == nil {
 		return nil, "it could not be read before it ran", nil
 	}
 

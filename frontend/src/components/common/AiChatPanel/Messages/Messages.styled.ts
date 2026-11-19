@@ -1,10 +1,8 @@
 import { Box, styled } from '@mui/material';
 
-export const MessagesStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'compact'
-})<{ compact?: boolean }>(({ theme, compact }) => ({
-  '--ai-chat-gap': theme.spacing(compact ? 0.75 : 1.5),
-  '--ai-chat-group-gap': theme.spacing(compact ? 0.25 : 0.75),
+export const MessagesStyled = styled(Box)(({ theme }) => ({
+  '--ai-chat-gap': theme.spacing(1.5),
+  '--ai-chat-group-gap': theme.spacing(0.75),
   display: 'flex',
   flexDirection: 'column',
   flex: 1,
@@ -27,6 +25,19 @@ export const MessageGroupStyled = styled(Box)(() => ({
   flexDirection: 'column',
   gap: 'var(--ai-chat-group-gap)',
   width: '100%'
+}));
+
+/** Last user prompt (bubble or in-place editor) stays at the top while the answer scrolls. */
+export const StickyComposerStyled = styled(Box)(({ theme }) => ({
+  position: 'sticky',
+  top: 0,
+  zIndex: 3,
+  backgroundColor: theme.palette.background.default,
+  marginInline: theme.spacing(-0.5),
+  paddingInline: theme.spacing(0.5),
+  paddingTop: theme.spacing(1),
+  paddingBottom: theme.spacing(1),
+  boxShadow: `0 1px 0 ${theme.palette.divider}`
 }));
 
 export const ScrollToBottomButtonStyled = styled(Box)(({ theme }) => ({

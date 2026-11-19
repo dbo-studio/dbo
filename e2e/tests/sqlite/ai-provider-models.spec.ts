@@ -86,7 +86,7 @@ test.describe("AI provider settings API", () => {
     }
   });
 
-  test("a provider cannot become active without a key, except Ollama", async ({
+  test("a provider cannot become active without a key, except Ollama and OpenAI", async ({
     page,
   }) => {
     const gemini = await provider(page, "gemini");
@@ -107,6 +107,18 @@ test.describe("AI provider settings API", () => {
     });
     expect(active.status()).toBe(200);
     await page.request.patch(`/api/ai/providers/${ollama.id}`, {
+      data: { isActive: false },
+    });
+
+    const openai = await provider(page, "openai");
+    const openaiActive = await page.request.patch(
+      `/api/ai/providers/${openai.id}`,
+      {
+        data: { apiKey: "", isActive: true },
+      },
+    );
+    expect(openaiActive.status()).toBe(200);
+    await page.request.patch(`/api/ai/providers/${openai.id}`, {
       data: { isActive: false },
     });
   });

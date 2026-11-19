@@ -230,8 +230,8 @@ func (r *Server) routing() {
 	public.Get("/backup-destinations/oauth/callback", r.handlers.BackupDestination.OAuthCallback)
 
 	// The one outgoing mail account the schedules send through; an instance admin sets it.
-	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSmtp)
-	api.Put("/subscriptions/smtp", r.handlers.DashboardSubscription.SaveSmtp)
+	api.Get("/subscriptions/smtp", r.handlers.DashboardSubscription.GetSMTP)
+	api.Put("/subscriptions/smtp", r.handlers.DashboardSubscription.SaveSMTP)
 
 	// One live stream per client replaces polling jobs, and the inbox of finished jobs.
 	api.Get("/events", r.handlers.Notification.Stream)

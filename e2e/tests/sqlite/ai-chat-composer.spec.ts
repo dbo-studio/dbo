@@ -142,15 +142,15 @@ test.describe("AI chat composer and message polish", () => {
 
         await composer.focus();
         await composer.press("ArrowUp");
-        await expect(composer).toHaveValue("first question");
+        await expect(composer).toHaveAttribute("data-composer-text", "first question");
 
         await composer.press("Control+Shift+Backspace");
-        await expect(composer).toHaveValue("");
+        await expect(composer).toHaveAttribute("data-composer-text", "");
 
         // Up arrow only recalls when the composer is empty.
         await composer.fill("typed");
         await composer.press("ArrowUp");
-        await expect(composer).toHaveValue("typed");
+        await expect(composer).toHaveAttribute("data-composer-text", "typed");
         await composer.press("Control+Shift+Backspace");
       });
 
@@ -166,6 +166,38 @@ test.describe("AI chat composer and message polish", () => {
         await send(page, "fence");
         await expect(page.getByTestId("ai-code-language").last()).toHaveText("sql", { timeout: 15000 });
         await expect(page.getByTestId("ai-code-open-tab").last()).toBeVisible();
+        await expect(page.getByTestId("ai-code-block").last()).toHaveCSS("direction", "ltr");
+      });
+
+      await test.step("Persian composer text and the sent bubble follow dir=auto", async () => {
+        await composer.fill("یه گزارش از users");
+        await expect(composer).toHaveAttribute("dir", "auto");
+        await composer.press("Enter");
+        await expect(page.getByTestId("ai-user-message").last()).toHaveAttribute("dir", "auto");
+        await expect(page.getByTestId("ai-user-message").last()).toHaveText("یه گزارش از users");
+      });
+
+      await test.step("Edit opens the composer on the user bubble", async () => {
+        await send(page, "edit me");
+        await expect(page.getByTestId("ai-user-message").last()).toHaveText("edit me");
+        await expect(page.getByTestId("ai-sticky-user")).toHaveCSS("position", "sticky");
+        await expect(page.getByTestId("ai-sticky-user")).toContainText("edit me");
+        await page.getByTestId("ai-edit-message").last().click();
+        const inline = page.getByTestId("ai-edit-input");
+        await expect(inline).toHaveAttribute("data-composer-text", "edit me");
+        await expect(page.getByTestId("ai-inline-composer")).toHaveCSS("position", "sticky");
+        await expect(page.getByTestId("ai-chat-input")).toHaveAttribute("data-composer-text", "");
+        await expect(page.getByTestId("ai-composer-field")).toHaveCount(2);
+        await page.getByTestId("ai-chat-input").click();
+        await expect(page.getByTestId("ai-inline-composer")).toHaveCount(0);
+        await expect(page.getByTestId("ai-sticky-user")).toHaveCSS("position", "sticky");
+        await expect(page.getByTestId("ai-user-message").last()).toHaveText("edit me");
+        await page.getByTestId("ai-edit-message").last().click();
+        await inline.fill("edited");
+        await inline.press("Enter");
+        await expect(page.getByText("echo: edited")).toBeVisible({ timeout: 15000 });
+        await expect(page.getByTestId("ai-user-message").last()).toHaveText("edited");
+        await expect(page.getByTestId("ai-sticky-user")).toContainText("edited");
       });
 
       await test.step("Result table: Copy JSON, Rerun, tool-card link", async () => {

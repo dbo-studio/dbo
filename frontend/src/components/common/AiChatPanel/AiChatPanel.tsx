@@ -41,8 +41,6 @@ export default function AiChatPanel() {
   const chats = useAiStore((state) => state.chats);
   const connectionId = useConnectionStore((state) => state.currentConnectionId);
   const updateUI = useSettingStore((state) => state.updateUI);
-  const updateEditor = useSettingStore((state) => state.updateEditor);
-  const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
   const { useSidebarOverlay } = useLayoutMode();
   // Pending changes of this chat get the same review bar as the workstation.
   const openChangesetId = useChangesetStore(
@@ -67,15 +65,6 @@ export default function AiChatPanel() {
         {connectionId && <SafeModeBadge />}
         <AddChat onClick={() => void handleCreateChat()} />
         <ChatHistory />
-        <Tooltip title={density === 'compact' ? locales.ai_density_compact : locales.ai_density_comfortable}>
-          <IconButton
-            onClick={() => updateEditor({ aiChatDensity: density === 'compact' ? 'comfortable' : 'compact' })}
-            data-testid='ai-density-toggle'
-            data-density={density}
-          >
-            <CustomIcon type='density' />
-          </IconButton>
-        </Tooltip>
         {connectionId && !useSidebarOverlay && (
           <Tooltip title={`${locales.ai_expand_to_agent} (${shortcuts.toggleAgentWorkspace.command.join('+')})`}>
             <IconButton onClick={() => updateUI({ agentWorkspaceOpen: true })} data-testid='ai-expand-to-agent'>

@@ -6,7 +6,6 @@ import type { ChatContextProps } from '../../types';
 import { ChatContextStyled, ChatContextTagsStyled } from './ChatContext.styled';
 import ChatContextTarget from './ChatContextTarget';
 import ChatContextItem from './ChatContextItem/ChatContextModalItem';
-import { toggleContextOption } from '../../utils/contextOptions';
 
 export default function ChatContext({ autocomplete }: ChatContextProps) {
   const context = useAiStore((state) => state.context);
@@ -34,24 +33,6 @@ export default function ChatContext({ autocomplete }: ChatContextProps) {
             <CustomIcon type={autoContext ? 'refresh' : 'pin'} size='xs' />
           </IconButton>
         </Tooltip>
-
-        {context.tables.map((item) => (
-          <ChatContextItem
-            type='tables'
-            key={item}
-            name={item}
-            onClick={() => updateContext(toggleContextOption(context, { kind: 'table', label: item, attached: true }))}
-          />
-        ))}
-
-        {context.views.map((item) => (
-          <ChatContextItem
-            type='views'
-            key={item}
-            name={item}
-            onClick={() => updateContext(toggleContextOption(context, { kind: 'view', label: item, attached: true }))}
-          />
-        ))}
 
         {context.selectedQuery && (
           <ChatContextItem

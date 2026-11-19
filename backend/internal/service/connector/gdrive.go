@@ -21,13 +21,13 @@ type gdriveDestination struct {
 	folderID string
 }
 
-func newGDrive(f fields) (Destination, error) {
+func newGDrive(ctx context.Context, f fields) (Destination, error) {
 	conf, token, err := refreshClient(TypeGDrive, f)
 	if err != nil {
 		return nil, err
 	}
 
-	client := conf.Client(context.Background(), &oauth2.Token{RefreshToken: token})
+	client := conf.Client(ctx, &oauth2.Token{RefreshToken: token})
 
 	return &gdriveDestination{client: client, folderID: f.str("folderId")}, nil
 }

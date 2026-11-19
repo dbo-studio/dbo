@@ -45,7 +45,7 @@ func (r *Repository) Save(ctx context.Context, containerID, itemID string, chang
 		return contract.Invalid("_id cannot be changed")
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (r *Repository) Insert(ctx context.Context, containerID string, in contract
 		doc = append(bson.D{{Key: "_id", Value: parseID(in.ID)}}, doc...)
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +118,7 @@ func (r *Repository) Delete(ctx context.Context, containerID string, itemIDs []s
 		return contract.Invalid("at most %d documents per delete", maxDeleteBatch)
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}

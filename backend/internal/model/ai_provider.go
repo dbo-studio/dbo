@@ -12,6 +12,7 @@ type AiProvider struct {
 	Models                 []string `gorm:"type:json;serializer:json"`
 	IsActive               bool     `gorm:"default:false"`
 	Model                  string   `gorm:"size:50"`
+	CompletionModel        string   `gorm:"size:255"`
 	LastModelListUpdatedAt *time.Time
 	LastUsedAt             time.Time
 	CreatedAt              *time.Time `gorm:"autoCreateTime"`
@@ -26,3 +27,8 @@ const (
 	AIProviderTypeGemini    AIProviderType = "gemini"
 	AIProviderTypeOllama    AIProviderType = "ollama"
 )
+
+// RequiresAPIKey is false for Ollama and OpenAI-compatible local servers.
+func RequiresAPIKey(t AIProviderType) bool {
+	return t != AIProviderTypeOllama && t != AIProviderTypeOpenAI
+}

@@ -2,13 +2,16 @@ import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import DropDownMenu from '@/components/base/DropDownMenu/DropDownMenu';
 import locales from '@/locales';
 import { useCurrentConnection } from '@/hooks';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import { useAiStore } from '@/store/aiStore/ai.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box, IconButton, InputBase, Tooltip } from '@mui/material';
 import { type JSX, useMemo, useRef, useState } from 'react';
 import { useToggle } from 'usehooks-ts';
 import type { ChatContextProps } from '../../types';
 import {
   buildContextOptions,
+  contextAfterConnectionPick,
   type ContextOption,
   tableGroupLabel,
   toggleContextOption
@@ -22,13 +25,16 @@ export default function ContextAdd({ autocomplete }: ChatContextProps): JSX.Elem
 
   const context = useAiStore((state) => state.context);
   const updateContext = useAiStore((state) => state.updateContext);
+  const { switchConnection } = useSwitchConnection();
+  const connections = useConnectionStore((state) => state.connections);
+  const currentConnectionId = useConnectionStore((state) => state.currentConnectionId);
 
   const [search, setSearch] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const tablesGroup = tableGroupLabel(useCurrentConnection()?.type);
   const options = useMemo(
-    () => buildContextOptions(autocomplete, context, search, tablesGroup),
-    [autocomplete, context, search, tablesGroup]
+    () => buildContextOptions(autocomplete, context, search, tablesGroup, connections ?? [], currentConnectionId),
+    [autocomplete, context, search, tablesGroup, connections, currentConnectionId]
   );
   const active = Math.min(activeIndex, Math.max(options.length - 1, 0));
 
@@ -38,7 +44,15 @@ export default function ContextAdd({ autocomplete }: ChatContextProps): JSX.Elem
   };
 
   // The list stays open so several items can be attached in a row.
-  const handlePick = (option: ContextOption) => updateContext(toggleContextOption(context, option));
+  const handlePick = (option: ContextOption) => {
+    if (option.kind === 'connection' && option.connection) {
+      updateContext(contextAfterConnectionPick(useAiStore.getState().context, useAiStore.getState().context.input));
+      void switchConnection(option.connection);
+      closePicker();
+      return;
+    }
+    updateContext(toggleContextOption(context, option));
+  };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,13 +29,13 @@ type onedriveDestination struct {
 	dir    string
 }
 
-func newOneDrive(f fields) (Destination, error) {
+func newOneDrive(ctx context.Context, f fields) (Destination, error) {
 	conf, token, err := refreshClient(TypeOneDrive, f)
 	if err != nil {
 		return nil, err
 	}
 
-	signed := conf.Client(context.Background(), &oauth2.Token{RefreshToken: token})
+	signed := conf.Client(ctx, &oauth2.Token{RefreshToken: token})
 	// Downloads answer with a redirect to a pre-authorized URL; follow it without the token.
 	signed.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 
@@ -110,7 +111,7 @@ func (d *onedriveDestination) Put(ctx context.Context, name string, r io.Reader,
 
 	for offset := int64(0); ; {
 		n, err := io.ReadFull(r, buf)
-		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
 			return "", err
 		}
 

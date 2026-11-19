@@ -60,11 +60,11 @@ export function defineBackupConsoleTests(engine: DbEngine): void {
 
           await test.step("Run now completes and the row shows the result", async () => {
             await row.getByRole("button", { name: "Run now" }).click();
-            // Built-in dump engines (SQL Server, ClickHouse) open a progress dialog; close it, then read the row.
-            if (engine === "mssql" || engine === "clickhouse") {
-              await expect(page.getByText("Backup completed successfully")).toBeVisible({ timeout: 60_000 });
-              await page.getByRole("button", { name: "Close", exact: true }).click();
-            }
+            // Progress dialog blocks the console until dismissed (all built-in dump engines).
+            await expect(page.getByText("Backup completed successfully")).toBeVisible({
+              timeout: 60_000,
+            });
+            await page.getByRole("button", { name: "Close", exact: true }).click();
             await expect(
               row.getByText("Completed", { exact: true }),
             ).toBeVisible({ timeout: 60_000 });

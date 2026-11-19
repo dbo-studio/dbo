@@ -14,6 +14,7 @@ export const ProvidersStyled = styled(Box)(({ theme }) => ({
 export const ModelButtonStyled = styled(Button)(({ theme }) => ({
   minWidth: 0,
   maxWidth: '100%',
+  overflow: 'hidden',
   height: 24,
   padding: theme.spacing(0, 0.75),
   textTransform: 'none',

@@ -48,7 +48,7 @@ test.describe("AI chat message queue", () => {
           await composer.fill("second question");
           await composer.press("Enter");
           await expect(page.getByTestId("ai-queued")).toContainText("second question");
-          await expect(composer).toHaveValue("");
+          await expect(composer).toHaveAttribute("data-composer-text", "");
 
           llm.reply = null;
           await expect(message("first answer done")).toHaveCount(1, { timeout: 15000 });

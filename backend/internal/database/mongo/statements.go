@@ -91,7 +91,7 @@ func filterOf(cmd *call) (bson.D, int64, error) {
 }
 
 func (r *Repository) PreviewStatement(ctx context.Context, statement string) (*contract.WritePreview, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func undoHead(db, coll string) string {
 }
 
 func (r *Repository) CaptureStatement(ctx context.Context, statement string) (*contract.StatementCapture, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}

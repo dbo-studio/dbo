@@ -9,6 +9,7 @@ const appear = keyframes`
 export const AgentCardStyled = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'accent'
 })<{ accent?: string }>(({ theme, accent }) => ({
+  direction: 'ltr',
   display: 'flex',
   flexDirection: 'column',
   minWidth: 0,

@@ -1,14 +1,20 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { useSettingStore } from '@/store/settingStore/setting.store';
-import { Chip, CircularProgress, Typography } from '@mui/material';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Chip, CircularProgress, Typography } from '@mui/material';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { AiMessageType } from '@/types';
 import { MessagesProps } from '../types';
+import ChatBox from '../ChatBox/ChatBox';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
 import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
-import { MessageGroupStyled, MessagesListStyled, MessagesStyled, ScrollToBottomButtonStyled } from './Messages.styled';
+import {
+  MessageGroupStyled,
+  MessagesListStyled,
+  MessagesStyled,
+  ScrollToBottomButtonStyled,
+  StickyComposerStyled
+} from './Messages.styled';
 import StreamingPreview from './StreamingPreview/StreamingPreview';
 import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
 import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
@@ -16,6 +22,7 @@ import AgentItemCard from './AgentItemCard/AgentItemCard';
 import MessageBlock from './MessageBlock/MessageBlock';
 import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
 import TurnActions from './TurnActions/TurnActions';
+import { useAiChatController } from '../hooks/useAiChatController';
 import { useAiSession } from '../hooks/useAiSession';
 
 export default function Messages({
@@ -29,19 +36,18 @@ export default function Messages({
   onFeedback
 }: MessagesProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const editComposerRef = useRef<HTMLDivElement>(null);
   const { streaming, agentItems } = useAiSession();
-  const density = useSettingStore((state) => state.editor.aiChatDensity ?? 'comfortable');
+  const { autocomplete, chatPending, handleSend, handleCancel } = useAiChatController();
   const selectedQuery = useAiStore((state) => state.context.selectedQuery);
+  const editingUserAt = useAiStore((state) => state.editingUserAt);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
   const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
-  const lastTurn = useMemo(() => {
-    const lastUserIndex = messages.map((message) => message.role).lastIndexOf('user');
-    return messages.slice(lastUserIndex + 1);
-  }, [messages]);
-  const lastPrompt = useMemo(
-    () => [...messages].reverse().find((message) => message.role === 'user')?.content ?? '',
-    [messages]
-  );
+  const lastUserIndex = useMemo(() => messages.map((message) => message.role).lastIndexOf('user'), [messages]);
+  const lastTurn = useMemo(() => messages.slice(lastUserIndex + 1), [messages, lastUserIndex]);
+  const lastUser = lastUserIndex >= 0 ? messages[lastUserIndex] : undefined;
+  const lastPrompt = lastUser?.content ?? '';
+  const lastUserCreatedAt = lastUser?.createdAt ?? null;
   // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
   const previousSql = useMemo(() => {
     const result = new Map<AiMessageType, string>();
@@ -107,6 +113,27 @@ export default function Messages({
     container.scrollTo({ top: container.scrollHeight, behavior });
   }, []);
 
+  useLayoutEffect(() => {
+    if (!editingUserAt) return;
+    const container = messagesContainerRef.current;
+    const el = editComposerRef.current;
+    if (!container || !el) return;
+    container.scrollTop += el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+  }, [editingUserAt]);
+
+  useEffect(() => {
+    if (!editingUserAt) return;
+    const onPointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (editComposerRef.current?.contains(target)) return;
+      if (target.closest('.MuiPopover-root, .MuiModal-root, .MuiMenu-root')) return;
+      useAiStore.getState().cancelMessageEdit();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return (): void => document.removeEventListener('pointerdown', onPointerDown);
+  }, [editingUserAt]);
+
   // Sending a message always brings the conversation to the bottom, wherever the user had scrolled.
   const lastMessage = messages[messages.length - 1];
   const sentJustNow = lastMessage?.role === 'user' && lastMessage.isNew;
@@ -138,8 +165,7 @@ export default function Messages({
       onPointerDown={() => {
         pointerDownRef.current = true;
       }}
-      compact={density === 'compact'}
-      data-density={density}
+      data-testid='ai-messages'
     >
       {showLoadMore && onLoadMore && (
         <Typography
@@ -166,8 +192,44 @@ export default function Messages({
       <MessagesListStyled ref={listRef}>
         {blocks.map((block) => {
           const message = block.kind === 'message' ? block.message : undefined;
+          const isLastUser = message?.role === 'user' && message.createdAt === lastUserCreatedAt;
+          const isEditingThis =
+            message?.role === 'user' && editingUserAt !== null && message.createdAt === editingUserAt;
           const inLastTurn = message?.role === 'assistant' && lastTurn.includes(message);
           const baseline = message ? ((inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message)) : undefined;
+
+          if (isEditingThis) {
+            const composer = (
+              <ChatBox
+                variant='edit'
+                autoFocus
+                loading={chatPending}
+                autocomplete={autocomplete}
+                onSend={(prompt) => void handleSend(prompt)}
+                onCancel={() => void handleCancel()}
+              />
+            );
+            if (isLastUser) {
+              return (
+                <StickyComposerStyled key={block.key} ref={editComposerRef} data-testid='ai-inline-composer'>
+                  {composer}
+                </StickyComposerStyled>
+              );
+            }
+            return (
+              <Box key={block.key} ref={editComposerRef} data-testid='ai-inline-composer'>
+                {composer}
+              </Box>
+            );
+          }
+
+          if (isLastUser) {
+            return (
+              <StickyComposerStyled key={block.key} data-testid='ai-sticky-user'>
+                <MessageBlock block={block} baseline={baseline} showModelLabel={showModelLabel} />
+              </StickyComposerStyled>
+            );
+          }
 
           return <MessageBlock key={block.key} block={block} baseline={baseline} showModelLabel={showModelLabel} />;
         })}

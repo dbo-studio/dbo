@@ -162,7 +162,7 @@ func (r *PostgresRepository) Execute(ctx context.Context, nodeID string, action 
 // pinRoutineNode adds the pg_proc oid to the node id of a routine that was just created or
 // renamed. With overloads a bare name would be ambiguous, and the form reopened after the
 // save would fail. The new routine is the highest oid of that name.
-func (r *PostgresRepository) pinRoutineNode(ctx context.Context, node contract.DBNode, action contract.TreeNodeActionName, result *contract.ExecuteResult) *contract.ExecuteResult {
+func (r *PostgresRepository) pinRoutineNode(ctx context.Context, _ contract.DBNode, action contract.TreeNodeActionName, result *contract.ExecuteResult) *contract.ExecuteResult {
 	var procedure bool
 
 	switch action {

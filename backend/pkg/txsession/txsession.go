@@ -42,7 +42,7 @@ func NewStore() *Store { return &Store{sessions: map[Key]*session{}} }
 
 // Begin opens a transaction on db. It runs on its own context: the request's would roll it back when the
 // request ends.
-func (s *Store) Begin(key Key, db *gorm.DB) error {
+func (s *Store) Begin(ctx context.Context, key Key, db *gorm.DB) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -50,7 +50,7 @@ func (s *Store) Begin(key Key, db *gorm.DB) error {
 		return ErrActive
 	}
 
-	tx := db.WithContext(context.Background()).Begin()
+	tx := db.WithContext(context.WithoutCancel(ctx)).Begin()
 	if tx.Error != nil {
 		return tx.Error
 	}

@@ -32,11 +32,14 @@ export class BackupPage extends BasePage {
 
   /** Closes the Backup tab so the SQL editor tab is in front again. */
   async close(): Promise<void> {
-    await this.page
-      .getByTestId("workspace-tab-backup-&-restore")
-      .locator("svg")
-      .last()
-      .click();
+    if (this.page.isClosed()) {
+      return;
+    }
+    const tab = this.page.getByTestId("workspace-tab-backup-&-restore");
+    if ((await tab.count()) === 0) {
+      return;
+    }
+    await tab.locator("svg").last().click();
     await expect(this.dialog).toBeHidden();
   }
 

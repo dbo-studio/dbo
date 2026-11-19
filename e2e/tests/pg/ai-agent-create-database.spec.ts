@@ -130,7 +130,9 @@ test.describe("AI Agent Workspace create database (postgres)", () => {
           await test.step("Apply all creates the database with its tables", async () => {
             await page.getByTestId("ai-dock-apply-all").click();
             const preview = page.getByTestId("ai-dock-preview-modal");
-            await expect(preview).toContainText(`CREATE DATABASE ${blog}`);
+            await expect(preview).toContainText(
+              new RegExp(`CREATE DATABASE.*${blog}`),
+            );
             await page.getByTestId("ai-dock-execute").click();
             await expect(page.getByTestId("ai-changeset-dock")).toHaveCount(0, {
               timeout: 20000,

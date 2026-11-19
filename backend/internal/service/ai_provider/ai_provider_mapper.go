@@ -30,15 +30,16 @@ func aiProviderModelToDto(aiProvider *model.AiProvider) dto.AiProvider {
 	}
 
 	return dto.AiProvider{
-		ID:         aiProvider.ID,
-		Type:       string(aiProvider.Type),
-		URL:        aiProvider.URL,
-		APIKey:     maskAPIKey(aiProvider.APIKey),
-		Timeout:    aiProvider.Timeout,
-		Models:     aiProvider.Models,
-		Model:      aiProvider.Model,
-		IsActive:   aiProvider.IsActive,
-		LastUsedAt: aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
+		ID:              aiProvider.ID,
+		Type:            string(aiProvider.Type),
+		URL:             aiProvider.URL,
+		APIKey:          maskAPIKey(aiProvider.APIKey),
+		Timeout:         aiProvider.Timeout,
+		Models:          aiProvider.Models,
+		Model:           aiProvider.Model,
+		CompletionModel: aiProvider.CompletionModel,
+		IsActive:        aiProvider.IsActive,
+		LastUsedAt:      aiProvider.LastUsedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 

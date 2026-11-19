@@ -21,7 +21,7 @@ func isInternal(ip net.IP) bool {
 }
 
 // postWebhook sends the body as JSON. When internal targets are not allowed, the check runs on the address
-// actually dialled, so a name that resolves to a private address, or a redirect to one, is refused too.
+// actually dialed, so a name that resolves to a private address, or a redirect to one, is refused too.
 func postWebhook(ctx context.Context, url string, body []byte, secret, event string, allowInternal bool) error {
 	dialer := &net.Dialer{
 		Timeout: 10 * time.Second,

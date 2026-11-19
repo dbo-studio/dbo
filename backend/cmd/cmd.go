@@ -151,6 +151,7 @@ func Execute() {
 
 	// Scheduled dashboard deliveries run in this process, so they only fire while DBO is running.
 	go ss.DashboardSubscriptionService.Start(gracefulCtx)
+
 	ss.BackupScheduler.Start(gracefulCtx)
 
 	// SIGINT/SIGTERM: stop the job system (abort processors, wait, mark jobs

@@ -64,7 +64,7 @@ func FormatSQLValue(value any) string {
 
 func FormatSQLValueForDriver(driver string, value any) (string, error) {
 	// Nullable columns arrive as pointers (ClickHouse): format what they point at.
-	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Ptr {
+	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
 			return "NULL", nil
 		}

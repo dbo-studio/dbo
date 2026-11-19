@@ -15,7 +15,8 @@ const ICON: Record<ContextOptionKind, keyof typeof IconTypes> = {
   query: 'sql',
   selection: 'sql',
   table: 'sheet',
-  view: 'sheet'
+  view: 'sheet',
+  connection: 'connection'
 };
 
 type ContextPickerProps = {

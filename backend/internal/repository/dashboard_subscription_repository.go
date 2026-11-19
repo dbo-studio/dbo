@@ -111,8 +111,8 @@ func (r DashboardSubscriptionRepoImpl) Runs(ctx context.Context, subscriptionID 
 	return runs, err
 }
 
-func (r DashboardSubscriptionRepoImpl) GetSmtp(ctx context.Context) (*model.SmtpSettings, error) {
-	var settings model.SmtpSettings
+func (r DashboardSubscriptionRepoImpl) GetSMTP(ctx context.Context) (*model.SMTPSettings, error) {
+	var settings model.SMTPSettings
 
 	err := r.db.WithContext(ctx).Where("id = 1").Limit(1).Find(&settings).Error
 	if err != nil {
@@ -120,13 +120,13 @@ func (r DashboardSubscriptionRepoImpl) GetSmtp(ctx context.Context) (*model.Smtp
 	}
 
 	if settings.ID == 0 {
-		return &model.SmtpSettings{ID: 1, Port: 587, Security: "starttls"}, nil
+		return &model.SMTPSettings{ID: 1, Port: 587, Security: "starttls"}, nil
 	}
 
 	return &settings, nil
 }
 
-func (r DashboardSubscriptionRepoImpl) SaveSmtp(ctx context.Context, settings *model.SmtpSettings) error {
+func (r DashboardSubscriptionRepoImpl) SaveSMTP(ctx context.Context, settings *model.SMTPSettings) error {
 	settings.ID = 1
 
 	return r.db.WithContext(ctx).Save(settings).Error

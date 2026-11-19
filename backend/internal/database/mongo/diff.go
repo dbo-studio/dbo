@@ -117,6 +117,7 @@ func deepCopy(m map[string]any) map[string]any {
 	b, _ := json.Marshal(m)
 
 	var out map[string]any
+
 	_ = json.Unmarshal(b, &out)
 
 	return out

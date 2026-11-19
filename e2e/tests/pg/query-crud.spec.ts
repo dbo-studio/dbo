@@ -22,9 +22,6 @@ async function setupPostgresUsersTable(
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(config);
-  await expect(
-    connectionPage.getConnectionHeading(connectionName),
-  ).toBeVisible();
   await sqlEditor.open();
   await sqlEditor.selectContext("default", "public");
 

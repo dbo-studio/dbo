@@ -31,7 +31,7 @@ export default function ChatItem({ chat, selected, onClick, onDelete, onRename }
   };
 
   return (
-    <ChatItemStyled selected={selected} onClick={onClick} data-testid='ai-chat-item'>
+    <ChatItemStyled $selected={selected} onClick={onClick} data-testid='ai-chat-item'>
       {draft !== undefined ? (
         <InputBase
           autoFocus
@@ -41,14 +41,14 @@ export default function ChatItem({ chat, selected, onClick, onDelete, onRename }
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
           inputProps={{ maxLength: 255, 'aria-label': locales.ai_rename_chat, 'data-testid': 'ai-chat-rename-input' }}
-          sx={{ fontSize: variables.fontSize.sm, p: 0 }}
+          sx={{ fontSize: variables.fontSize.sm, p: 0, minWidth: 0, flex: 1 }}
         />
       ) : (
         <Tooltip title={`${chat.title} · ${locales.ai_rename_chat}: double-click`} enterDelay={500}>
           <Typography
             variant='caption'
             noWrap
-            sx={{ fontWeight: selected ? 600 : 400 }}
+            sx={{ fontWeight: selected ? 500 : 400, color: 'inherit', minWidth: 0 }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               setDraft(chat.title);
@@ -59,7 +59,7 @@ export default function ChatItem({ chat, selected, onClick, onDelete, onRename }
         </Tooltip>
       )}
 
-      <ChatItemIconStyled type='close' onClick={handleDeleteClick} selected={selected} />
+      <ChatItemIconStyled type='close' size='xs' onClick={handleDeleteClick} $selected={selected} />
     </ChatItemStyled>
   );
 }

@@ -97,18 +97,21 @@ func buildCreateTablePlan(input TableInput) (ddl.Plan, string, error) {
 
 	plan = append(plan, indexStatementsPlan...)
 	plan = append(plan, foreignKeyStatements(input.Schema, tableName, foreignKeyRows(input), contract.CreateTableAction)...)
+
 	checkStatementsPlan, err := checkStatements(input.Schema, tableName, checkRows(input), contract.CreateTableAction)
 	if err != nil {
 		return nil, "", err
 	}
 
 	plan = append(plan, checkStatementsPlan...)
+
 	triggerStatementsPlan, err := triggerStatements(input.Schema, tableName, triggerRows(input), contract.CreateTableAction)
 	if err != nil {
 		return nil, "", err
 	}
 
 	plan = append(plan, triggerStatementsPlan...)
+
 	tableSequenceStatementsPlan, err := tableSequenceStatements(input.Schema, tableName, sequenceRows(input), contract.CreateTableAction)
 	if err != nil {
 		return nil, "", err

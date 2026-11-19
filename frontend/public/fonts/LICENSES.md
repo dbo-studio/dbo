@@ -12,7 +12,7 @@ where OFL restricts that.
 | Family folder | Typical license |
 | --- | --- |
 | roboto, roboto-mono | Apache 2.0 |
-| inter, open-sans, noto-sans, dm-sans, manrope, space-grotesk, source-sans-3, ibm-plex-*, fira-code, jetbrains-mono, inconsolata, source-code-pro, cascadia-code, commit-mono, noto-sans-arabic | SIL OFL 1.1 |
+| inter, open-sans, noto-sans, dm-sans, manrope, space-grotesk, source-sans-3, ibm-plex-*, fira-code, jetbrains-mono, inconsolata, source-code-pro, cascadia-code, commit-mono, vazirmatn | SIL OFL 1.1 |
 | geist-sans, geist-mono | SIL OFL 1.1 (Vercel) |
 | hack | MIT (Hack) |
 

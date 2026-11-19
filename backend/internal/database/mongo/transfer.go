@@ -45,7 +45,7 @@ func (r *Repository) Export(ctx context.Context, containerID, filter string) (co
 		return nil, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (r *Repository) ImportDocsMode(ctx context.Context, containerID string, tex
 		docs = append(docs, d)
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -260,7 +260,7 @@ func replaceByID(ctx context.Context, coll *mongo.Collection, docs []bson.D) (in
 
 // insertDocs writes documents in batches and stops at the first failure; inserted is what was written before it.
 func (r *Repository) insertDocs(ctx context.Context, containerID string, docs []bson.D) (int, error) {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -309,7 +309,7 @@ func (r *Repository) RenameCollection(ctx context.Context, containerID, newName 
 		return containerID, nil
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -325,7 +325,7 @@ func (r *Repository) RenameCollection(ctx context.Context, containerID, newName 
 }
 
 func (r *Repository) DropCollection(ctx context.Context, containerID string) error {
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}

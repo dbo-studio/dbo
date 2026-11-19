@@ -133,6 +133,7 @@ func runRawScript(ctx context.Context, r *BaseRepository, db *gorm.DB, req *dto.
 
 		return nil
 	})
+
 	if result == nil {
 		result = &dto.RawQueryResponse{Data: []map[string]any{}}
 	}

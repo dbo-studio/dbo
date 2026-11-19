@@ -7,5 +7,6 @@ export type AiProviderType = {
   timeout?: number;
   isActive: boolean;
   model: string;
+  completionModel?: string;
   lastUsedAt: string;
 };

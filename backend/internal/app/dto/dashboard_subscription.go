@@ -63,7 +63,7 @@ type (
 		Manual     bool      `json:"manual"`
 	}
 
-	SmtpSettingsRequest struct {
+	SMTPSettingsRequest struct {
 		Host        string `json:"host"`
 		Port        int    `json:"port"`
 		Username    string `json:"username"`
@@ -72,7 +72,7 @@ type (
 		Security    string `json:"security"`
 	}
 
-	SmtpSettingsResponse struct {
+	SMTPSettingsResponse struct {
 		Host        string `json:"host"`
 		Port        int    `json:"port"`
 		Username    string `json:"username"`
@@ -149,7 +149,7 @@ func (req DashboardSubscriptionRequest) Validate() error {
 	)
 }
 
-func (req SmtpSettingsRequest) Validate() error {
+func (req SMTPSettingsRequest) Validate() error {
 	return validation.ValidateStruct(&req,
 		validation.Field(&req.Host, validation.Required, validation.Length(1, 255)),
 		validation.Field(&req.Port, validation.Required, validation.Min(1), validation.Max(65535)),

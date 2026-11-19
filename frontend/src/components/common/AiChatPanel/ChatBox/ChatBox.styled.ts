@@ -28,6 +28,14 @@ export const SendButtonStyled = styled(Button)(({ theme }) => ({
   boxShadow: 'none',
   '& svg': {
     color: `${theme.palette.primary.contrastText} !important`
+  },
+  // contrastText matches the filled primary circle. The disabled fill is a neutral wash,
+  // so the arrow uses muted text or it disappears (dark contrast on a dark disc).
+  '&&.Mui-disabled': {
+    backgroundColor: alpha(theme.palette.text.primary, 0.16),
+    '& svg': {
+      color: `${theme.palette.text.secondary} !important`
+    }
   }
 }));
 
@@ -35,8 +43,18 @@ export const ComposerFooterStyled = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between',
   gap: theme.spacing(0.5),
+  minWidth: 0,
+  width: '100%'
+}));
+
+/** One field: chips wrap on their own row, the textarea stays full width underneath. */
+export const ComposerFieldStyled = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'stretch',
+  gap: theme.spacing(0.5),
+  width: '100%',
   minWidth: 0
 }));
 

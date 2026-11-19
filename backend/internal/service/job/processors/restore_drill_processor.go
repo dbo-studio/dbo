@@ -121,7 +121,7 @@ func (p *RestoreDrillProcessor) Process(ctx context.Context, job *model.Job) err
 		}
 	}
 
-	// The job context is cancelled on a user cancel; the outcome still has to be recorded.
+	// The job context is canceled on a user cancel; the outcome still has to be recorded.
 	bg := context.WithoutCancel(ctx)
 	now := time.Now()
 	_ = p.artifactRepo.UpdateFields(bg, artifact.ID, map[string]any{
@@ -256,6 +256,7 @@ func (p *RestoreDrillProcessor) drillSQLite(ctx context.Context, job *model.Job,
 	}
 
 	scratch := filepath.Join(helper.BackupDir, fmt.Sprintf("drill_%d.db", job.ID))
+
 	defer func() {
 		for _, suffix := range []string{"", "-journal", "-wal", "-shm"} {
 			_ = os.Remove(scratch + suffix)

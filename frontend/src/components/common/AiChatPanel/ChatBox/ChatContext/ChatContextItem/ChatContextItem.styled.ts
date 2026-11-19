@@ -1,4 +1,3 @@
-import { variables } from '@/core/theme/variables';
 import { Box, ButtonBase, styled } from '@mui/material';
 
 // Fixed size and structure: the chip never changes shape on hover, so the row does not jump.
@@ -10,7 +9,7 @@ export const ChatContextItemStyled = styled(Box)(({ theme }) => ({
   height: 22,
   maxWidth: 180,
   padding: theme.spacing(0, 0.25, 0, 0.75),
-  borderRadius: variables.radius.medium,
+  borderRadius: 999,
   border: `1px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.default
 }));

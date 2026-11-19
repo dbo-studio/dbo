@@ -225,8 +225,8 @@ type IDashboardSubscriptionRepo interface {
 	Delete(ctx context.Context, sub *model.DashboardSubscription) error
 	AddRun(ctx context.Context, run *model.DashboardSubscriptionRun) error
 	Runs(ctx context.Context, subscriptionID uint) ([]model.DashboardSubscriptionRun, error)
-	GetSmtp(ctx context.Context) (*model.SmtpSettings, error)
-	SaveSmtp(ctx context.Context, settings *model.SmtpSettings) error
+	GetSMTP(ctx context.Context) (*model.SMTPSettings, error)
+	SaveSMTP(ctx context.Context, settings *model.SMTPSettings) error
 }
 
 type INotificationRepo interface {

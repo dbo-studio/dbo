@@ -31,7 +31,7 @@ func (r *Repository) Analyze(ctx context.Context, containerID string, sample int
 
 	sample = min(sample, maxSample)
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (r *Repository) GetValidator(ctx context.Context, containerID string) (*con
 		return nil, err
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (r *Repository) SetValidator(ctx context.Context, containerID string, v con
 		rule = bson.D{}
 	}
 
-	c, err := r.client()
+	c, err := r.client(ctx)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,7 @@ import { ensureSqliteDbFile } from "../../helpers/objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "../../helpers/safeCleanup";
 import { ConnectionPage, SettingsPage } from "../../pages";
 
-/** Chat panel: remembered width, Comfortable / Compact density, per-turn timestamp. */
+/** Chat panel: remembered width, per-turn timestamp. */
 
 async function openAssistant(page: Page): Promise<void> {
   const settingsPage = new SettingsPage(page);
@@ -29,7 +29,7 @@ const panelWidth = (page: Page): Promise<number> =>
     .evaluate((handle) => handle.parentElement?.getBoundingClientRect().width ?? 0);
 
 test.describe("AI chat panel refresh", () => {
-  test("remembers width, switches density, shows message time", async ({ page }, testInfo) => {
+  test("remembers width, shows message time", async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const suffix = uniqueTestSuffix(testInfo);
     const connectionName = `ai-refresh-${suffix}`;
@@ -87,26 +87,6 @@ test.describe("AI chat panel refresh", () => {
         expect(title).toContain("2026");
       });
 
-      await test.step("Density toggles spacing and persists", async () => {
-        const toggle = page.getByTestId("ai-density-toggle");
-        const gap = (): Promise<string> =>
-          page
-            .getByTestId("ai-message")
-            .first()
-            .evaluate((el) => getComputedStyle(el.parentElement as HTMLElement).rowGap);
-
-        await expect(toggle).toHaveAttribute("data-density", "comfortable");
-        const comfortable = parseFloat(await gap());
-
-        await toggle.click();
-        await expect(toggle).toHaveAttribute("data-density", "compact");
-        expect(parseFloat(await gap())).toBeLessThan(comfortable);
-
-        await page.reload();
-        await openAssistant(page);
-        await expect(page.getByTestId("ai-density-toggle")).toHaveAttribute("data-density", "compact");
-      });
-
       await test.step("Panel width is remembered after a resize", async () => {
         const before = await panelWidth(page);
         const handle = page.getByTestId("resize-handle").last();
@@ -138,7 +118,7 @@ test.describe("AI chat panel refresh", () => {
         }
 
         // A real scroll: a programmatic one is not the user leaving the bottom.
-        const conversation = await page.locator("[data-density]:not([data-testid])").boundingBox();
+        const conversation = await page.getByTestId("ai-messages").boundingBox();
         await page.mouse.move(
           (conversation?.x ?? 0) + (conversation?.width ?? 0) / 2,
           (conversation?.y ?? 0) + (conversation?.height ?? 0) / 2,

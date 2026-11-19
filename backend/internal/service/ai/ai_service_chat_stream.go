@@ -81,10 +81,12 @@ func (s *AiServiceImpl) ChatStream(ctx context.Context, req *dto.AiChatRequest, 
 	})
 
 	providerReq := buildProviderChatRequest(chat, dbProvider.Model, contextStr, req, conn.ConnectionType)
+
 	providerReq.Tools = serviceDbtools.ChatTools(req.AgentMode(), req.AgentTier)
 	if req.NoSQL {
 		providerReq.Tools = serviceDbtools.NoSQLChatTools(req.AgentMode(), req.AgentTier, !req.Redis)
 	}
+
 	providerReq.ModeInstructions = s.modeInstructions(ctx, chat.ID, req)
 
 	if err := emitEvent(aiProvider.StreamEvent{

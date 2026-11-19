@@ -293,6 +293,11 @@ func restoreErrors(stderr string) []string {
 			continue
 		}
 
+		// pg_dump from newer clients may SET params the replay server does not know (e.g. transaction_timeout on PG16).
+		if strings.Contains(line, "unrecognized configuration parameter") {
+			continue
+		}
+
 		failures = append(failures, strings.TrimSpace(line))
 		if len(failures) == maxRestoreErrors {
 			break

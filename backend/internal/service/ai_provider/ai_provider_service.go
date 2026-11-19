@@ -148,9 +148,9 @@ func (i *IAiProviderServiceImpl) Models(ctx context.Context, id uint, req *dto.A
 }
 
 // validateActivation refuses to make a provider the active one when it could
-// not answer: every provider but Ollama needs an API key.
+// not answer: Anthropic and Gemini need an API key; Ollama and OpenAI do not.
 func validateActivation(provider *model.AiProvider, req *dto.AiProviderUpdateRequest) error {
-	if req.IsActive == nil || !*req.IsActive || provider.Type == model.AIProviderTypeOllama {
+	if req.IsActive == nil || !*req.IsActive || !model.RequiresAPIKey(provider.Type) {
 		return nil
 	}
 

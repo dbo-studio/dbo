@@ -38,7 +38,7 @@ func ListModels(ctx context.Context, provider *model.AiProvider) ([]string, erro
 		option.WithRequestTimeout(listTimeout(provider.Timeout)),
 	}
 
-	// Ollama needs no key; every other provider does.
+	// A key is sent when the user saved one; Ollama and local OpenAI servers often have none.
 	if provider.APIKey != nil && *provider.APIKey != "" {
 		options = append(options, option.WithAPIKey(*provider.APIKey))
 	}

@@ -3,6 +3,7 @@ export type UpdateProviderRequestType = {
   url?: string;
   isActive?: boolean;
   model?: string;
+  completionModel?: string;
   timeout?: number;
   models?: string[];
 };

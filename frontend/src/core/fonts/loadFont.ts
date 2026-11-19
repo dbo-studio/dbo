@@ -17,7 +17,8 @@ async function loadFace(cssFamily: string, face: FontFaceSpec): Promise<void> {
   const fontFace = new FontFace(cssFamily, `url(${fontUrl(face.path)})`, {
     weight: face.weight,
     style: face.style ?? 'normal',
-    display: 'swap'
+    display: 'swap',
+    ...(face.unicodeRange ? { unicodeRange: face.unicodeRange } : {})
   });
   const loaded = await fontFace.load();
   document.fonts.add(loaded);

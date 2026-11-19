@@ -115,7 +115,7 @@ test("B8 B9 chat streaming and long conversation", async ({ page }, testInfo) =>
       }
       await page.waitForTimeout(1000);
       const dom = await page.evaluate(() => document.getElementsByTagName("*").length);
-      const scroller = page.locator("[data-density]");
+      const scroller = page.getByTestId("ai-messages");
       const j0 = Date.now();
       await scroller.evaluate((el) => (el.scrollTop = 0));
       await page.waitForTimeout(100);

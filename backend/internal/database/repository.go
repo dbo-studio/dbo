@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"sync"
 
-	_ "github.com/dbo-studio/dbo/internal/database/clickhouse"
+	_ "github.com/dbo-studio/dbo/internal/database/clickhouse" // registers the ClickHouse driver
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
 	databaseGeneric "github.com/dbo-studio/dbo/internal/database/generic"
 	databaseMongo "github.com/dbo-studio/dbo/internal/database/mongo"
-	_ "github.com/dbo-studio/dbo/internal/database/mssql"
+	_ "github.com/dbo-studio/dbo/internal/database/mssql" // registers the SQL Server driver
 	databaseMysql "github.com/dbo-studio/dbo/internal/database/mysql"
 	databaseNoSQLFixture "github.com/dbo-studio/dbo/internal/database/nosqlfixture"
 	databasePostgres "github.com/dbo-studio/dbo/internal/database/postgres"

@@ -106,7 +106,9 @@ export class ConnectionPage extends BasePage {
   }
 
   getConnectionHeading(name: string): Locator {
-    return this.page.getByRole("heading", { name: new RegExp(name, "i") });
+    return this.page
+      .getByTestId("connection-switcher")
+      .getByText(name, { exact: false });
   }
 
   async expectConnectionActive(name: string): Promise<void> {
@@ -199,14 +201,24 @@ export class ConnectionPage extends BasePage {
     }
   }
 
+  /** Collapsible SSL/SSH sections toggle on each click — only expand when collapsed. */
+  private async expandConnectionSection(id: "ssl" | "ssh"): Promise<void> {
+    const tab = this.page.getByTestId(`connection-tab-${id}`);
+    if ((await tab.getAttribute("aria-expanded")) !== "true") {
+      await tab.click();
+    }
+    await expect(this.page.getByTestId(`connection-${id}-fields`)).toBeVisible();
+  }
+
   async openSshTab(): Promise<void> {
-    await this.page.getByTestId("connection-tab-ssh").click();
-    await expect(this.page.getByTestId("connection-ssh-fields")).toBeVisible();
+    await this.expandConnectionSection("ssh");
   }
 
   async setSshEnabled(enabled: boolean): Promise<void> {
     await this.openSshTab();
-    await this.page.getByTestId("ssh-enabled").setChecked(enabled);
+    const toggle = this.page.getByTestId("ssh-enabled");
+    await toggle.scrollIntoViewIfNeeded();
+    await toggle.setChecked(enabled);
   }
 
   private async fillSshHop(
@@ -224,7 +236,7 @@ export class ConnectionPage extends BasePage {
     await root.locator(`input[name="${prefix}Host"]`).fill(hop.host);
     await root.locator(`input[name="${prefix}Port"]`).fill(hop.port);
     await root.locator(`input[name="${prefix}Username"]`).fill(hop.username);
-    await root.locator(`.${prefix}-auth__control`).click();
+    await page.getByTestId(`${prefix}-auth-select`).click();
     await page
       .getByRole("option", { name: labels[hop.authMethod], exact: true })
       .click();
@@ -257,8 +269,7 @@ export class ConnectionPage extends BasePage {
   }
 
   async openSslTab(): Promise<void> {
-    await this.page.getByTestId("connection-tab-ssl").click();
-    await expect(this.page.getByTestId("connection-ssl-fields")).toBeVisible();
+    await this.expandConnectionSection("ssl");
   }
 
   async openGeneralTab(): Promise<void> {
@@ -280,13 +291,12 @@ export class ConnectionPage extends BasePage {
       };
 
     await this.openSslTab();
-    await this.page.locator(".ssl-mode__control").click();
+    const select = this.page.getByTestId("ssl-mode-select");
+    await select.click();
     await this.page
       .getByRole("option", { name: labels[mode], exact: true })
       .click();
-    await expect(this.page.locator(".ssl-mode__single-value")).toHaveText(
-      labels[mode],
-    );
+    await expect(select).toContainText(labels[mode]);
   }
 
   async fillSslCaCert(pem: string): Promise<void> {

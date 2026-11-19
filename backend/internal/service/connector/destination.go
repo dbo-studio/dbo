@@ -82,7 +82,7 @@ func (f fields) require(keys ...string) error {
 }
 
 // OpenDestination builds the driver for a destination connector.
-func OpenDestination(connType string, f fields) (Destination, error) {
+func OpenDestination(ctx context.Context, connType string, f fields) (Destination, error) {
 	switch connType {
 	case TypeFolder:
 		return newFolder(f)
@@ -93,13 +93,13 @@ func OpenDestination(connType string, f fields) (Destination, error) {
 	case TypeFTP:
 		return newFTP(f)
 	case TypeGDrive:
-		return newGDrive(f)
+		return newGDrive(ctx, f)
 	case TypeWebDAV:
 		return newWebDAV(f)
 	case TypeDropbox:
-		return newDropbox(f)
+		return newDropbox(ctx, f)
 	case TypeOneDrive:
-		return newOneDrive(f)
+		return newOneDrive(ctx, f)
 	default:
 		return nil, ErrUnknownType
 	}

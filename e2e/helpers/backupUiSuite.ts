@@ -140,7 +140,14 @@ export function defineBackupUiTests(engine: DbEngine): void {
               await expect(page.getByText("Type the database name to confirm: " + database)).toBeVisible();
               await page.getByRole("button", { name: "Cancel" }).last().click();
             } else {
-              await expect(page.locator('input[name="backup-database"]')).toHaveValue(database!);
+              const scopeDb = page.getByTestId("scope-database");
+              if (await scopeDb.isVisible().catch(() => false)) {
+                await expect(scopeDb).toContainText(database!);
+              } else {
+                await expect(
+                  page.locator('input[name="backup-database"]'),
+                ).toHaveValue(database!);
+              }
             }
           });
 

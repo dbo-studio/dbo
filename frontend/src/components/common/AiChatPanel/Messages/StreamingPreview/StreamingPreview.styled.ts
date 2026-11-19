@@ -9,6 +9,7 @@ const blink = keyframes`
 export const StreamingPreviewStyled = styled(Box, {
   shouldForwardProp: (prop) => prop !== '$isCode'
 })<{ $isCode?: boolean }>(({ theme, $isCode }) => ({
+  direction: $isCode ? 'ltr' : undefined,
   alignSelf: 'flex-start',
   maxWidth: '100%',
   width: $isCode ? '100%' : undefined,

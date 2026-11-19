@@ -119,6 +119,7 @@ func normalizeShell(s string) (string, error) {
 		switch {
 		case unicode.IsSpace(rune(ch)):
 			out.WriteByte(ch)
+
 			i++
 		case ch == '/' && i+1 < len(s) && s[i+1] == '/':
 			for i < len(s) && s[i] != '\n' {

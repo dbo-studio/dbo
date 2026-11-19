@@ -60,7 +60,6 @@ export type EditorSettings = {
   scrollToBottom: boolean;
   aiChatMode?: AiChatMode;
   aiWhatsNewSeen?: boolean;
-  aiChatDensity?: 'comfortable' | 'compact';
   /** How much of the agent's tool activity the chat shows, like Cursor's tool call density. */
   aiToolDensity?: AiToolDensity;
   /** Max width of the workstation conversation. */

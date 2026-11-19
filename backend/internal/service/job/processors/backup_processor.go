@@ -452,7 +452,7 @@ func (p *BackupProcessor) planRetry(ctx context.Context, jobData *dto.BackupJob)
 }
 
 // queueDrill asks for a restore test of the backup just made. A failure to queue it must not fail the backup.
-func (p *BackupProcessor) queueDrill(ctx context.Context, jobData *dto.BackupJob, artifact *model.BackupArtifact) {
+func (p *BackupProcessor) queueDrill(_ context.Context, jobData *dto.BackupJob, artifact *model.BackupArtifact) {
 	_, _ = p.jobManager.CreateJob(model.JobTypeRestoreDrill, jobData.OwnerID, helper.StructToJSON(dto.RestoreDrillJob{
 		OwnerID: jobData.OwnerID, ArtifactID: artifact.ID,
 	}))
