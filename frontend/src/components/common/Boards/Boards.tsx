@@ -2,16 +2,16 @@ import api from '@/api';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import type { IconProps } from '@/components/base/CustomIcon/types';
 import Search from '@/components/base/Search/Search';
 import { PERM } from '@/core/auth/permissions';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import { useCan, useCanReports } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
-import { Box, IconButton, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, type MouseEvent, useState } from 'react';
-import { BoardsItemStyled, BoardsListStyled, BoardsSectionHeaderStyled } from './Boards.styled';
+import { BoardsListStyled } from './Boards.styled';
+import BoardsSection from './BoardsSection/BoardsSection';
 import { type DashboardCommand, useDashboardCommands } from './useDashboardCommands';
 
 type Item = { id: number; name: string };
@@ -101,7 +101,7 @@ export default function Boards(): JSX.Element {
         ) : (
           <>
             {canDashboards && (
-              <Section
+              <BoardsSection
                 kind='dashboard'
                 title={locales.dashboards}
                 icon='layout'
@@ -125,7 +125,7 @@ export default function Boards(): JSX.Element {
               />
             )}
             {canReports && (
-              <Section
+              <BoardsSection
                 kind='report'
                 title={locales.reports}
                 icon='chart'
@@ -151,67 +151,3 @@ export default function Boards(): JSX.Element {
   );
 }
 
-type SectionAction = { label: string; icon: IconProps['type']; testId: string; onClick: () => void };
-
-function Section({
-  kind,
-  title,
-  icon,
-  items,
-  actions,
-  onOpen,
-  onMenu
-}: {
-  kind: Kind;
-  title: string;
-  icon: IconProps['type'];
-  items: Item[];
-  actions: SectionAction[];
-  onOpen: (item: Item) => void;
-  onMenu: (event: MouseEvent, item: Item) => void;
-}): JSX.Element {
-  const [open, setOpen] = useState(true);
-
-  return (
-    <Box data-testid='boards-section' data-kind={kind}>
-      <BoardsSectionHeaderStyled role='button' aria-expanded={open} onClick={() => setOpen(!open)}>
-        <CustomIcon type={open ? 'chevronDown' : 'chevronRight'} size='xs' />
-        <Typography variant='caption' sx={{ flex: 1, fontWeight: 600 }}>
-          {title} · {items.length}
-        </Typography>
-        {actions.map((action) => (
-          <Tooltip key={action.testId} title={action.label}>
-            <IconButton
-              aria-label={action.label}
-              data-testid={action.testId}
-              onClick={(event) => {
-                event.stopPropagation();
-                action.onClick();
-              }}
-            >
-              <CustomIcon type={action.icon} size='xs' />
-            </IconButton>
-          </Tooltip>
-        ))}
-      </BoardsSectionHeaderStyled>
-      {open &&
-        items.map((item) => (
-          <BoardsItemStyled
-            key={item.id}
-            tabIndex={0}
-            data-testid='boards-item'
-            data-kind={kind}
-            data-name={item.name}
-            onClick={() => onOpen(item)}
-            onKeyDown={(event) => event.key === 'Enter' && onOpen(item)}
-            onContextMenu={(event) => onMenu(event, item)}
-          >
-            <CustomIcon type={icon} size='xs' />
-            <Typography variant='body2' noWrap sx={{ flex: 1, minWidth: 0 }}>
-              {item.name}
-            </Typography>
-          </BoardsItemStyled>
-        ))}
-    </Box>
-  );
-}

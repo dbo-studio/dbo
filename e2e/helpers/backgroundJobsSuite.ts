@@ -4,6 +4,7 @@ import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../pages";
 import { EventStream } from "./eventStream";
 import { createTableSql } from "./ddl";
+import { ensureSqliteDbFile, removeSqliteDbFile } from "./objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "./safeCleanup";
 
 type Job = { id: number; type: string; status: string; result?: { data?: { data?: Array<Record<string, unknown>> } } };
@@ -38,8 +39,15 @@ function hms(seconds: number): string {
   return `${p(Math.floor(seconds / 3600))}:${p(Math.floor((seconds % 3600) / 60))}:${p(seconds % 60)}`;
 }
 
+const sqliteSlow = (rows: number): string =>
+  `WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM c WHERE x<${rows}) SELECT count(*) AS n FROM c`;
+
 /** Background queries and job events on a server database: handover, one run, cancel stops the statement. */
-export function defineBackgroundJobsTests(engine: Exclude<DbEngine, "sqlite">): void {
+export function defineBackgroundJobsTests(engine: DbEngine): void {
+  if (engine === "sqlite") {
+    defineBackgroundJobsSqliteTests();
+    return;
+  }
   const server = SERVER[engine];
 
   test.describe(`Background jobs ${engine}`, () => {
@@ -124,6 +132,100 @@ export function defineBackgroundJobsTests(engine: Exclude<DbEngine, "sqlite">): 
           await raw(`DROP TABLE IF EXISTS ${table}`);
         }
       });
+    });
+  });
+}
+
+function defineBackgroundJobsSqliteTests(): void {
+  test.describe("Background jobs sqlite", () => {
+    test("a slow query becomes a job, runs once, cancels cleanly, and leaves exports alone", async ({ page }, testInfo) => {
+      test.setTimeout(180_000);
+      const suffix = uniqueTestSuffix(testInfo).replace(/[^a-z0-9_]/gi, "_");
+      const connectionName = `bgjobs-${suffix}`;
+      const dbPath = `/tmp/dbo-e2e-bgjobs-${suffix}.db`;
+      const table = `e2e_bg_${suffix}`;
+      const baseURL = testInfo.project.use.baseURL as string;
+      const stream = new EventStream();
+      ensureSqliteDbFile(dbPath);
+
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          const connectionPage = new ConnectionPage(page);
+          await connectionPage.goto();
+          await connectionPage.waitForReady();
+          await connectionPage.setupConnection(getDbConfig("sqlite", connectionName, dbPath));
+
+          const connections = (await (await page.request.get("/api/connections")).json()) as {
+            data: Array<{ id: number; name: string }>;
+          };
+          const connectionId = connections.data.find((item) => item.name === connectionName)?.id as number;
+          const raw = (query: string, backgroundAfterSeconds?: number) =>
+            page.request.post("/api/query/raw", { data: { connectionId, query, backgroundAfterSeconds } });
+          const job = async (id: number): Promise<Job> =>
+            ((await (await page.request.get(`/api/jobs/${id}`)).json()) as { data: Job }).data;
+          const cookies = async (): Promise<string> =>
+            (await page.context().cookies()).map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
+
+          try {
+            await raw(`CREATE TABLE ${table} (id INTEGER)`);
+            await raw(`INSERT INTO ${table} VALUES (1),(2)`);
+            await stream.open(baseURL, await cookies());
+
+            await test.step("A quick query answers as before", async () => {
+              const answer = await raw(`SELECT * FROM ${table}`, 5);
+              expect(answer.status()).toBe(200);
+              expect(stream.events).toHaveLength(0);
+            });
+
+            await test.step("A slow one answers 202, finishes as a job, and was run once", async () => {
+              const slowQuery = sqliteSlow(4_000_000);
+              const answer = await raw(slowQuery, 1);
+              expect(answer.status()).toBe(202);
+              const { jobId } = ((await answer.json()) as { data: { jobId: number } }).data;
+              await expect.poll(() => stream.of("job.completed").length, { timeout: 90_000 }).toBe(1);
+              expect(await job(jobId)).toMatchObject({ type: "query", status: "completed" });
+              expect(stream.of("notification.created")[0].data).toMatchObject({ jobType: "query", jobId });
+
+              const history = await (await page.request.get(`/api/histories?connectionId=${connectionId}&page=1&count=100`)).text();
+              expect(history.includes("4000000")).toBe(true);
+            });
+
+            await test.step("An export finishes while a background query runs, and neither disturbs the other", async () => {
+              const longQuery = sqliteSlow(80_000_000_000);
+              const long = await raw(longQuery, 1);
+              expect(long.status()).toBe(202);
+              const longId = ((await long.json()) as { data: { jobId: number } }).data.jobId;
+              await expect.poll(async () => (await job(longId)).status, { timeout: 15_000 }).toBe("running");
+
+              const exported = (
+                (await (
+                  await page.request.post("/api/export", {
+                    data: { connectionId, table, query: `SELECT * FROM ${table}`, format: "csv", chunkSize: 100 },
+                  })
+                ).json()) as { data: { jobId: number } }
+              ).data.jobId;
+              await expect.poll(async () => (await job(exported)).status, { timeout: 60_000 }).toBe("completed");
+              expect((await job(longId)).status).toBe("running");
+
+              await test.step("Cancel stops the job and frees the connection", async () => {
+                expect((await page.request.delete(`/api/jobs/${longId}`)).ok()).toBe(true);
+                await expect.poll(() => stream.of("job.canceled").some((event) => event.data.id === longId), {
+                  timeout: 15_000,
+                }).toBe(true);
+                expect((await job(longId)).status).toBe("canceled");
+                const quick = await raw(`SELECT 1 AS one`, 5);
+                expect(quick.status()).toBe(200);
+                expect(stream.of("notification.created").some((event) => event.data.jobId === longId)).toBe(false);
+              });
+            });
+          } finally {
+            await stream.close();
+            await raw(`DROP TABLE IF EXISTS ${table}`);
+          }
+        });
+      } finally {
+        removeSqliteDbFile(dbPath);
+      }
     });
   });
 }

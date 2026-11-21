@@ -1,51 +1,10 @@
 import { variables } from '@/core/theme/variables';
 import type { NoSQLItem } from '@/api/nosql/types';
 import locales from '@/locales';
-import { alpha, Box, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
+import TypeBadge from './KeyList/TypeBadge/TypeBadge';
 import type { JSX, MouseEvent } from 'react';
 import type { KeyRow } from './keyTree';
-
-const TYPE_LABEL: Record<string, string> = {
-  string: 'STR',
-  hash: 'HASH',
-  list: 'LIST',
-  set: 'SET',
-  zset: 'ZSET',
-  stream: 'STRM',
-  'ReJSON-RL': 'JSON'
-};
-
-function TypeBadge({ type }: { type: string }): JSX.Element {
-  const { palette } = useTheme();
-  const color =
-    {
-      string: palette.info.main,
-      hash: palette.success.main,
-      list: palette.warning.main,
-      set: palette.secondary.main,
-      zset: palette.error.main
-    }[type] ?? palette.text.secondary;
-
-  return (
-    <Box
-      aria-label={type}
-      sx={{
-        width: 40,
-        flexShrink: 0,
-        textAlign: 'center',
-        borderRadius: 0.75,
-        py: '1px',
-        typography: 'caption',
-        fontWeight: 600,
-        lineHeight: 1.4,
-        color,
-        bgcolor: alpha(color, 0.2)
-      }}
-    >
-      {TYPE_LABEL[type] ?? type.slice(0, 4).toUpperCase()}
-    </Box>
-  );
-}
 
 type Props = {
   rows: KeyRow[];

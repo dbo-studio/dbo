@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
 import { CardRowMainStyled, CardRowStyled, CardStyled, SectionActionsStyled } from '../BackupPanel.styled';
 import { formatDate, formatSize } from '../format';
-import { FormGroup, FormRow } from '../FormRow';
+import { FormGroup } from '../FormGroup/FormGroup';
+import { FormRow } from '../FormRow';
 import RestoreConfirm from '../RestoreConfirm';
 import { restoreCandidates } from '../restoreCandidates';
 

@@ -1,4 +1,4 @@
-// @tool: CLI
+// @cap: CollectionAdmin @tool: CLI
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers } from "../../helpers/nosql";
 import { db, useMongo } from "./_case";

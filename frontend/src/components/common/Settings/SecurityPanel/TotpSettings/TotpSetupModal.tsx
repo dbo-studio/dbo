@@ -3,7 +3,8 @@ import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import { Box, CircularProgress } from '@mui/material';
 import { type JSX } from 'react';
-import { TotpSetupActions, TotpSetupPanel } from './TotpSetupPanel';
+import { TotpSetupActions } from './TotpSetupActions/TotpSetupActions';
+import { TotpSetupPanel } from './TotpSetupPanel';
 
 export type TotpSetupModalProps = {
   open: boolean;

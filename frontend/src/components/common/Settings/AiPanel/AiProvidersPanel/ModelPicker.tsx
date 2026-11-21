@@ -1,14 +1,13 @@
-import { PASSWORD_MANAGER_OFF } from '@/components/base/FieldInput/FieldInput';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { SelectInputStyles } from '@/components/base/SelectInput/SelectInput.styled';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
-import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import locales from '@/locales';
 import type { AiProviderType } from '@/types';
 import { Box, Typography, useTheme } from '@mui/material';
 import type { JSX } from 'react';
-import { components, type InputProps } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import { capabilityLabel } from './capabilityLabel';
+import { createModelSearchInput } from './ModelSearchInput/ModelSearchInput';
 
 type ModelPickerProps = {
   providerType: AiProviderType['type'];
@@ -25,19 +24,6 @@ type ModelPickerProps = {
   inputTestId?: string;
   onChange: (model: string) => void;
 };
-
-const ModelSearchInput = (testId: string) =>
-  function ModelSearchInputInner(props: InputProps<SelectInputOption, false>): JSX.Element {
-    return <components.Input {...props} autoComplete='off' data-testid={testId} {...PASSWORD_MANAGER_OFF} />;
-  };
-
-function capabilityLabel(providerType: AiProviderType['type'], model: string): string | null {
-  const caps = getModelCapabilities(providerType, model);
-  if (!caps.tools) return null;
-  return caps.contextWindow
-    ? `${locales.ai_tools_supported} · ${formatContextWindow(caps.contextWindow)}`
-    : locales.ai_tools_supported;
-}
 
 /** Searchable model list, same control as the rest of the app, that also accepts an unlisted model id. */
 export default function ModelPicker({
@@ -67,7 +53,7 @@ export default function ModelPicker({
         placeholder={placeholder}
         isDisabled={disabled}
         isClearable={clearable}
-        components={{ IndicatorSeparator: null, Input: ModelSearchInput(inputTestId) }}
+        components={{ IndicatorSeparator: null, Input: createModelSearchInput(inputTestId) }}
         value={selected}
         options={selectOptions}
         menuPlacement='auto'

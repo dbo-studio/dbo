@@ -1,4 +1,3 @@
-import { variables } from '@/core/theme/variables';
 import { useCan } from '@/hooks/useFeaturePermissions';
 import { PERM } from '@/core/auth/permissions';
 import api from '@/api';
@@ -6,222 +5,30 @@ import type { DashboardCardType, DashboardType } from '@/api/dashboard/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
-import ChartView from '@/components/common/ChartView/ChartView';
-import { missingParams, questionParams, type QuestionParam } from '@/core/charts/chartSpec';
-import ParamInput from '../ParamInput/ParamInput';
+import { questionParams, type QuestionParam } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { ToolbarSpacerStyled, ToolbarStyled } from '@/components/base/Toolbar/Toolbar.styled';
-import { Box, CircularProgress, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toCsv } from '@/core/utils/csv';
-import { tools } from '@/core/utils';
-import { toPng } from 'html-to-image';
-import { useRef, useState, type JSX } from 'react';
+import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, type JSX } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 import ScheduleDialog from '../ScheduleDialog/ScheduleDialog';
 import ShareDialog from '../ShareDialog/ShareDialog';
+import ParamInput from '../ParamInput/ParamInput';
 import { exportBoard } from './boardJson';
+import AddCard from './AddCard/AddCard';
+import BoardCard from './BoardCard/BoardCard';
+import { BoardCanvasStyled, BoardFiltersStyled, BoardGridStyled, BoardRootStyled } from './BoardView.styled';
+import { useSetBoard } from './useSetBoard';
 
-/** How long a card's result is reused before opening the board runs it again. */
-const RESULT_TTL_MS = 5 * 60_000;
 const REFRESH_OPTIONS: SelectInputOption[] = [
   { value: 0, label: locales.dashboard_refresh_off },
   { value: 60_000, label: locales.dashboard_refresh_1m },
   { value: 5 * 60_000, label: locales.dashboard_refresh_5m },
   { value: 15 * 60_000, label: locales.dashboard_refresh_15m }
 ];
-
-/** Writes a board the server returned into the cached list, so every view of it updates. */
-const useSetBoard = (connectionId: number): ((next: DashboardType) => void) => {
-  const queryClient = useQueryClient();
-
-  return (next) =>
-    queryClient.setQueryData<DashboardType[]>(['dashboards', connectionId], (boards) =>
-      boards?.map((item) => (item.id === next.id ? next : item))
-    );
-};
-
-function BoardCard({
-  board,
-  card,
-  editing,
-  filters,
-  refreshMs
-}: {
-  board: DashboardType;
-  card: DashboardCardType;
-  editing: boolean;
-  filters: Record<string, string>;
-  refreshMs: number;
-}): JSX.Element {
-  const theme = useTheme();
-  const chartRef = useRef<HTMLDivElement>(null);
-  // A filter reaches each card whose SQL has a {{param}} of the same name.
-  const declared = questionParams(card.question.sql);
-  const params = Object.fromEntries(declared.map((param) => [param.name, filters[param.name] ?? '']));
-  // Without every value the server would only refuse, so the card waits for the filters instead.
-  const missing = missingParams(declared, params);
-  const setBoard = useSetBoard(board.connectionId);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: card.id,
-    disabled: !editing
-  });
-  const { data, error, isFetching, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['question-run', card.question.id, params],
-    queryFn: () => api.question.runQuestion(card.question.id, params),
-    enabled: missing.length === 0,
-    staleTime: RESULT_TTL_MS,
-    // React Query skips interval runs while the window is hidden.
-    refetchInterval: refreshMs || false
-  });
-  const columns = data ? (data.columns?.map((column) => column.name) ?? Object.keys(data.rows[0] ?? {})) : [];
-  const exportPng = async (): Promise<void> => {
-    if (!chartRef.current) return;
-    const link = document.createElement('a');
-    link.href = await toPng(chartRef.current, { backgroundColor: theme.palette.background.paper });
-    link.download = `${card.question.name}.png`;
-    link.click();
-  };
-  const { mutate: resize } = useMutation({
-    mutationFn: () => api.dashboard.resizeCard(board.id, card.id, card.width === 2 ? 1 : 2),
-    onSuccess: setBoard
-  });
-  const { mutate: unpin } = useMutation({
-    mutationFn: () => api.dashboard.unpinCard(board.id, card.id),
-    onSuccess: setBoard
-  });
-
-  return (
-    <Box
-      ref={setNodeRef}
-      data-testid='ai-board-card'
-      data-width={card.width}
-      data-card={card.question.name}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
-      sx={{
-        gridColumn: card.width === 2 ? 'span 2' : 'span 1',
-        border: 1,
-        borderColor: editing ? 'primary.main' : 'divider',
-        borderStyle: editing ? 'dashed' : 'solid',
-        borderRadius: variables.radius.small,
-        p: 1,
-        minWidth: 0,
-        bgcolor: 'background.paper'
-      }}
-    >
-      <Stack direction='row' spacing={0.5} sx={{ alignItems: 'center', mb: 0.5 }}>
-        {editing && (
-          <IconButton
-            aria-label={locales.dashboard_card_move}
-            sx={{ cursor: 'grab', touchAction: 'none' }}
-            data-testid='ai-board-card-drag'
-            {...attributes}
-            {...listeners}
-          >
-            <CustomIcon type='grid' size='xs' />
-          </IconButton>
-        )}
-        <Typography variant='subtitle2' noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {card.question.name}
-        </Typography>
-        {isFetching && <CircularProgress size={12} />}
-        {data && !editing && (
-          <>
-            <Typography variant='caption' color='textSubdued' data-testid='ai-board-card-updated'>
-              {new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Typography>
-            <Tooltip title={locales.dashboard_card_csv}>
-              <IconButton
-                onClick={() =>
-                  tools.fileDownload(
-                    new Blob([toCsv(columns, data.rows)], { type: 'text/csv' }),
-                    `${card.question.name}.csv`
-                  )
-                }
-                data-testid='ai-board-card-csv'
-              >
-                <CustomIcon type='sheet' size='xs' />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={locales.dashboard_card_png}>
-              <IconButton onClick={() => void exportPng()} data-testid='ai-board-card-png'>
-                <CustomIcon type='download' size='xs' />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-        <Tooltip title={locales.dashboard_card_refresh}>
-          <IconButton onClick={() => void refetch()} data-testid='ai-board-card-refresh'>
-            <CustomIcon type='refresh' size='xs' />
-          </IconButton>
-        </Tooltip>
-        {editing && (
-          <>
-            <Tooltip title={card.width === 2 ? locales.ai_board_narrow : locales.ai_board_wide}>
-              <IconButton onClick={() => resize()} data-testid='ai-board-card-resize'>
-                <CustomIcon type={card.width === 2 ? 'collapse' : 'expand'} size='xs' />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={locales.ai_board_unpin}>
-              <IconButton onClick={() => unpin()} data-testid='ai-board-card-unpin'>
-                <CustomIcon type='close' size='xs' />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </Stack>
-      {missing.length > 0 ? (
-        <Typography variant='caption' color='textSubdued' data-testid='ai-board-card-needs-filter'>
-          {locales.dashboard_filter_needed.replace('{names}', missing.join(', '))}
-        </Typography>
-      ) : error ? (
-        <Typography variant='caption' color='error' data-testid='ai-board-card-error'>
-          {error.message}
-        </Typography>
-      ) : data ? (
-        <Box ref={chartRef}>
-          <ChartView rows={data.rows} columns={columns} spec={card.question.chart} height={200} />
-        </Box>
-      ) : (
-        <CircularProgress size={16} />
-      )}
-    </Box>
-  );
-}
-
-/** Picks a saved report that is not on the board yet and adds it as a card. */
-function AddCard({ board }: { board: DashboardType }): JSX.Element {
-  const setBoard = useSetBoard(board.connectionId);
-  const { data: questions } = useQuery({
-    queryKey: ['questions', board.connectionId],
-    queryFn: () => api.question.getQuestions(board.connectionId)
-  });
-  const { mutate: pin } = useMutation({
-    mutationFn: (questionId: number) => api.dashboard.pinToDashboard(board.id, questionId),
-    onSuccess: setBoard
-  });
-  const onBoard = new Set(board.cards.map((card) => card.question.id));
-  const options = (questions ?? [])
-    .filter((question) => !onBoard.has(question.id))
-    .map((question): SelectInputOption => ({ value: question.id, label: question.name }));
-
-  return (
-    <Box sx={{ width: 260 }}>
-      <SelectInput
-        testId='dashboard-add-card'
-        label={locales.dashboard_add_card}
-        // Shown only when the list is empty, where the select is disabled.
-        emptylabel={locales.dashboard_add_card_none}
-        value=''
-        options={options}
-        onChange={(value) => pin((value as SelectInputOption).value as number)}
-      />
-    </Box>
-  );
-}
 
 /** A board: its reports in a two-column grid, run on open and on Refresh all; Edit arranges the cards. */
 export default function BoardView({ board }: { board: DashboardType }): JSX.Element {
@@ -267,7 +74,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
   };
 
   return (
-    <Stack sx={{ height: '100%', minHeight: 0 }} data-testid='ai-board' data-board={board.name} data-editing={editing}>
+    <BoardRootStyled data-testid='ai-board' data-board={board.name} data-editing={editing}>
       <ToolbarStyled>
         <SelectInput
           testId='dashboard-auto-refresh'
@@ -333,9 +140,9 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
         <ShareDialog board={board} open={sharing} onClose={() => setSharing(false)} />
         <ScheduleDialog board={board} open={scheduling} onClose={() => setScheduling(false)} />
       </ToolbarStyled>
-      <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
+      <BoardCanvasStyled>
         {filterParams.length > 0 && (
-          <Stack direction='row' spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }} data-testid='dashboard-filters'>
+          <BoardFiltersStyled data-testid='dashboard-filters'>
             {filterParams.map((param) => (
               <ParamInput
                 key={param.name}
@@ -347,7 +154,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
                 scope={{ database: board.cards[0]?.question.database, schema: board.cards[0]?.question.schema }}
               />
             ))}
-          </Stack>
+          </BoardFiltersStyled>
         )}
         {board.cards.length === 0 ? (
           <Stack spacing={1.5} sx={{ alignItems: 'flex-start' }}>
@@ -359,7 +166,7 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext items={board.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
+              <BoardGridStyled>
                 {board.cards.map((card) => (
                   <BoardCard
                     key={card.id}
@@ -370,11 +177,11 @@ export default function BoardView({ board }: { board: DashboardType }): JSX.Elem
                     refreshMs={refreshMs}
                   />
                 ))}
-              </Box>
+              </BoardGridStyled>
             </SortableContext>
           </DndContext>
         )}
-      </Stack>
-    </Stack>
+      </BoardCanvasStyled>
+    </BoardRootStyled>
   );
 }

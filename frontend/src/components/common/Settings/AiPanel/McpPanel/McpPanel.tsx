@@ -13,44 +13,16 @@ import {
   IconButton,
   Stack,
   Switch,
-  Typography,
-  type Theme
+  Typography
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { McpSectionStyled } from '../AiPanel.styled';
 import { buildMcpClientConfigs, type McpClientId } from './mcpConfigs';
-import {
-  McpConfigHeaderStyled,
-  McpConfigSectionStyled,
-  McpStatusRowStyled,
-  McpStatusValueStyled
-} from './McpPanel.styled';
-import { variables } from '@/core/theme/variables';
-
-function McpStatusRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <McpStatusRowStyled>
-      <Typography color='text.secondary' variant='caption'>
-        {label}
-      </Typography>
-      <McpStatusValueStyled>{children}</McpStatusValueStyled>
-    </McpStatusRowStyled>
-  );
-}
-
-const monoChipSx = (theme: Theme) => ({
-  maxWidth: '100%',
-  height: 'auto',
-  '& .MuiChip-label': {
-    fontFamily: theme.editorFontFamily,
-    fontSize: variables.fontSize.sm,
-    whiteSpace: 'normal',
-    wordBreak: 'break-all',
-    py: 0.5
-  }
-});
+import { McpConfigHeaderStyled, McpConfigSectionStyled } from './McpPanel.styled';
+import McpStatusRow from './McpStatusRow/McpStatusRow';
+import { monoChipSx } from './McpStatusRow/McpStatusRow.styled';
 
 export default function McpPanel() {
   const queryClient = useQueryClient();

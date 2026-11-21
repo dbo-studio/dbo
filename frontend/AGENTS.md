@@ -99,6 +99,12 @@ Ask: "is it a list I pick from, or a page I work in?"
 
 Run `npm run knip` (warn-only) periodically; delete confirmed unused exports before they accumulate.
 
+### Component structure (see `.cursor/rules/frontend-components.mdc`)
+
+Product UI under `src/components/common/`: one React component per file and folder, styles in `*.styled.ts`, heavy logic in hooks.
+
+**Documented exceptions in `src/components/base/`:** tightly coupled compound primitives may stay in one file when splitting would only add re-export noise — `NavRail` (list + item), `VirtualList` (list + virtualized wrapper), `Grid` (grid + grid item). New features in `common/` or `routes/` should not rely on this exception.
+
 
 ## UI Baseline (design contract)
 

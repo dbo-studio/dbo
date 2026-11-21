@@ -1,3 +1,4 @@
+// @tool: Server
 import { execFileSync } from "node:child_process";
 import { expect, test, type Page } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";

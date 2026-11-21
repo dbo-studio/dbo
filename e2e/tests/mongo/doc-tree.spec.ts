@@ -1,3 +1,4 @@
+// @cap: DocTree
 import { execFileSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";

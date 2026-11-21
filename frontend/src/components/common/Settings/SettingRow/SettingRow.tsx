@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import type { JSX, ReactNode } from 'react';
-import { SettingGroupStyled, SettingRowStyled } from './SettingRow.styled';
+import { SettingRowStyled } from './SettingRow.styled';
 
 export type SettingRowProps = {
   id?: string;
@@ -33,24 +33,5 @@ export function SettingRow({ id, label, description, control, highlighted }: Set
       </Box>
       <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'flex-start', pt: description ? 0.25 : 0 }}>{control}</Box>
     </SettingRowStyled>
-  );
-}
-
-export type SettingGroupProps = {
-  id?: string;
-  title?: string;
-  children: ReactNode;
-};
-
-export function SettingGroup({ id, title, children }: SettingGroupProps): JSX.Element {
-  return (
-    <SettingGroupStyled data-settings-id={id}>
-      {title ? (
-        <Typography color='textSecondary' variant='caption' sx={{ mb: 1, display: 'block', fontWeight: 600 }}>
-          {title}
-        </Typography>
-      ) : null}
-      {children}
-    </SettingGroupStyled>
   );
 }

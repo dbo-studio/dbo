@@ -2,11 +2,8 @@ import api from '@/api';
 import type { BackupScheduleType } from '@/api/backup/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import type { IconTypes } from '@/components/base/CustomIcon/types';
-import {
-  SidebarItemStyled,
-  SidebarListStyled,
-  SidebarSectionHeaderStyled
-} from '@/components/base/SidebarList/SidebarList.styled';
+import { SidebarItemStyled, SidebarListStyled } from '@/components/base/SidebarList/SidebarList.styled';
+import BackupSidebarSection from './BackupSidebarSection/BackupSidebarSection';
 import { openBackup } from '@/core/backup/openBackup';
 import { PERM } from '@/core/auth/permissions';
 import { TabMode } from '@/core/enums';
@@ -14,53 +11,13 @@ import { useCan } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import type { BackupSection, BackupTabType } from '@/types';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { type JSX, type ReactNode, useState } from 'react';
+import type { JSX } from 'react';
 import { ScheduleDotStyled } from './BackupSidebar.styled';
 
 const dotTone = (s: BackupScheduleType): 'success' | 'error' | 'idle' =>
   !s.enabled || s.lastStatus === '' ? 'idle' : s.lastStatus === 'failed' ? 'error' : 'success';
-
-function Section({
-  title,
-  count,
-  action,
-  children
-}: {
-  title: string;
-  count?: number;
-  action?: { label: string; testId: string; onClick: () => void };
-  children: ReactNode;
-}): JSX.Element {
-  const [open, setOpen] = useState(true);
-
-  return (
-    <Box>
-      <SidebarSectionHeaderStyled role='button' aria-expanded={open} onClick={() => setOpen(!open)}>
-        <CustomIcon type={open ? 'chevronDown' : 'chevronRight'} size='xs' />
-        <Typography variant='caption' sx={{ flex: 1, fontWeight: 600 }}>
-          {count === undefined ? title : `${title} · ${count}`}
-        </Typography>
-        {action && (
-          <Tooltip title={action.label}>
-            <IconButton
-              aria-label={action.label}
-              data-testid={action.testId}
-              onClick={(event) => {
-                event.stopPropagation();
-                action.onClick();
-              }}
-            >
-              <CustomIcon type='plus' size='xs' />
-            </IconButton>
-          </Tooltip>
-        )}
-      </SidebarSectionHeaderStyled>
-      {open && children}
-    </Box>
-  );
-}
 
 /**
  * The Backup area's list, in the same look as Boards: sections you can fold, 28px rows, live status
@@ -101,13 +58,13 @@ export default function BackupSidebar(): JSX.Element {
 
   return (
     <SidebarListStyled>
-      <Section title={locales.backup_sidebar_data}>
+      <BackupSidebarSection title={locales.backup_sidebar_data}>
         {can(PERM.backupCreate) && page('backups', locales.backup_nav_backups, 'backup')}
         {can(PERM.backupRestore) && page('restore', locales.backup_nav_restore, 'undo')}
-      </Section>
+      </BackupSidebarSection>
 
       {can(PERM.backupCreate) && (
-        <Section
+        <BackupSidebarSection
           title={locales.backup_jobs}
           count={schedules.length}
           action={{
@@ -138,7 +95,7 @@ export default function BackupSidebar(): JSX.Element {
               )}
             </SidebarItemStyled>
           ))}
-        </Section>
+        </BackupSidebarSection>
       )}
     </SidebarListStyled>
   );

@@ -7,7 +7,7 @@ import { openSettings } from '@/core/settings/openSettings';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
 import type { AiProviderType } from '@/types';
-import { Chip, Divider, ListSubheader, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
+import { Divider, ListSubheader, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type JSX } from 'react';
 import { useAiChatMode } from '../../hooks/useAiChatMode';
@@ -19,18 +19,7 @@ import {
   visuallyHiddenSx
 } from './Providers.styled';
 import { variables } from '@/core/theme/variables';
-
-const badgeSx = { height: 18, fontSize: variables.fontSize.xxs, '& .MuiChip-label': { px: 0.75 } };
-
-function CapabilityBadge({ provider, model }: { provider: AiProviderType; model: string }): JSX.Element | null {
-  const caps = getModelCapabilities(provider.type, model);
-  if (!caps.tools) return null;
-
-  const label = caps.contextWindow
-    ? `${locales.ai_tools_supported} · ${formatContextWindow(caps.contextWindow)}`
-    : locales.ai_tools_supported;
-  return <Chip variant='outlined' label={label} sx={badgeSx} />;
-}
+import CapabilityBadge from './CapabilityBadge/CapabilityBadge';
 
 /** Composer footer model picker: shows active provider + model and switches both in one step. */
 export default function Providers(): JSX.Element {

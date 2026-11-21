@@ -36,12 +36,6 @@ export const REQUIRED = {
 };
 
 export const EXEMPT = {
-  "defineBackgroundJobsTests": {
-    "sqlite": "TODO: not tested on this engine yet. Add the spec or replace with the reason it is unsupported",
-  },
-  "defineDashboardSharingTests": {
-    "sqlite": "TODO: not tested on this engine yet. Add the spec or replace with the reason it is unsupported"
-  },
   "defineGeneratedColumnTests": {
     "mysql": "unsupported in the Object Form (no generated field outside PostgreSQL/SQLite); behaviour covered by defineGeneratedColumnApiTests",
     "mssql": "covered by defineHostSqlGeneratedColumnTests (computed column through the Object Form) and defineGeneratedColumnApiTests",

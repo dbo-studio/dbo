@@ -1,4 +1,5 @@
-import { SettingGroup, SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
+import { SettingGroup } from '@/components/common/Settings/SettingGroup/SettingGroup';
+import { SettingRow } from '@/components/common/Settings/SettingRow/SettingRow';
 import { requestNotificationPermission, sendTestNotification } from '@/core/notifications/announce';
 import { tools } from '@/core/utils/tools';
 import locales from '@/locales';

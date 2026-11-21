@@ -4,6 +4,7 @@ import { uniqueTestSuffix } from "../fixtures/uniqueSuffix";
 import { ConnectionPage } from "../pages";
 import { createTableSql } from "./ddl";
 import { FakeWebhook } from "./fakeMailbox";
+import { ensureSqliteDbFile, removeSqliteDbFile } from "./objectFormSqliteLifecycle";
 import { withConnectionCleanup } from "./safeCleanup";
 
 /** Share links and subscriptions on a real server: the report runs with a bound filter for the visitor and the sender. */
@@ -16,12 +17,15 @@ export function defineDashboardSharingTests(engine: DbEngine): void {
       const table = `e2e_s_${suffix}`;
       const baseURL = testInfo.project.use.baseURL as string;
       const hook = new FakeWebhook();
+      const dbPath = engine === "sqlite" ? `/tmp/dbo-e2e-sharing-${suffix}.db` : undefined;
+      if (dbPath) ensureSqliteDbFile(dbPath);
 
-      await withConnectionCleanup(page, connectionName, async () => {
-        const connectionPage = new ConnectionPage(page);
-        await connectionPage.goto();
-        await connectionPage.waitForReady();
-        await connectionPage.setupConnection(getDbConfig(engine, connectionName));
+      try {
+        await withConnectionCleanup(page, connectionName, async () => {
+          const connectionPage = new ConnectionPage(page);
+          await connectionPage.goto();
+          await connectionPage.waitForReady();
+          await connectionPage.setupConnection(getDbConfig(engine, connectionName, dbPath));
 
         const connections = (await (await page.request.get("/api/connections")).json()) as {
           data: Array<{ id: number; name: string }>;
@@ -91,7 +95,10 @@ export function defineDashboardSharingTests(engine: DbEngine): void {
           await hook.stop();
           await raw(`DROP TABLE IF EXISTS ${table}`);
         }
-      });
+        });
+      } finally {
+        if (dbPath) removeSqliteDbFile(dbPath);
+      }
     });
   });
 }

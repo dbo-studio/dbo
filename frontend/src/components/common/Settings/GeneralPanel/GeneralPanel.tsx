@@ -2,7 +2,7 @@ import { isInstanceAdmin } from '@/core/auth/permissions';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { Box } from '@mui/material';
 import type { JSX } from 'react';
-import { SettingGroup } from '../SettingRow/SettingRow';
+import { SettingGroup } from '../SettingGroup/SettingGroup';
 import { AccountSettings } from './AccountSettings/AccountSettings';
 import { Analytics } from './Analytics/Analytics';
 import { AuthSessionSettings } from './AuthSessionSettings/AuthSessionSettings';

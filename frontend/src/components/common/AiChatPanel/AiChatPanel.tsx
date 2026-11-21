@@ -17,7 +17,7 @@ import ChatHistory from './ChatHistory/ChatHistory';
 import Chats from './Chats/Chats';
 import { useAiChatController } from './hooks/useAiChatController';
 import Messages from './Messages/Messages';
-import { SafeModeBadge } from './ModeBar/ModeBar';
+import SafeModeBadge from './ModeBar/SafeModeBadge/SafeModeBadge';
 
 export default function AiChatPanel() {
   const {

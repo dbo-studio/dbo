@@ -4,6 +4,7 @@ import locales from '@/locales';
 import { useTheme } from '@mui/material';
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import { memo, type JSX } from 'react';
+import KeyBadge from './KeyBadge/KeyBadge';
 import {
   AccentBarStyled,
   ColumnKeyIconStyled,
@@ -16,7 +17,6 @@ import {
   HeaderIconStyled,
   HeaderStyled,
   HeaderTextStyled,
-  KeyBadgeStyled,
   SchemaNameStyled,
   TableNameStyled,
   TableNodeCardStyled
@@ -32,10 +32,6 @@ export type TableNodeData = {
 };
 
 export type TableFlowNode = Node<TableNodeData, 'table'>;
-
-function KeyBadge({ label, color }: { label: string; color: string }): JSX.Element {
-  return <KeyBadgeStyled badgeColor={color}>{label}</KeyBadgeStyled>;
-}
 
 function TableNodeComponent({ data, selected }: NodeProps<TableFlowNode>): JSX.Element {
   const theme = useTheme();

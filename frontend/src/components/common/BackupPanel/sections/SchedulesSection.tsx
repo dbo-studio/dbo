@@ -1,31 +1,23 @@
 import api from '@/api';
 import type { BackupArtifactType, BackupScheduleType } from '@/api/backup/types';
 import { openBackup } from '@/core/backup/openBackup';
-import { tools } from '@/core/utils/tools';
 import type { BackupTabType } from '@/types';
 import { supportsBackup } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
-import { Alert, Box, Button, Chip, Typography } from '@mui/material';
+import { Alert, Box, Button, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { useAiBridge } from '@/hooks/useAiBridge';
 import { isFinished, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import RestoreConfirm from '../RestoreConfirm';
 import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
-import { describeCadence, formatDate, formatSize, statusLabel } from '../format';
 import { restoreCandidates } from '../restoreCandidates';
-import { explainFailurePrompt } from '../explainFailure';
-import RunInsights from '../RunInsights';
 import ScheduleForm from '../ScheduleForm';
+import JobDetail from './JobDetail/JobDetail';
+import JobRow from './JobRow/JobRow';
 
 type View = { kind: 'dashboard' } | { kind: 'wizard'; editId?: number } | { kind: 'job'; id: number };
-
-const statusColor = (status: BackupScheduleType['lastStatus']): 'success' | 'error' | 'default' =>
-  status === 'completed' ? 'success' : status === 'failed' ? 'error' : 'default';
 
 export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.Element {
   const queryClient = useQueryClient();
@@ -201,251 +193,5 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
         }}
       />
     </>
-  );
-}
-
-function JobRow({
-  job,
-  connection,
-  onRun,
-  onOpen
-}: {
-  job: BackupScheduleType;
-  connection: string;
-  onRun: () => void;
-  onOpen: () => void;
-}): JSX.Element {
-  return (
-    <Box
-      data-testid={`backup-job-${job.name}`}
-      sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1, borderTop: 1, borderColor: 'divider' }}
-    >
-      <Box sx={{ flex: 2, minWidth: 0 }}>
-        <Typography variant='body2' noWrap>
-          {job.name}
-          {job.encrypted ? ` · ${locales.backup_encrypted}` : ''}
-          {!job.enabled ? ` · ${locales.backup_schedule_paused}` : ''}
-        </Typography>
-        <Typography variant='caption' color='textSubdued' noWrap component='p'>
-          {connection} · {describeCadence(job)}
-        </Typography>
-      </Box>
-      <Box sx={{ flex: 1 }}>
-        <Chip color={statusColor(job.lastStatus)} label={statusLabel(job.lastStatus)} />
-      </Box>
-      <Box sx={{ flex: 1.4 }}>
-        <Typography variant='caption' color='textSubdued' component='p'>
-          {locales.backup_job_last_success}
-        </Typography>
-        <Typography variant='body2'>{formatDate(job.lastSuccessAt)}</Typography>
-      </Box>
-      <Box sx={{ flex: 1.4 }}>
-        <Typography variant='caption' color='textSubdued' component='p'>
-          {locales.backup_schedule_next}
-        </Typography>
-        <Typography variant='body2'>{job.enabled ? formatDate(job.nextRunAt) : '—'}</Typography>
-      </Box>
-      <Box sx={{ flex: 0.8 }}>
-        <Typography variant='caption' color='textSubdued' component='p'>
-          {locales.backup_job_size}
-        </Typography>
-        <Typography variant='body2'>{formatSize(job.lastSize)}</Typography>
-      </Box>
-      <Typography variant='caption' color='textSubdued' sx={{ flex: 0.9 }}>
-        {locales.backup_wizard_local_folder}
-      </Typography>
-      <Button onClick={onRun}>{locales.backup_schedule_run_now}</Button>
-      <Button onClick={onOpen}>{locales.backup_job_details}</Button>
-    </Box>
-  );
-}
-
-function JobDetail({
-  job,
-  connection,
-  onBack,
-  onRun,
-  onEdit,
-  onToggle,
-  onDelete,
-  onRestore,
-  onDrill
-}: {
-  job: BackupScheduleType;
-  connection: string;
-  onBack: () => void;
-  onRun: () => void;
-  onEdit: () => void;
-  onToggle: () => void;
-  onDelete: () => void;
-  onRestore: (run: BackupArtifactType) => void;
-  /** Restores the run into a scratch database to prove it works; the passphrase is for an encrypted run. */
-  onDrill: (run: BackupArtifactType, passphrase?: string) => void;
-}): JSX.Element {
-  const { data: runs = [] } = useQuery({
-    queryKey: ['backup-runs', job.id, job.connectionId],
-    queryFn: async (): Promise<BackupArtifactType[]> =>
-      (await api.backup.history(job.connectionId)).filter((a) => a.scheduleId === job.id)
-  });
-
-  const download = async (run: BackupArtifactType): Promise<void> => {
-    try {
-      tools.fileDownload(await api.backup.download(run.id), run.fileName);
-    } catch {
-      toast.error(locales.download_failed);
-    }
-  };
-
-  const { prefillChat } = useAiBridge();
-  const [passphrase, setPassphrase] = useState('');
-  const [openLog, setOpenLog] = useState<number | null>(null);
-  const verify = async (run: BackupArtifactType): Promise<void> => {
-    try {
-      const result = await api.backup.verify(run.id, passphrase || undefined);
-      if (result.ok) toast.success(`${locales.backup_verify_ok}: ${result.message}`);
-      else toast.error(`${locales.backup_verify_failed}: ${result.message}`);
-    } catch {
-      /* the api layer already toasted */
-    }
-  };
-
-  const seconds = (run: BackupArtifactType): string =>
-    run.completedAt
-      ? `${Math.max(0, Math.round((new Date(run.completedAt).getTime() - new Date(run.startedAt).getTime()) / 1000))}s`
-      : '—';
-
-  return (
-    <Box data-testid='backup-job-detail'>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Button onClick={onBack}>{locales.backup_job_back}</Button>
-        <Typography variant='subtitle1' sx={{ flex: 1 }}>
-          {job.name} · {connection}
-        </Typography>
-        <Button onClick={onRun}>{locales.backup_schedule_run_now}</Button>
-        <Button onClick={onEdit}>{locales.backup_job_edit}</Button>
-        <Button onClick={onToggle}>
-          {job.enabled ? locales.backup_schedule_pause : locales.backup_schedule_resume}
-        </Button>
-        <Button color='error' onClick={onDelete}>
-          {locales.delete}
-        </Button>
-      </Box>
-      <Typography variant='caption' color='textSubdued' component='p' sx={{ mb: 2 }}>
-        {describeCadence(job)}
-      </Typography>
-      {job.lastStatus === 'failed' && (
-        <Alert severity='error' sx={{ mb: 2 }}>
-          {locales.backup_schedule_failed}: {job.lastError}
-        </Alert>
-      )}
-
-      {runs.some((r) => r.encrypted) && (
-        <FieldInput
-          name='verify-passphrase'
-          type='password'
-          label={locales.backup_verify_passphrase}
-          value={passphrase}
-          onChange={(e) => setPassphrase(e.target.value)}
-        />
-      )}
-
-      <RunInsights runs={runs} />
-
-      <Typography variant='subtitle2' sx={{ mb: 1 }}>
-        {locales.backup_job_runs}
-      </Typography>
-      {runs.length === 0 && (
-        <Typography variant='body2' color='textSubdued'>
-          {locales.backup_job_no_runs}
-        </Typography>
-      )}
-      {runs.map((run) => (
-        <Box key={run.id} sx={{ borderTop: 1, borderColor: 'divider' }}>
-          <Box data-testid={`backup-run-${run.id}`} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 0.75 }}>
-            <Box sx={{ flex: 1.5 }}>
-              <Typography variant='body2'>{formatDate(run.startedAt)}</Typography>
-              <Typography variant='caption' color='textSubdued'>
-                {locales.backup_job_duration}: {seconds(run)}
-              </Typography>
-            </Box>
-            <Chip
-              color={run.status === 'completed' ? 'success' : run.status === 'failed' ? 'error' : 'default'}
-              label={
-                run.status === 'completed'
-                  ? locales.backup_status_completed
-                  : run.status === 'failed'
-                    ? locales.backup_status_failed
-                    : locales.backup_status_running
-              }
-            />
-            <Typography variant='body2' sx={{ width: 80 }}>
-              {formatSize(run.size)}
-            </Typography>
-            <Box sx={{ flex: 3, minWidth: 0 }}>
-              <Typography
-                variant='caption'
-                color={run.status === 'failed' ? 'error.main' : 'textSubdued'}
-                noWrap
-                component='p'
-              >
-                {run.status === 'failed'
-                  ? run.error
-                  : run.method === 'native'
-                    ? `${run.tool} ${run.toolVersion}`
-                    : locales.backup_method_basic}
-              </Typography>
-            </Box>
-            {run.log && (
-              <Button onClick={() => setOpenLog(openLog === run.id ? null : run.id)}>
-                {openLog === run.id ? locales.backup_job_log_hide : locales.backup_job_log_show}
-              </Button>
-            )}
-            {run.status === 'failed' && (
-              <Button onClick={() => prefillChat(explainFailurePrompt(run, job.name), true)}>
-                {locales.backup_explain_ai}
-              </Button>
-            )}
-            {run.drillStatus && (
-              <Chip
-                data-testid={`backup-run-drill-${run.id}`}
-                title={run.drillMessage}
-                color={run.drillStatus === 'passed' ? 'success' : run.drillStatus === 'failed' ? 'error' : 'default'}
-                label={
-                  run.drillStatus === 'passed'
-                    ? locales.backup_drill_passed
-                    : run.drillStatus === 'failed'
-                      ? locales.backup_drill_failed
-                      : locales.backup_drill_skipped
-                }
-              />
-            )}
-            {run.status === 'completed' && (
-              <>
-                <Button
-                  data-testid={`backup-run-drill-run-${run.id}`}
-                  onClick={() => onDrill(run, run.encrypted ? passphrase || undefined : undefined)}
-                >
-                  {locales.backup_drill}
-                </Button>
-                <Button onClick={() => void verify(run)}>{locales.backup_verify}</Button>
-                <Button onClick={() => void download(run)}>{locales.backup_download}</Button>
-                <Button color='error' onClick={() => onRestore(run)}>
-                  {locales.backup_job_open_restore}
-                </Button>
-              </>
-            )}
-          </Box>
-          {openLog === run.id && (
-            <Box
-              component='pre'
-              data-testid={`backup-run-log-${run.id}`}
-              sx={{ typography: 'caption', m: 0, mb: 1, p: 1, whiteSpace: 'pre-wrap', bgcolor: 'action.hover' }}
-            >
-              {run.log}
-            </Box>
-          )}
-        </Box>
-      ))}
-    </Box>
   );
 }

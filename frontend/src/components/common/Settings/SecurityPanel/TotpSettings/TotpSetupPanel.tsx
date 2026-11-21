@@ -3,7 +3,7 @@ import FieldInput from '@/components/base/FieldInput/FieldInput';
 import { FormError } from '@/components/base/FormError/FormError';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { type JSX } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
@@ -17,6 +17,7 @@ import {
   TotpSetupSecretRowStyled
 } from './TotpSettings.styled';
 import { TotpSetupQr } from './TotpSetupQr';
+import { TotpSetupActions } from './TotpSetupActions/TotpSetupActions';
 import { variables } from '@/core/theme/variables';
 
 type TotpSetupPanelProps = {
@@ -29,27 +30,6 @@ type TotpSetupPanelProps = {
   onCancel: () => void;
   onEnable: () => void;
 };
-
-export function TotpSetupActions({
-  enableCode,
-  isEnabling,
-  onCancel,
-  onEnable
-}: Pick<TotpSetupPanelProps, 'enableCode' | 'isEnabling' | 'onCancel' | 'onEnable'>): JSX.Element {
-  return (
-    <>
-      <Button onClick={onCancel}>{locales.cancel}</Button>
-      <Button
-        variant='contained'
-        disabled={isEnabling || enableCode.length < 6}
-        data-testid='auth-totp-enable-submit'
-        onClick={onEnable}
-      >
-        {locales.auth_totp_enable}
-      </Button>
-    </>
-  );
-}
 
 export function TotpSetupPanel({
   variant = 'panel',

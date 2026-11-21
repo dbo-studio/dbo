@@ -2,40 +2,18 @@ import { variables } from '@/core/theme/variables';
 import { useAnalyticsSetting } from '@/hooks/useAnalyticsSetting';
 import locales from '@/locales';
 import { Box, Stack, Switch, Typography } from '@mui/material';
-import { Check, X } from 'lucide-react';
 import type { JSX } from 'react';
+import FactList from './FactList/FactList';
 
-type Fact = { id: string; text: string };
-
-const SENT: Fact[] = [
+const SENT = [
   { id: 'sent-features', text: locales.onboarding_privacy_sent_1 },
   { id: 'sent-version', text: locales.onboarding_privacy_sent_2 }
 ];
 
-const NEVER: Fact[] = [
+const NEVER = [
   { id: 'never-data', text: locales.onboarding_privacy_never_1 },
   { id: 'never-secrets', text: locales.onboarding_privacy_never_2 }
 ];
-
-function FactList({ title, facts, sent }: { title: string; facts: Fact[]; sent: boolean }): JSX.Element {
-  const Icon = sent ? Check : X;
-
-  return (
-    <Box>
-      <Typography variant='overline' color='text.secondary'>
-        {title}
-      </Typography>
-      <Stack spacing={1} sx={{ pt: 1 }}>
-        {facts.map((fact) => (
-          <Stack key={fact.id} direction='row' spacing={1.25} sx={{ alignItems: 'center' }}>
-            <Icon size={16} />
-            <Typography variant='body2'>{fact.text}</Typography>
-          </Stack>
-        ))}
-      </Stack>
-    </Box>
-  );
-}
 
 /** The analytics choice, explained, with its switch. Same setting as Settings, General. */
 export default function PrivacyStep(): JSX.Element {

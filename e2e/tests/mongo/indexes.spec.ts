@@ -1,3 +1,4 @@
+// @cap: Indexes
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
 import { useMongo } from "./_case";

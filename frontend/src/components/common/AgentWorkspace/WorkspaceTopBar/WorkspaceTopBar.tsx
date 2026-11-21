@@ -1,5 +1,5 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { SafeModeBadge } from '@/components/common/AiChatPanel/ModeBar/ModeBar';
+import SafeModeBadge from '@/components/common/AiChatPanel/ModeBar/SafeModeBadge/SafeModeBadge';
 import { useSwitchConnection } from '@/hooks/useSwitchConnection';
 import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';

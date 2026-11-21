@@ -63,7 +63,11 @@ for (const [driver, rel] of Object.entries(NOSQL)) {
   const tagged = { cap: new Set(), tool: new Set() };
   const dir = path.join(root, "tests", driver);
   for (const f of fs.readdirSync(dir).filter((n) => n.endsWith(".spec.ts"))) {
-    const head = fs.readFileSync(path.join(dir, f), "utf8").split("\n").find((l) => l.includes("@cap:")) ?? "";
+    const head =
+      fs
+        .readFileSync(path.join(dir, f), "utf8")
+        .split("\n")
+        .find((l) => l.includes("@cap:") || l.includes("@tool:")) ?? "";
     const [capPart, toolPart = ""] = head.split("@tool:");
     capPart.replace(/.*@cap:/, "").trim().split(/\s+/).filter(Boolean).forEach((c) => tagged.cap.add(c));
     toolPart.trim().split(/\s+/).filter(Boolean).forEach((t) => tagged.tool.add(t));

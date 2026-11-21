@@ -1,121 +1,23 @@
 import api from '@/api';
-import type { NoSQLStreamMessage } from '@/api/nosql/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import Search from '@/components/base/Search/Search';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
-import { alpha, Box, Button, Chip, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
 import { type JSX, type UIEvent, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import MessageRow, { type PubSubReceived } from './PubSubTool/MessageRow/MessageRow';
+import StatusPill from './PubSubTool/StatusPill/StatusPill';
 
 type ToolProps = { connectionId: number };
-type Received = NoSQLStreamMessage & { id: number; at: number };
 
 /** Messages kept in the view; older ones drop off the front. */
 const MAX_MESSAGES = 1000;
-const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
-
-function pretty(payload: string | undefined): string {
-  try {
-    return JSON.stringify(JSON.parse(payload ?? ''), null, 2);
-  } catch {
-    return payload ?? '';
-  }
-}
-
-function StatusPill({ running, paused }: { running: boolean; paused: boolean }): JSX.Element {
-  const { palette } = useTheme();
-  const color = !running ? palette.text.secondary : paused ? palette.warning.main : palette.success.main;
-  const label = !running ? locales.nosql_pubsub_idle : paused ? locales.nosql_pubsub_paused : locales.nosql_pubsub_live;
-
-  return (
-    <Box
-      data-testid='pubsub-status'
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.75,
-        px: 1.25,
-        height: 32,
-        borderRadius: 999,
-        bgcolor: alpha(color, 0.12),
-        color
-      }}
-    >
-      <Box
-        sx={{
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          bgcolor: color,
-          '@keyframes pubsubPulse': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.35 } },
-          animation: running && !paused ? 'pubsubPulse 1.4s ease-in-out infinite' : undefined
-        }}
-      />
-      <Typography variant='caption' sx={{ fontWeight: 600 }}>
-        {label}
-      </Typography>
-    </Box>
-  );
-}
-
-function MessageRow({ m }: { m: Received }): JSX.Element {
-  const [open, setOpen] = useState(false);
-  const text = pretty(m.payload);
-  const long = text.split('\n').length > 6;
-
-  return (
-    <Box
-      data-testid='pubsub-message'
-      sx={{ px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider', '&:hover .copy': { opacity: 1 } }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Typography variant='caption' color='textSubdued' sx={{ fontVariantNumeric: 'tabular-nums' }}>
-          {new Date(m.at).toLocaleTimeString()}
-        </Typography>
-        <Chip label={m.channel} sx={{ fontFamily: MONO, maxWidth: 360 }} />
-        <Box sx={{ flex: 1 }} />
-        {long && (
-          <Button onClick={(): void => setOpen(!open)}>
-            {open ? locales.nosql_pubsub_collapse : locales.nosql_pubsub_expand}
-          </Button>
-        )}
-        <Tooltip title={locales.copy}>
-          <IconButton
-            className='copy'
-            aria-label={locales.copy}
-            sx={{ opacity: 0 }}
-            onClick={(): void => {
-              void navigator.clipboard.writeText(m.payload ?? '').then(() => toast.success(locales.copied));
-            }}
-          >
-            <CustomIcon type='copy' size='s' />
-          </IconButton>
-        </Tooltip>
-      </Box>
-      <Box
-        component='pre'
-        sx={{
-          m: 0,
-          fontFamily: MONO,
-          typography: 'body2',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-all',
-          maxHeight: open || !long ? 'none' : 120,
-          overflow: 'hidden'
-        }}
-      >
-        {text}
-      </Box>
-    </Box>
-  );
-}
 
 export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
   const [channel, setChannel] = useState('');
-  const [messages, setMessages] = useState<Received[]>([]);
+  const [messages, setMessages] = useState<PubSubReceived[]>([]);
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [filter, setFilter] = useState('');

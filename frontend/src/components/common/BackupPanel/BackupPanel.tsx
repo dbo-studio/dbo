@@ -7,7 +7,7 @@ import type { BackupSection, BackupTabType } from '@/types';
 import { Typography } from '@mui/material';
 import { type JSX, type ReactNode } from 'react';
 import { BackupContentInnerStyled, BackupContentPaneStyled, BackupRootStyled } from './BackupPanel.styled';
-import BackupsSection from './sections/BackupsSection';
+import BackupsSection from './sections/BackupsSection/BackupsSection';
 import RestoreSection from './sections/RestoreSection';
 import SchedulesSection from './sections/SchedulesSection';
 

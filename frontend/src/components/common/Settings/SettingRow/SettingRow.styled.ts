@@ -20,9 +20,3 @@ export const SettingRowStyled = styled(Box)(({ theme }) => ({
     paddingRight: theme.spacing(1)
   }
 }));
-
-export const SettingGroupStyled = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  marginBottom: theme.spacing(1.5)
-}));

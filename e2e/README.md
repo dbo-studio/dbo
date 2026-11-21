@@ -4,7 +4,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Agents:** follow [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and the [`e2e-playwright`](../.cursor/skills/e2e-playwright/SKILL.md) skill when writing or fixing tests.
 
-**Per-engine completeness + speed:** see [`docs/e2e-per-engine-implementation.md`](../docs/e2e-per-engine-implementation.md). Gaps: [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
+**Inventory:** every spec file is listed in [`SPEC-CATALOG.md`](SPEC-CATALOG.md). **Gaps and CI exceptions:** [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
 
 CI (`.github/workflows/e2e.yml`) runs one sharded job per engine plus a coverage guard (`npm run check:coverage`, matrix in `coverage/capabilities.mjs`). `npm run test:auth` is not in CI yet.
 
@@ -70,6 +70,25 @@ HTML report: `e2e/playwright-report/` after a run.
 ## Feature matrix
 
 Prefer **one assertable scenario per `test()`**. Mega-files are split into small named tests (serial only for Object Form lifecycles / edit-table chains).
+
+### Scenario groups (catalog)
+
+Each row is a **product area**. Specs live under `tests/<engine>/`; see [`SPEC-CATALOG.md`](SPEC-CATALOG.md) for the full file list.
+
+| Group | Representative specs | What it proves |
+| ----- | -------------------- | -------------- |
+| Harness / workspace | `shared/harness-smoke`, `workspace-*`, `split-view`, `command-palette` | Ephemeral stack, tabs, palette, split |
+| Auth (local) | `shared/auth-*.spec.ts` (`npm run test:auth`) | Login, TOTP, admin users, shared connections |
+| Connections / SQL editor | `connections`, `editor-context`, `query-*`, `query-format` | Connect, edit SQL, guards, status bar |
+| Data grid / browser | `data-browser`, `data-grid-*`, `import-export`, `export-scope` | Grid, menus, FK editors, import/export |
+| Backup | `backup`, `backup-ui`, `backup-schedule`, `backup-console`, `backup-seal` | Backup tab, schedules, encryption |
+| Object Form | `object-form-*` per engine | DDL lifecycle + edit-table serial chains |
+| Boards / dashboards | `boards-sidebar`, `dashboard-share`, `dashboard-subscriptions`, `dashboard-sharing` | Dashboards, share links, webhooks |
+| Database diagram | `shared/database-diagram` | ERD, export |
+| AI chat / agent | `ai-chat-*`, `ai-agent-*`, `ai-setup`, `ai-provider-*`, `shared/ai-*` | Panel, composer, agent, workstation (mocked LLM) |
+| Settings / MCP | `settings-theme`, `mcp-panel`, `account-settings`, `notification-*` | Theme, MCP, notifications |
+| Redis / Mongo | `tests/redis/*`, `tests/mongo/*` | NoSQL capabilities (tagged `@cap` / `@tool`) |
+| Mobile / perf | `mobile-*`, `perf-*` | Phone shell, baselines |
 
 | Feature                  | Spec                                          | Flow                                                    |
 | ------------------------ | --------------------------------------------- | ------------------------------------------------------- |
@@ -141,7 +160,8 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | Object Form SQLite STRICT | `sqlite/object-form-sqlite-table-options.spec.ts` | STRICT + WITHOUT ROWID create                        |
 | Object Form generated col | `pg|sqlite/object-form-generated-column.spec.ts` | Add generated column on edit (STORED / VIRTUAL)     |
 | Boards sidebar           | `sqlite/boards-sidebar.spec.ts`               | Boards tab: new/rename/duplicate/delete dashboard, new/save/delete report, `{{filters}}`, CSV/PNG/JSON export + import |
-| Dashboard share / schedule | `sqlite/dashboard-share.spec.ts`, `sqlite/dashboard-subscriptions.spec.ts` | opened from the Boards tab; share actions in the modal footer |
+| Dashboard share / schedule | `sqlite/dashboard-share.spec.ts`, `sqlite/dashboard-subscriptions.spec.ts`, `*/dashboard-sharing.spec.ts` | UI share modal + API share/webhook suite (`defineDashboardSharingTests`) |
+| Background jobs | `*/background-jobs.spec.ts`, `sqlite/background-queries.spec.ts` | Slow query → job, cancel, export isolation |
 | Database diagram (ERD)   | `shared/database-diagram.spec.ts`             | PG/MySQL/SQLite: open ERD, FK edges, related highlight, PNG export, Source DBML |
 
 **Accepted out of automated e2e:** AI send/stream with real providers; Tauri/desktop native dialogs (manual release checklist).
