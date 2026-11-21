@@ -26,8 +26,10 @@ export const messageMarkdownSx = (theme: Theme) => ({
     margin: '1em 0 0.4em',
     fontWeight: 600,
     lineHeight: 1.35,
-    '&:first-child': { marginTop: 0 }
   },
+  // Emotion SSR: avoid :first-child; first-of-type only zeros margin at block start.
+  '& > :is(h1, h2, h3, h4):first-of-type': { marginTop: 0 },
+  '& :is(p, ul, ol, blockquote, pre, hr) + :is(h1, h2, h3, h4)': { marginTop: '1em' },
   '& h1': { fontSize: '1.3em' },
   '& h2': { fontSize: '1.15em' },
   '& h3': { fontSize: '1.05em' },

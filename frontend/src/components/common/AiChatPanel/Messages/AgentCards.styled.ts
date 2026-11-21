@@ -52,8 +52,8 @@ export const AgentCardBodyStyled = styled(Box)(({ theme }) => ({
 
 export const ToolRowStyled = styled(Box)(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.divider}`,
-  '&:first-child': { borderTop: 'none' },
-  '.MuiCollapse-wrapperInner > &:first-child': { borderTop: `1px solid ${theme.palette.divider}` }
+  '&:first-of-type': { borderTop: 'none' },
+  '.MuiCollapse-wrapperInner > &:first-of-type': { borderTop: `1px solid ${theme.palette.divider}` }
 }));
 
 export const RawTextStyled = styled('pre')(({ theme }) => ({
