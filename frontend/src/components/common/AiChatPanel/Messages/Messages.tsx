@@ -1,29 +1,26 @@
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import locales from '@/locales';
 import { useAiStore } from '@/store/aiStore/ai.store';
-import { Box, Chip, CircularProgress, Typography } from '@mui/material';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { IDLE_SESSION } from '@/store/aiStore/slices/aiSession.slice';
 import type { AiMessageType } from '@/types';
-import { MessagesProps } from '../types';
+import { useMemo } from 'react';
 import ChatBox from '../ChatBox/ChatBox';
+import { useAiChatController } from '../hooks/useAiChatController';
+import { useMessageScroll } from '../hooks/useMessageScroll';
+import { MessagesProps } from '../types';
+import { groupTurns, toRenderBlocks } from '../utils/agentTrace';
 import ChatEmptyState from './ChatEmptyState/ChatEmptyState';
-import ChatErrorMessage from './ChatErrorMessage/ChatErrorMessage';
+import MessageBlock from './MessageBlock/MessageBlock';
+import MessageTail from './MessageTail/MessageTail';
 import {
-  MessageGroupStyled,
+  JumpChipStyled,
+  LoadMoreStyled,
   MessagesListStyled,
   MessagesStyled,
   ScrollToBottomButtonStyled,
-  StickyComposerStyled
+  StickyComposerStyled,
+  StickyTurnStyled
 } from './Messages.styled';
-import StreamingPreview from './StreamingPreview/StreamingPreview';
-import ThinkingMessage from './ThinkingMessage/ThinkingMessage';
-import { groupLiveItems, toRenderBlocks } from '../utils/agentTrace';
-import AgentItemCard from './AgentItemCard/AgentItemCard';
-import MessageBlock from './MessageBlock/MessageBlock';
-import ToolCallGroup from './ToolCallGroup/ToolCallGroup';
-import TurnActions from './TurnActions/TurnActions';
-import { useAiChatController } from '../hooks/useAiChatController';
-import { useAiSession } from '../hooks/useAiSession';
 
 export default function Messages({
   messages,
@@ -35,19 +32,28 @@ export default function Messages({
   onCompare,
   onFeedback
 }: MessagesProps) {
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const editComposerRef = useRef<HTMLDivElement>(null);
-  const { streaming, agentItems } = useAiSession();
   const { autocomplete, chatPending, handleSend, handleCancel } = useAiChatController();
   const selectedQuery = useAiStore((state) => state.context.selectedQuery);
-  const editingUserAt = useAiStore((state) => state.editingUserAt);
+  const streamingStatus = useAiStore(
+    (state) => (state.sessions[state.currentChat?.id ?? 0] ?? IDLE_SESSION).streaming.status
+  );
+  const {
+    messagesContainerRef,
+    editComposerRef,
+    listRef,
+    editingUserAt,
+    showScrollButton,
+    setShowScrollButton,
+    scrollToBottom,
+    markUserIntent,
+    handleScroll,
+    onPointerDown
+  } = useMessageScroll(messages);
   const blocks = useMemo(() => toRenderBlocks(messages), [messages]);
-  const liveBlocks = useMemo(() => groupLiveItems(agentItems), [agentItems]);
+  const turns = useMemo(() => groupTurns(blocks), [blocks]);
   const lastUserIndex = useMemo(() => messages.map((message) => message.role).lastIndexOf('user'), [messages]);
   const lastTurn = useMemo(() => messages.slice(lastUserIndex + 1), [messages, lastUserIndex]);
-  const lastUser = lastUserIndex >= 0 ? messages[lastUserIndex] : undefined;
-  const lastPrompt = lastUser?.content ?? '';
-  const lastUserCreatedAt = lastUser?.createdAt ?? null;
+  const lastPrompt = lastUserIndex >= 0 ? (messages[lastUserIndex]?.content ?? '') : '';
   // Earlier SQL answer in the chat; it is the diff baseline when nothing was selected, and after a reload.
   const previousSql = useMemo(() => {
     const result = new Map<AiMessageType, string>();
@@ -65,95 +71,20 @@ export default function Messages({
       new Set(messages.filter((message) => message.role === 'assistant' && message.model).map((m) => m.model)).size > 1,
     [messages]
   );
-  // Stays true while the user is at the bottom; only the user scrolling up ends it.
-  const isNearBottomRef = useRef(true);
-  // Our own smooth scroll fires scroll events on the way; they must not read as "user scrolled up".
-  const ignoreScrollUntilRef = useRef(0);
-  // The browser also scrolls on its own when content is swapped (the viewport clamps); only a scroll that
-  // follows a wheel, touch, key or pointer action counts as the user leaving the bottom.
-  const userIntentUntilRef = useRef(0);
-  const pointerDownRef = useRef(false);
-  const listRef = useRef<HTMLDivElement>(null);
-  const [showScrollButton, setShowScrollButton] = useState(false);
 
-  const markUserIntent = useCallback(() => {
-    userIntentUntilRef.current = Date.now() + 250;
-  }, []);
-
-  useEffect(() => {
-    const release = (): void => {
-      pointerDownRef.current = false;
-    };
-    window.addEventListener('pointerup', release);
-    return (): void => window.removeEventListener('pointerup', release);
-  }, []);
-
-  const handleScroll = useCallback(() => {
-    const container = messagesContainerRef.current;
-    if (!container || Date.now() < ignoreScrollUntilRef.current) return;
-    const threshold = 100;
-    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-    const userScrolling = pointerDownRef.current || Date.now() < userIntentUntilRef.current;
-    // A wheel or touch scroll animates for a while; every event of it keeps the user's intent alive.
-    if (userScrolling) markUserIntent();
-    if (nearBottom) {
-      isNearBottomRef.current = true;
-      setShowScrollButton(false);
-    } else if (userScrolling) {
-      isNearBottomRef.current = false;
-      setShowScrollButton(true);
-    }
-  }, [markUserIntent]);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-    isNearBottomRef.current = true;
-    if (behavior === 'smooth') ignoreScrollUntilRef.current = Date.now() + 600;
-    container.scrollTo({ top: container.scrollHeight, behavior });
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!editingUserAt) return;
-    const container = messagesContainerRef.current;
-    const el = editComposerRef.current;
-    if (!container || !el) return;
-    container.scrollTop += el.getBoundingClientRect().top - container.getBoundingClientRect().top;
-  }, [editingUserAt]);
-
-  useEffect(() => {
-    if (!editingUserAt) return;
-    const onPointerDown = (event: PointerEvent): void => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (editComposerRef.current?.contains(target)) return;
-      if (target.closest('.MuiPopover-root, .MuiModal-root, .MuiMenu-root')) return;
-      useAiStore.getState().cancelMessageEdit();
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    return (): void => document.removeEventListener('pointerdown', onPointerDown);
-  }, [editingUserAt]);
-
-  // Sending a message always brings the conversation to the bottom, wherever the user had scrolled.
-  const lastMessage = messages[messages.length - 1];
-  const sentJustNow = lastMessage?.role === 'user' && lastMessage.isNew;
-  useEffect(() => {
-    if (sentJustNow) scrollToBottom();
-  }, [sentJustNow, messages.length, scrollToBottom]);
-
-  // Whatever makes the conversation taller (tokens, cards, tables) is followed while pinned to the bottom.
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const observer = new ResizeObserver(() => {
-      if (isNearBottomRef.current) scrollToBottom();
-    });
-    observer.observe(list);
-    return (): void => observer.disconnect();
-  }, [scrollToBottom]);
-
-  const showEmpty = messages.length === 0 && !loading && streaming.status !== 'streaming';
+  const showEmpty = messages.length === 0 && !loading && streamingStatus !== 'streaming';
   const showLoadMore = messages.filter((message) => !message.isNew).length > 10;
+  const tail = (
+    <MessageTail
+      loading={loading}
+      lastTurn={lastTurn}
+      lastPrompt={lastPrompt}
+      onRetry={onRetry}
+      onRegenerate={onRegenerate}
+      onCompare={onCompare}
+      onFeedback={onFeedback}
+    />
+  );
 
   return (
     <MessagesStyled
@@ -162,126 +93,65 @@ export default function Messages({
       onWheel={markUserIntent}
       onTouchMove={markUserIntent}
       onKeyDown={markUserIntent}
-      onPointerDown={() => {
-        pointerDownRef.current = true;
-      }}
+      onPointerDown={onPointerDown}
       data-testid='ai-messages'
     >
       {showLoadMore && onLoadMore && (
-        <Typography
-          component='button'
-          variant='caption'
-          color='primary'
-          onClick={onLoadMore}
-          sx={{
-            alignSelf: 'center',
-            mb: 1,
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            font: 'inherit'
-          }}
-        >
+        <LoadMoreStyled component='button' variant='caption' onClick={onLoadMore}>
           {locales.load_more}
-        </Typography>
+        </LoadMoreStyled>
       )}
 
       {showEmpty && <ChatEmptyState onSelectPrompt={onSelectPrompt} />}
 
       <MessagesListStyled ref={listRef}>
-        {blocks.map((block) => {
-          const message = block.kind === 'message' ? block.message : undefined;
-          const isLastUser = message?.role === 'user' && message.createdAt === lastUserCreatedAt;
+        {turns.map((turn, index) => {
+          const isTail = index === turns.length - 1;
+          const user = turn.user;
           const isEditingThis =
-            message?.role === 'user' && editingUserAt !== null && message.createdAt === editingUserAt;
-          const inLastTurn = message?.role === 'assistant' && lastTurn.includes(message);
-          const baseline = message ? ((inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message)) : undefined;
+            user?.kind === 'message' && editingUserAt !== null && user.message.createdAt === editingUserAt;
 
-          if (isEditingThis) {
-            const composer = (
-              <ChatBox
-                variant='edit'
-                autoFocus
-                loading={chatPending}
-                autocomplete={autocomplete}
-                onSend={(prompt) => void handleSend(prompt)}
-                onCancel={() => void handleCancel()}
-              />
-            );
-            if (isLastUser) {
-              return (
-                <StickyComposerStyled key={block.key} ref={editComposerRef} data-testid='ai-inline-composer'>
-                  {composer}
-                </StickyComposerStyled>
-              );
-            }
-            return (
-              <Box key={block.key} ref={editComposerRef} data-testid='ai-inline-composer'>
-                {composer}
-              </Box>
-            );
-          }
+          return (
+            <StickyTurnStyled key={turn.key}>
+              {user &&
+                (isEditingThis ? (
+                  <StickyComposerStyled ref={editComposerRef} data-testid='ai-inline-composer'>
+                    <ChatBox
+                      variant='edit'
+                      autoFocus
+                      loading={chatPending}
+                      autocomplete={autocomplete}
+                      onSend={(prompt) => void handleSend(prompt)}
+                      onCancel={() => void handleCancel()}
+                    />
+                  </StickyComposerStyled>
+                ) : (
+                  <StickyComposerStyled data-testid='ai-sticky-user'>
+                    <MessageBlock block={user} baseline={undefined} showModelLabel={showModelLabel} />
+                  </StickyComposerStyled>
+                ))}
 
-          if (isLastUser) {
-            return (
-              <StickyComposerStyled key={block.key} data-testid='ai-sticky-user'>
-                <MessageBlock block={block} baseline={baseline} showModelLabel={showModelLabel} />
-              </StickyComposerStyled>
-            );
-          }
+              {turn.rest.map((block) => {
+                const message = block.kind === 'message' ? block.message : undefined;
+                const inLastTurn = message?.role === 'assistant' && lastTurn.includes(message);
+                const baseline = message
+                  ? ((inLastTurn ? selectedQuery : undefined) ?? previousSql.get(message))
+                  : undefined;
+                return (
+                  <MessageBlock key={block.key} block={block} baseline={baseline} showModelLabel={showModelLabel} />
+                );
+              })}
 
-          return <MessageBlock key={block.key} block={block} baseline={baseline} showModelLabel={showModelLabel} />;
+              {isTail && tail}
+            </StickyTurnStyled>
+          );
         })}
-
-        {streaming.status === 'streaming' && (
-          <MessageGroupStyled>
-            {(streaming.thinkingContent || streaming.statusLabel || !streaming.previewContent) && (
-              <ThinkingMessage
-                content={streaming.thinkingContent || streaming.statusLabel || ''}
-                isLive={!streaming.previewContent}
-              />
-            )}
-
-            {liveBlocks.map((block) =>
-              block.kind === 'tools' ? (
-                <ToolCallGroup key={block.key} items={block.items} live />
-              ) : (
-                <AgentItemCard key={block.key} item={block.item} />
-              )
-            )}
-
-            {(streaming.phase === 'answering' || streaming.previewContent) && (
-              <StreamingPreview content={streaming.previewContent} blockType={streaming.activeBlockType} isStreaming />
-            )}
-          </MessageGroupStyled>
-        )}
-
-        {!loading && streaming.status !== 'streaming' && !streaming.error && lastTurn.length > 0 && (
-          <TurnActions
-            turn={lastTurn}
-            prompt={lastPrompt}
-            onRegenerate={onRegenerate}
-            onCompare={onCompare}
-            onFeedback={onFeedback}
-          />
-        )}
-
-        {loading && streaming.status !== 'streaming' && (
-          <MessageGroupStyled sx={{ flexDirection: 'row', alignItems: 'center', gap: 1, pl: 0.5 }}>
-            <CircularProgress size={14} thickness={5} />
-            <Typography variant='body2' color='textSubdued'>
-              {locales.thinking}...
-            </Typography>
-          </MessageGroupStyled>
-        )}
-
-        {streaming.error && onRetry && <ChatErrorMessage message={streaming.error} onRetry={onRetry} />}
+        {turns.length === 0 && tail}
       </MessagesListStyled>
 
       {showScrollButton && messages.length > 0 && (
         <ScrollToBottomButtonStyled>
-          <Chip
+          <JumpChipStyled
             clickable
             icon={<CustomIcon type='arrowDown' size='xs' />}
             label={locales.ai_jump_to_latest}
@@ -290,15 +160,6 @@ export default function Messages({
               setShowScrollButton(false);
             }}
             data-testid='ai-jump-to-latest'
-            sx={{
-              backgroundColor: 'background.paper',
-              border: 1,
-              borderColor: 'divider',
-              boxShadow: 2,
-              '&:hover': {
-                backgroundColor: 'background.paper'
-              }
-            }}
           />
         </ScrollToBottomButtonStyled>
       )}

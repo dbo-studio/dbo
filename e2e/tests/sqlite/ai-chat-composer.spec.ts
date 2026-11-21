@@ -180,8 +180,11 @@ test.describe("AI chat composer and message polish", () => {
       await test.step("Edit opens the composer on the user bubble", async () => {
         await send(page, "edit me");
         await expect(page.getByTestId("ai-user-message").last()).toHaveText("edit me");
-        await expect(page.getByTestId("ai-sticky-user")).toHaveCSS("position", "sticky");
-        await expect(page.getByTestId("ai-sticky-user")).toContainText("edit me");
+        const stickyUsers = page.getByTestId("ai-sticky-user");
+        await expect(stickyUsers).toHaveCount(await page.getByTestId("ai-user-message").count());
+        await expect(stickyUsers.first()).toHaveCSS("position", "sticky");
+        await expect(stickyUsers.last()).toHaveCSS("position", "sticky");
+        await expect(stickyUsers.last()).toContainText("edit me");
         await page.getByTestId("ai-edit-message").last().click();
         const inline = page.getByTestId("ai-edit-input");
         await expect(inline).toHaveAttribute("data-composer-text", "edit me");
@@ -190,14 +193,14 @@ test.describe("AI chat composer and message polish", () => {
         await expect(page.getByTestId("ai-composer-field")).toHaveCount(2);
         await page.getByTestId("ai-chat-input").click();
         await expect(page.getByTestId("ai-inline-composer")).toHaveCount(0);
-        await expect(page.getByTestId("ai-sticky-user")).toHaveCSS("position", "sticky");
+        await expect(page.getByTestId("ai-sticky-user").last()).toHaveCSS("position", "sticky");
         await expect(page.getByTestId("ai-user-message").last()).toHaveText("edit me");
         await page.getByTestId("ai-edit-message").last().click();
         await inline.fill("edited");
         await inline.press("Enter");
         await expect(page.getByText("echo: edited")).toBeVisible({ timeout: 15000 });
         await expect(page.getByTestId("ai-user-message").last()).toHaveText("edited");
-        await expect(page.getByTestId("ai-sticky-user")).toContainText("edited");
+        await expect(page.getByTestId("ai-sticky-user").last()).toContainText("edited");
       });
 
       await test.step("Result table: Copy JSON, Rerun, tool-card link", async () => {

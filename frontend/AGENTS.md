@@ -24,8 +24,9 @@
 
 ## Testing Guidelines
 - **E2E only** — do not add Vitest/Jest/`node:test` (or any unit/component tests) under `frontend/`.
-- Cover user-visible behavior in Playwright: `../e2e/tests/` with scenario-based names (example: `connections.spec.ts`).
-- Add or update E2E tests when UI/behavior changes; update the feature matrix in `../e2e/README.md`.
+- **Every user-visible feature ships as a scenario** in `../e2e/tests/` (example: `connections.spec.ts`, `ai-chat-composer.spec.ts`). The feature matrix in `../e2e/README.md` is the checklist: if there is no row, the feature is not covered.
+- Prefer one assertable outcome per `test()`; describe the QA script with `test.step` (see `../.cursor/rules/e2e-qa.mdc`).
+- Add or update specs when UI/behavior changes, then update the matrix row (or add one).
 - Before submitting, run at least `cd e2e && npm test -- tests/<affected>.spec.ts`.
 - Follow `.cursor/rules/e2e-qa.mdc` and the `e2e-playwright` skill when writing or fixing e2e.
 - See [`../e2e/README.md`](../e2e/README.md) for isolation and run details.

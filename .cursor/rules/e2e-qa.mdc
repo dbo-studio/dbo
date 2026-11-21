@@ -20,7 +20,8 @@ Act like a QA engineer: document flows, keep tests isolated, never poison the de
 
 ## Spec design
 
-- One user-visible feature/flow per spec file; name it by scenario (`connections.spec.ts`).
+- **Scenario = contract.** If product code exposes a flow to users, it must appear as a spec (or a new `test()` in an existing spec) before the PR is done. The matrix in `e2e/README.md` is the source of truth for what is covered.
+- One user-visible feature/flow per spec file when practical; name it by scenario (`connections.spec.ts`). Several related outcomes can share one file, but each gets its own `test()` title.
 - Every meaningful action is a `test.step('…')` — steps are the QA script in the report.
 - Prefer independent tests; mega-lifecycles must still clean up on failure.
 - Update the feature matrix in `e2e/README.md` when adding/changing coverage.

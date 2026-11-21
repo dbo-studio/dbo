@@ -122,7 +122,7 @@ Prefer **one assertable scenario per `test()`**. Mega-files are split into small
 | AI provider settings     | `sqlite/ai-provider-settings.spec.ts`         | form validation; OpenAI saves without a key; chat vs autocomplete model; footer picker leaves autocomplete alone |
 | AI provider models API   | `sqlite/ai-provider-models.spec.ts`           | list/test connection; Ollama and OpenAI activate without a key; Gemini still needs one |
 | AI chat context          | `sqlite/ai-chat-context.spec.ts`              | @ mention inserts a chip in the typed text; follow/pin; history restore; @ connection switches and drops stale table chips |
-| AI chat composer         | `sqlite/ai-chat-composer.spec.ts`             | shortcuts, fences, table actions; Persian dir=auto; last user prompt stays pinned; edit turns it into a second composer; SQL fence dir=ltr |
+| AI chat composer         | `sqlite/ai-chat-composer.spec.ts`             | shortcuts, fences, table actions; Persian dir=auto; each user prompt stays pinned over its answer; edit turns it into a second composer; SQL fence dir=ltr |
 | Tab query migration      | `shared/tab-query-persistence-migration.spec.ts` | localStorage `dbo_tab_queries` → editor + key removed |
 | MCP panel                | `shared/mcp-panel.spec.ts`                    | Settings AI → MCP controls + enable toggle (no LLM)     |
 | Object Form PG lifecycle | `pg/object-form-postgres-lifecycle.spec.ts`   | serial: connect → DB → tables → FK → view → edit → drop |

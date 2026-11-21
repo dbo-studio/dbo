@@ -120,3 +120,20 @@ export const groupLiveItems = (items: AiAgentItem[]): LiveBlock[] => {
   });
   return blocks;
 };
+
+export type ChatTurn = { key: string; user?: RenderBlock; rest: RenderBlock[] };
+
+/** One user prompt plus everything the assistant did after it, up to the next prompt. */
+export const groupTurns = (blocks: RenderBlock[]): ChatTurn[] => {
+  const grouped: ChatTurn[] = [];
+  for (const block of blocks) {
+    if (block.kind === 'message' && block.message.role === 'user') {
+      grouped.push({ key: block.key, user: block, rest: [] });
+      continue;
+    }
+    const current = grouped[grouped.length - 1];
+    if (current) current.rest.push(block);
+    else grouped.push({ key: block.key, rest: [block] });
+  }
+  return grouped;
+};

@@ -10,6 +10,8 @@ alwaysApply: false
 
 **Do not add new unit/integration tests under `frontend/` or `backend/`.**
 
+**Every user-visible feature must have at least one Playwright scenario** (named spec under `e2e/tests/`, listed in `e2e/README.md` matrix). Refactors that keep behavior use the existing spec; behavior changes extend or add a scenario — never “lint only” for product UI.
+
 All product behavior coverage goes through Playwright in [`e2e/`](../../e2e/):
 
 - Specs: `e2e/tests/*.spec.ts`
