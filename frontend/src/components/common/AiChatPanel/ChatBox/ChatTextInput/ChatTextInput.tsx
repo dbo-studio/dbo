@@ -140,7 +140,7 @@ export default function ChatTextInput({
       ...toggleContextOption(current, { ...option, attached: false }),
       input: isEdit ? current.input : text
     });
-    
+
     if (isEdit) setEditingDraft(text);
     lastTextRef.current = text;
   };

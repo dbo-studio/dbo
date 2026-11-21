@@ -34,16 +34,14 @@ export const ChartHeatmapGrid = styled(Box)<{ $columnCount: number }>(({ theme, 
   fontSize: theme.typography.caption.fontSize
 }));
 
-export const ChartHeatmapCell = styled(Box)<{ $shade: number; $finite: boolean }>(
-  ({ theme, $shade, $finite }) => ({
-    minHeight: 28,
-    borderRadius: variables.radius.small,
-    display: 'grid',
-    placeItems: 'center',
-    backgroundColor: $finite ? alpha(theme.palette.primary.main, $shade) : theme.palette.action.hover,
-    color: $finite && $shade > 0.55 ? theme.palette.primary.contrastText : theme.palette.text.primary
-  })
-);
+export const ChartHeatmapCell = styled(Box)<{ $shade: number; $finite: boolean }>(({ theme, $shade, $finite }) => ({
+  minHeight: 28,
+  borderRadius: variables.radius.small,
+  display: 'grid',
+  placeItems: 'center',
+  backgroundColor: $finite ? alpha(theme.palette.primary.main, $shade) : theme.palette.action.hover,
+  color: $finite && $shade > 0.55 ? theme.palette.primary.contrastText : theme.palette.text.primary
+}));
 
 export const ChartHeatmapHeaderCell = styled(Typography)({
   textAlign: 'center'

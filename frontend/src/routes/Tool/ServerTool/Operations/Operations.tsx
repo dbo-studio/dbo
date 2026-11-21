@@ -47,7 +47,9 @@ export default function Operations({ connectionId }: ServerToolProps): JSX.Eleme
             <TableCell>{op.namespace}</TableCell>
             <TableCell>{op.secs}</TableCell>
             <TableCell>{op.client}</TableCell>
-            <TableCell sx={{ fontFamily: SERVER_TOOL_MONO, maxWidth: 360, wordBreak: 'break-all' }}>{op.command}</TableCell>
+            <TableCell sx={{ fontFamily: SERVER_TOOL_MONO, maxWidth: 360, wordBreak: 'break-all' }}>
+              {op.command}
+            </TableCell>
             <TableCell align='right'>
               <Button color='error' onClick={(): void => kill(op.id)}>
                 {locales.server_kill}

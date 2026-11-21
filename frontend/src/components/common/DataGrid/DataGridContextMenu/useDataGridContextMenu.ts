@@ -67,8 +67,7 @@ export function useDataGridContextMenu(target: DataGridContextTarget | null): Me
         ? target.columnName
         : focusedSelection?.selectedColumn;
   const focusedRow = focusedSelection?.row;
-  const rowsToCopy =
-    selectedRows.length > 0 ? selectedRows.map((s) => s.row) : focusedRow ? [focusedRow] : [];
+  const rowsToCopy = selectedRows.length > 0 ? selectedRows.map((s) => s.row) : focusedRow ? [focusedRow] : [];
   const focusedColumn = columns.find((c) => c.name === focusedColumnName);
 
   const resetPaginationIfNeeded = (): void => {

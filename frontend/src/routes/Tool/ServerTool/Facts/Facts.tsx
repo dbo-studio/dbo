@@ -18,4 +18,3 @@ export default function Facts({ rows }: { rows: [string, string][] }): JSX.Eleme
     </Table>
   );
 }
-

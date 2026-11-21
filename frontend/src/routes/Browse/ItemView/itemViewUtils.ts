@@ -11,7 +11,8 @@ export const isBase64Item = (item: NoSQLItem): boolean => item.meta?.encoding ==
 
 export const bytesOfBase64 = (b64: string): Uint8Array => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
-export const asItemText = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value, null, 2));
+export const asItemText = (value: unknown): string =>
+  typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 
 export const cellText = (v: unknown): string => (typeof v === 'string' ? v : v == null ? '' : JSON.stringify(v));
 

@@ -1,12 +1,7 @@
 import { formatAxisNumber, formatNumber } from '@/core/charts/chartSpec';
 import { Box, Typography } from '@mui/material';
 import type { JSX } from 'react';
-import {
-  ChartHeatmapCell,
-  ChartHeatmapGrid,
-  ChartHeatmapHeaderCell,
-  ChartHeatmapRoot
-} from '../ChartView.styled';
+import { ChartHeatmapCell, ChartHeatmapGrid, ChartHeatmapHeaderCell, ChartHeatmapRoot } from '../ChartView.styled';
 
 type Props = {
   xKey: string;

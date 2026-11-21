@@ -132,18 +132,20 @@ export default function ChartRechartsPlot({ spec, data, rows, chartTheme }: Prop
               maxBarSize={32}
               animationDuration={600}
             />,
-            ...spec.y.slice(1).map((key, index) => (
-              <Line
-                key={key}
-                type='monotone'
-                dataKey={key}
-                stroke={palette[(index + 1) % palette.length]}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-                animationDuration={600}
-              />
-            ))
+            ...spec.y
+              .slice(1)
+              .map((key, index) => (
+                <Line
+                  key={key}
+                  type='monotone'
+                  dataKey={key}
+                  stroke={palette[(index + 1) % palette.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                  animationDuration={600}
+                />
+              ))
           ])}
           {tooltip(true)}
           {legend(spec)}
@@ -153,14 +155,7 @@ export default function ChartRechartsPlot({ spec, data, rows, chartTheme }: Prop
       return (
         <ScatterChart>
           <CartesianGrid {...grid} />
-          <XAxis
-            type='number'
-            dataKey={spec.x}
-            name={spec.x}
-            tick={axis}
-            {...bare}
-            tickFormatter={formatAxisNumber}
-          />
+          <XAxis type='number' dataKey={spec.x} name={spec.x} tick={axis} {...bare} tickFormatter={formatAxisNumber} />
           <YAxis
             type='number'
             dataKey={spec.y[0]}

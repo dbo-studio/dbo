@@ -4,17 +4,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import SyntaxHighlighter from '@/components/base/SyntaxHighlighter/SyntaxHighlighter';
 import locales from '@/locales';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  FormControlLabel,
-  IconButton,
-  Stack,
-  Switch,
-  Typography
-} from '@mui/material';
+import { Alert, Box, Button, Chip, FormControlLabel, IconButton, Stack, Switch, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';

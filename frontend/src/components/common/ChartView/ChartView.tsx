@@ -1,10 +1,4 @@
-import {
-  MAX_CHART_POINTS,
-  numericColumns,
-  pivotRows,
-  toPlotRows,
-  type ChartSpec
-} from '@/core/charts/chartSpec';
+import { MAX_CHART_POINTS, numericColumns, pivotRows, toPlotRows, type ChartSpec } from '@/core/charts/chartSpec';
 import locales from '@/locales';
 import { Typography } from '@mui/material';
 import { type JSX, useId } from 'react';

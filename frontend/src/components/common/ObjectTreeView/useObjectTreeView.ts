@@ -9,15 +9,7 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { TreeNodeType } from '@/types/Tree';
 import { useMutation } from '@tanstack/react-query';
 import { alpha, useTheme } from '@mui/material';
-import {
-  type KeyboardEvent,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
+import { type KeyboardEvent, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConnectionMenu } from '../Connections/ConnectionItem/ConnectionItemContextMenu/useConnectionMenu';
 import { flattenTree } from './flattenTree';
 import { mergeSearchResults } from './mergeSearchResults';

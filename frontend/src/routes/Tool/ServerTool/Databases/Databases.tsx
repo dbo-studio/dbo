@@ -19,7 +19,6 @@ const KIND_LABEL: Record<NoSQLCollectionOptions['kind'], string> = {
   view: locales.server_kind_view
 };
 
-
 export default function Databases({ connectionId }: ServerToolProps): JSX.Element {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);

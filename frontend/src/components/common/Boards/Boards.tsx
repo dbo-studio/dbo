@@ -150,4 +150,3 @@ export default function Boards(): JSX.Element {
     </Stack>
   );
 }
-
