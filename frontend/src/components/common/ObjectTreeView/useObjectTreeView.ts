@@ -2,14 +2,14 @@ import api from '@/api';
 import type { MenuType } from '@/components/base/ContextMenu/types';
 import { useContextMenu, useCurrentConnection, useSelectedTab } from '@/hooks';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
-import { useVirtualList } from '@/hooks/useVirtualList';
 import locales from '@/locales';
 import { useSettingStore } from '@/store/settingStore/setting.store';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import type { TreeNodeType } from '@/types/Tree';
 import { useMutation } from '@tanstack/react-query';
 import { alpha, useTheme } from '@mui/material';
-import { type KeyboardEvent, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Virtualizer } from '@tanstack/react-virtual';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConnectionMenu } from '../Connections/ConnectionItem/ConnectionItemContextMenu/useConnectionMenu';
 import { flattenTree } from './flattenTree';
 import { mergeSearchResults } from './mergeSearchResults';
@@ -92,8 +92,9 @@ export function useObjectTreeView() {
   const [anchorId, setAnchorId] = useState<string | undefined>(undefined);
   const pinned = useTreeStore((state) => (connectionId ? state.pinnedNodes[connectionId] : undefined)) ?? EMPTY_NODES;
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  const [searchInput, setSearchInput] = useState<HTMLInputElement | null>(null);
+  const scrollVirtualizerRef = useRef<Virtualizer<HTMLElement, Element> | null>(null);
   const rowElementsRef = useRef(new Map<string, HTMLDivElement>());
   const parentOfRef = useRef(new Map<string, string | null>());
 
@@ -126,12 +127,17 @@ export function useObjectTreeView() {
     [displayTree, expandedIds, loadingIds, searchTerm, collapsedDuringSearch, emptyIds]
   );
 
-  const { virtualItems, totalSize, virtualizer } = useVirtualList({
-    count: rows.length,
-    estimateSize: TREE_ROW_HEIGHT,
-    overscan: 12,
-    scrollElementRef: scrollContainerRef
-  });
+  const setScrollContainer = useCallback((element: HTMLDivElement | null): void => {
+    setScrollElement(element);
+  }, []);
+
+  const setSearchInputEl = useCallback((element: HTMLInputElement | null): void => {
+    setSearchInput(element);
+  }, []);
+
+  const registerScrollVirtualizer = useCallback((virtualizer: Virtualizer<HTMLElement, Element>): void => {
+    scrollVirtualizerRef.current = virtualizer;
+  }, []);
 
   // Widest row decides the horizontal scroll extent (rows are virtualized, so measure from data, not DOM).
   const contentWidth = useMemo(
@@ -146,22 +152,32 @@ export function useObjectTreeView() {
 
   const rowIndex = useCallback((id: string | undefined): number => rows.findIndex((r) => r.key === id), [rows]);
 
-  // When the active row is collapsed away or reloaded, its nearest visible ancestor takes over.
-  let currentId = activeId;
-  while (currentId && rowIndex(currentId) < 0) currentId = parentOfRef.current.get(currentId) ?? undefined;
+  const parentOf = useMemo(() => {
+    const map = new Map<string, string | null>();
+    rows.forEach((row) => {
+      if (row.kind === 'node') map.set(row.key, row.parentId);
+    });
+    return map;
+  }, [rows]);
+
+  const currentId = useMemo(() => {
+    let id = activeId;
+    while (id && rowIndex(id) < 0) id = parentOf.get(id) ?? undefined;
+    return id;
+  }, [activeId, parentOf, rowIndex]);
 
   const focusRow = useCallback(
     (id: string): void => {
       const index = rowIndex(id);
       if (index < 0) return;
       setActiveId(id);
-      virtualizer.scrollToIndex(index, { align: 'auto' });
+      scrollVirtualizerRef.current?.scrollToIndex(index, { align: 'auto' });
       // Rendered rows take focus now (keys typed right after still land in the tree); others once scrolled in.
       const element = rowElementsRef.current.get(id);
       if (element) element.focus({ preventScroll: true });
       else nextFrame(() => rowElementsRef.current.get(id)?.focus({ preventScroll: true }));
     },
-    [rowIndex, virtualizer]
+    [rowIndex]
   );
 
   const moveTo = useCallback(
@@ -428,14 +444,14 @@ export function useObjectTreeView() {
   }, [currentId, handleCloseContextMenu]);
 
   const focusSearch = useCallback((): void => {
-    searchInputRef.current?.focus();
-    searchInputRef.current?.select();
-  }, []);
+    searchInput?.focus();
+    searchInput?.select();
+  }, [searchInput]);
 
   const handleTreeKeyDown = useTreeKeyboard({
     rows,
     activeId: currentId,
-    pageSize: () => Math.max(1, Math.floor((scrollContainerRef.current?.clientHeight ?? 0) / TREE_ROW_HEIGHT) - 1),
+    pageSize: () => Math.max(1, Math.floor((scrollElement?.clientHeight ?? 0) / TREE_ROW_HEIGHT) - 1),
     moveTo,
     toggle,
     expandLoaded,
@@ -470,21 +486,21 @@ export function useObjectTreeView() {
     if (selectedNodeId === lastSelectedRef.current) return;
     lastSelectedRef.current = selectedNodeId;
     const index = rowIndex(selectedNodeId);
-    const scroller = scrollContainerRef.current;
-    if (!selectedNodeId || index < 0 || !scroller) return;
+    if (!selectedNodeId || index < 0 || !scrollElement) return;
 
     const top = index * TREE_ROW_HEIGHT;
-    const visible = top >= scroller.scrollTop && top + TREE_ROW_HEIGHT <= scroller.scrollTop + scroller.clientHeight;
+    const visible =
+      top >= scrollElement.scrollTop && top + TREE_ROW_HEIGHT <= scrollElement.scrollTop + scrollElement.clientHeight;
     if (visible) return;
 
-    virtualizer.scrollToIndex(index, { align: 'center' });
+    scrollVirtualizerRef.current?.scrollToIndex(index, { align: 'center' });
     if (prefersReducedMotion()) return;
     nextFrame(() =>
       rowElementsRef.current
         .get(selectedNodeId)
         ?.animate([{ backgroundColor: flashColor }, { backgroundColor: 'transparent' }], { duration: FLASH_MS })
     );
-  }, [flashColor, rowIndex, selectedNodeId, virtualizer]);
+  }, [flashColor, rowIndex, scrollElement, selectedNodeId]);
 
   const tabStopId = currentId || (selectedNodeId && rowIndex(selectedNodeId) >= 0 && selectedNodeId) || rows[0]?.key;
 
@@ -606,7 +622,7 @@ export function useObjectTreeView() {
     isLoading,
     searchTerm,
     setSearchTerm,
-    searchInputRef: searchInputRef as RefObject<HTMLInputElement>,
+    setSearchInputEl,
     handleSearchKeyDown,
     searchStatus,
     search,
@@ -614,10 +630,10 @@ export function useObjectTreeView() {
     pinned,
     selectedNodeId,
     rows,
-    virtualItems,
-    totalSize,
     contentWidth,
-    scrollContainerRef: scrollContainerRef as RefObject<HTMLDivElement>,
+    scrollElement,
+    setScrollContainer,
+    registerScrollVirtualizer,
     handleEmptyContextMenu,
     handleContainerKeyDown,
     handleTreeKeyDown,

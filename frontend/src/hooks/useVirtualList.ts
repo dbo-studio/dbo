@@ -7,7 +7,7 @@ export type UseVirtualListOptions = {
   gap?: number;
   overscan?: number;
   enabled?: boolean;
-  scrollElementRef?: RefObject<HTMLElement | null>;
+  scrollElement?: HTMLElement | null;
 };
 
 export type UseVirtualListReturn = {
@@ -25,17 +25,18 @@ export function useVirtualList({
   gap = 0,
   overscan = 10,
   enabled = true,
-  scrollElementRef
+  scrollElement
 }: UseVirtualListOptions): UseVirtualListReturn {
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual
   const virtualizer = useVirtualizer<HTMLElement, Element>({
     count,
     gap,
     overscan,
     enabled: enabled && count > 0,
     estimateSize: () => estimateSize,
-    getScrollElement: () => scrollElementRef?.current ?? parentRef.current
+    getScrollElement: () => scrollElement ?? parentRef.current
   });
 
   const virtualItems = virtualizer.getVirtualItems();

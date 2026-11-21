@@ -23,7 +23,7 @@ type Progress = { jobId: string };
 /** Every restorable backup in one list, with an upload for files made elsewhere. */
 export default function RestoreSection(): JSX.Element {
   const queryClient = useQueryClient();
-  const fileInput = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // Redis has nothing to dump, so it is not offered.
   const connections = (useConnectionStore((s) => s.connections) ?? []).filter((c) => supportsBackup(c.type));
   const writable = connections.filter((c) => (c.access ?? 'owner') !== 'viewer');
@@ -56,7 +56,7 @@ export default function RestoreSection(): JSX.Element {
     } catch {
       toast.error(locales.backup_upload_failed);
     } finally {
-      if (fileInput.current) fileInput.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -87,7 +87,7 @@ export default function RestoreSection(): JSX.Element {
       </FormGroup>
       <SectionActionsStyled sx={{ ml: 0 }}>
         <input
-          ref={fileInput}
+          ref={fileInputRef}
           hidden
           type='file'
           accept='.sql,.sqlite,.archive,.gz,.enc'
@@ -96,7 +96,7 @@ export default function RestoreSection(): JSX.Element {
         <Button
           variant='outlined'
           disabled={intoId === null}
-          onClick={() => fileInput.current?.click()}
+          onClick={() => fileInputRef.current?.click()}
           data-testid='restore-upload'
         >
           {locales.backup_restore_upload}

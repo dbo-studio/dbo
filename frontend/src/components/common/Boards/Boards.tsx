@@ -7,7 +7,7 @@ import { PERM } from '@/core/auth/permissions';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import { useCan, useCanReports } from '@/hooks/useFeaturePermissions';
 import locales from '@/locales';
-import { Box, LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, IconButton, LinearProgress, Stack } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, type MouseEvent, useState } from 'react';
 import { BoardsListStyled } from './Boards.styled';

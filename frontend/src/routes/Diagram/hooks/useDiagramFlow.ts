@@ -8,6 +8,7 @@ import {
 } from '@/core/diagram/layout';
 import type { ViewGraph } from '@/core/diagram/types';
 import { useReactFlow, type Edge, type Node, type OnEdgesChange, type OnNodesChange } from '@xyflow/react';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TableFlowNode } from '../TableNode/TableNode';
 
@@ -81,17 +82,17 @@ export function useDiagramFlow({
   exportImage: (format: 'png' | 'svg') => Promise<void>;
 } {
   const { fitView } = useReactFlow();
-  const fitViewRef = useRef(fitView);
-  fitViewRef.current = fitView;
+  const fitViewRef = useLatestRef(fitView);
 
   const layoutKey = connectionId !== undefined ? layoutStorageKey(connectionId, database, schema) : '';
-  const positionsRef = useRef<Record<string, DiagramPosition>>({});
+  const [positions, setPositions] = useState<Record<string, DiagramPosition>>({});
   const loadedLayoutKeyRef = useRef('');
 
-  if (layoutKey && loadedLayoutKeyRef.current !== layoutKey) {
+  useEffect(() => {
+    if (!layoutKey || loadedLayoutKeyRef.current === layoutKey) return;
     loadedLayoutKeyRef.current = layoutKey;
-    positionsRef.current = loadLayout(layoutKey);
-  }
+    setPositions(loadLayout(layoutKey));
+  }, [layoutKey]);
 
   const baseNodes = useMemo((): TableFlowNode[] => {
     const nextNodes: TableFlowNode[] = viewGraph.nodes
@@ -99,7 +100,7 @@ export function useDiagramFlow({
       .map((node) => ({
         id: node.id,
         type: 'table' as const,
-        position: positionsRef.current[node.id] ?? { x: 0, y: 0 },
+        position: positions[node.id] ?? { x: 0, y: 0 },
         data: {
           name: node.name,
           schema: node.schema,
@@ -111,8 +112,8 @@ export function useDiagramFlow({
       }));
 
     const layoutEdges = flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke, statusStroke);
-    return layoutTableNodes(nextNodes, layoutEdges, positionsRef.current) as TableFlowNode[];
-  }, [edgeStroke, shownNodeIds, statusStroke, viewGraph]);
+    return layoutTableNodes(nextNodes, layoutEdges, positions) as TableFlowNode[];
+  }, [edgeStroke, positions, shownNodeIds, statusStroke, viewGraph]);
 
   const baseEdges = useMemo(
     (): Edge[] => flowEdgesFromGraph(viewGraph, shownNodeIds, edgeStroke, statusStroke),
@@ -131,29 +132,24 @@ export function useDiagramFlow({
 
   const [nodes, setNodes] = useState<TableFlowNode[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const nodesRef = useRef(nodes);
-  nodesRef.current = nodes;
+  const nodesRef = useLatestRef(nodes);
   const graphSignatureRef = useRef('');
-  const baseNodesRef = useRef(baseNodes);
-  const baseEdgesRef = useRef(baseEdges);
-  baseNodesRef.current = baseNodes;
-  baseEdgesRef.current = baseEdges;
 
   useEffect(() => {
     if (graphSignatureRef.current === graphSignature) {
       return;
     }
     graphSignatureRef.current = graphSignature;
-    setNodes(baseNodesRef.current);
-    setEdges(baseEdgesRef.current);
-    if (baseNodesRef.current.length === 0) {
+    setNodes(baseNodes);
+    setEdges(baseEdges);
+    if (baseNodes.length === 0) {
       return;
     }
     const frame = window.requestAnimationFrame(() => {
       void fitViewRef.current({ padding: 0.15 });
     });
     return (): void => window.cancelAnimationFrame(frame);
-  }, [graphSignature]);
+  }, [baseEdges, baseNodes, fitViewRef, graphSignature]);
 
   const displayNodes = useMemo((): TableFlowNode[] => {
     const query = search.trim().toLowerCase();
@@ -180,12 +176,14 @@ export function useDiagramFlow({
       if (!layoutKey) {
         return;
       }
-      const positions: Record<string, DiagramPosition> = { ...positionsRef.current };
-      for (const node of nextNodes) {
-        positions[node.id] = node.position;
-      }
-      positionsRef.current = positions;
-      saveLayout(layoutKey, positions);
+      setPositions((current) => {
+        const next: Record<string, DiagramPosition> = { ...current };
+        for (const node of nextNodes) {
+          next[node.id] = node.position;
+        }
+        saveLayout(layoutKey, next);
+        return next;
+      });
     },
     [layoutKey]
   );
@@ -211,13 +209,13 @@ export function useDiagramFlow({
   const autoLayout = useCallback((): void => {
     setNodes((current) => {
       const next = layoutTableNodes(current, edges, {}) as TableFlowNode[];
-      const positions: Record<string, DiagramPosition> = {};
+      const nextPositions: Record<string, DiagramPosition> = {};
       for (const node of next) {
-        positions[node.id] = node.position;
+        nextPositions[node.id] = node.position;
       }
-      positionsRef.current = positions;
+      setPositions(nextPositions);
       if (layoutKey) {
-        saveLayout(layoutKey, positions);
+        saveLayout(layoutKey, nextPositions);
       }
       return next;
     });
@@ -225,7 +223,7 @@ export function useDiagramFlow({
 
   const fit = useCallback((): void => {
     void fitViewRef.current({ padding: 0.15 });
-  }, []);
+  }, [fitViewRef]);
 
   const exportFilename = `diagram-${schema || database || 'db'}`;
 
@@ -238,7 +236,7 @@ export function useDiagramFlow({
         backgroundColor: exportBg
       });
     },
-    [exportBg, exportFilename]
+    [exportBg, exportFilename, nodesRef]
   );
 
   return {

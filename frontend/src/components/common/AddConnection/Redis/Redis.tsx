@@ -148,7 +148,7 @@ export default function Redis({
       onSubmit={(e): void => {
         e.preventDefault();
         e.stopPropagation();
-        form.state.values.isPing = false;
+        void form.setFieldValue('isPing', false);
         void form.handleSubmit().then();
       }}
     >
@@ -209,7 +209,7 @@ export default function Redis({
           disabled={pingLoading}
           loading={pingLoading}
           onClick={(): void => {
-            form.state.values.isPing = true;
+            void form.setFieldValue('isPing', true);
             void form.handleSubmit().then();
           }}
           variant='outlined'

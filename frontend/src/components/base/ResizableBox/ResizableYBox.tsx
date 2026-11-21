@@ -1,5 +1,6 @@
 import type { EventFor } from '@/types';
-import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
+import { type JSX, useCallback, useEffect, useState } from 'react';
 import { ResizableYBoxStyled } from './ResizableYBox.styled';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxYProps } from './types';
@@ -14,7 +15,7 @@ export default function ResizableYBox({
   const [boxHeight, setBoxHeight] = useState(height);
   const [isResizing, setIsResizing] = useState(false);
   const [initialY, setInitialY] = useState(0);
-  const currentHeightRef = useRef(boxHeight);
+  const currentHeightRef = useLatestRef(boxHeight);
   const [prevHeight, setPrevHeight] = useState(height);
 
   // Follow the prop (maximize, restore) unless the user is dragging.
@@ -22,8 +23,6 @@ export default function ResizableYBox({
     setPrevHeight(height);
     if (!isResizing) setBoxHeight(height);
   }
-
-  currentHeightRef.current = boxHeight;
 
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
@@ -42,7 +41,7 @@ export default function ResizableYBox({
       }
     }
     setIsResizing(false);
-  }, [isResizing, maxHeight, onChange]);
+  }, [currentHeightRef, isResizing, maxHeight, onChange]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent): void => {
@@ -59,7 +58,7 @@ export default function ResizableYBox({
       currentHeightRef.current = newHeight;
       setInitialY(event.clientY);
     },
-    [boxHeight, direction, initialY, isResizing, maxHeight]
+    [boxHeight, currentHeightRef, direction, initialY, isResizing, maxHeight]
   );
 
   useEffect(() => {

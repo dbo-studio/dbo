@@ -142,7 +142,7 @@ export const useDynamicField = (objectTabId: string): UseDynamicFieldReturn => {
         }
       }
     },
-    [buildFormValues, clearDynamicFieldState, currentConnection?.id, selectedTab?.nodeId, objectTabId]
+    [buildFormValues, clearDynamicFieldState, currentConnection, selectedTab, objectTabId]
   );
 
   useEffect(() => {

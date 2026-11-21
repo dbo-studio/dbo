@@ -112,9 +112,9 @@ export default function ChatHistory({ variant = 'menu' }: ChatHistoryProps): JSX
     },
     [
       chats,
-      currentChat?.id,
+      currentChat,
       currentConnectionId,
-      data?.length,
+      data,
       deleteChatMutation,
       handleSelectChat,
       queryClient,

@@ -12,33 +12,33 @@ export default function Changes({ connectionId }: ServerToolProps): JSX.Element 
   const [container, setContainer] = useState('');
   const [live, setLive] = useState(false);
   const [events, setEvents] = useState<(NoSQLChangeMessage & { n: number })[]>([]);
-  const abort = useRef<AbortController | null>(null);
-  const counter = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const counterRef = useRef(0);
 
   const stop = (): void => {
-    abort.current?.abort();
-    abort.current = null;
+    abortRef.current?.abort();
+    abortRef.current = null;
     setLive(false);
   };
 
   // Leaving the tab closes the stream, which makes the server stop watching.
-  useEffect(() => (): void => abort.current?.abort(), []);
+  useEffect(() => (): void => abortRef.current?.abort(), []);
 
   const start = async (): Promise<void> => {
     stop();
     const controller = new AbortController();
-    abort.current = controller;
+    abortRef.current = controller;
     setEvents([]);
     setLive(true);
     try {
       await api.nosql.changeStream(connectionId, container, controller.signal, (msg) => {
         if (msg.type === 'ping') return;
-        setEvents((list) => [{ ...msg, n: counter.current++ }, ...list].slice(0, SERVER_TOOL_MAX_CHANGES));
+        setEvents((list) => [{ ...msg, n: counterRef.current++ }, ...list].slice(0, SERVER_TOOL_MAX_CHANGES));
       });
     } catch {
       /* aborted, or the stream ended */
     } finally {
-      if (abort.current === controller) setLive(false);
+      if (abortRef.current === controller) setLive(false);
     }
   };
 
@@ -82,7 +82,7 @@ export default function Changes({ connectionId }: ServerToolProps): JSX.Element 
             key={e.n}
             data-testid='change-event'
             sx={{
-              fontFamily: MONO,
+              fontFamily: SERVER_TOOL_MONO,
               typography: 'caption',
               py: 0.5,
               borderBottom: 1,

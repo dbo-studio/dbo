@@ -10,6 +10,7 @@ import type { AiChangeset } from '@/types';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { Box, Button, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { type JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { TabMode } from '@/core/enums';
 import { useAiStore } from '@/store/aiStore/ai.store';
@@ -121,8 +122,7 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
   }, []);
   const fit = viewportWidth > 0 ? clampZoom(Math.min(1, viewportWidth / (width + 24))) : 1;
   const scale = zoom ?? fit;
-  const fitRef = useRef(fit);
-  fitRef.current = fit;
+  const fitRef = useLatestRef(fit);
   useEffect(() => {
     const element = viewportRef.current;
     if (!element) return;
@@ -135,7 +135,7 @@ export default function MiniDiagram({ changeset }: { changeset: AiChangeset }): 
     };
     element.addEventListener('wheel', onWheel, { passive: false });
     return () => element.removeEventListener('wheel', onWheel);
-  }, []);
+  }, [fitRef]);
 
   const open = (): void => {
     // The full diagram is a tab of the app, under the workstation: leave the workstation to show it.

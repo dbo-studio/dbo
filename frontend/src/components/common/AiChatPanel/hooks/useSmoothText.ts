@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
+import { useEffect, useState } from 'react';
 
 /**
  * Reveals streamed text at an even pace. Tokens arrive in bursts; this
@@ -8,8 +9,7 @@ import { useEffect, useRef, useState } from 'react';
  */
 export const useSmoothText = (target: string, active: boolean): string => {
   const [length, setLength] = useState(0);
-  const targetRef = useRef(target);
-  targetRef.current = target;
+  const targetRef = useLatestRef(target);
 
   useEffect(() => {
     if (!active) return;
@@ -26,7 +26,7 @@ export const useSmoothText = (target: string, active: boolean): string => {
     frame = requestAnimationFrame(tick);
 
     return (): void => cancelAnimationFrame(frame);
-  }, [active]);
+  }, [active, targetRef]);
 
   return active ? target.slice(0, length) : target;
 };

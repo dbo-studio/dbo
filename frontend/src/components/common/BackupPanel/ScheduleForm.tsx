@@ -7,7 +7,7 @@ import locales from '@/locales';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Box } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { type JSX, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import DestinationPicker from './DestinationPicker/DestinationPicker';
 import FormSection from './FormSection';
 import { describeCadence } from './format';
@@ -107,7 +107,11 @@ export default function ScheduleForm({
     encrypt && !job?.encrypted && !passphrase ? locales.backup_plan_missing_passphrase : ''
   ].filter(Boolean);
 
-  const upcoming = nextRuns({ ...when, timezone }, new Date(), 3);
+  const [scheduleNow] = useState(() => new Date());
+  const upcoming = useMemo(
+    () => nextRuns({ ...when, timezone }, scheduleNow, 3),
+    [scheduleNow, timezone, when]
+  );
   const destination = destinations.find((d) => d.id === destinationId);
 
   const handleSave = async (): Promise<void> => {

@@ -102,7 +102,7 @@ export default function MemberWindowView({
   const [removed, setRemoved] = useState<Set<string>>(() => new Set());
   const [renames, setRenames] = useState<Record<string, string>>({});
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const anchor = useRef<string | null>(null);
+  const selectionAnchorRef = useRef<string | null>(null);
   const { columnSizes, startResize, resizingColumnId } = useColumnResize({
     columns: GRID_COLUMNS,
     defaultColumnWidth: 300
@@ -164,7 +164,11 @@ export default function MemberWindowView({
     stageEdit(m, value);
   };
 
-  const addRow = (): void => setAdded([{ id: Date.now(), key: '', value: '' }, ...added]);
+  const addRow = (): void =>
+    setAdded((prev) => [
+      { id: prev.reduce((max, row) => Math.max(max, row.id), 0) + 1, key: '', value: '' },
+      ...prev
+    ]);
 
   const addedReady = (r: { key: string; value: string }): boolean =>
     l.type === 'list' ? r.value !== '' : r.key !== '' && (l.type !== 'zset' || r.value !== '');
@@ -239,18 +243,22 @@ export default function MemberWindowView({
   };
 
   const duplicate = (m: NoSQLMember): void =>
-    setAdded([
-      { id: Date.now(), key: l.type === 'list' ? '' : `${m.key}_copy`, value: edits[m.key] ?? shown(m) },
-      ...added
+    setAdded((prev) => [
+      {
+        id: prev.reduce((max, row) => Math.max(max, row.id), 0) + 1,
+        key: l.type === 'list' ? '' : `${m.key}_copy`,
+        value: edits[m.key] ?? shown(m)
+      },
+      ...prev
     ]);
 
   const selectOnly = (key: string): void => setSelected(new Set([key]));
 
   // Shift extends from the last clicked row, like the SQL grid.
   const toggle = (key: string, shift = false): void => {
-    const from = anchor.current ? members.findIndex((m) => m.key === anchor.current) : -1;
+    const from = selectionAnchorRef.current ? members.findIndex((m) => m.key === selectionAnchorRef.current) : -1;
     const to = members.findIndex((m) => m.key === key);
-    anchor.current = key;
+    selectionAnchorRef.current = key;
     if (shift && from >= 0 && to >= 0) {
       const [a, b] = from < to ? [from, to] : [to, from];
       setSelected(new Set([...selected, ...members.slice(a, b + 1).map((m) => m.key)]));

@@ -1,5 +1,5 @@
 import { useVirtualizer, type VirtualItem, type Virtualizer } from '@tanstack/react-virtual';
-import { type RefObject, useEffect, useState } from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useState } from 'react';
 
 const ROW_HEIGHT = 22;
 const DEFAULT_OVERSCAN = 30;
@@ -25,9 +25,14 @@ export function useDataGridVirtualization({
   tableContainerRef
 }: UseDataGridVirtualizationProps): UseDataGridVirtualizationReturn {
   const [overScan, setOverScan] = useState<number>(DEFAULT_OVERSCAN);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    setScrollElement(tableContainerRef.current);
+  }, [tableContainerRef]);
 
   useEffect(() => {
-    const element = tableContainerRef.current;
+    const element = scrollElement ?? tableContainerRef.current;
     if (!element) {
       return;
     }
@@ -60,11 +65,12 @@ export function useDataGridVirtualization({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [tableContainerRef]);
+  }, [scrollElement, tableContainerRef]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual
   const rowVirtualizer = useVirtualizer<HTMLDivElement, Element>({
     count: rowsCount,
-    getScrollElement: () => tableContainerRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => ROW_HEIGHT,
     overscan: overScan,
     enabled: rowsCount > 0 && !loading

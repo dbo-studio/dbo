@@ -163,11 +163,11 @@ export default function AggregateDialog({ connectionId, containerId, onClose }: 
           {loading && <Typography color='text.secondary'>{locales.loading}</Typography>}
           {error && <Typography color='error'>{error}</Typography>}
           {docs?.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_no_docs}</Typography>}
-          {docs?.map((d, i) => (
+          {docs?.map((d) => (
             // Output rows have no identity of their own; the list is replaced whole on every preview.
             <Box
               component='pre'
-              key={`${i}:${d.length}`}
+              key={`${d.length}:${d.slice(0, 64)}`}
               data-testid='agg-doc'
               sx={{
                 m: 0,

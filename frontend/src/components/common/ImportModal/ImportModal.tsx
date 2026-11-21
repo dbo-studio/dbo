@@ -9,7 +9,7 @@ import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { Box, Button, Checkbox, FormControlLabel, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { JobProgressModal } from '../JobProgressModal/JobProgressModal';
 import ImportButton from './ImportButton/ImportButton';
@@ -45,13 +45,13 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
 
   const { mutateAsync: importData, isPending } = useMutation({ mutationFn: api.importExport.importData });
 
-  useEffect(() => {
-    if (show) return;
+  const handleClose = (): void => {
     setStep(0);
     setFile(null);
     setPreview(null);
     setMapping({});
-  }, [show]);
+    onClose();
+  };
 
   // Step 1 -> 2: read the file and the table's columns, then guess the mapping by name.
   const loadMapping = async () => {
@@ -86,7 +86,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
     });
     setJobId(response.jobId);
     setShowProgress(true);
-    onClose();
+    handleClose();
     await useDataStore.getState().runQuery();
     useDataStore.getState().toggleReRunQuery();
   };
@@ -99,7 +99,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
       <Modal
         open={show}
         title={`${locales.import_data} · ${STEPS[step]} (${step + 1}/${STEPS.length})`}
-        onClose={onClose}
+        onClose={handleClose}
       >
         <ImportModalContainerStyled
           component='form'
@@ -201,7 +201,7 @@ export function ImportModal({ show, connectionId, table, onClose }: ImportModalP
             )}
           </ImportModalBodyStyled>
           <ModalFooter>
-            <Button type='button' onClick={onClose}>
+            <Button type='button' onClick={handleClose}>
               {locales.cancel}
             </Button>
             {step > 0 && (

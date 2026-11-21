@@ -77,7 +77,9 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
   );
 
   useEffect(() => {
-    void load(ROOT);
+    queueMicrotask(() => {
+      void load(ROOT);
+    });
   }, [load]);
 
   const toggle = (path: string[]): void => {

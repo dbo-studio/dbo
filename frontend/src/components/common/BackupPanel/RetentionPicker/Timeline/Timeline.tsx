@@ -20,6 +20,7 @@ export default function Timeline({ cadence, retention }: { cadence: PlanCadence;
       <TimelineStripStyled>
         {cells.map((kept, d) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: the strip is fixed, one cell per day
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- same as biome above
           <TimelineCellStyled key={d} kept={kept} />
         ))}
       </TimelineStripStyled>

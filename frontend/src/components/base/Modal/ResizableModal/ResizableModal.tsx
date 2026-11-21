@@ -3,6 +3,7 @@ import {
   ResizeHandle
 } from '@/components/base/Modal/ResizableModal/ResizableModal.styled.ts';
 import { useScopedSelectAll } from '@/hooks';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { type JSX, useEffect, useRef, useState } from 'react';
 import { ModalBodyStyled, ModalStyled } from '../Modal.styled.ts';
@@ -25,17 +26,16 @@ export default function ResizableModal({
   const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
-  const dimensionsRef = useRef(dimensions);
-  const onResizeRef = useRef(onResize);
+  const dimensionsRef = useLatestRef(dimensions);
+  const onResizeRef = useLatestRef(onResize);
   const prevOpenRef = useRef(open);
 
-  dimensionsRef.current = dimensions;
-  onResizeRef.current = onResize;
-
-  if (open && !prevOpenRef.current) {
-    setDimensions(DEFAULT_DIMENSIONS);
-  }
-  prevOpenRef.current = open;
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setDimensions(DEFAULT_DIMENSIONS);
+    }
+    prevOpenRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent): void => {
@@ -66,7 +66,7 @@ export default function ResizableModal({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing, startPosition]);
+  }, [dimensionsRef, isResizing, onResizeRef, startPosition]);
 
   const handleResizeStart = (e: React.MouseEvent<HTMLDivElement>): void => {
     const rect = (e.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();

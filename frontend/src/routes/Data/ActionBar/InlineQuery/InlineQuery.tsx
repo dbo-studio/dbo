@@ -6,7 +6,8 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box } from '@mui/material';
-import { useCallback, useRef, useState } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
+import { useCallback, useState } from 'react';
 import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 
 export default function InlineQuery() {
@@ -15,12 +16,11 @@ export default function InlineQuery() {
   const tabInlineQuery = selectedTab?.inlineQuery ?? '';
   const [value, setValue] = useState(tabInlineQuery);
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
-  const latestQueryRef = useRef(tabInlineQuery);
+  const latestQueryRef = useLatestRef(tabInlineQuery);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
     setValue(tabInlineQuery);
-    latestQueryRef.current = tabInlineQuery;
   }
 
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);

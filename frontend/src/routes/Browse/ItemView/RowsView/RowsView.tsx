@@ -36,6 +36,7 @@ export default function RowsView({
         </TableHead>
         <TableBody>
           {draft.map((r, i) => (
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- row order is the identity while editing
             <TableRow key={i}>
               <TableCell>
                 {keyed ? <Cell value={r[0]} editable={editable} onChange={(v): void => setCell(i, 0, v)} /> : i}

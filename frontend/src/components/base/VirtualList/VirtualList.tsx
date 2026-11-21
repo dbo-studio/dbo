@@ -1,6 +1,6 @@
 import { VIRTUAL_LIST_THRESHOLD, useVirtualList } from '@/hooks/useVirtualList';
 import { Box } from '@mui/material';
-import { type JSX, type ReactNode, type RefObject, useEffect } from 'react';
+import { type JSX, type ReactNode, type RefObject, useEffect, useLayoutEffect, useState } from 'react';
 
 type VirtualListProps<T> = {
   items: T[];
@@ -62,12 +62,17 @@ function VirtualizedList<T>({
   renderItem,
   activeIndex
 }: VirtualListProps<T>): JSX.Element {
+  const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    setScrollElement(scrollElementRef.current);
+  }, [scrollElementRef]);
+
   const { parentRef, virtualItems, virtualizer } = useVirtualList({
     count: items.length,
     estimateSize,
     gap,
     overscan: 12,
-    scrollElementRef
+    scrollElement
   });
 
   // A row far outside the window is not rendered, so the virtualizer has to bring it in.

@@ -19,6 +19,7 @@ export default function TableValueView({ item }: { item: NoSQLItem }): JSX.Eleme
         </TableHead>
         <TableBody>
           {rows.map((r, i) => (
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- read-only preview rows lack stable ids
             <TableRow key={i}>
               {cols.map((c) => (
                 <TableCell key={c}>{cellText(r[c])}</TableCell>

@@ -26,7 +26,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
   const [stuck, setStuck] = useState(true);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const seq = useRef(0);
+  const seqRef = useRef(0);
   // Read inside the stream callback, which outlives the render that created it.
   const pausedRef = useRef(false);
 
@@ -53,7 +53,7 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         controller.signal,
         (msg) => {
           if (msg.type === 'message' && !pausedRef.current) {
-            setMessages((prev) => [...prev.slice(-(MAX_MESSAGES - 1)), { ...msg, id: seq.current++, at: Date.now() }]);
+            setMessages((prev) => [...prev.slice(-(MAX_MESSAGES - 1)), { ...msg, id: seqRef.current++, at: Date.now() }]);
           }
         }
       )

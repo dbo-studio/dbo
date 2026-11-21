@@ -23,7 +23,9 @@ type Props = {
 
 export default function ConnectorForm({ kind, connector, initialType, onClose, onSaved }: Props): JSX.Element {
   const types = CONNECTOR_TYPES.filter((t) => t.kind === kind);
-  const [spec, setSpec] = useState<ConnectorTypeSpec>(specOf(connector?.type ?? initialType ?? '') ?? types[0]);
+  const [spec, setSpec] = useState<ConnectorTypeSpec>(
+    () => specOf(connector?.type ?? initialType ?? '') ?? types[0]
+  );
   const [name, setName] = useState(connector?.name ?? '');
   const [config, setConfig] = useState<Record<string, string | number | boolean>>(connector?.config ?? {});
   const [secrets, setSecrets] = useState<Record<string, string>>({});

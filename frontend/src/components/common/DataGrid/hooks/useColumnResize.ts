@@ -1,5 +1,5 @@
 import type { ColumnType } from '@/types';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 type UseColumnResizeProps = {
   columns: ColumnType[];
@@ -68,19 +68,24 @@ export function useColumnResize({
     }));
   }, []);
 
-  const handleMouseUp = useCallback(() => {
-    if (isResizingRef.current && resizingColumnIdRef.current && onColumnResize) {
-      onColumnResize(columnSizesRef.current);
-    }
+  const onEndResizeRef = useRef<() => void>(() => {});
+  const onEndResize = useMemo(() => () => onEndResizeRef.current(), []);
 
-    setIsResizing(false);
-    setResizingColumnId(null);
+  useLayoutEffect(() => {
+    onEndResizeRef.current = (): void => {
+      if (isResizingRef.current && resizingColumnIdRef.current && onColumnResize) {
+        onColumnResize(columnSizesRef.current);
+      }
 
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    document.removeEventListener('touchmove', handleTouchMove);
-    document.removeEventListener('touchend', handleMouseUp);
-  }, [handleMouseMove, handleTouchMove, onColumnResize]);
+      setIsResizing(false);
+      setResizingColumnId(null);
+
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', onEndResize);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', onEndResize);
+    };
+  }, [handleMouseMove, handleTouchMove, onColumnResize, onEndResize]);
 
   const startResize = useCallback(
     (columnId: string, event: React.MouseEvent | React.TouchEvent) => {
@@ -95,23 +100,23 @@ export function useColumnResize({
       setResizingColumnId(columnId);
 
       document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mouseup', onEndResize);
       document.addEventListener('touchmove', handleTouchMove);
-      document.addEventListener('touchend', handleMouseUp);
+      document.addEventListener('touchend', onEndResize);
 
       event.preventDefault();
     },
-    [defaultColumnWidth, handleMouseMove, handleMouseUp, handleTouchMove]
+    [defaultColumnWidth, handleMouseMove, handleTouchMove, onEndResize]
   );
 
   useEffect(() => {
     return (): void => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', onEndResize);
       document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleMouseUp);
+      document.removeEventListener('touchend', onEndResize);
     };
-  }, [handleMouseMove, handleMouseUp, handleTouchMove]);
+  }, [handleMouseMove, handleTouchMove, onEndResize]);
 
   return {
     columnSizes,

@@ -80,17 +80,6 @@ export default function Query(): JSX.Element {
       .catch(() => undefined);
   }, [selectedTab?.id, connectionId]);
 
-  useShortcut(shortcuts.runQuery, () => {
-    if (!isDataFetching) {
-      void runQuery();
-    }
-  });
-  useShortcut(shortcuts.cancelQuery, () => {
-    if (isDataFetching) {
-      cancelRunningQuery();
-    }
-  });
-
   const { data: autocomplete } = useQuery({
     queryKey: ['autocomplete', currentConnection?.id, sessionDatabase, sessionSchema],
     queryFn: async (): Promise<AutoCompleteType> =>
@@ -193,6 +182,17 @@ export default function Query(): JSX.Element {
     const selectedQuery = sqlEditorRef.current?.getSelectedQuery();
     await executeRawQuery(selectedQuery === '' ? undefined : selectedQuery);
   };
+
+  useShortcut(shortcuts.runQuery, () => {
+    if (!isDataFetching) {
+      void runQuery();
+    }
+  });
+  useShortcut(shortcuts.cancelQuery, () => {
+    if (isDataFetching) {
+      cancelRunningQuery();
+    }
+  });
 
   const handleAiExplain = (): void => {
     const sql = sqlEditorRef.current?.getSelectedQuery()?.trim();

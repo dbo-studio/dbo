@@ -148,7 +148,7 @@ export default function UriSqlForm({
       onSubmit={(e): void => {
         e.preventDefault();
         e.stopPropagation();
-        form.state.values.isPing = false;
+        void form.setFieldValue('isPing', false);
         void form.handleSubmit();
       }}
     >
@@ -366,7 +366,7 @@ export default function UriSqlForm({
           loadingPosition='start'
           loading={pingLoading}
           onClick={(): void => {
-            form.state.values.isPing = true;
+            void form.setFieldValue('isPing', true);
             void form.handleSubmit();
           }}
           variant='outlined'

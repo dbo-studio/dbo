@@ -5,7 +5,8 @@ import { isDatabasePath, useOpenDatabaseFile } from '@/hooks/useOpenDatabaseFile
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { open } from '@tauri-apps/plugin-dialog';
-import { useEffect, useRef } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 const isSqlPath = (path: string): boolean => path.toLowerCase().endsWith('.sql');
@@ -54,8 +55,7 @@ export const pickAndOpenSqlFile = async (): Promise<void> => {
 export const useDesktopOpenFiles = (): void => {
   const { openDatabaseFile } = useOpenDatabaseFile();
   // The listener is registered once; the ref keeps it calling the latest handler.
-  const openDatabaseRef = useRef(openDatabaseFile);
-  openDatabaseRef.current = openDatabaseFile;
+  const openDatabaseRef = useLatestRef(openDatabaseFile);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -104,5 +104,5 @@ export const useDesktopOpenFiles = (): void => {
       unlisten?.();
       unlistenDrop?.();
     };
-  }, []);
+  }, [openDatabaseRef]);
 };

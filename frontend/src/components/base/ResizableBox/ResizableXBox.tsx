@@ -1,5 +1,6 @@
 import type { EventFor } from '@/types';
-import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
+import { useLatestRef } from '@/hooks/useLatestRef';
+import { type JSX, useCallback, useEffect, useState } from 'react';
 import { ResizableXBoxStyled } from './ResizableXBox.styled';
 import ResizableToggle from './ResizableToggle';
 import type { ResizableBoxXProps } from './types';
@@ -17,7 +18,7 @@ export default function ResizableXBox({
   const [boxWidth, setBoxWidth] = useState(width);
   const [isResizing, setIsResizing] = useState(false);
   const [initialX, setInitialX] = useState(0);
-  const currentWidthRef = useRef(boxWidth);
+  const currentWidthRef = useLatestRef(boxWidth);
   const [prevWidth, setPrevWidth] = useState(width);
 
   // Follow the prop (reset, restored setting) unless the user is dragging.
@@ -25,8 +26,6 @@ export default function ResizableXBox({
     setPrevWidth(width);
     if (!isResizing) setBoxWidth(width);
   }
-
-  currentWidthRef.current = boxWidth;
 
   const handleMouseDown = (event: EventFor<'div', 'onMouseDown'>): void => {
     event.preventDefault();
@@ -46,7 +45,7 @@ export default function ResizableXBox({
       }
     }
     setIsResizing(false);
-  }, [isResizing, maxWidth, onChange]);
+  }, [currentWidthRef, isResizing, maxWidth, onChange]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent): void => {
@@ -64,7 +63,7 @@ export default function ResizableXBox({
 
       setInitialX(event.clientX);
     },
-    [boxWidth, direction, initialX, isResizing, maxWidth]
+    [boxWidth, currentWidthRef, direction, initialX, isResizing, maxWidth]
   );
 
   useEffect(() => {

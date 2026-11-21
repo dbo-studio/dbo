@@ -34,12 +34,6 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const addEditorTab = useTabStore((state) => state.addEditorTab);
 
-  useShortcut(shortcuts.reloadTab, () => void handleRefresh());
-
-  const handleAddEditorTab = (): void => {
-    addEditorTab();
-  };
-
   const handleRefresh = async (): Promise<void> => {
     const selectedTab = useTabStore.getState().selectedTab();
 
@@ -64,6 +58,12 @@ export default function ConnectionInfo({ compact = false }: ConnectionInfoProps)
     if (selectedTab?.mode === TabMode.Data) {
       toggleReRunQuery();
     }
+  };
+
+  useShortcut(shortcuts.reloadTab, () => void handleRefresh());
+
+  const handleAddEditorTab = (): void => {
+    addEditorTab();
   };
 
   return (

@@ -46,12 +46,11 @@ export default function SqlSnippets(): JSX.Element {
     >
       <Search onChange={setSearch} />
       <SnippetChipsStyled>
-        <Chip label='All' size='small' color={group ? 'default' : 'primary'} onClick={(): void => setGroup(null)} />
+        <Chip label='All' color={group ? 'default' : 'primary'} onClick={(): void => setGroup(null)} />
         {snippets.map((g) => (
           <Chip
             key={g.group}
             label={g.group}
-            size='small'
             color={group === g.group ? 'primary' : 'default'}
             onClick={(): void => setGroup(group === g.group ? null : g.group)}
           />
@@ -75,7 +74,6 @@ export default function SqlSnippets(): JSX.Element {
                   <Stack direction='row' className='snippet-actions'>
                     <Tooltip title={locales.ai_changes_copy}>
                       <IconButton
-                        size='small'
                         aria-label={locales.ai_changes_copy}
                         onClick={(): void => {
                           void navigator.clipboard.writeText(sql).then(() => toast.success(locales.ai_changes_copied));
@@ -87,7 +85,6 @@ export default function SqlSnippets(): JSX.Element {
                     {canOpen && (
                       <Tooltip title={locales.ai_changes_open_query}>
                         <IconButton
-                          size='small'
                           aria-label={locales.ai_changes_open_query}
                           onClick={(): void => {
                             useTabStore.getState().addEditorTab(sql, { forceNew: true });

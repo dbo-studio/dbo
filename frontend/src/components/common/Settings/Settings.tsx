@@ -194,11 +194,14 @@ export default function Settings(): JSX.Element {
     }
   }
 
-  if (settingsTab?.query != null && settingsTab.query !== appliedExternalQueryRef.current) {
-    appliedExternalQueryRef.current = settingsTab.query;
-    setSearchQuery(settingsTab.query);
-    setActiveResultIndex(0);
-  }
+  useEffect(() => {
+    const query = settingsTab?.query;
+    if (query != null && query !== appliedExternalQueryRef.current) {
+      appliedExternalQueryRef.current = query;
+      setSearchQuery(query);
+      setActiveResultIndex(0);
+    }
+  }, [settingsTab?.query]);
 
   useEffect(() => {
     const id = settingsTab?.highlightId;

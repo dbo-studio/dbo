@@ -9,6 +9,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTheme } from '@mui/material';
 import { Terminal, useTerminal } from '@wterm/react';
 import '@wterm/react/css';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import { type JSX, useEffect, useRef } from 'react';
 import { bold, cyan, dim, formatResult, red, sanitize } from './format';
 
@@ -63,11 +64,11 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
     palette.text.primary
   ];
 
-  const { ref, write, focus } = useTerminal();
-  const line = useRef('');
-  const pending = useRef(''); // SQL statement lines collected so far
-  const cursor = useRef<number | null>(null); // position in history while browsing it
-  const running = useRef<AbortController | null>(null);
+  const { ref: terminalRef, write, focus } = useTerminal();
+  const lineRef = useRef('');
+  const pendingRef = useRef(''); // SQL statement lines collected so far
+  const historyCursorRef = useRef<number | null>(null); // position in history while browsing it
+  const runningRef = useRef<AbortController | null>(null);
 
   const history = (): string[] => {
     const list = histories.get(connectionId) ?? [];
@@ -75,15 +76,15 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
     return list;
   };
 
-  const prompt = (): string => (pending.current ? dim('    -> ') : bold(cyan(`${sanitize(label)}`)) + bold('> '));
+  const prompt = (): string => (pendingRef.current ? dim('    -> ') : bold(cyan(`${sanitize(label)}`)) + bold('> '));
 
   const showPrompt = (): void => write(`\r\n${prompt()}`);
 
-  const redraw = (): void => write(`\r\u001b[2K${prompt()}${line.current}`);
+  const redraw = (): void => write(`\r\u001b[2K${prompt()}${lineRef.current}`);
 
   const run = async (input: string): Promise<void> => {
     const controller = new AbortController();
-    running.current = controller;
+    runningRef.current = controller;
 
     try {
       const result = await withSafeModeRetry((confirmed) =>
@@ -107,28 +108,28 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
         write(red(sanitize(message ?? locales.action_failed)));
       }
     } finally {
-      running.current = null;
+      runningRef.current = null;
       showPrompt();
     }
   };
 
   const submit = (): void => {
-    const text = line.current.trim();
-    line.current = '';
-    cursor.current = null;
+    const text = lineRef.current.trim();
+    lineRef.current = '';
+    historyCursorRef.current = null;
 
-    if (!text && !pending.current) {
+    if (!text && !pendingRef.current) {
       showPrompt();
       return;
     }
 
-    if (!pending.current && text === 'clear') {
+    if (!pendingRef.current && text === 'clear') {
       write('\u001b[2J\u001b[H');
       write(prompt());
       return;
     }
 
-    if (!pending.current && text === 'help') {
+    if (!pendingRef.current && text === 'help') {
       write(`\r\n${locales.cli_help}`);
       showPrompt();
       return;
@@ -136,13 +137,13 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
 
     // SQL runs when the statement ends with `;`; until then lines are collected.
     if (engine === 'sql' && !text.endsWith(';')) {
-      pending.current = `${pending.current}${text}\n`;
+      pendingRef.current = `${pendingRef.current}${text}\n`;
       write(`\r\n${prompt()}`);
       return;
     }
 
-    const input = `${pending.current}${text}`.trim();
-    pending.current = '';
+    const input = `${pendingRef.current}${text}`.trim();
+    pendingRef.current = '';
 
     const list = history();
     if (list[list.length - 1] !== input) list.push(input);
@@ -155,19 +156,19 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
   const recall = (dir: -1 | 1): void => {
     const list = history();
     if (list.length === 0) return;
-    const next = Math.min(Math.max((cursor.current ?? list.length) + dir, 0), list.length);
-    cursor.current = next;
-    line.current = list[next] ?? '';
+    const next = Math.min(Math.max((historyCursorRef.current ?? list.length) + dir, 0), list.length);
+    historyCursorRef.current = next;
+    lineRef.current = list[next] ?? '';
     redraw();
   };
 
-  const started = useRef(false);
+  const startedRef = useRef(false);
 
   /** Applies a command handed over from outside (a chat code block): run it, or leave it on the prompt. */
   const applyPending = (): void => {
     const store = useDataStore.getState();
     const pendingCommand = store.pendingTerminalCommand;
-    if (!pendingCommand || !started.current || running.current) return;
+    if (!pendingCommand || !startedRef.current || runningRef.current) return;
     store.clearPendingTerminalCommand();
 
     const lines = pendingCommand.command
@@ -177,7 +178,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
     if (lines.length === 0) return;
 
     if (!pendingCommand.run) {
-      line.current = lines[0];
+      lineRef.current = lines[0];
       redraw();
       return;
     }
@@ -191,25 +192,24 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
       }
     })();
   };
-  const applyPendingRef = useRef(applyPending);
-  applyPendingRef.current = applyPending;
+  const applyPendingRef = useLatestRef(applyPending);
   const pendingCommand = useDataStore((s) => s.pendingTerminalCommand);
 
   useEffect(() => {
     if (pendingCommand) applyPendingRef.current();
-  }, [pendingCommand]);
+  }, [applyPendingRef, pendingCommand]);
 
   const start = (): void => {
-    if (started.current) return;
-    started.current = true;
+    if (startedRef.current) return;
+    startedRef.current = true;
     write(`${dim(locales.cli_welcome)}\r\n${prompt()}`);
     applyPendingRef.current();
   };
 
   const handleData = (data: string): void => {
     // A running statement only accepts Ctrl+C.
-    if (running.current) {
-      if (data === KEY.ctrlC) running.current.abort();
+    if (runningRef.current) {
+      if (data === KEY.ctrlC) runningRef.current.abort();
       return;
     }
 
@@ -217,7 +217,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
     // flattened to one line and shown, never executed: the user reviews it and presses Enter.
     if (data.length > 1 && !data.startsWith('\u001b')) {
       const text = sanitize(data.replace(/[\r\n]+/g, ' '));
-      line.current += text;
+      lineRef.current += text;
       write(text);
       return;
     }
@@ -227,23 +227,23 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
         submit();
         return;
       case KEY.backspace:
-        if (line.current) {
-          line.current = line.current.slice(0, -1);
+        if (lineRef.current) {
+          lineRef.current = lineRef.current.slice(0, -1);
           write('\b \b');
         }
         return;
       case KEY.ctrlC:
-        line.current = '';
-        pending.current = '';
+        lineRef.current = '';
+        pendingRef.current = '';
         write(red('^C'));
         showPrompt();
         return;
       case KEY.ctrlL:
         write('\u001b[2J\u001b[H');
-        write(`${prompt()}${line.current}`);
+        write(`${prompt()}${lineRef.current}`);
         return;
       case KEY.ctrlU:
-        line.current = '';
+        lineRef.current = '';
         redraw();
         return;
       case KEY.up:
@@ -255,7 +255,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
       default:
         // Printable single characters only; control characters and unknown escapes are dropped.
         if (data.length === 1 && data >= ' ' && data !== '\u007f') {
-          line.current += data;
+          lineRef.current += data;
           write(data);
         }
     }
@@ -264,7 +264,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
   // Leaving the tab cancels a running statement server-side (the request context is aborted).
   useEffect(
     () => (): void => {
-      running.current?.abort();
+      runningRef.current?.abort();
     },
     []
   );
@@ -275,7 +275,7 @@ export default function DbTerminal({ connectionId, engine, label }: DbTerminalPr
 
   return (
     <Terminal
-      ref={ref}
+      ref={terminalRef}
       autoResize
       cursorBlink
       webmcp={false}

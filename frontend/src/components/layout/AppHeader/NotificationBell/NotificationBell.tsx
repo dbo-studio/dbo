@@ -9,7 +9,7 @@ import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { variables } from '@/core/theme/variables';
 import { Badge, Button, IconButton, Popover, Tooltip, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, type JSX } from 'react';
+import { useRef, useState, type JSX } from 'react';
 import { useNotificationPanelStore } from '@/store/notificationPanel/notificationPanel.store';
 import {
   NotificationBodyStyled,
@@ -29,8 +29,11 @@ export default function NotificationBell(): JSX.Element {
   const panelOpen = useNotificationPanelStore((s) => s.open);
   const setPanelOpen = useNotificationPanelStore((s) => s.setOpen);
   const bellRef = useRef<HTMLButtonElement>(null);
-  const anchor = panelOpen ? bellRef.current : null;
-  const setAnchor = (el: HTMLElement | null): void => setPanelOpen(el !== null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const setAnchor = (el: HTMLElement | null): void => {
+    setAnchorEl(el);
+    setPanelOpen(el !== null);
+  };
   const { data } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => api.notification.list(),
@@ -65,8 +68,8 @@ export default function NotificationBell(): JSX.Element {
         </IconButton>
       </Tooltip>
       <Popover
-        open={!!anchor}
-        anchorEl={anchor}
+        open={panelOpen}
+        anchorEl={(): HTMLElement | null => anchorEl ?? bellRef.current}
         onClose={() => setAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}

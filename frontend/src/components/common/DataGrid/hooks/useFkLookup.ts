@@ -145,7 +145,7 @@ export function useFkLookup({ column, enabled }: UseFkLookupArgs): UseFkLookupRe
         }
       }
     },
-    [canLookup, column, currentConnection?.id, nodeId, referencedColumnsKey]
+    [canLookup, column, currentConnection, nodeId, referencedColumnsKey]
   );
 
   const search = useCallback(
@@ -164,7 +164,9 @@ export function useFkLookup({ column, enabled }: UseFkLookupArgs): UseFkLookupRe
     if (!enabled || !canLookup) {
       return;
     }
-    void fetchOptions('');
+    queueMicrotask(() => {
+      void fetchOptions('');
+    });
     return () => {
       abortRef.current?.abort();
       if (debounceRef.current) {

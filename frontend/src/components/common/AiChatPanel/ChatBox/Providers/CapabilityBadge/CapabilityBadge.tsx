@@ -1,7 +1,6 @@
 import { formatContextWindow, getModelCapabilities } from '@/core/ai/modelCapabilities';
 import locales from '@/locales';
 import type { AiProviderType } from '@/types';
-import { Chip } from '@mui/material';
 import type { JSX } from 'react';
 import { CapabilityBadgeChipStyled } from './CapabilityBadge.styled';
 

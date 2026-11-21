@@ -1,5 +1,5 @@
 import { ClickAwayListener, Popper, Typography } from '@mui/material';
-import { useCallback, useMemo, useRef, useState, type JSX } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type JSX } from 'react';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import { valueToEditorString } from '@/core/utils/dataValue';
 import {
@@ -79,8 +79,13 @@ export default function DateTimePicker({
     setViewMonth(nextParts.month);
     setOffsetSuffix(mode === 'date' ? '' : extractOffsetSuffix(valueToEditorString(value).replace('T', ' ')));
     setValidationError(null);
-    committedDraftRef.current = nextDraft;
   }
+
+  useLayoutEffect(() => {
+    if (value !== syncedValue && !open) {
+      committedDraftRef.current = formatTemporalDraft(value, mode);
+    }
+  }, [mode, open, syncedValue, value]);
 
   const showCalendar = mode === 'date' || mode === 'datetime';
   const showTime = mode === 'time' || mode === 'datetime';
@@ -286,7 +291,7 @@ export default function DateTimePicker({
 
         <Popper
           open={open}
-          anchorEl={fieldRef.current}
+          anchorEl={(): HTMLElement => fieldRef.current as HTMLElement}
           placement='bottom-start'
           style={{ zIndex: 1400 }}
           modifiers={[{ name: 'offset', options: { offset: [0, 4] } }]}

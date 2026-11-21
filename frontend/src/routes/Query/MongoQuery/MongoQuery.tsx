@@ -13,6 +13,7 @@ import { canUseCli } from '@/core/auth/permissions';
 import { shortcuts } from '@/core/utils';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection, useSelectedTab } from '@/hooks';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { useSettingStore } from '@/store/settingStore/setting.store';
@@ -159,8 +160,7 @@ export default function MongoQuery(): JSX.Element {
   const table = useMemo(() => (outcome?.docs ? toTable(outcome.docs) : undefined), [outcome]);
   const { askAboutSelection, askAboutError } = useAiBridge();
   // Editor actions are registered once at mount; keep them pointing at the latest bridge.
-  const askRef = useRef(askAboutSelection);
-  askRef.current = askAboutSelection;
+  const askRef = useLatestRef(askAboutSelection);
 
   const download = (kind: 'json' | 'csv'): void => {
     setExportAnchor(null);
@@ -198,7 +198,7 @@ export default function MongoQuery(): JSX.Element {
     if (text) askAboutSelection(text, 'explain');
   };
 
-  const controller = useRef<AbortController | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
   const run = async (override?: string): Promise<void> => {
     const editor = editorRef.current;
@@ -208,7 +208,7 @@ export default function MongoQuery(): JSX.Element {
     if (!input || running) return;
 
     const abort = new AbortController();
-    controller.current = abort;
+    controllerRef.current = abort;
     setRunning(true);
     let next: Outcome;
     try {
@@ -231,7 +231,7 @@ export default function MongoQuery(): JSX.Element {
         ? { text: locales.query_cancelled, error: true }
         : { text: errorText(e), error: true, input };
     }
-    controller.current = null;
+    controllerRef.current = null;
     outcomes.set(tabId, next);
     setOutcome(next);
     setRunning(false);
@@ -242,16 +242,20 @@ export default function MongoQuery(): JSX.Element {
   const clearPending = useDataStore((s) => s.clearPendingEditorQueryRun);
 
   // The editor action is bound once at mount; keep it pointing at the latest run.
-  const runRef = useRef(run);
-  runRef.current = run;
+  const runRef = useLatestRef(run);
 
   useEffect(() => {
     if (!pending || pending.tabId !== tab?.id) return;
     clearPending();
-    setValue(pending.query);
-    updateQuery(pending.query, tab.id);
-    if (pending.run) void runRef.current(pending.query);
-  }, [pending, tab?.id, clearPending, updateQuery]);
+
+    const runPending = async (): Promise<void> => {
+      setValue(pending.query);
+      updateQuery(pending.query, tab.id);
+      if (pending.run) await runRef.current(pending.query);
+    };
+
+    void runPending();
+  }, [pending, tab?.id, clearPending, runRef, updateQuery]);
 
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -287,7 +291,7 @@ export default function MongoQuery(): JSX.Element {
     <>
       <QueryEditorActionBar
         loading={running}
-        onStop={(): void => controller.current?.abort()}
+        onStop={(): void => controllerRef.current?.abort()}
         databases={databases}
         schemas={[]}
         onFormat={(): void => undefined}

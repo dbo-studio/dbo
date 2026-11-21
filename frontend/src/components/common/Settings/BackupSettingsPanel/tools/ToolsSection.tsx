@@ -105,6 +105,7 @@ function DriverCard({
       onSettled();
     }
     // biome-ignore lint/correctness/useExhaustiveDependencies: settle once when the job finishes
+    // eslint-disable-next-line @eslint-react/exhaustive-deps, react-hooks/exhaustive-deps -- same as biome above
   }, [job?.status]);
 
   const startInstall = async (): Promise<void> => {

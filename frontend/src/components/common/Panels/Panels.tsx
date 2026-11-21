@@ -10,7 +10,7 @@ import { useShortcut } from '@/hooks';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { selectTabs, useTabStore } from '@/store/tabStore/tab.store';
 import { isSplitActive } from '@/store/tabStore/tabs';
-import { type JSX, useCallback, useRef } from 'react';
+import { type JSX, useCallback, useEffect, useRef, useState } from 'react';
 
 const SECONDARY_WIDTH_KEY = 'split-pane-width';
 const MIN_PANE_WIDTH = 240;
@@ -48,7 +48,21 @@ export default function Panels(): JSX.Element {
 
   useShortcut(shortcuts.newTab, addNewEmptyTab);
 
-  const containerWidth = containerRef.current?.clientWidth ?? 0;
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const update = (): void => setContainerWidth(element.clientWidth);
+    update();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+      return () => window.removeEventListener('resize', update);
+    }
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(element);
+    return () => resizeObserver.disconnect();
+  }, [split]);
+
   const maxWidth = Math.max(MIN_PANE_WIDTH, containerWidth - MIN_PANE_WIDTH);
 
   return (

@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { JSX } from 'react';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { SortableItemProps } from '../types';
 import { SortableItemStyled } from './SortableItem.styled';
 
@@ -58,11 +58,13 @@ function SortableItem({
     [onClick, isDragging, disabled]
   );
 
-  if (isDragging) {
-    hasMovedRef.current = true;
-  } else if (!isDragging && hasMovedRef.current) {
-    hasMovedRef.current = false;
-  }
+  useEffect(() => {
+    if (isDragging) {
+      hasMovedRef.current = true;
+    } else if (hasMovedRef.current) {
+      hasMovedRef.current = false;
+    }
+  }, [isDragging]);
 
   return (
     <SortableItemStyled

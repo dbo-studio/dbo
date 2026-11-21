@@ -23,6 +23,8 @@ export type Command = {
   run: () => void;
 };
 
+const EMPTY_CONNECTIONS: NonNullable<ReturnType<typeof useConnectionStore.getState>['connections']> = [];
+
 const toggleSidebar = (side: 'showLeft' | 'showRight'): void => {
   const { sidebar } = useSettingStore.getState().ui;
   useSettingStore.getState().updateUI({ sidebar: { ...sidebar, [side]: !sidebar[side] } });
@@ -31,7 +33,7 @@ const toggleSidebar = (side: 'showLeft' | 'showRight'): void => {
 /** Everything the palette can run, filtered by the query. Objects come from the server's tree search. */
 export function useCommands(query: string): Command[] {
   const connection = useCurrentConnection();
-  const connections = useConnectionStore((s) => s.connections) ?? [];
+  const connections = useConnectionStore((s) => s.connections) ?? EMPTY_CONNECTIONS;
   const { switchConnection } = useSwitchConnection();
   const { data: schedules = [] } = useQuery({ queryKey: ['backup-schedules'], queryFn: api.backup.schedules });
   const q = useDeferredValue(query.trim());

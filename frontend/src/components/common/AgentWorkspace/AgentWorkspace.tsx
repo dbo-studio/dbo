@@ -7,6 +7,7 @@ import { useChatActivity } from '@/components/common/AiChatPanel/hooks/useChatAc
 import { reportFromTrace } from '@/components/common/AiChatPanel/utils/chartReport';
 import { resultFromTrace } from '@/components/common/AiChatPanel/utils/queryResult';
 import { useChangesetReview } from '@/hooks';
+import { useLatestRef } from '@/hooks/useLatestRef';
 import locales from '@/locales';
 import { shortcuts } from '@/core/utils/shortcuts';
 import { useShortcut } from '@/hooks/useShortcut';
@@ -88,8 +89,7 @@ export default function AgentWorkspace(): JSX.Element {
     );
   const focusKey =
     focus?.kind === 'diagram_diff' ? `changeset-${focus.changesetId}` : focus?.kind === 'tool' ? focus.trace.id : '';
-  const focusRef = useRef(focus);
-  focusRef.current = focus;
+  const focusRef = useLatestRef(focus);
 
   // Another chat starts with its own tabs: its newest artifact.
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function AgentWorkspace(): JSX.Element {
       const report = reportFromTrace(item.trace);
       if (report) canvas.showReport(report);
     }
-  }, [focusKey, currentChat?.id]);
+  }, [currentChat?.id, focusKey, focusRef]);
 
   const updateUI = useSettingStore((state) => state.updateUI);
 

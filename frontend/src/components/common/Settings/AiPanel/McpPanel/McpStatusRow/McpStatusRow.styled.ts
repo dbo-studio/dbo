@@ -1,5 +1,5 @@
 import { variables } from '@/core/theme/variables';
-import { type Theme, alpha } from '@mui/material';
+import type { Theme } from '@mui/material';
 
 export const monoChipSx = (theme: Theme) => ({
   maxWidth: '100%',

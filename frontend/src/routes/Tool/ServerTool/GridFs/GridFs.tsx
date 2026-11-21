@@ -1,7 +1,5 @@
 import api from '@/api';
-import FieldInput from '@/components/base/FieldInput/FieldInput';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
-import type { SelectInputOption } from '@/components/base/SelectInput/types';
 import { formatBytes } from '@/core/utils/formatBytes';
 import { tools } from '@/core/utils/tools';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';

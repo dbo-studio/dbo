@@ -18,7 +18,10 @@ export default function FilterItem({
   apply,
   operators = PgsqlFilterConditions
 }: FilterItemProps): JSX.Element {
-  const requires = (operator: string): boolean => operators.find((c) => c.value === operator)?.requiresValue ?? true;
+  const requires = useCallback(
+    (operator: string): boolean => operators.find((c) => c.value === operator)?.requiresValue ?? true,
+    [operators]
+  );
   const upsertFilters = useTabStore((state) => state.upsertFilters);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>({
@@ -72,7 +75,7 @@ export default function FilterItem({
       setCurrentFilter(newFilter);
       return newFilter;
     },
-    [currentFilter]
+    [currentFilter, requires]
   );
 
   const commitValue = (raw: string): FilterType => {

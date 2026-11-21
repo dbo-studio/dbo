@@ -20,7 +20,7 @@ export default function DropDownMenu({ open, onClose, anchorRef, children }: Dro
   return (
     <Popper
       open={open}
-      anchorEl={anchorRef?.current}
+      anchorEl={anchorRef ? (): HTMLElement => anchorRef.current as HTMLElement : undefined}
       role='menu'
       placement='top-start'
       transition

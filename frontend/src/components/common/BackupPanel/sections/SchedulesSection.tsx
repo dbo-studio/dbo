@@ -8,7 +8,7 @@ import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
 import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { Alert, Box, Button, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type JSX, useEffect, useState } from 'react';
+import { type JSX, useCallback, useEffect, useState } from 'react';
 import { isFinished, useJobEventsStore } from '@/store/jobEvents/jobEvents.store';
 import RestoreConfirm from '../RestoreConfirm';
 import { JobProgressModal } from '../../JobProgressModal/JobProgressModal';
@@ -53,16 +53,18 @@ export default function SchedulesSection({ tab }: { tab: BackupTabType }): JSX.E
     queryFn: api.backup.schedules
   });
 
-  const refresh = (): void => void queryClient.invalidateQueries({ queryKey: ['backup-schedules'] });
+  const refresh = useCallback(
+    (): void => void queryClient.invalidateQueries({ queryKey: ['backup-schedules'] }),
+    [queryClient]
+  );
 
   // A scheduled run ends on the server; the job stream tells this screen to reload instead of a timer.
   const finishedBackups = useJobEventsStore(
     (s) => Object.values(s.jobs).filter((j) => j.type === 'backup' && isFinished(j.status)).length
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reload only when the count of finished backups changes
   useEffect(() => {
     if (finishedBackups > 0) refresh();
-  }, [finishedBackups]);
+  }, [finishedBackups, refresh]);
   const connectionName = (id: number): string => connections.find((c) => c.id === id)?.name ?? `#${id}`;
   const failing = jobs.filter((j) => j.enabled && j.lastStatus === 'failed');
 

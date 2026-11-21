@@ -79,7 +79,9 @@ export const useSetupDesktop = (): DesktopBootState => {
   }, [reset]);
 
   useEffect(() => {
-    void runSetup();
+    queueMicrotask(() => {
+      void runSetup();
+    });
 
     return () => {
       cancelledRef.current = true;

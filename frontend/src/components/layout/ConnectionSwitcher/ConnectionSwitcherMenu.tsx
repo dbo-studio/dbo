@@ -19,6 +19,8 @@ import {
   SwitcherSearchStyled
 } from './ConnectionSwitcher.styled';
 
+const EMPTY_CONNECTIONS: NonNullable<ReturnType<typeof useConnectionStore.getState>['connections']> = [];
+
 /** The list of connections as a popover. Shared by the sidebar switcher and the header crumb. */
 export default function ConnectionSwitcherMenu({
   anchor,
@@ -27,7 +29,7 @@ export default function ConnectionSwitcherMenu({
   anchor: HTMLElement | null;
   onClose: () => void;
 }): JSX.Element {
-  const connections = useConnectionStore((s) => s.connections) ?? [];
+  const connections = useConnectionStore((s) => s.connections) ?? EMPTY_CONNECTIONS;
   const current = useCurrentConnection();
   const { locked } = useConnectionLock();
   const { switchConnection, isSwitching, switchingId } = useSwitchConnection();
@@ -37,7 +39,7 @@ export default function ConnectionSwitcherMenu({
   const canAdd = canCreateConnection(mode, user);
   const [query, setQuery] = useState('');
   // Dropping a dragged row ends in a click on it; that click must not pick the connection.
-  const dragged = useRef(false);
+  const draggedRef = useRef(false);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -87,9 +89,9 @@ export default function ConnectionSwitcherMenu({
             getItemId={(c) => String(c.id)}
             direction='vertical'
             onDragEnd={() => {
-              dragged.current = true;
+              draggedRef.current = true;
               setTimeout(() => {
-                dragged.current = false;
+                draggedRef.current = false;
               }, 0);
             }}
             activationDistance={8}
@@ -102,7 +104,7 @@ export default function ConnectionSwitcherMenu({
                 locked={locked && c.id === current?.id}
                 onMenuClosed={close}
                 onPick={() => {
-                  if (dragged.current) return;
+                  if (draggedRef.current) return;
                   close();
                   void switchConnection(c);
                 }}

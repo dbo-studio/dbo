@@ -57,7 +57,7 @@ export default function ObjectForm(): React.JSX.Element {
       querySnippet: undefined,
       selectedQuery: undefined
     });
-  }, [currentConnection?.id, prefillChat, selectedTab, tabs]);
+  }, [currentConnection, prefillChat, selectedTab, tabs]);
 
   const { handleSave, handleCancel, handleConfirmExecute, handleClosePreview, isSaving, previewState } = useFormSave({
     tabs: tabs as ObjectTabType[],

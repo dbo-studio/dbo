@@ -1,7 +1,7 @@
 import { useFormObjectStore } from '@/store/formObject/formObject.store';
 import { FormFieldType, FormValue } from '@/types/Tree';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import React, { memo, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useMemo } from 'react';
 import { useDynamicField } from '../../hooks/useDynamicField';
 import { ArrayFormContainerStyled } from './ArrayForm.styled';
 import ArrayRow from './ArrayRow';
@@ -29,7 +29,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
   const markRowDeleted = useFormObjectStore((state) => state.markRowDeleted);
   const { getDynamicFieldStateKey, refreshDynamicField, getDynamicOptions, isLoadingDynamicField } =
     useDynamicField(objectTabId);
-  const rowKeysRef = useRef(new WeakMap<FormFieldType[], string>());
+  const rowKeys = useMemo(() => new WeakMap<FormFieldType[], string>(), []);
 
   const refreshRowDynamicFields = useCallback(
     (row: FormFieldType[], rowIndex: number, changedFieldId?: string) => {
@@ -100,7 +100,7 @@ function ArrayForm({ objectTabId }: { objectTabId: string }): React.JSX.Element 
               return (
                 <ArrayRow
                   rowIndex={rowIndex}
-                  key={getStableRowKey(rowKeysRef.current, row, rowIndex)}
+                  key={getStableRowKey(rowKeys, row, rowIndex)}
                   rows={row}
                   getDynamicFieldStateKey={getDynamicFieldStateKey}
                   getDynamicOptions={getDynamicOptions}
