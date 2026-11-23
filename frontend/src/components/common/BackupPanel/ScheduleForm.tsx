@@ -108,10 +108,7 @@ export default function ScheduleForm({
   ].filter(Boolean);
 
   const [scheduleNow] = useState(() => new Date());
-  const upcoming = useMemo(
-    () => nextRuns({ ...when, timezone }, scheduleNow, 3),
-    [scheduleNow, timezone, when]
-  );
+  const upcoming = useMemo(() => nextRuns({ ...when, timezone }, scheduleNow, 3), [scheduleNow, timezone, when]);
   const destination = destinations.find((d) => d.id === destinationId);
 
   const handleSave = async (): Promise<void> => {

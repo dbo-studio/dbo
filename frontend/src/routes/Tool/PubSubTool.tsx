@@ -53,7 +53,10 @@ export default function PubSubTool({ connectionId }: ToolProps): JSX.Element {
         controller.signal,
         (msg) => {
           if (msg.type === 'message' && !pausedRef.current) {
-            setMessages((prev) => [...prev.slice(-(MAX_MESSAGES - 1)), { ...msg, id: seqRef.current++, at: Date.now() }]);
+            setMessages((prev) => [
+              ...prev.slice(-(MAX_MESSAGES - 1)),
+              { ...msg, id: seqRef.current++, at: Date.now() }
+            ]);
           }
         }
       )

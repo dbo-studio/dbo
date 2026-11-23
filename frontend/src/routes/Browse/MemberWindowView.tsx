@@ -165,10 +165,7 @@ export default function MemberWindowView({
   };
 
   const addRow = (): void =>
-    setAdded((prev) => [
-      { id: prev.reduce((max, row) => Math.max(max, row.id), 0) + 1, key: '', value: '' },
-      ...prev
-    ]);
+    setAdded((prev) => [{ id: prev.reduce((max, row) => Math.max(max, row.id), 0) + 1, key: '', value: '' }, ...prev]);
 
   const addedReady = (r: { key: string; value: string }): boolean =>
     l.type === 'list' ? r.value !== '' : r.key !== '' && (l.type !== 'zset' || r.value !== '');

@@ -12,9 +12,7 @@ export const createAiChatSlice: StateCreator<AiChatSlice, [['zustand/devtools', 
     if (chat) {
       const chats = get().chats;
       const inTabs = chats.some((c) => c.id === chat.id);
-      const updatedChats = inTabs
-        ? chats.map((c) => (c.id === chat.id ? chat : c))
-        : [...chats, chat];
+      const updatedChats = inTabs ? chats.map((c) => (c.id === chat.id ? chat : c)) : [...chats, chat];
       set({ chats: updatedChats, currentChat: chat }, undefined, 'updateCurrentChat');
       return;
     }
