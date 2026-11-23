@@ -58,5 +58,7 @@ func (*BaseRepository) CommandResponseBuilder(queryResult *dto.RawQueryResponse,
 }
 
 func (*BaseRepository) IsQuery(query string) bool {
-	return strings.Contains(strings.ToLower(query), "select")
+	q := strings.ToLower(query)
+	// EXEC runs a stored procedure that may return rows, so keep its result set.
+	return strings.Contains(q, "select") || strings.HasPrefix(strings.TrimSpace(q), "exec")
 }

@@ -143,7 +143,7 @@ test.describe("Redis types CRUD", () => {
 
   test("delete refuses more than the batch limit", async ({ page }) => {
     const ids = Array.from({ length: 5001 }, (_, i) => `${r.s.prefix}:b${i}`);
-    expect((await r.api(page).remove(ids)).status()).toBe(400);
+    expect((await r.api(page).remove(ids)).status()).toBe(422);
   });
 
   test("a stream is read-only: save and member edits are refused", async ({ page }) => {

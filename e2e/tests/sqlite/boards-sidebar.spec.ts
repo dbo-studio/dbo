@@ -126,7 +126,7 @@ test.describe("Boards in the sidebar", () => {
           await boards.openItem(name);
           await expect(page.getByTestId("ai-report-title")).toHaveValue(name);
           await expect(page.getByTestId("ai-report-type-number")).toHaveAttribute(
-            "aria-pressed",
+            "aria-checked",
             "true",
           );
         });

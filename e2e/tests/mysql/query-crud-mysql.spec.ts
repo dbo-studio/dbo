@@ -22,7 +22,7 @@ async function setupMysqlUsersTable(
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(config);
-  await expect(connectionPage.getConnectionItem(connectionName)).toBeVisible();
+  await connectionPage.expectConnectionActive(connectionName);
   await sqlEditor.open();
   await sqlEditor.selectContext("default");
 
@@ -277,9 +277,7 @@ DROP TABLE IF EXISTS ${table1};
 
       await test.step("Create MySQL connection without a default database", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       try {

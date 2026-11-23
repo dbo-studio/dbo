@@ -41,18 +41,19 @@ test.describe("MongoDB bulk delete, recycle bin and stats", () => {
   test("a wrong or empty confirmation name deletes nothing", async ({ page }) => {
     await seed(page, 2);
     expect((await bulk(page, '{"kind":"junk"}', "nope")).status()).toBe(400);
-    expect((await bulk(page, '{"kind":"junk"}', "")).status()).toBe(400);
+    expect((await bulk(page, '{"kind":"junk"}', "")).status()).toBe(422);
     expect(((await j(await m.api(page).browse())).items as unknown[]).length).toBe(3);
   });
 
-  test("the job deletes the matches, keeps the rest and recycles what it deleted", async ({ page }) => {
+  test("the job deletes the matches, keeps the rest and recycles nothing", async ({ page }) => {
     await seed(page, 5);
     const res = await bulk(page, '{"kind":"junk"}', m.s.name);
     expect(res.ok(), await res.text()).toBeTruthy();
     await expect
       .poll(async () => ((await j(await m.api(page).browse({ limit: 100 }))).items as unknown[]).length, { timeout: 60000, intervals: [1000] })
       .toBe(1);
-    await expect.poll(async () => (await recycle(page)).length, { timeout: 30000, intervals: [1000] }).toBeGreaterThanOrEqual(5);
+    // A bulk delete is not undoable: nothing goes to the recycle bin.
+    expect(await recycle(page)).toHaveLength(0);
   });
 
   test("a deleted document is restored with its _id and types", async ({ page }) => {

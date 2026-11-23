@@ -158,7 +158,7 @@ ${seriesInsert}
 /** Portable 1..N series for pagination / non-updatable SELECT. */
 function seriesSelectSql(count: number, engine: DbEngine = "sqlite"): string {
   if (engine === "clickhouse") {
-    return `SELECT number + 1 AS n FROM numbers(${count}) ORDER BY n`;
+    return `SELECT number + 1 AS n FROM system.numbers WHERE number < ${count} ORDER BY n`;
   }
   if (engine === "mssql") {
     return `WITH seq(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < ${count}) SELECT n FROM seq ORDER BY 1 OPTION (MAXRECURSION 0)`;

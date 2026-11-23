@@ -153,7 +153,7 @@ test.describe("MongoDB server tools", () => {
     await openServerTool(page);
     await expect(page.getByTestId("server-fact-Version")).toContainText(/^\d+\.\d+/, { timeout: 15000 });
     await expect(page.getByTestId("server-fact-Replica set")).toContainText("Standalone");
-    await page.getByTestId("server-tab-operations").click();
+    await page.getByTestId("server-tabs-operations").click();
     await expect(page.getByTestId("server-tool")).toContainText(/Nothing is running|Operation/, { timeout: 15000 });
   });
 
@@ -161,7 +161,7 @@ test.describe("MongoDB server tools", () => {
     const name = dbName();
     try {
       await openServerTool(page);
-      await page.getByTestId("server-tab-databases").click();
+      await page.getByTestId("server-tabs-databases").click();
       await page.getByRole("textbox", { name: "new-database-name" }).fill(name);
       await page.getByRole("textbox", { name: "new-database-collection" }).fill("base");
       await page.getByRole("button", { name: "Create database", exact: true }).click();
@@ -188,7 +188,7 @@ test.describe("MongoDB server tools", () => {
 
   test("the Changes tab reports a standalone server in words", async ({ page }) => {
     await openServerTool(page);
-    await page.getByTestId("server-tab-changes").click();
+    await page.getByTestId("server-tabs-changes").click();
     await page.getByRole("textbox", { name: "changes-container" }).fill(m.s.container);
     await page.getByTestId("changes-watch").click();
     await expect(page.getByTestId("change-error")).toContainText("replica set", { timeout: 15000 });

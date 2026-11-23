@@ -204,8 +204,7 @@ test.describe("MongoDB import, export and collection admin", () => {
     const file = '{"_id":1,"v":"file"}\n{"_id":2,"v":"file"}';
     await post(page, "import", { data: '[{"_id":1,"v":"kept"}]', format: "json" });
     const value = async (id: number): Promise<string> => {
-      const out = JSON.stringify(await j(await m.api(page).cli(`db.${m.s.coll}.findOne({_id: ${id}}).v`, false)));
-      return out;
+      return String((await j(await m.api(page).get(String(id)))).value);
     };
 
     const stopped = await importFile(page, "d.ndjson", "ndjson", file);

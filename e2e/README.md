@@ -4,7 +4,7 @@ Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemer
 
 **Agents:** follow [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and the [`e2e-playwright`](../.cursor/skills/e2e-playwright/SKILL.md) skill when writing or fixing tests.
 
-**Inventory:** every spec file is listed in [`SPEC-CATALOG.md`](SPEC-CATALOG.md). **Gaps and CI exceptions:** [`docs/e2e-coverage-gap-report.md`](../docs/e2e-coverage-gap-report.md).
+**Inventory:** every spec file is listed in [`SPEC-CATALOG.md`](SPEC-CATALOG.md).
 
 CI (`.github/workflows/e2e.yml`) runs one sharded job per engine plus a coverage guard (`npm run check:coverage`, matrix in `coverage/capabilities.mjs`). `npm run test:auth` is not in CI yet.
 

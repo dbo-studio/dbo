@@ -90,6 +90,11 @@ export class MobileShellPage extends BasePage {
     await this.page.setViewportSize(DESKTOP_VIEWPORT);
     await this.page.reload();
     await expect(this.shell).toBeHidden({ timeout: 15000 });
+    // The phone layout collapses the sidebar and that sticks; desktop helpers need the connection switcher in it.
+    const switcher = this.page.getByTestId("connection-switcher");
+    if (!(await switcher.isVisible({ timeout: 3000 }).catch(() => false))) {
+      await this.page.getByRole("button", { name: "sideLeft" }).click();
+    }
   }
 
   async openTab(id: MobileTab): Promise<void> {

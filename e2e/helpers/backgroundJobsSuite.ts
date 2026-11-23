@@ -178,7 +178,7 @@ function defineBackgroundJobsSqliteTests(): void {
             });
 
             await test.step("A slow one answers 202, finishes as a job, and was run once", async () => {
-              const slowQuery = sqliteSlow(4_000_000);
+              const slowQuery = sqliteSlow(40_000_000);
               const answer = await raw(slowQuery, 1);
               expect(answer.status()).toBe(202);
               const { jobId } = ((await answer.json()) as { data: { jobId: number } }).data;

@@ -228,12 +228,12 @@ func (s IConnectionServiceImpl) pingNoSQL(ctx context.Context, connection *model
 
 	repo, err := database.NewNoSQLRepository(ctx, connection, s.cm)
 	if err != nil {
-		return nil, apperror.DriverError(err)
+		return nil, pingDiagnosticError(connection.ConnectionType, err, time.Since(start).Milliseconds())
 	}
 
 	version, err := repo.Version(ctx)
 	if err != nil {
-		return nil, apperror.DriverError(fmt.Errorf("version check failed: %w", err))
+		return nil, pingDiagnosticError(connection.ConnectionType, fmt.Errorf("version check failed: %w", err), time.Since(start).Milliseconds())
 	}
 
 	return &dto.PingConnectionResponse{

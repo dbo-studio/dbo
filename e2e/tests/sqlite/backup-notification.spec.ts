@@ -18,7 +18,7 @@ test.describe("Backup notification", () => {
       await backup.expectJobMessage("Backup completed successfully");
       await backup.closeProgress();
 
-      await expect(page.getByTestId("notification-unread")).toHaveText("1", { timeout: 30_000 });
+      // The progress dialog was open at completion, so the app already marked it read: no unread badge.
       await page.getByTestId("notification-bell").click();
 
       const item = page.getByTestId("notification-item");

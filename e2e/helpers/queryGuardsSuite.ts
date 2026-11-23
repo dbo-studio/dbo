@@ -60,7 +60,7 @@ function seriesSelectSql(
   engine: DbEngine = "sqlite",
 ): string {
   if (engine === "clickhouse") {
-    return `SELECT number + 1 AS n FROM numbers(${count}) ORDER BY 1${limitClause ? ` ${limitClause}` : ""}`;
+    return `SELECT number + 1 AS n FROM system.numbers WHERE number < ${count} ORDER BY 1${limitClause ? ` ${limitClause}` : ""}`;
   }
   if (engine === "mssql") {
     // No LIMIT in T-SQL: the clause arrives as "LIMIT n" and becomes TOP n. MAXRECURSION lifts the 100-level cap.

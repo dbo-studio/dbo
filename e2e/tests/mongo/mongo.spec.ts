@@ -270,14 +270,23 @@ test.describe("MongoDB driver", () => {
       for (const name of ["Copy _id", "Copy document", "Delete item"]) {
         await expect(page.getByRole("menuitem", { name })).toBeVisible();
       }
+      // The menu opens without focus inside it, so Escape only works once an item has it.
+      await page.getByRole("menuitem").first().focus();
       await page.keyboard.press("Escape");
+      await expect(page.getByRole("menu")).toBeHidden();
     });
 
     await test.step("the empty part of the list offers new document and refresh", async () => {
-      await page.getByTestId("browse-list").click({ button: "right", position: { x: 40, y: 400 } });
+      const list = page.getByTestId("browse-list");
+      const box = (await list.boundingBox())!;
+      // Bottom of the list: below the few documents, whatever the window height.
+      await list.click({ button: "right", position: { x: 40, y: box.height - 8 } });
       await expect(page.getByRole("menuitem", { name: "New document" })).toBeVisible();
       await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
+      // The menu opens without focus inside it, so Escape only works once an item has it.
+      await page.getByRole("menuitem").first().focus();
       await page.keyboard.press("Escape");
+      await expect(page.getByRole("menu")).toBeHidden();
     });
 
     await test.step("Delete from the menu removes only that document after confirming", async () => {

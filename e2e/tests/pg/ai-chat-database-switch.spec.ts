@@ -76,7 +76,7 @@ test.describe("AI chat database switch (postgres)", () => {
           });
 
           await test.step("The request carries the database", async () => {
-            await composer.fill("what is in here");
+            await composer.pressSequentially("what is in here");
             await composer.press("Enter");
             await expect.poll(() => requests.length).toBeGreaterThanOrEqual(1);
             expect(requests.at(-1)?.contextOpts?.database).toBe(otherDatabase);

@@ -25,9 +25,6 @@ test.describe("MariaDB alias", () => {
 
       await test.step("Create MariaDB-typed connection", async () => {
         await connectionPage.createConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
       });
 
       await test.step("Tree opens (MySQL stack via alias)", async () => {

@@ -69,6 +69,7 @@ test.describe("Agent audit log", () => {
         await test.step("The settings page lists the entries", async () => {
           await settingsPage.open();
           await settingsPage.navigateTo("AI");
+          await page.getByTestId("settings-tab-audit").click();
           await expect(page.getByTestId("ai-audit-entry")).toHaveCount(2);
           await expect(page.getByTestId("ai-audit")).toContainText(`create_table ${table}`);
         });

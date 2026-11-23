@@ -34,9 +34,7 @@ test.describe("Database diagram", () => {
 
       await test.step("Create PostgreSQL connection", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       await test.step("Seed users and posts with FK", async () => {
@@ -131,9 +129,7 @@ CREATE TABLE ${postsTable} (
 
       await test.step("Create MySQL connection", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       await test.step("Seed users and posts with FK", async () => {
@@ -203,9 +199,7 @@ CREATE TABLE ${postsTable} (
 
       await test.step("Create SQLite connection", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       await test.step("Seed users and posts with FK", async () => {

@@ -153,8 +153,8 @@ export default function AgentWorkspace(): JSX.Element {
       close();
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [close, handleCancel, fullScreen]);
 
   const composer = (

@@ -103,6 +103,8 @@ test.describe("AI chat history", () => {
       });
 
       await test.step("Export downloads Markdown", async () => {
+        // The pin step leaves its tooltip over the next row's icons.
+        await page.mouse.move(0, 0);
         const downloadPromise = page.waitForEvent("download");
         await items.filter({ hasText: "orders report" }).getByTestId("ai-history-export").click();
         const download = await downloadPromise;

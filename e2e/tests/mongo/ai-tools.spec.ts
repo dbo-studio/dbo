@@ -173,8 +173,8 @@ test.describe("MongoDB AI assistant", () => {
     await editor.typeQuery(`use ${db};\ndb.${m.s.coll}.find({oops: })`);
     await editor.clickRun();
     await page.getByTestId("mongo-fix-with-ai").click();
-    await expect(page.getByText("Help me fix this MongoDB statement error.")).toBeVisible({ timeout: 20000 });
-    expect(llm.systemPrompts.at(-1) ?? "").toContain("find({oops");
+    await expect(page.getByTestId("ai-user-message").filter({ hasText: "Help me fix this MongoDB statement error." }).first()).toBeVisible({ timeout: 20000 });
+    await expect.poll(() => llm.systemPrompts.at(-1) ?? "", { timeout: 20000 }).toContain("find({oops");
   });
 
   test("a successful run feeds its result to the assistant", async ({ page }) => {

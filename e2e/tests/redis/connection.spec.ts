@@ -39,7 +39,7 @@ test.describe("Redis connection", () => {
 
   test("ping rejects an unknown connection type", async ({ page }) => {
     await page.goto("/");
-    expect((await ping(page, "not-a-db", base)).status).toBe(400);
+    expect((await ping(page, "not-a-db", base)).status).toBe(422);
   });
 
   test("a non-default database index is accepted", async ({ page }) => {

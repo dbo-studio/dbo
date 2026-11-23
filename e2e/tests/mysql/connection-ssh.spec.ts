@@ -44,7 +44,7 @@ test("MySQL connection reaches a DB only visible from the bastion", async ({
       port: "3306",
       ssh: { ...bastion, authMethod: "password" },
     });
-    await expect(connectionPage.getConnectionItem(name)).toBeVisible();
+    await connectionPage.expectConnectionActive(name);
     await connectionPage.deleteConnection(name);
   });
 });

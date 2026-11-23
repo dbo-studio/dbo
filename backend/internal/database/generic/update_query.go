@@ -53,7 +53,8 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 	}
 
 	for _, item := range req.AddedItems {
-		names, values := r.insertParts(item)
+		identity := lo.SliceToMap(lo.Filter(columns, func(c ColumnInfo, _ int) bool { return c.IsIdentity }), func(c ColumnInfo) (string, bool) { return c.Name, true })
+		names, values := r.insertParts(item, identity)
 		if len(names) == 0 {
 			continue
 		}
@@ -139,12 +140,14 @@ func (r *Repository) setClauses(values map[string]any) []string {
 	return clauses
 }
 
-func (r *Repository) insertParts(item map[string]any) (names, values []string) {
+// insertParts lists the columns of one added row. An identity column left at the grid's empty placeholder (nil, "", 0)
+// is not sent: the server numbers it, and an explicit value would be refused.
+func (r *Repository) insertParts(item map[string]any, identity map[string]bool) (names, values []string) {
 	keys := lo.Keys(item)
 	sort.Strings(keys)
 
 	for _, key := range keys {
-		if key == "dbo_index" || item[key] == "@DEFAULT" {
+		if key == "dbo_index" || item[key] == "@DEFAULT" || (identity[key] && emptyPlaceholder(item[key])) {
 			continue
 		}
 
@@ -200,4 +203,17 @@ func (r *Repository) deleteStatement(target string, where []string) string {
 	}
 
 	return fmt.Sprintf("DELETE FROM %s WHERE %s", target, strings.Join(where, " AND "))
+}
+
+func emptyPlaceholder(v any) bool {
+	switch x := v.(type) {
+	case nil:
+		return true
+	case string:
+		return x == ""
+	case float64:
+		return x == 0
+	}
+
+	return false
 }

@@ -81,13 +81,13 @@ test.describe("bottom panel", () => {
     const items = panel.getByTestId("history-item");
     await expect(items).toHaveCount(2);
 
-    await panel.getByRole("button", { name: "Reads" }).click();
+    await panel.getByRole("radio", { name: "Reads" }).click();
     await expect(items).toHaveCount(1);
     await expect(items.first()).toContainText("SELECT 7");
-    await panel.getByRole("button", { name: "Writes" }).click();
+    await panel.getByRole("radio", { name: "Writes" }).click();
     await expect(items).toHaveCount(1);
     await expect(items.first()).toContainText("CREATE TABLE hx");
-    await panel.getByRole("button", { name: "All" }).click();
+    await panel.getByRole("radio", { name: "All" }).click();
 
     await panel.getByPlaceholder("Search").fill("seven");
     await expect(items).toHaveCount(1);

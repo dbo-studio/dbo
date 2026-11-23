@@ -16,7 +16,7 @@ for i in $(seq 1 120); do
   sleep 2
 done
 
-"$SQLCMD" -No -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -i /seed.sql
+"$SQLCMD" -No -I -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -i /seed.sql
 touch /tmp/seeded
 
 wait $SERVER_PID

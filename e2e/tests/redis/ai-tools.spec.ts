@@ -41,7 +41,7 @@ test.describe("Redis AI assistant", () => {
 
       llm.script = null;
       await page.request.post("/api/ai/chat/stream", { data: { connectionId: r.s.id, message: "hi", mode: "ask" } });
-      expect((llm.offeredTools.at(-1) ?? []).sort()).toEqual(["aggregate", "browse_container", "describe_container", "get_item", "list_containers", "list_reports", "pin_report", "review_collection", "run_command", "save_report", "show_chart"]);
+      expect((llm.offeredTools.at(-1) ?? []).sort()).toEqual(["aggregate", "browse_container", "describe_container", "get_item", "list_containers", "review_collection", "run_command"]);
       const prompt = llm.systemPrompts.at(-1) ?? "";
       expect(prompt).toContain("Containers:");
       expect(prompt).toContain("db0");
@@ -144,29 +144,14 @@ test.describe("Redis AI assistant", () => {
     expect(prompt).not.toContain("SQL fill-in-the-middle");
   });
 
-  test("a chart and a report run a read-only Redis command; a write is refused", async ({ page }) => {
-    const key = `${r.s.prefix}:report`;
-    try {
-      expect((await r.api(page).insert({ id: key, view: "text", value: "v", meta: { kind: "string" } })).ok()).toBeTruthy();
+  test("charts and reports are MongoDB-only: the tool is not offered and a report is refused", async ({ page }) => {
+    const chart = await call(page, "show_chart", { title: "Keys", type: "number", command: "DBSIZE" });
+    expect(chart.type).toBe("tool_error");
 
-      const size = await call(page, "show_chart", { title: "Keys", type: "number", command: "DBSIZE" });
-      expect(size.type, size.content).toBe("tool_result");
-      expect(JSON.parse(size.content ?? "{}").columns).toEqual([{ name: "value", type: "number" }]);
-
-      const refused = await call(page, "show_chart", { title: "Bad", type: "table", command: `DEL ${key}` });
-      expect(refused.type).toBe("tool_error");
-
-      const saved = await call(page, "save_report", { title: "Key count", type: "number", command: "DBSIZE" });
-      expect(saved.type, saved.content).toBe("tool_result");
-      const list = (await (await page.request.get(`/api/questions?connectionId=${r.s.id}`)).json()) as { data: { id: number; name: string }[] };
-      const report = list.data.find((q) => q.name === "Key count");
-      expect(report).toBeDefined();
-      const run = await page.request.post(`/api/questions/${report!.id}/run`, { data: { params: {} } });
-      expect(run.status(), await run.text()).toBe(200);
-      expect(((await run.json()) as { data: { count: number } }).data.count).toBe(1);
-    } finally {
-      await r.api(page).remove([key]);
-    }
+    const created = await page.request.post("/api/questions", {
+      data: { connectionId: r.s.id, name: "Get key", sql: JSON.stringify({ command: "DBSIZE" }), chart: { type: "table", y: [] } },
+    });
+    expect(created.status()).toBe(400);
   });
 
   test("Agent mode proposes Redis commands, applies them on request, and undoes them", async ({ page }) => {
@@ -259,26 +244,4 @@ test.describe("Redis AI assistant", () => {
       await db1.remove([other]);
     }
   });
-
-  test("a Redis report's filter is quoted for the command line", async ({ page }) => {
-    const key = `${r.s.prefix}:filtered key`;
-    try {
-      expect((await r.api(page).insert({ id: key, view: "text", value: "found", meta: { kind: "string" } })).ok()).toBeTruthy();
-      const created = await page.request.post("/api/questions", {
-        data: { connectionId: r.s.id, name: "Get key", sql: JSON.stringify({ command: "GET {{key}}" }), chart: { type: "table", y: [] } },
-      });
-      expect(created.status(), await created.text()).toBe(200);
-      const id = ((await created.json()) as { data: { id: number } }).data.id;
-      const rows = async (params: Record<string, string>) =>
-        ((await (await page.request.post(`/api/questions/${id}/run`, { data: { params } })).json()) as { data: { rows: unknown[] } }).data.rows;
-
-      // The key has a space in it; the value is quoted, so it is one argument, not two.
-      expect(await rows({ key })).toEqual([{ value: "found" }]);
-      // A value cannot add a second argument or a second command.
-      expect(await rows({ key: `${r.s.prefix}:nope extra` })).toEqual([]);
-    } finally {
-      await r.api(page).remove([key]);
-    }
-  });
 });
-

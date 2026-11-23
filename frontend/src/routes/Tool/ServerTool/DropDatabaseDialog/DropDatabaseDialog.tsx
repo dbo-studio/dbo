@@ -1,6 +1,6 @@
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 
 export default function DropDatabaseDialog({

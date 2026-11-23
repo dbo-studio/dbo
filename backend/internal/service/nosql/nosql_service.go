@@ -210,7 +210,7 @@ func (s *Service) Browse(ctx context.Context, req *dto.NoSQLBrowseRequest) (*con
 
 	page, err := repo.Browse(ctx, req.ContainerID, req.Query)
 	if err != nil {
-		return nil, apperror.InternalServerError(err)
+		return nil, driverErr(err)
 	}
 
 	return page, nil

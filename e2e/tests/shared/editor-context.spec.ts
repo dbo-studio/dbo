@@ -29,9 +29,7 @@ test.describe("SQL editor context", () => {
 
       await test.step("Create PostgreSQL connection", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       const schemaName = `e2e_ctx_${suffix}`;
@@ -90,9 +88,7 @@ test.describe("SQL editor context", () => {
 
       await test.step("Create MySQL connection", async () => {
         await connectionPage.setupConnection(config);
-        await expect(
-          connectionPage.getConnectionItem(connectionName),
-        ).toBeVisible();
+        await connectionPage.expectConnectionActive(connectionName);
       });
 
       await test.step("Open editor and assert context", async () => {
@@ -126,9 +122,7 @@ test.describe("SQL editor context", () => {
 
         await test.step("Create SQLite connection", async () => {
           await connectionPage.setupConnection(config);
-          await expect(
-            connectionPage.getConnectionItem(connectionName),
-          ).toBeVisible();
+          await connectionPage.expectConnectionActive(connectionName);
         });
 
         await test.step("Open editor without context selects", async () => {

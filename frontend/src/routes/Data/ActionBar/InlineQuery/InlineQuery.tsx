@@ -6,7 +6,6 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Box } from '@mui/material';
-import { useLatestRef } from '@/hooks/useLatestRef';
 import { useCallback, useState } from 'react';
 import { InlineQueryStackStyled, SubmitButtonStyled } from '@/components/base/InlineSqlEditor/InlineBar.styled';
 
@@ -16,7 +15,6 @@ export default function InlineQuery() {
   const tabInlineQuery = selectedTab?.inlineQuery ?? '';
   const [value, setValue] = useState(tabInlineQuery);
   const [prevTabId, setPrevTabId] = useState(selectedTab?.id);
-  const latestQueryRef = useLatestRef(tabInlineQuery);
 
   if (selectedTab?.id !== prevTabId) {
     setPrevTabId(selectedTab?.id);
@@ -58,10 +56,7 @@ export default function InlineQuery() {
           columns={columns ?? []}
           placeholder={locales.inline_query_placeholder}
           value={value}
-          onChange={(v) => {
-            latestQueryRef.current = v;
-            setValue(v);
-          }}
+          onChange={setValue}
           onBlur={handleUpdateQuery}
           onEnter={(q) => void handleRunQuery(q)}
         />
@@ -70,7 +65,7 @@ export default function InlineQuery() {
         variant='contained'
         data-testid='inline-query-run'
         aria-label='Run inline query'
-        onClick={() => void handleRunQuery(latestQueryRef.current)}
+        onClick={() => void handleRunQuery(value)}
       >
         <CustomIcon type='check' size='s' />
       </SubmitButtonStyled>

@@ -166,6 +166,8 @@ export default function SqlEditor({
         value={value}
         options={{
           ...editorConfig,
+          // The right-click menu carries the AI Explain/Optimize/Fix actions.
+          contextmenu: !!onAiSelection,
           fontSize: theme.editorFontSize,
           fontFamily: getEditorFontFamily(theme.editorFont)
         }}

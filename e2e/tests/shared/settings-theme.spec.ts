@@ -122,8 +122,10 @@ test.describe("Settings & Theme", () => {
 
       await test.step("Check AI panel", async () => {
         await settingsPage.navigateTo("AI");
-        await expect(page.getByRole("region", { name: "Providers" })).toBeVisible();
-        await expect(page.getByRole("region", { name: "MCP" })).toBeVisible();
+        await expect(page.getByRole("radio", { name: "Providers" })).toBeChecked();
+        await expect(page.getByRole("tablist", { name: "Providers" })).toBeVisible();
+        await page.getByTestId("settings-tab-mcp").click();
+        await expect(page.getByRole("radio", { name: "MCP" })).toBeChecked();
       });
 
       await test.step("Check Security panel", async () => {

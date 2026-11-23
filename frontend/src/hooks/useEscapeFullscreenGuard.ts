@@ -9,13 +9,14 @@ export function useEscapeFullscreenGuard(): void {
         e.preventDefault();
       }
     };
-    window.addEventListener('keydown', onKeyDown, true);
+    // Bubble phase: handlers on document/React roots run first and can still read defaultPrevented as 'handled'.
+    window.addEventListener('keydown', onKeyDown);
     const keyboard = (
       navigator as Navigator & { keyboard?: { lock?: (keys: string[]) => Promise<void>; unlock?: () => void } }
     ).keyboard;
     void keyboard?.lock?.(['Escape']).catch(() => undefined);
     return (): void => {
-      window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('keydown', onKeyDown);
       keyboard?.unlock?.();
     };
   }, []);

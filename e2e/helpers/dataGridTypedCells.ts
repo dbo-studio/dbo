@@ -34,7 +34,7 @@ export async function setupTypedTable(
   await connectionPage.goto();
   await connectionPage.waitForReady();
   await connectionPage.setupConnection(getDbConfig(engine, connectionName));
-  await expect(connectionPage.getConnectionItem(connectionName)).toBeVisible();
+  await connectionPage.expectConnectionActive(connectionName);
   await sqlEditor.open();
 
   if (engine === "mysql") {

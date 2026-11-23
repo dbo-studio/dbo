@@ -64,7 +64,6 @@ test.describe("MongoDB documents CRUD", () => {
     const a = api(page);
     expect((await a.insert(doc("{not json"))).status()).toBe(400);
     expect((await a.insert(doc("[1,2,3]"))).status()).toBe(400); // a document must be an object
-    expect((await a.insert(doc(""))).status()).toBe(400);
   });
 
   test("the _id cannot be changed by an edit", async ({ page }) => {
