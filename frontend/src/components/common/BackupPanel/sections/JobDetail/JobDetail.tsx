@@ -197,9 +197,7 @@ export default function JobDetail({
             )}
           </JobDetailRunRowStyled>
           {openLog === run.id && (
-            <JobDetailRunLogStyled data-testid={`backup-run-log-${run.id}`}>
-              {run.log}
-            </JobDetailRunLogStyled>
+            <JobDetailRunLogStyled data-testid={`backup-run-log-${run.id}`}>{run.log}</JobDetailRunLogStyled>
           )}
         </JobDetailRunBlockStyled>
       ))}

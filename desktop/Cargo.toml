@@ -29,7 +29,7 @@ tauri-plugin-shell = "2"
 tauri-plugin-opener = "2"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "android", target_os = "windows"))'.dependencies]
-tauri-plugin-biometry = "0.3.0-rc.3"
+tauri-plugin-biometry = { git = "https://github.com/Choochmeque/tauri-plugin-biometry", rev = "35253d1d004486fe9ef76e674957297ff05cba41" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
