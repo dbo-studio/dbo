@@ -54,6 +54,7 @@ func (r *Repository) UpdateQuery(ctx context.Context, req *dto.UpdateQueryReques
 
 	for _, item := range req.AddedItems {
 		identity := lo.SliceToMap(lo.Filter(columns, func(c ColumnInfo, _ int) bool { return c.IsIdentity }), func(c ColumnInfo) (string, bool) { return c.Name, true })
+
 		names, values := r.insertParts(item, identity)
 		if len(names) == 0 {
 			continue

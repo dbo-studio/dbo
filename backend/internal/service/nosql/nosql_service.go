@@ -482,14 +482,20 @@ func (s *Service) PubSubStream(ctx context.Context, req *dto.NoSQLPubSubRequest,
 	out := make(chan contract.Message)
 	subErr := make(chan error, 1)
 
-	go func() { subErr <- ps.Subscribe(ctx, req.Channels, out) }()
+	go func() {
+		defer close(subErr)
+
+		subErr <- ps.Subscribe(ctx, req.Channels, out)
+	}()
 
 	for {
 		select {
 		case msg := <-out:
 			if err := emit(msg); err != nil {
 				cancel()
-				<-subErr
+				// Wait for the subscription to stop after the stream writer exits.
+				for range subErr {
+				}
 
 				return nil
 			}

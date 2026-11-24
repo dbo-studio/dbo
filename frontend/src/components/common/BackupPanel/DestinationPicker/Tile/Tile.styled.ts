@@ -11,7 +11,10 @@ export const TileButtonStyled = styled(ButtonBase, {
   textAlign: 'left',
   border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
   backgroundColor: selected ? theme.palette.action.selected : 'transparent',
-  borderRadius: theme.shape.borderRadius / 2
+  borderRadius:
+    typeof theme.shape.borderRadius === 'number'
+      ? theme.shape.borderRadius / 2
+      : `calc((${theme.shape.borderRadius}) / 2)`
 }));
 
 export const TileIconStyled = styled(Box, {
@@ -27,7 +30,7 @@ export const TileBodyStyled = styled(Box)({
 
 export const TileTitleStyled = styled(Typography)({});
 
-export const TileSubStyled = styled(Typography, {
+export const TileSubStyled = styled(Typography<'p'>, {
   shouldForwardProp: (prop) => prop !== 'warn'
 })<{ warn?: boolean }>(({ theme, warn }) => ({
   color: warn ? theme.palette.warning.main : theme.palette.text.secondary

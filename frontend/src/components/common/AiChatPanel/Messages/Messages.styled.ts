@@ -62,7 +62,7 @@ export const LoadingRowStyled = styled(MessageGroupStyled)(({ theme }) => ({
   paddingLeft: theme.spacing(0.5)
 }));
 
-export const LoadMoreStyled = styled(Typography)(({ theme }) => ({
+export const LoadMoreStyled = styled(Typography<'button'>)(({ theme }) => ({
   alignSelf: 'center',
   marginBottom: theme.spacing(1),
   border: 'none',

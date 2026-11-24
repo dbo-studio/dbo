@@ -11,7 +11,7 @@ export default function Sparkline({ values }: { values: number[] }): JSX.Element
     )
     .join(' ');
   return (
-    <SparklineSvgStyled component='svg' viewBox={`0 0 ${w} ${h}`} width={w} height={h} aria-hidden>
+    <SparklineSvgStyled viewBox={`0 0 ${w} ${h}`} width={w} height={h} aria-hidden>
       <polyline points={points} fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinejoin='round' />
     </SparklineSvgStyled>
   );

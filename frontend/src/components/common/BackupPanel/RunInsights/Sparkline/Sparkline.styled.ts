@@ -1,5 +1,5 @@
-import { Box, styled } from '@mui/material';
+import { styled } from '@mui/material';
 
-export const SparklineSvgStyled = styled(Box)(({ theme }) => ({
+export const SparklineSvgStyled = styled('svg')(({ theme }) => ({
   color: theme.palette.primary.main
 }));

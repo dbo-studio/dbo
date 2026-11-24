@@ -30,7 +30,7 @@ export const JobDetailRunNoteStyled = styled(Box)({
   minWidth: 0
 });
 
-export const JobDetailRunLogStyled = styled(Box)(({ theme }) => ({
+export const JobDetailRunLogStyled = styled('pre')(({ theme }) => ({
   margin: 0,
   marginBottom: theme.spacing(1),
   padding: theme.spacing(1),
