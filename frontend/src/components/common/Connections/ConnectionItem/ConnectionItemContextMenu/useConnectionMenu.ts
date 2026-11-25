@@ -3,7 +3,8 @@ import type { MenuType } from '@/components/base/ContextMenu/types';
 import { resumePasswordPromptForConnection, suppressPasswordPromptForConnection } from '@/core/api';
 import { canCreateConnection, PERM } from '@/core/auth/permissions';
 import { useCan } from '@/hooks/useFeaturePermissions';
-import { supportsBackup } from '@/core/db/connectionAliases';
+import { useSwitchConnection } from '@/hooks/useSwitchConnection';
+import { getConnectionAlias, supportsBackup } from '@/core/db/connectionAliases';
 import locales from '@/locales';
 import { useAuthStore } from '@/store/authStore/auth.store';
 import { openBackup } from '@/core/backup/openBackup';
@@ -38,6 +39,7 @@ export function useConnectionMenu(connection: ConnectionType | undefined): MenuT
   const canLeave = connection?.shared === true && access !== 'owner';
   const canDuplicate = canCreateConnection(mode, user);
   const can = useCan();
+  const { switchConnection } = useSwitchConnection();
   const canBackup = can(PERM.backupCreate) || can(PERM.backupRestore);
 
   const showModal = useConfirmModalStore((state) => state.danger);
@@ -181,6 +183,25 @@ export function useConnectionMenu(connection: ConnectionType | undefined): MenuT
   if (!connection) return [];
 
   const menu: MenuType[] = [
+    ...(getConnectionAlias(connection.type) && can(PERM.dataCli)
+      ? [
+          {
+            name: connection.type === 'sqlite' ? locales.server_database_info : locales.nosql_tool_server,
+            icon: 'database' as const,
+            action: () => {
+              const open = async (): Promise<void> => {
+                await switchConnection(connection);
+                if (Number(useConnectionStore.getState().currentConnectionId) === connection.id) {
+                  const title = connection.type === 'sqlite' ? locales.server_database_info : locales.nosql_tool_server;
+                  useTabStore.getState().addToolTab('server', title);
+                }
+              };
+              void open();
+            },
+            closeBeforeAction: true
+          }
+        ]
+      : []),
     ...(canEdit
       ? [
           {

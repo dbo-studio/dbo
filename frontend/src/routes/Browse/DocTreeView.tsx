@@ -466,7 +466,7 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
               onKeyDown={(e): void => {
                 if (e.key === 'Escape') cancelAdd();
               }}
-              inputProps={{ 'aria-label': 'new-field-name' }}
+              inputProps={{ 'aria-label': 'new-field-name', dir: 'auto' }}
             />
           )}
           <FieldInput
@@ -478,7 +478,7 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
               if (e.key === 'Enter') void applyAdd();
               if (e.key === 'Escape') cancelAdd();
             }}
-            inputProps={{ 'aria-label': 'new-field-value' }}
+            inputProps={{ 'aria-label': 'new-field-value', dir: 'auto' }}
           />
           {typeSelect(addType, (v): void => setAddType(v as EditType | 'auto'), true, 'new-field-type')}
           <Tooltip title={locales.nosql_add_field}>
@@ -543,7 +543,7 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
             </IconButton>
           )}
         </Box>
-        <Typography variant='body2' sx={{ fontWeight: 600, flexShrink: 0 }}>
+        <Typography variant='body2' dir='auto' sx={{ fontWeight: 600, flexShrink: 0 }}>
           {node.key}
         </Typography>
         <Typography variant='caption' color='text.secondary' sx={{ flexShrink: 0 }}>
@@ -564,7 +564,7 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
                 if (e.key === 'Escape') cancelEdit();
                 if (e.key === 'Enter') void applyEdit(node);
               }}
-              inputProps={{ 'aria-label': 'field-value' }}
+              inputProps={{ 'aria-label': 'field-value', dir: editing.type === 'string' ? 'auto' : 'ltr' }}
             />
             {typeSelect(
               editing.type,
@@ -587,8 +587,14 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
           <Typography
             variant='body2'
             noWrap
+            dir='ltr'
             title={node.truncated ? locales.nosql_value_truncated : undefined}
-            sx={{ fontFamily: 'monospace', cursor: canEditValue ? 'text' : 'default', minWidth: 0 }}
+            sx={{
+              fontFamily: (theme) => theme.editorFontFamily,
+              unicodeBidi: 'isolate',
+              cursor: canEditValue ? 'text' : 'default',
+              minWidth: 0
+            }}
             onClick={(): void => {
               if (canEditValue) startEdit(node);
             }}
@@ -665,7 +671,7 @@ export default function DocTreeView({ connectionId, containerId, itemId, editabl
           variant='caption'
           color='text.secondary'
           noWrap
-          sx={{ ml: 1, flex: 1, minWidth: 0, fontFamily: 'monospace' }}
+          sx={{ ml: 1, flex: 1, minWidth: 0, fontFamily: (theme) => theme.editorFontFamily }}
           data-testid='doc-breadcrumb'
         >
           {selected?.join(' › ')}

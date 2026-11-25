@@ -1,5 +1,14 @@
+import api from '@/api';
+import type { RunQueryResponseType } from '@/api/query/types';
+import { parseObjectNodeId } from '@/core/db/parseObjectNodeId';
+import { getConnectionAlias } from '@/core/db/connectionAliases';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
+import { useCurrentConnection } from '@/hooks/useCurrentConnection';
+import { toast } from 'sonner';
+import SqlExplainDialog from './SqlExplainDialog/SqlExplainDialog';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
-import { GridItem } from '@/components/base/Grid/Grid';
+import BrowseActionBar from '@/components/common/BrowseActionBar/BrowseActionBar';
+import BrowsePanelButton from '@/components/common/BrowseActionBar/BrowsePanelButton/BrowsePanelButton';
 import { ExportModal } from '@/components/common/ExportModal/ExportModal';
 import { ImportModal } from '@/components/common/ImportModal/ImportModal';
 import { useSelectedTab, useFeaturePermissions } from '@/hooks';
@@ -10,7 +19,6 @@ import { useTabStore } from '@/store/tabStore/tab.store';
 import { DataTabType } from '@/types';
 import { Badge, Box, IconButton, Tooltip } from '@mui/material';
 import { type JSX, useState } from 'react';
-import { ActionBarActionsGridItemStyled, ActionBarGridStyled } from './ActionBar.styled';
 import Filters from '@/components/common/Filters/Filters';
 import InlineQuery from './InlineQuery/InlineQuery';
 import QueryPreview from '@/components/common/QueryPreview/QueryPreview';
@@ -18,6 +26,15 @@ import Sorts from '@/components/common/Sorts/Sorts';
 import type { ActionBarProps } from './types';
 
 export default function ActionBar({ showColumns, setShowColumns }: ActionBarProps): JSX.Element {
+  const driver = getConnectionAlias(useCurrentConnection()?.type)?.driver;
+  const canExplain =
+    driver === 'postgresql' ||
+    driver === 'mysql' ||
+    driver === 'sqlite' ||
+    driver === 'clickhouse' ||
+    driver === 'sqlserver';
+  const [plan, setPlan] = useState<RunQueryResponseType>();
+  const [explaining, setExplaining] = useState(false);
   const selectedTab = useSelectedTab<DataTabType>();
   const getQuery = useTabStore((state) => state.getQuery);
   const updateSelectedTab = useTabStore((state) => state.updateSelectedTab);
@@ -68,6 +85,32 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
     });
   };
 
+  const explain = async (): Promise<void> => {
+    const query = getQuery();
+    const connectionId = Number(selectedTab?.connectionId);
+    if (!query || !connectionId || !selectedTab || explaining) return;
+    const { database, schema } = parseObjectNodeId(selectedTab.nodeId);
+    setExplaining(true);
+    try {
+      const result = await withSafeModeRetry(
+        (confirmed) =>
+          api.query.explainQuery({
+            connectionId,
+            query,
+            database: driver === 'sqlserver' ? undefined : database,
+            schema,
+            confirmed
+          }),
+        connectionId
+      );
+      if (result) setPlan(result);
+    } catch {
+      toast.error(locales.action_failed);
+    } finally {
+      setExplaining(false);
+    }
+  };
+
   const handleToggle = (type: 'filter' | 'query' | 'sort' | 'column'): void => {
     if (!selectedTab) return;
 
@@ -104,78 +147,61 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
 
   return (
     <Box>
-      <ActionBarGridStyled
-        templateColumns={{
-          xs: 'minmax(0, 1fr) max-content'
-        }}
-      >
-        <GridItem sx={{ minWidth: 0 }}>
-          <InlineQuery />
-        </GridItem>
-        <ActionBarActionsGridItemStyled>
-          <Tooltip title={locales.filters}>
-            <IconButton
-              aria-label={locales.filters}
-              className={showFilters ? 'active' : ''}
-              onClick={(): void => handleToggle('filter')}
-            >
-              <Badge badgeContent={filterCount} color='secondary' variant='dot'>
-                <CustomIcon type='filter' size='s' />
-              </Badge>
+      <BrowseActionBar input={<InlineQuery />}>
+        <BrowsePanelButton
+          kind='filter'
+          open={showFilters}
+          count={filterCount}
+          onClick={() => handleToggle('filter')}
+        />
+        <BrowsePanelButton kind='sort' open={showSorts} count={sortCount} onClick={() => handleToggle('sort')} />
+        <Tooltip title={locales.columns}>
+          <IconButton
+            className={showColumns ? 'active' : ''}
+            aria-label='grid'
+            onClick={(): void => handleToggle('column')}
+          >
+            <Badge badgeContent={hiddenColumnCount} color='secondary' variant='dot'>
+              <CustomIcon type='grid' size='s' />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+
+        {perms.export && (
+          <Tooltip title={locales.export}>
+            <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
+              <CustomIcon type='export' size='s' />
             </IconButton>
           </Tooltip>
+        )}
 
-          <Tooltip title={locales.sorts}>
-            <IconButton
-              className={showSorts ? 'active' : ''}
-              aria-label='sort'
-              onClick={(): void => handleToggle('sort')}
-            >
-              <Badge badgeContent={sortCount} color='secondary' variant='dot'>
-                <CustomIcon type='sort' size='s' />
-              </Badge>
+        {perms.import && (
+          <Tooltip title={locales.import}>
+            <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
+              <CustomIcon type='import' size='s' />
             </IconButton>
           </Tooltip>
+        )}
 
-          <Tooltip title={locales.columns}>
-            <IconButton
-              className={showColumns ? 'active' : ''}
-              aria-label='grid'
-              onClick={(): void => handleToggle('column')}
-            >
-              <Badge badgeContent={hiddenColumnCount} color='secondary' variant='dot'>
-                <CustomIcon type='grid' size='s' />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-
-          {perms.export && (
-            <Tooltip title={locales.export}>
-              <IconButton data-testid='export-button' aria-label='export' onClick={handleShowExport}>
-                <CustomIcon type='export' size='s' />
+        {canExplain && (
+          <Tooltip title={locales.nosql_explain}>
+            <span>
+              <IconButton aria-label={locales.nosql_explain} disabled={explaining} onClick={() => void explain()}>
+                <CustomIcon type='search' size='s' />
               </IconButton>
-            </Tooltip>
-          )}
-
-          {perms.import && (
-            <Tooltip title={locales.import}>
-              <IconButton data-testid='import-button' aria-label='import' onClick={handleShowImport}>
-                <CustomIcon type='import' size='s' />
-              </IconButton>
-            </Tooltip>
-          )}
-
-          <Tooltip title={locales.query_preview}>
-            <IconButton
-              aria-label={locales.query_preview}
-              className={showQuery ? 'active' : 'toggle-code-preview'}
-              onClick={(): void => handleToggle('query')}
-            >
-              <CustomIcon type='code' size='s' />
-            </IconButton>
+            </span>
           </Tooltip>
-        </ActionBarActionsGridItemStyled>
-      </ActionBarGridStyled>
+        )}
+        <Tooltip title={locales.query_preview}>
+          <IconButton
+            aria-label={locales.query_preview}
+            className={showQuery ? 'active' : 'toggle-code-preview'}
+            onClick={(): void => handleToggle('query')}
+          >
+            <CustomIcon type='code' size='s' />
+          </IconButton>
+        </Tooltip>
+      </BrowseActionBar>
 
       <ExportModal
         onClose={() => setShowExport({ ...showExport, show: false })}
@@ -191,6 +217,7 @@ export default function ActionBar({ showColumns, setShowColumns }: ActionBarProp
         table={showImport.table}
       />
 
+      {plan && <SqlExplainDialog plan={plan} onClose={() => setPlan(undefined)} />}
       {showFilters && <Filters />}
       {showSorts && <Sorts />}
       {showQuery && <QueryPreview query={getQuery()} />}

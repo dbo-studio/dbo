@@ -18,7 +18,7 @@ DBO Studio is an open-source, minimal database GUI (Postgres, SQLite, MySQL, SQL
 1. Read this file and the area-specific guide:
    - Backend: [`backend/AGENTS.md`](backend/AGENTS.md)
    - Frontend: [`frontend/AGENTS.md`](frontend/AGENTS.md)
-2. Cursor rules in [`.cursor/rules/`](.cursor/rules/) auto-apply by file type — follow them.
+2. Read the [shared rules](#shared-rules-and-skills) that apply to the task.
 3. Match existing patterns in the package you are editing; do not introduce new abstractions without need.
 4. Keep diffs minimal and focused on the requested change.
 
@@ -54,7 +54,7 @@ Dependencies flow one direction only: `app → service → repository/database`.
 - **Minimize scope** — smallest correct change; no drive-by refactors.
 - **Follow existing conventions** — naming, file layout, error handling, response shapes.
 - **No secrets in source** — use env vars and secret store.
-- **Conventional Commits** — `feat:`, `fix:`, `chore:`, `refactor:`, `test:`. See [`.cursor/rules/git-commits.mdc`](.cursor/rules/git-commits.mdc).
+- **Conventional Commits** — `feat:`, `fix:`, `chore:`, `refactor:`, `test:`. See [`.agents/rules/git-commits.md`](.agents/rules/git-commits.md).
 - **Commit author** — always the machine Git identity (`user.name` / `user.email`). Never `--author` or `GIT_AUTHOR_*` overrides.
 - **Test via e2e** — do **not** add new unit/integration tests under `frontend/` or `backend/`. Cover behavior with Playwright in [`e2e/`](e2e/). Lint/fmt still required before PR.
 
@@ -119,20 +119,13 @@ Components: `PascalCase`. Hooks/functions: `camelCase`. Colocate feature code un
 - [ ] No secrets or credentials committed
 - [ ] API/behavior changes documented in PR description
 
-## Cursor Rules & Skills
+## Shared Rules and Skills
 
-| File | Scope |
-|------|-------|
-| `.cursor/rules/project-overview.mdc` | Always-on project context |
-| `.cursor/rules/go-core.mdc` | Go idioms (errors, interfaces, packages) |
-| `.cursor/rules/go-dbo-architecture.mdc` | DBO backend layers & patterns |
-| `.cursor/rules/go-concurrency.mdc` | context, goroutines |
-| `.cursor/rules/go-testing.mdc` | No new FE/BE unit tests — e2e only |
-| `.cursor/rules/go-tooling.mdc` | fmt, golangci-lint |
-| `.cursor/rules/e2e-qa.mdc` | Strict Playwright/QA rules (`e2e/**`) |
-| `.cursor/rules/e2e-host-os.mdc` | Run Playwright on the host OS, never in the Cursor sandbox |
-| `.cursor/skills/golang-development/SKILL.md` | Go development workflow skill |
-| `.cursor/skills/e2e-playwright/SKILL.md` | E2E QA / Playwright workflow skill |
+- For every task, read the [project overview](.agents/rules/project-overview.md) and [scope and simplicity rules](.agents/rules/ponytail.md). Follow the [commit rules](.agents/rules/git-commits.md) when committing.
+- For backend Go, follow the [backend guide](backend/AGENTS.md) and the [Go development skill](.agents/skills/golang-development/SKILL.md).
+- For frontend TypeScript, follow the [frontend guide](frontend/AGENTS.md). Read the [testing policy](.agents/rules/go-testing.md) when adding or changing coverage for frontend or backend behavior.
+- When writing, editing, or running E2E scenarios, follow the [E2E QA rules](.agents/rules/e2e-qa.md), [host execution rules](.agents/rules/e2e-host-os.md), and [Playwright skill](.agents/skills/e2e-playwright/SKILL.md).
+- For codebase questions, query the existing graph first when `graphify-out/graph.json` exists. Follow the [graphify rules](.agents/rules/graphify.md). If the user invokes `/graphify`, read the [graphify skill](.agents/skills/graphify/SKILL.md) before taking any action.
 
 ## Further Reading
 

@@ -1,19 +1,40 @@
 import api from '@/api';
+import type { SaveObjectRequestType } from '@/api/tree/types';
 import { openBottomPanel } from '@/core/bottomPanel';
 import { useCloseOverlaySidebar } from '@/components/common/Boards/useDashboardCommands';
+import { isMongoDriver } from '@/core/db/connectionAliases';
 import { TabMode } from '@/core/enums';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import { useCurrentConnection } from '@/hooks';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
 import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
+import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { useTreeStore } from '@/store/treeStore/tree.store';
 import { TreeNodeType } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { useCopyToClipboard } from 'usehooks-ts';
+
+async function executeTreeAction(params: SaveObjectRequestType): Promise<unknown> {
+  if (params.action === 'dropCollection') {
+    await api.nosql.dropCollection(params.connectionId, params.nodeId, params.confirmed);
+    return true;
+  }
+
+  return api.tree.executeAction(params);
+}
+
+function closeCollectionTab(nodeId: string, connectionId: number): void {
+  const { tabs, removeTab } = useTabStore.getState();
+  const tab = tabs.find(
+    (tab) => tab.mode === TabMode.Browse && tab.nodeId === nodeId && matchConnectionId(tab.connectionId, connectionId)
+  );
+  if (tab) removeTab(tab.id);
+}
 
 export const useActionDetection = (
   expandNode: (event: React.MouseEvent, focus?: boolean) => Promise<void>
@@ -37,7 +58,7 @@ export const useActionDetection = (
   const [, copy] = useCopyToClipboard();
 
   const { mutateAsync: executeActionMutation, isPending: pendingExecuteAction } = useMutation({
-    mutationFn: api.tree.executeAction
+    mutationFn: executeTreeAction
   });
 
   const dropActionOf = (node: TreeNodeType): string | undefined =>
@@ -46,19 +67,28 @@ export const useActionDetection = (
   const renameNode = useCallback(
     async (node: TreeNodeType, newName: string): Promise<boolean> => {
       if (!currentConnection) return false;
+      const connectionId = currentConnection.id;
+      const isMongoCollection = isMongoDriver(currentConnection.type) && node.type === 'table';
       try {
-        const result = await withSafeModeRetry((confirmed) =>
-          executeActionMutation({
-            nodeId: node.id,
-            action: 'rename',
-            connectionId: currentConnection.id,
-            confirmed,
-            data: { name: newName }
-          })
+        const result = await withSafeModeRetry(
+          (confirmed) =>
+            isMongoCollection
+              ? api.nosql.renameCollection(connectionId, node.id, newName, confirmed)
+              : executeActionMutation({
+                  nodeId: node.id,
+                  action: 'rename',
+                  connectionId,
+                  confirmed,
+                  data: { name: newName }
+                }),
+          connectionId
         );
         if (result === undefined) return false;
-        useTreeStore.getState().renamePinned(node.id, node.name, newName);
-        await reloadTree(false);
+        const savedName =
+          isMongoCollection && typeof result === 'string' ? result.slice(result.indexOf('/') + 1) : newName;
+        useTreeStore.getState().renamePinned(node.id, node.name, savedName, connectionId);
+        if (isMongoCollection) closeCollectionTab(node.id, connectionId);
+        if (Number(useConnectionStore.getState().currentConnectionId) === connectionId) await reloadTree(false);
         toast.success(locales.action_executed_successfully);
         return true;
       } catch {
@@ -78,29 +108,34 @@ export const useActionDetection = (
         () => {
           void (async (): Promise<void> => {
             let failed = false;
+            let dropped = false;
             for (const node of nodes) {
               const action = dropActionOf(node);
               if (!action) continue;
               try {
-                const result = await withSafeModeRetry((confirmed) =>
-                  executeActionMutation({
-                    nodeId: node.id,
-                    action,
-                    connectionId: currentConnection.id,
-                    confirmed,
-                    data: { general: {} }
-                  })
+                const result = await withSafeModeRetry(
+                  (confirmed) =>
+                    executeActionMutation({
+                      nodeId: node.id,
+                      action,
+                      connectionId: currentConnection.id,
+                      confirmed,
+                      data: { general: {} }
+                    }),
+                  currentConnection.id
                 );
                 // Declined safe-mode prompt: stop instead of asking once per object.
                 if (result === undefined) break;
-                useTreeStore.getState().unpinNodes([node.id]);
+                dropped = true;
+                useTreeStore.getState().unpinNodes([node.id], currentConnection.id);
+                if (action === 'dropCollection') closeCollectionTab(node.id, currentConnection.id);
               } catch {
                 failed = true;
               }
             }
-            await reloadTree(false);
+            if (dropped) await reloadTree(false);
             if (failed) toast.error(locales.action_failed);
-            else toast.success(locales.action_executed_successfully);
+            else if (dropped) toast.success(locales.action_executed_successfully);
           })();
         }
       );
@@ -116,25 +151,29 @@ export const useActionDetection = (
 
       try {
         const selectedTab = useTabStore.getState().selectedTab();
-        const result = await withSafeModeRetry((confirmed) =>
-          executeActionMutation({
-            nodeId: node.id,
-            action: node.action.name,
-            connectionId: currentConnection.id,
-            confirmed,
-            // Drop table (and other tree actions) only emit SQL for the general tab.
-            data: {
-              general: {}
-            }
-          })
+        const result = await withSafeModeRetry(
+          (confirmed) =>
+            executeActionMutation({
+              nodeId: node.id,
+              action: node.action.name,
+              connectionId: currentConnection.id,
+              confirmed,
+              data: { general: {} }
+            }),
+          currentConnection.id
         );
         if (result === undefined) {
           return;
         }
 
-        await queryClient.invalidateQueries({
-          queryKey: ['tabFields', currentConnection?.id, selectedTab?.id, selectedTab?.action, node.id]
-        });
+        if (node.action.name === 'dropCollection') {
+          useTreeStore.getState().unpinNodes([node.id], currentConnection.id);
+          closeCollectionTab(node.id, currentConnection.id);
+        } else {
+          await queryClient.invalidateQueries({
+            queryKey: ['tabFields', currentConnection.id, selectedTab?.id, selectedTab?.action, node.id]
+          });
+        }
 
         await reloadTree(false);
 
@@ -200,9 +239,12 @@ export const useActionDetection = (
           const needsGenericConfirm = !currentConnection.safeMode || currentConnection.safeMode === 'silent';
 
           if (needsGenericConfirm) {
+            const isCollectionDrop = node.action.name === 'dropCollection';
             confirmDanger(
-              `Confirm ${node.action.title}`,
-              `Are you sure you want to ${node.action.title} ${node.name}?`,
+              isCollectionDrop ? locales.nosql_drop_collection : `Confirm ${node.action.title}`,
+              isCollectionDrop
+                ? locales.nosql_drop_collection_confirm.replace('{name}', node.name)
+                : `Are you sure you want to ${node.action.title} ${node.name}?`,
               () => {
                 void runTreeAction(node);
               }

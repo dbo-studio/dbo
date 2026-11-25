@@ -5,10 +5,12 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import { formatBytes } from '@/core/utils/formatBytes';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
-import { Box, Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
+import ServerGrid from '../ServerGrid/ServerGrid';
+import ServerRowActions from '../ServerGrid/ServerRowActions';
 import DropDatabaseDialog from '../DropDatabaseDialog/DropDatabaseDialog';
 import { pickServerOption, SERVER_COLLECTION_KINDS, type ServerToolProps } from '../serverToolShared';
 
@@ -59,46 +61,32 @@ export default function Databases({ connectionId }: ServerToolProps): JSX.Elemen
   return (
     <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
       <Box sx={{ minWidth: 340, flex: 1 }}>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>
-              <TableCell>{locales.server_database}</TableCell>
-              <TableCell>{locales.server_size}</TableCell>
-              <TableCell>{locales.server_collections}</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(dbs.data ?? []).map((d) => (
-              <TableRow
-                key={d.name}
-                hover
-                selected={selected === d.name}
-                sx={{ cursor: 'pointer' }}
-                onClick={(): void => setSelected(d.name)}
-                data-testid='server-database'
-              >
-                <TableCell>{d.name}</TableCell>
-                <TableCell>{formatBytes(d.sizeOnDisk)}</TableCell>
-                <TableCell>{d.collections}</TableCell>
-                <TableCell align='right'>
-                  {!['admin', 'local', 'config'].includes(d.name) && (
-                    <Button
-                      color='error'
-                      aria-label={`drop-${d.name}`}
-                      onClick={(e): void => {
-                        e.stopPropagation();
-                        setDropping(d.name);
-                      }}
-                    >
-                      {locales.delete}
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        {dbs.isError ? (
+          <Typography color='error' role='alert'>
+            {locales.action_failed}
+          </Typography>
+        ) : (
+          <ServerGrid
+            headers={[locales.server_database, locales.server_size, locales.server_collections]}
+            values={(dbs.data ?? []).map((d) => [d.name, formatBytes(d.sizeOnDisk), d.collections])}
+            loading={dbs.isPending}
+            action={([value]) => {
+              const database = String(value);
+              return (
+                <ServerRowActions
+                  key={database}
+                  actions={[
+                    { label: locales.server_collections, run: () => setSelected(database) },
+                    ...(!['admin', 'local', 'config'].includes(database)
+                      ? [{ label: locales.server_drop_database, run: () => setDropping(database), danger: true }]
+                      : [])
+                  ]}
+                />
+              );
+            }}
+          />
+        )}
+
         <Typography variant='subtitle2' sx={{ mt: 2, mb: 0.5 }}>
           {locales.server_create_database}
         </Typography>
@@ -137,16 +125,18 @@ export default function Databases({ connectionId }: ServerToolProps): JSX.Elemen
       {selected && (
         <Box sx={{ minWidth: 340, flex: 1 }} data-testid='server-collections'>
           <Typography variant='subtitle2' sx={{ mb: 0.5 }}>{`${locales.server_collections}: ${selected}`}</Typography>
-          <Table size='small'>
-            <TableBody>
-              {(colls.data ?? []).map((c) => (
-                <TableRow key={c.name} data-testid='server-collection'>
-                  <TableCell>{c.name}</TableCell>
-                  <TableCell>{c.capped ? locales.server_kind_capped : c.type}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {colls.isError ? (
+            <Typography color='error' role='alert'>
+              {locales.action_failed}
+            </Typography>
+          ) : (
+            <ServerGrid
+              headers={[locales.name, locales.server_kind]}
+              values={(colls.data ?? []).map((c) => [c.name, c.capped ? locales.server_kind_capped : c.type])}
+              loading={colls.isPending}
+            />
+          )}
+
           <Typography variant='subtitle2' sx={{ mt: 2, mb: 0.5 }}>
             {locales.server_create_collection}
           </Typography>
@@ -234,6 +224,7 @@ export default function Databases({ connectionId }: ServerToolProps): JSX.Elemen
 
       {dropping && (
         <DropDatabaseDialog
+          prompt={locales.server_drop_database_confirm}
           name={dropping}
           onClose={(): void => setDropping(null)}
           onConfirm={(): void => {

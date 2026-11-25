@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dbo-studio/dbo/pkg/permission"
 	"io"
 	"sync"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/apperror"
 	"github.com/dbo-studio/dbo/pkg/cache"
 	"github.com/dbo-studio/dbo/pkg/helper"
+	"github.com/dbo-studio/dbo/pkg/permission"
 )
 
 // MaxSubscriptionsPerUser caps concurrent streaming tools per owner; each holds a dedicated connection.
@@ -150,8 +150,9 @@ func (s *Service) guard(ctx context.Context, repo contract.NoSQLRepository, conn
 	policy := serviceSafemode.FromConnection(connection)
 	policy = s.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
-	// Destructive operations always need explicit confirmation, even in Silent mode.
-	if class == contract.SafetyDestructive && !confirmed && !policy.Unlocked {
+	// Server administration has its own confirmation. Redis also retains its destructive-command confirmation.
+	explicitConfirmation := op.Name == ServerDestructive || !contract.IsMongo(connection.ConnectionType)
+	if explicitConfirmation && class == contract.SafetyDestructive && !confirmed && !policy.Unlocked {
 		return apperror.SafeModeConfirmRequired(map[string]any{
 			"class": string(class), "requiresConfirm": true, "reason": "destructive operation requires confirmation", "count": op.Count,
 		})
@@ -401,7 +402,19 @@ func (s *Service) RunCommand(ctx context.Context, req *dto.NoSQLCommandRequest) 
 		return nil, err
 	}
 
-	res, err := runner.RunCommand(ctx, req.Input)
+	run := runner.RunCommand
+	if req.Database != "" {
+		scoped, ok := runner.(contract.DatabaseCommandRunner)
+		if !ok {
+			return nil, apperror.BadRequest(ErrToolNotSupported)
+		}
+
+		run = func(ctx context.Context, input string) (*contract.CommandResult, error) {
+			return scoped.RunCommandInDatabase(ctx, input, req.Database)
+		}
+	}
+
+	res, err := run(ctx, req.Input)
 	if err != nil {
 		// A rejected command is a user error, not a server fault.
 		return nil, apperror.BadRequest(err)

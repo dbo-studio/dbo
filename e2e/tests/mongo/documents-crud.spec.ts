@@ -224,10 +224,11 @@ test.describe("MongoDB documents CRUD", () => {
       }
     });
 
-    test("a destructive statement needs explicit confirmation", async ({ page }) => {
+    test("a destructive document command runs in Silent Mode", async ({ page }) => {
+      await add(page, '{"kind":"delete"}');
       const res = await run(page, `db.${coll}.deleteMany({})`, false);
-      expect(res.status()).toBe(403);
-      expect((await res.json()).message).toBe("safe_mode_confirm_required");
+      expect(res.ok(), await res.text()).toBeTruthy();
+      expect((await j(res)).output).toMatchObject({ deletedCount: 1 });
     });
 
     test("a malformed statement is a clean error", async ({ page }) => {

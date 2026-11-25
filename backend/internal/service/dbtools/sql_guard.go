@@ -41,6 +41,23 @@ func GuardExplainSQL(sql string) (string, error) {
 	return readStatement(sql)
 }
 
+// ExplainStatement builds a plan-only statement for a single validated SELECT.
+func ExplainStatement(engine, query string) (string, error) {
+	statement, err := GuardExplainSQL(query)
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case databaseContract.IsPostgresFamily(engine), databaseContract.IsMysqlFamily(engine), engine == databaseContract.ClickHouse:
+		return "EXPLAIN " + statement, nil
+	case engine == databaseContract.Sqlite:
+		return "EXPLAIN QUERY PLAN " + statement, nil
+	default:
+		return "", fmt.Errorf("query plans are not available for %s connections", engine)
+	}
+}
+
 func readStatement(sql string) (string, error) {
 	if strings.TrimSpace(sql) == "" {
 		return "", fmt.Errorf("sql is required")

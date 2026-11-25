@@ -115,3 +115,43 @@ export function buildMongoSort(sorts: SortType[]): string {
   if (active.length === 0) return '';
   return JSON.stringify(Object.fromEntries(active.map((s) => [s.column, s.operator === 'DESC' ? -1 : 1])));
 }
+
+export const mongoQuickFilterTypes = ['string', 'regex', 'json', 'number', 'objectId', 'uuid'] as const;
+export type MongoQuickFilterType = (typeof mongoQuickFilterTypes)[number];
+
+export function isMongoQuickFilterField(field: string): boolean {
+  return !!field && !field.startsWith('$') && !field.includes('\0');
+}
+
+export function buildMongoQuickFilter(key: string, raw: string, type: MongoQuickFilterType): string {
+  const field = key.trim();
+  if (!field && !raw) return '';
+  if (!isMongoQuickFilterField(field)) throw new Error('Invalid MongoDB field');
+
+  const value = raw.trim();
+  switch (type) {
+    case 'string':
+      return JSON.stringify({ [field]: raw });
+    case 'regex':
+      return JSON.stringify({ [field]: regex(raw) });
+    case 'json':
+      return JSON.stringify({ [field]: { $eq: JSON.parse(value) as unknown } });
+    case 'number': {
+      if (!NUMBER.test(value) || !Number.isFinite(Number(value))) throw new Error('Invalid number');
+      if (/^-?\d+$/.test(value) && !Number.isSafeInteger(Number(value))) {
+        const integer = BigInt(value);
+        if (integer < -(2n ** 63n) || integer >= 2n ** 63n) throw new Error('Number is out of range');
+        return JSON.stringify({ [field]: { $numberLong: integer.toString() } });
+      }
+      return JSON.stringify({ [field]: Number(value) });
+    }
+    case 'objectId':
+      if (!OBJECT_ID.test(value)) throw new Error('Invalid ObjectId');
+      return JSON.stringify({ [field]: { $oid: value } });
+    case 'uuid':
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value)) {
+        throw new Error('Invalid UUID v4');
+      }
+      return JSON.stringify({ [field]: { $uuid: value } });
+  }
+}

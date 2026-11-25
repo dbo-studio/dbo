@@ -414,9 +414,12 @@ func openQuery(title, db, statement string, run bool) contract.TreeNodeAction {
 func databaseMenu(db string) []contract.TreeNodeAction {
 	return []contract.TreeNodeAction{
 		openQuery("Create collection", db, `db.createCollection("new_collection")`, false),
+		copyNameAction,
 		refreshAction,
 	}
 }
+
+var copyNameAction = contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand}
 
 func collectionMenu(db, coll string) []contract.TreeNodeAction {
 	ref := collRef(coll)
@@ -424,7 +427,9 @@ func collectionMenu(db, coll string) []contract.TreeNodeAction {
 	return []contract.TreeNodeAction{
 		openQuery("Indexes", db, ref+".getIndexes()", true),
 		openQuery("Create index", db, ref+`.createIndex({ field: 1 }, { name: "field_1" })`, false),
-		openQuery("Drop collection", db, ref+".drop()", false),
+		{Title: "Rename", Name: contract.RenameAction, Type: contract.TreeNodeActionTypeAction},
+		{Title: "Drop collection", Name: contract.DropCollectionAction, Type: contract.TreeNodeActionTypeAction},
+		copyNameAction,
 		refreshAction,
 	}
 }

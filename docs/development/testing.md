@@ -78,7 +78,7 @@ e2e/
 
 ## Writing tests
 
-Follow [`.cursor/rules/e2e-qa.mdc`](../../.cursor/rules/e2e-qa.mdc) and the `e2e-playwright` skill:
+Follow [`.agents/rules/e2e-qa.md`](../../.agents/rules/e2e-qa.md) and the `e2e-playwright` skill:
 
 - One user-visible flow per spec file
 - `test.step()` for each meaningful action

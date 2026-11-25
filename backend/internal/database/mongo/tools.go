@@ -569,9 +569,25 @@ func chainInt(c *call, name string, def int64) (int64, error) {
 // RunCommand runs mongosh-style statements. It is a parser, not a JavaScript engine: arguments are JSON, plus the
 // shell conveniences normalizeShell understands. One statement returns its output; several return one entry each.
 func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.CommandResult, error) {
+	return r.RunCommandInDatabase(ctx, input, "")
+}
+
+var _ contract.DatabaseCommandRunner = (*Repository)(nil)
+
+func validShellDatabase(name string) bool {
+	return name != "" && !strings.ContainsAny(name, "/\\. \"$*<>:|?") && !strings.ContainsRune(name, 0)
+}
+
+func (r *Repository) RunCommandInDatabase(ctx context.Context, input, database string) (*contract.CommandResult, error) {
 	parts, err := statements(input)
 	if err != nil {
 		return nil, err
+	}
+
+	if database == "" {
+		database = r.cliDB()
+	} else if !validShellDatabase(database) {
+		return nil, contract.Invalid("invalid database name %q", database)
 	}
 
 	c, err := r.client(ctx)
@@ -589,7 +605,7 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 			}
 		}
 
-		res, err := r.runStatement(ctx, c, t)
+		res, err := r.runStatement(ctx, c, t, &database)
 		if err != nil {
 			if len(parts) > 1 {
 				return nil, contract.Invalid("%s: %v", t, err)
@@ -613,25 +629,26 @@ func (r *Repository) RunCommand(ctx context.Context, input string) (*contract.Co
 	return &contract.CommandResult{Output: entries}, nil
 }
 
-func (r *Repository) runStatement(ctx context.Context, c *mongo.Client, t string) (*contract.CommandResult, error) {
+func (r *Repository) runStatement(ctx context.Context, c *mongo.Client, t string, database *string) (*contract.CommandResult, error) {
 	switch {
 	case t == "db":
-		return &contract.CommandResult{Output: r.cliDB()}, nil
+		return &contract.CommandResult{Output: *database}, nil
 	case t == "show dbs" || t == "show databases":
 		names, err := c.ListDatabaseNames(ctx, bson.D{})
 
 		return &contract.CommandResult{Output: names}, err
 	case t == "show collections":
-		names, err := c.Database(r.cliDB()).ListCollectionNames(ctx, bson.D{})
+		names, err := c.Database(*database).ListCollectionNames(ctx, bson.D{})
 
 		return &contract.CommandResult{Output: names}, err
 	case strings.HasPrefix(t, "use "):
 		name := strings.TrimSpace(strings.TrimPrefix(t, "use "))
-		if name == "" || strings.ContainsAny(name, "/\\. \"$*<>:|?") {
+		if !validShellDatabase(name) {
 			return nil, contract.Invalid("invalid database name %q", name)
 		}
 
 		cliDBs.Store(clientKey{r.owner, r.conn.ID}, name)
+		*database = name
 
 		return &contract.CommandResult{Output: "switched to db " + name}, nil
 	}
@@ -647,10 +664,10 @@ func (r *Repository) runStatement(ctx context.Context, c *mongo.Client, t string
 			return nil, contract.Invalid("createCollection needs a collection name")
 		}
 
-		return &contract.CommandResult{Output: bson.D{{Key: "ok", Value: 1}}}, c.Database(r.cliDB()).CreateCollection(ctx, name)
+		return &contract.CommandResult{Output: bson.D{{Key: "ok", Value: 1}}}, c.Database(*database).CreateCollection(ctx, name)
 	}
 
-	return r.exec(ctx, c.Database(r.cliDB()).Collection(cmd.coll), cmd)
+	return r.exec(ctx, c.Database(*database).Collection(cmd.coll), cmd)
 }
 
 // stringArg reads a quoted string argument.

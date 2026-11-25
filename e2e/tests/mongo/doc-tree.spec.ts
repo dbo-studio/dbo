@@ -17,7 +17,7 @@ test.describe("MongoDB document tree", () => {
     await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
     const dbNode = page.getByTestId(`tree-node-${db}`);
     if (!(await dbNode.isVisible().catch(() => false))) await page.getByTestId(`tree-node-${m.s.name.toLowerCase()}`).click();
-    await dbNode.click();
+    if ((await dbNode.getAttribute("aria-expanded")) !== "true") await dbNode.click();
     await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
@@ -77,6 +77,53 @@ test.describe("MongoDB document tree", () => {
     const text = root.nodes.find((n) => n.key === "text")!;
     expect(text.truncated).toBe(true);
     expect(text.value.length).toBeLessThanOrEqual(2000);
+  });
+
+  test("Arabic and Persian values use the bundled font and survive edits", async ({ page }, testInfo) => {
+    const field = "نام";
+    const original = "محمد، یگانه (A12)";
+    const updated = "عین‌الله، آزمون (B34)";
+    await m.add(page, JSON.stringify({ [field]: original }));
+    await openBrowse(page);
+    const item = page.getByTestId("browse-item").first();
+    await item.click();
+    const row = page.getByTestId(`doc-node-${field}`);
+    const preview = row.getByText(JSON.stringify(original), { exact: true });
+
+    await test.step("Render the mixed-script value with the bundled Arabic fallback", async () => {
+      await expect(row.getByText(field, { exact: true })).toHaveAttribute("dir", "auto");
+      await expect(preview).toHaveCSS("direction", "ltr");
+      await expect(preview).toHaveCSS("font-family", /Vazirmatn.*monospace/);
+      const cdp = await page.context().newCDPSession(page);
+      try {
+        await cdp.send("DOM.enable");
+        await cdp.send("CSS.enable");
+        const { root } = await cdp.send("DOM.getDocument");
+        const { nodeId } = await cdp.send("DOM.querySelector", {
+          nodeId: root.nodeId,
+          selector: `[data-testid="doc-node-${field}"] [dir="ltr"]`,
+        });
+        await expect.poll(async () => {
+          const { fonts } = await cdp.send("CSS.getPlatformFontsForNode", { nodeId });
+          return fonts.some((font) => font.isCustomFont && font.familyName.includes("Vazirmatn") && font.glyphCount > 0);
+        }).toBe(true);
+      } finally {
+        await cdp.detach();
+      }
+      await testInfo.attach("mixed-script-preview", { body: await row.screenshot(), contentType: "image/png" });
+    });
+
+    await test.step("Edit the value and reopen the document after reloading", async () => {
+      await preview.click();
+      const input = row.getByRole("textbox", { name: "field-value" });
+      await expect(input).toHaveCSS("direction", "rtl");
+      await input.fill(updated);
+      await input.press("Enter");
+      await expect(row.getByText(JSON.stringify(updated), { exact: true })).toBeVisible();
+      await openBrowse(page);
+      await item.click();
+      await expect(row.getByText(JSON.stringify(updated), { exact: true })).toBeVisible();
+    });
   });
 
   test("the tree view edits a field in place and the JSON view follows", async ({ page }) => {

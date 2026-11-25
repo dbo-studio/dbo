@@ -106,3 +106,7 @@ export const endTransaction = async (data: TransactionRequestType, commit: boole
 export const transactionActive = async (data: TransactionRequestType): Promise<boolean> => {
   return (await api.get<{ data: { active: boolean } }>(endpoint.transaction(), { params: data })).data.data.active;
 };
+
+export async function explainQuery(data: RunRawQueryRequestType): Promise<RunQueryResponseType> {
+  return (await api.post<{ data: RunQueryResponseType }>('/query/explain', data, { silent: true })).data.data;
+}

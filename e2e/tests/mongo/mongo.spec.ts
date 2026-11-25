@@ -2,7 +2,7 @@ import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { ConnectionPage } from "../../pages";
+import { ConnectionPage, ObjectTreePage } from "../../pages";
 
 /**
  * MongoDB driver on the NoSQL engine. Needs a MongoDB (docker compose -f docker-compose.dev.yml up -d sample-mongo,
@@ -86,10 +86,11 @@ test.describe("MongoDB driver", () => {
     }
     await expect(dbNode).toBeVisible({ timeout: 15000 });
     await dbNode.click();
-    const node = page.getByTestId(`tree-node-${coll}`);
-    await expect(node).toBeVisible({ timeout: 15000 });
+    const tree = new ObjectTreePage(page);
+    const node = await tree.expectNodeVisible(coll);
     await node.dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
+    await tree.clearTreeFilter();
   }
 
   test("tree, browse, filter, and Extended JSON types survive an edit", async ({ page }) => {
@@ -222,19 +223,12 @@ test.describe("MongoDB driver", () => {
       }
     });
 
-    await test.step("dropping the collection is destructive: refused without confirmation, allowed with it", async () => {
-      const refused = await run("db." + coll + ".drop()", false);
-      expect(refused.status()).toBe(403);
-      expect((await refused.json()).message).toBe("safe_mode_confirm_required");
+    await test.step("Silent Mode allows dropping the collection without confirmation", async () => {
       expect(await out("show collections")).toContain(coll);
-      expect(await out("db." + coll + ".drop()")).toMatchObject({ ok: 1 });
+      const dropped = await run("db." + coll + ".drop()", false);
+      expect(dropped.ok(), await dropped.text()).toBeTruthy();
+      expect((await dropped.json()).data.output).toMatchObject({ ok: 1 });
       expect(await out("show collections")).not.toContain(coll);
-    });
-
-    await test.step("a destructive statement needs explicit confirmation even without Safe Mode", async () => {
-      const res = await run("db." + coll + ".deleteMany({})", false);
-      expect(res.status()).toBe(403);
-      expect((await res.json()).message).toBe("safe_mode_confirm_required");
     });
   });
 
@@ -297,13 +291,42 @@ test.describe("MongoDB driver", () => {
     });
   });
 
+  test("the MongoDB inline filter preserves the chosen value type", async ({ page }) => {
+    await seed(page);
+    await openUsers(page);
+    const inline = page.getByTestId("mongo-quick-filter");
+    const footer = page.getByTestId("browse-footer");
+
+    await test.step("Search for a numeric field as a string", async () => {
+      await inline.getByRole("textbox", { name: "Field" }).fill("age");
+      await inline.getByRole("textbox", { name: "Value" }).fill("41");
+      await inline.getByRole("button", { name: "Run", exact: true }).click();
+      await expect(footer).toContainText("0 loaded");
+    });
+
+    await test.step("Select Number and run the same value with Enter", async () => {
+      await inline.getByRole("combobox", { name: "Value type" }).click();
+      await page.getByRole("option", { name: "Number", exact: true }).click();
+      await inline.getByRole("textbox", { name: "Value" }).press("Enter");
+      await expect(footer).toContainText("1 loaded");
+    });
+
+    await test.step("Inspect the applied JSON and return to the same simple draft", async () => {
+      await page.getByRole("button", { name: "Advanced", exact: true }).click();
+      await expect(page.getByTestId("browse-filter-bar")).toContainText('{"age":41}');
+      await page.getByRole("button", { name: "Simple", exact: true }).click();
+      await expect(inline.getByRole("textbox", { name: "Value" })).toHaveValue("41");
+      await expect(inline.getByRole("combobox", { name: "Value type" })).toContainText("Number");
+    });
+  });
+
   test("the query builder turns rows into a MongoDB filter and sort, and the JSON box shows them", async ({ page }) => {
     await seed(page);
     await openUsers(page);
     await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
 
-    await page.getByTestId("browse-query-mode-builder").click();
-    const builder = page.getByTestId("browse-query-builder");
+    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    const builder = page.getByTestId("browse-filter-panel");
     await expect(builder).toBeVisible();
 
     const pick = async (index: number, label: string): Promise<void> => {
@@ -320,11 +343,13 @@ test.describe("MongoDB driver", () => {
       await value.blur();
       await builder.getByRole("button", { name: "Apply" }).first().click();
       await expect(page.getByTestId("browse-footer")).toContainText("1 loaded", { timeout: 15000 });
-      await expect(page.getByTestId("browse-generated-query")).toContainText("$regularExpression");
+      await expect(page.getByTestId("browse-filter-bar")).toContainText("regularExpression");
     });
 
     await test.step("the same filter is in the Query box as JSON", async () => {
-      await page.getByTestId("browse-query-mode-query").click();
+      await page.getByTestId("browse-panel-sort").click();
+      await expect(builder).toBeHidden();
+      await expect(page.getByTestId("browse-sort-panel")).toBeVisible();
       await expect(page.getByTestId("browse-filter-bar")).toContainText("regularExpression");
     });
   });

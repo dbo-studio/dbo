@@ -12,3 +12,5 @@ backend/.env
 docs/prd/*
 graphify-out
 .playwright-mcp
+.openidea
+.codex

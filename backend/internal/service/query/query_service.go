@@ -26,6 +26,7 @@ import (
 )
 
 type IQueryService interface {
+	Explain(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
 	Run(ctx context.Context, req *dto.RunQueryRequest) (*dto.RunQueryResponse, error)
 	Raw(ctx context.Context, req *dto.RawQueryRequest) (*dto.RawQueryResponse, error)
 	// RunOrBackground and RawOrBackground are Run and Raw for the HTTP request: a query that outlasts the

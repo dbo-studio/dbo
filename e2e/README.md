@@ -2,7 +2,7 @@
 
 Isolated Playwright suite for DBO Studio. Each `npm test` run boots an **ephemeral backend** (random port + temp SQLite) and a Vite frontend that proxies `/api` to that backend. Your personal app DB (`~/Library/Application Support/dbo/...`) is never used.
 
-**Agents:** follow [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and the [`e2e-playwright`](../.cursor/skills/e2e-playwright/SKILL.md) skill when writing or fixing tests.
+**Agents** must follow the [E2E QA rules](../.agents/rules/e2e-qa.md), [host execution rules](../.agents/rules/e2e-host-os.md), and [Playwright skill](../.agents/skills/e2e-playwright/SKILL.md).
 
 **Inventory:** every spec file is listed in [`SPEC-CATALOG.md`](SPEC-CATALOG.md).
 
@@ -88,6 +88,10 @@ Each row is a **product area**. Specs live under `tests/<engine>/`; see [`SPEC-C
 | AI chat / agent | `ai-chat-*`, `ai-agent-*`, `ai-setup`, `ai-provider-*`, `shared/ai-*` | Panel, composer, agent, workstation (mocked LLM) |
 | Settings / MCP | `settings-theme`, `mcp-panel`, `account-settings`, `notification-*` | Theme, MCP, notifications |
 | Redis / Mongo | `tests/redis/*`, `tests/mongo/*` | NoSQL capabilities (tagged `@cap` / `@tool`) |
+| Browse and Server tools | `tests/mongo/mongo.spec.ts`, `tests/{mongo,pg,redis}/server.spec.ts` | Typed MongoDB inline filters, toolbar Filters and Sorts, shared Server grids, native activity controls, and SQL Explain |
+| MongoDB collection drop and Safe Mode | `mongo/{transfer,editor,safe-mode}.spec.ts` | Direct explorer drop with confirmation and refresh, Silent Mode execution, Alert cancellation preserving results, password and production gates |
+| MongoDB document text and explorer menus | `mongo/{doc-tree,transfer}.spec.ts` | Bundled Arabic and Persian font, mixed-direction edits, copy database and collection names, and inline rename with cancellation and collision checks |
+| Redis destructive command cancellation | `redis/redis.spec.ts` | Terminal confirmation preserves the key and prior output when canceled |
 | Mobile / perf | `mobile-*`, `perf-*` | Phone shell, baselines |
 
 | Feature                  | Spec                                          | Flow                                                    |

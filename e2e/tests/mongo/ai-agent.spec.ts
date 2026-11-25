@@ -88,14 +88,16 @@ test.describe("MongoDB AI agent writes", () => {
     expect((await applyChangeset(page, proposal, true)).status()).toBe(200);
     expect(await names(page)).toEqual(["bob", "carol", "dave", "erin"]);
 
-    // Taking back an insert deletes documents, which Safe Mode asks to confirm.
+    // Taking back an insert deletes documents, so Alert Mode gates the whole undo.
     const undo = await page.request.post(`/api/ai/chats/${proposal.chatId}/changesets/${proposal.changeset.id}/undo`);
     expect(undo.status()).toBe(200);
     const undoSet = { chatId: proposal.chatId, changeset: ((await undo.json()) as { data: ProposedChangeset["changeset"] }).data };
+    await m.setMode(page, "alert_write");
     const unconfirmed = await applyChangeset(page, undoSet, false);
     expect(unconfirmed.status()).toBe(403);
     expect(await names(page)).toEqual(["bob", "carol", "dave", "erin"]); // the batch stopped before its first statement
-    expect((await applyChangeset(page, undoSet, true)).status()).toBe(200);
+    await m.setMode(page, "silent");
+    expect((await applyChangeset(page, undoSet, false)).status()).toBe(200);
     expect(await names(page)).toEqual(["alice", "bob", "carol"]);
   });
 

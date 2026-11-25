@@ -49,6 +49,13 @@ func (s *Service) ServerCall(ctx context.Context, connectionID int32, kind strin
 		return nil, err
 	}
 
+	if kind == ServerDestructive && !confirmed {
+		return nil, apperror.SafeModeConfirmRequired(map[string]any{
+			"requiresConfirm": true,
+			"reason":          "destructive server operation requires confirmation",
+		})
+	}
+
 	if kind != ServerRead {
 		if err := s.guard(ctx, repo, connectionID, contract.Operation{Name: kind, Count: 1}, confirmed); err != nil {
 			return nil, err

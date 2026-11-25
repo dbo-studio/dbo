@@ -1,9 +1,3 @@
----
-description: Go concurrency — context propagation, goroutine ownership, channels, errgroup
-globs: backend/**/*.go
-alwaysApply: false
----
-
 # Go Concurrency
 
 ## Context

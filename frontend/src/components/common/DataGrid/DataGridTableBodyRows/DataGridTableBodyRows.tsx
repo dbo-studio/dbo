@@ -15,17 +15,20 @@ export default function DataGridTableBodyRows({
   paddingBottom,
   searchTerm,
   currentMatch,
-  columnWindow
+  columnWindow,
+  renderCell,
+  standalone
 }: DataGridTableBodyRowsProps & {
   virtualRows: Array<{ index: number; start: number; end: number; size: number }>;
   paddingTop: number;
   paddingBottom: number;
+  standalone: boolean;
 }): JSX.Element {
   const { getRowState } = useRowStateLookup();
   const rangeHandlers = useCellRangeSelection(columns);
 
   return (
-    <tbody {...rangeHandlers}>
+    <tbody {...(!standalone ? rangeHandlers : undefined)}>
       {paddingTop > 0 && (
         <tr>
           <PaddingTableCell colSpan={columns.length} height={paddingTop} />
@@ -39,6 +42,8 @@ export default function DataGridTableBodyRows({
 
         return (
           <DataGridTableRow
+            renderCell={renderCell}
+            standalone={standalone}
             key={`row-${row.dbo_index}`}
             editable={editable}
             row={row}

@@ -17,6 +17,7 @@ import {
   TreeViewContentStyled
 } from './ObjectTreeView.styled';
 import ObjectTreeVirtualBody from './ObjectTreeVirtualBody';
+import RenameField from './RenameField/RenameField';
 import { findNode, useObjectTreeView } from './useObjectTreeView';
 
 export default function ObjectTreeView(): JSX.Element {
@@ -48,6 +49,8 @@ export default function ObjectTreeView(): JSX.Element {
     hasFocus,
     selectedIds,
     renamingId,
+    renamingPinId,
+    edit,
     revealParentId,
     setRowElement,
     handleRowClick,
@@ -103,14 +106,19 @@ export default function ObjectTreeView(): JSX.Element {
                 tabIndex={0}
                 data-testid={`tree-pinned-${pin.name.toLowerCase().replace(/\s+/g, '-')}`}
                 onClick={(): void => open(node)}
-                onContextMenu={(event): void => handleRowContextMenu(event, node)}
+                onContextMenu={(event): void => handleRowContextMenu(event, node, true)}
                 onKeyDown={(event): void => {
                   if (event.key === 'Enter') open(node);
+                  if (event.key === 'F2') edit(node, true);
                 }}
               >
                 <NodeRowContent>
                   {node.icon && <CustomIcon type={node.icon as keyof typeof IconTypes} size='s' />}
-                  <NodeName>{pin.name}</NodeName>
+                  {renamingPinId === node.id ? (
+                    <RenameField node={node} onCommit={commitRename} onCancel={cancelRename} />
+                  ) : (
+                    <NodeName>{pin.name}</NodeName>
+                  )}
                 </NodeRowContent>
               </NodeLabel>
             );

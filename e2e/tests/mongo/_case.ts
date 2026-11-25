@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { SAFE_MODE_PASSWORD } from "../../fixtures/safeMode";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { createNoSqlConnection, nosql } from "../../helpers/nosql";
+import { apiUrl, createNoSqlConnection, headers, nosql } from "../../helpers/nosql";
+import type { SafeModeValue } from "../../pages/SafeModePage";
 
 const mongoContainer = process.env.MONGO_TEST_CONTAINER ?? "dbo-studio-sample-mongo";
 export const db = "test";
@@ -29,6 +31,20 @@ export function useMongo(tag: string) {
   return {
     s,
     api: (page: Page) => nosql(page, s.id, s.container),
+    setMode: async (page: Page, safeMode: SafeModeValue): Promise<void> => {
+      if (safeMode !== "silent") {
+        const set = await page.request.post(`${apiUrl()}/safe-mode/password`, {
+          data: { password: SAFE_MODE_PASSWORD, confirm: SAFE_MODE_PASSWORD },
+          headers,
+        });
+        expect([200, 409], await set.text()).toContain(set.status());
+      }
+      const patch = await page.request.patch(`${apiUrl()}/connections/${s.id}`, {
+        data: { safeMode, safeModePassword: SAFE_MODE_PASSWORD },
+        headers,
+      });
+      expect(patch.ok(), await patch.text()).toBeTruthy();
+    },
     add: async (page: Page, value: string): Promise<string> => {
       const res = await nosql(page, s.id, s.container).insert({ id: "", view: "document", value, meta: { kind: "document" } });
       return ((await res.json()).data as { id: string }).id;

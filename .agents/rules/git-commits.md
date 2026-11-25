@@ -1,8 +1,3 @@
----
-description: Conventional Commits format and author identity rules for DBO
-alwaysApply: true
----
-
 # Git Commits
 
 ## Format

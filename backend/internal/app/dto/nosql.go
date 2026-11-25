@@ -73,6 +73,7 @@ type (
 		ConnectionID int32  `json:"connectionId"`
 		Input        string `json:"input"`
 		Confirmed    bool   `json:"confirmed"`
+		Database     string `json:"database,omitempty"`
 	}
 
 	NoSQLPubSubRequest struct {

@@ -1,18 +1,12 @@
----
-description: Strict QA rules for DBO Playwright e2e — isolation, POM, cleanup, locators, DoD
-globs: e2e/**/*
-alwaysApply: false
----
-
 # E2E QA Rules (DBO)
 
 Act like a QA engineer: document flows, keep tests isolated, never poison the developer's machine.
 
-**DBO testing policy:** Playwright e2e is the only place for new automated tests. Do not add unit/integration suites under `frontend/` or `backend/` — see `.cursor/rules/go-testing.mdc`.
+**DBO testing policy:** Playwright e2e is the only place for new automated tests. Do not add unit/integration suites under `frontend/` or `backend/` — see `.agents/rules/go-testing.md`.
 
 ## Isolation (non-negotiable)
 
-- Run on the **host OS**, never the Cursor sandbox. Shell calls for `npm test`, Playwright, or sample-DB compose **must** use `required_permissions: ["all"]` on the first attempt — see `.cursor/rules/e2e-host-os.mdc`.
+- Run Playwright and sample database commands on the **host OS**. Follow the [host execution rules](e2e-host-os.md).
 - Run only via `cd e2e && npm test` (or `npm run test:ui`). Never `npx playwright test` alone — `PLAYWRIGHT_API_URL` must come from `run-e2e`.
 - Never point tests at a daily backend on `:8080` or the user's Application Support SQLite.
 - `/config/reset` is allowed only against the ephemeral API started by the harness.

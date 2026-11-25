@@ -92,12 +92,18 @@ func (s *Service) RequireConfirmed(ctx context.Context, connectionID int32, stat
 		policy := serviceSafemode.FromConnection(connection)
 		policy = s.unlockStore.WithUnlock(ctx, helper.CtxOwnerID(ctx), connection.ID, policy)
 
+		if contract.IsMongo(connection.ConnectionType) {
+			return serviceSafemode.Enforce(policy, serviceSafemode.ClassFromSafety(contract.SafetyDestructive), confirmed)
+		}
+
 		// An unlocked connection takes destructive statements without asking, like guard does.
 		if !policy.Unlocked {
 			return apperror.SafeModeConfirmRequired(map[string]any{
 				"class": string(contract.SafetyDestructive), "requiresConfirm": true, "reason": "destructive operation requires confirmation",
 			})
 		}
+
+		return nil
 	}
 
 	return nil

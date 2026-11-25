@@ -220,25 +220,14 @@ func (r *Registry) executeSQL(ctx context.Context, args map[string]any, toolCtx 
 func (r *Registry) explainQuery(ctx context.Context, args map[string]any, toolCtx ToolContext) (string, error) {
 	sqlText, _ := args["sql"].(string)
 
-	safeSQL, err := GuardExplainSQL(sqlText)
-	if err != nil {
-		return "", err
-	}
-
 	conn, err := r.connectionRepo.Find(ctx, toolCtx.ConnectionID)
 	if err != nil {
 		return "", fmt.Errorf("connection not found: %w", err)
 	}
 
-	switch {
-	case databaseContract.IsPostgresFamily(conn.ConnectionType), databaseContract.IsMysqlFamily(conn.ConnectionType):
-		safeSQL = "EXPLAIN " + safeSQL
-	case conn.ConnectionType == databaseContract.Sqlite:
-		safeSQL = "EXPLAIN QUERY PLAN " + safeSQL
-	case conn.ConnectionType == databaseContract.ClickHouse:
-		safeSQL = "EXPLAIN " + safeSQL
-	default:
-		return "", fmt.Errorf("query plans are not available for %s connections", conn.ConnectionType)
+	safeSQL, err := ExplainStatement(conn.ConnectionType, sqlText)
+	if err != nil {
+		return "", err
 	}
 
 	return r.runReadOnly(ctx, conn, safeSQL, toolCtx)

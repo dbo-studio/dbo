@@ -86,7 +86,7 @@ export function useObjectTreeView() {
   const [revealParentId, setRevealParentId] = useState<string | undefined>(undefined);
   const [menu, setMenu] = useState<MenuType[]>([]);
   const [menuFromKeyboard, setMenuFromKeyboard] = useState(false);
-  const [renamingId, setRenamingId] = useState<string | undefined>(undefined);
+  const [renaming, setRenaming] = useState<{ id: string; fromPin: boolean }>();
   // Cmd/Ctrl+click and Shift+click build this set; the anchor is where a Shift range starts.
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(EMPTY_SET);
   const [anchorId, setAnchorId] = useState<string | undefined>(undefined);
@@ -323,7 +323,7 @@ export function useObjectTreeView() {
     [connectionMenu, newConnectionItem, refreshItem]
   );
   const buildMenu = useTreeNodeMenuBuilder(actionDetection, {
-    onRename: (node) => setRenamingId(node.id),
+    onRename: (node, fromPin = false) => setRenaming({ id: node.id, fromPin }),
     onDropMany: (nodes) => {
       setSelectedIds(EMPTY_SET);
       dropNodes(nodes);
@@ -384,10 +384,10 @@ export function useObjectTreeView() {
   );
 
   const edit = useCallback(
-    (node: TreeNodeType): void => {
+    (node: TreeNodeType, fromPin = false): void => {
       // F2 renames what can be renamed; otherwise it opens the object's editor.
       if (node.contextMenu?.some((a) => a.name === 'rename')) {
-        setRenamingId(node.id);
+        setRenaming({ id: node.id, fromPin });
         return;
       }
       const action = node.contextMenu?.find((a) => a.name.startsWith('edit'));
@@ -400,14 +400,15 @@ export function useObjectTreeView() {
     (
       event: Pick<React.MouseEvent, 'preventDefault' | 'clientX' | 'clientY'>,
       node: TreeNodeType,
-      fromKeyboard = false
+      fromKeyboard = false,
+      fromPin = false
     ): void => {
       setActiveId(node.id);
       setMenuFromKeyboard(fromKeyboard);
       // Right-clicking outside the multi-selection acts on that one row only.
       const inSelection = selectedIds.has(node.id);
       if (!inSelection) setSelectedIds(EMPTY_SET);
-      const rowMenu = buildMenu(node, inSelection ? selectedNodes : [node]);
+      const rowMenu = buildMenu(node, inSelection ? selectedNodes : [node], fromPin);
       // Root row is the connection: connection edit/delete stay up top, server DDL (Create database, …) below.
       setMenu(
         node.id === tree?.id
@@ -543,10 +544,9 @@ export function useObjectTreeView() {
   );
 
   const cancelRename = useCallback((): void => {
-    const id = renamingId;
-    setRenamingId(undefined);
-    if (id) refocusIfLost(rowElementsRef.current.get(id));
-  }, [renamingId]);
+    setRenaming(undefined);
+    if (renaming && !renaming.fromPin) refocusIfLost(rowElementsRef.current.get(renaming.id));
+  }, [renaming]);
 
   const commitRename = useCallback(
     (node: TreeNodeType, name: string): void => {
@@ -564,9 +564,9 @@ export function useObjectTreeView() {
   );
 
   const handleRowContextMenu = useCallback(
-    (event: React.MouseEvent, node: TreeNodeType): void => {
+    (event: React.MouseEvent, node: TreeNodeType, fromPin = false): void => {
       event.stopPropagation();
-      showMenu(event, node);
+      showMenu(event, node, false, fromPin);
     },
     [showMenu]
   );
@@ -583,7 +583,7 @@ export function useObjectTreeView() {
   };
 
   const handleContainerKeyDown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && selectedIds.size > 0 && !renamingId) setSelectedIds(EMPTY_SET);
+    if (event.key === 'Escape' && selectedIds.size > 0 && !renaming) setSelectedIds(EMPTY_SET);
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
       event.preventDefault();
       focusSearch();
@@ -643,7 +643,9 @@ export function useObjectTreeView() {
     tabStopId,
     hasFocus,
     selectedIds,
-    renamingId,
+    renamingId: renaming?.fromPin ? undefined : renaming?.id,
+    renamingPinId: renaming?.fromPin ? renaming.id : undefined,
+    edit,
     revealParentId,
     setRowElement,
     handleRowClick,

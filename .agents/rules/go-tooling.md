@@ -1,9 +1,3 @@
----
-description: Go tooling — gofmt, golangci-lint, air hot reload, pre-commit checks
-globs: backend/**/*.go
-alwaysApply: false
----
-
 # Go Tooling (DBO)
 
 ## Format
@@ -47,6 +41,6 @@ go fmt ./...
 golangci-lint run
 ```
 
-Cover user-visible behavior in `e2e/` — do not add new `*_test.go`. See `go-testing.mdc`.
+Cover user-visible behavior in `e2e/` — do not add new `*_test.go`. See `go-testing.md`.
 
 Clean lint output is required — do not disable linters to pass.

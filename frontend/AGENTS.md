@@ -25,10 +25,10 @@
 ## Testing Guidelines
 - **E2E only** — do not add Vitest/Jest/`node:test` (or any unit/component tests) under `frontend/`.
 - **Every user-visible feature ships as a scenario** in `../e2e/tests/` (example: `connections.spec.ts`, `ai-chat-composer.spec.ts`). The feature matrix in `../e2e/README.md` is the checklist: if there is no row, the feature is not covered.
-- Prefer one assertable outcome per `test()`; describe the QA script with `test.step` (see `../.cursor/rules/e2e-qa.mdc`).
+- Prefer one assertable outcome per `test()`; describe the QA script with `test.step` (see `../.agents/rules/e2e-qa.md`).
 - Add or update specs when UI/behavior changes, then update the matrix row (or add one).
 - Before submitting, run at least `cd e2e && npm test -- tests/<affected>.spec.ts`.
-- Follow `.cursor/rules/e2e-qa.mdc` and the `e2e-playwright` skill when writing or fixing e2e.
+- Follow `.agents/rules/e2e-qa.md` and the `e2e-playwright` skill when writing or fixing e2e.
 - See [`../e2e/README.md`](../e2e/README.md) for isolation and run details.
 
 ## Commit & Pull Request Guidelines
@@ -99,7 +99,9 @@ Ask: "is it a list I pick from, or a page I work in?"
 
 Run `npm run knip` (warn-only) periodically; delete confirmed unused exports before they accumulate.
 
-### Component structure (see `.cursor/rules/frontend-components.mdc`)
+### Component structure
+
+Follow the [frontend component rules](../.agents/rules/frontend-components.md) when working on TypeScript under `frontend/src/`.
 
 Product UI under `src/components/common/`: one React component per file and folder, styles in `*.styled.ts`, heavy logic in hooks.
 

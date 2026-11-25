@@ -22,13 +22,23 @@ test.describe("MongoDB safe mode", () => {
     expect(((await j(await m.api(page).browse())).items as unknown[]).length).toBe(1);
   });
 
-  test("destructive statements need confirmation and delete nothing without it", async ({ page }) => {
+  test("Alert Mode requires confirmation for destructive statements", async ({ page }) => {
     await m.add(page, '{"a":1}');
+    await m.setMode(page, "alert_write");
     for (const q of [`db.${m.s.coll}.deleteMany({})`, `db.${m.s.coll}.deleteOne({})`]) {
       const res = await cli(page, q, false);
       expect(res.status(), q).toBe(403);
       expect((await res.json()).message).toBe("safe_mode_confirm_required");
     }
+    expect(((await j(await m.api(page).browse())).items as unknown[]).length).toBe(1);
+  });
+
+  test("Safe Mode requires a password for destructive statements", async ({ page }) => {
+    await m.add(page, '{"a":1}');
+    await m.setMode(page, "safe_write");
+    const res = await cli(page, `db.${m.s.coll}.drop()`, true);
+    expect(res.status()).toBe(403);
+    expect((await res.json()).message).toBe("safe_mode_password_required");
     expect(((await j(await m.api(page).browse())).items as unknown[]).length).toBe(1);
   });
 
@@ -42,6 +52,7 @@ test.describe("MongoDB safe mode", () => {
       await m.api(page).save(id, { value: '{"a":2}' }),
       await m.api(page).remove([id]),
       await cli(page, `db.${m.s.coll}.insertOne({"x":1})`, true),
+      await cli(page, `db.${m.s.coll}.drop()`, false),
     ];
     for (const res of locked) {
       expect(res.status()).toBe(403);

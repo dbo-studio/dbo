@@ -1,7 +1,7 @@
 import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
-import { ConnectionPage } from "../../pages";
+import { ConnectionPage, SafeModePage } from "../../pages";
 
 /**
  * Redis driver on the NoSQL engine. Needs a Redis (docker compose -f docker-compose.dev.yml up -d sample-redis).
@@ -253,6 +253,22 @@ test.describe("Redis driver", () => {
     await expect(terminal).toContainText("OK");
     await type(`GET ${prefix}:cli`);
     await expect(terminal).toContainText('"hello"');
+
+    await test.step("canceling a destructive command keeps the previous terminal output and the key", async () => {
+      const safeMode = new SafeModePage(page);
+      await type(`DEL ${prefix}:cli`);
+      await expect(safeMode.confirmTitle).toBeVisible();
+      await safeMode.cancelButton.click();
+      await expect(safeMode.confirmTitle).toHaveCount(0);
+      await expect(terminal).toContainText('"hello"');
+      await expect(page.getByTestId("run-query")).toHaveCount(0);
+      const key = await page.request.get(`${apiUrl()}/nosql/item`, {
+        params: { connectionId, containerId: "db0", itemId: `${prefix}:cli` },
+        headers,
+      });
+      expect(key.ok()).toBeTruthy();
+      await terminal.click();
+    });
 
     await test.step("a pasted command is shown but not executed until Enter", async () => {
       await page.evaluate(

@@ -1,9 +1,3 @@
----
-description: Testing policy — no new frontend/backend unit tests; cover behavior with Playwright e2e only
-globs: backend/**/*_test.go,frontend/**/*.{test,spec}.*
-alwaysApply: false
----
-
 # Testing Policy (DBO)
 
 ## Rule
@@ -15,7 +9,7 @@ alwaysApply: false
 All product behavior coverage goes through Playwright in [`e2e/`](../../e2e/):
 
 - Specs: `e2e/tests/*.spec.ts`
-- Follow [`.cursor/rules/e2e-qa.mdc`](e2e-qa.mdc) and the `e2e-playwright` skill
+- Follow [`.agents/rules/e2e-qa.md`](e2e-qa.md) and the `e2e-playwright` skill
 - Run: `cd e2e && npm test -- tests/<affected>.spec.ts`
 
 ## Do not create

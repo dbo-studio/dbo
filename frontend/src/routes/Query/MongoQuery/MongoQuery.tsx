@@ -104,8 +104,8 @@ export default function MongoQuery(): JSX.Element {
     setOutcome(outcomes.get(tabId));
   }
 
-  const cli = (input: string): Promise<unknown> =>
-    serial(() => api.cli.run({ connectionId, input })).then((res) => res.output);
+  const cli = (input: string, database?: string): Promise<unknown> =>
+    serial(() => api.cli.run({ connectionId, input, database })).then((res) => res.output);
   const asNames = (out: unknown): string[] => (Array.isArray(out) ? (out as string[]) : []);
 
   const { data: databases = [] } = useQuery({
@@ -125,10 +125,7 @@ export default function MongoQuery(): JSX.Element {
 
   const { data: collections = [] } = useQuery({
     queryKey: ['mongo', 'collections', connectionId, database],
-    queryFn: async (): Promise<string[]> => {
-      if (database) await cli(`use ${database}`);
-      return asNames(await cli('show collections'));
-    },
+    queryFn: async (): Promise<string[]> => asNames(await cli('show collections', database)),
     enabled: !!connection && allowed && !!database
   });
 
@@ -210,31 +207,30 @@ export default function MongoQuery(): JSX.Element {
     const abort = new AbortController();
     controllerRef.current = abort;
     setRunning(true);
-    let next: Outcome;
     try {
-      // The shell runs in the database last selected, so name this tab's one first.
-      if (tab?.database) await serial(() => api.cli.run({ connectionId, input: `use ${tab.database}` }, abort.signal));
-      const res = await withSafeModeRetry((confirmed) =>
-        serial(() => api.cli.run({ connectionId, input, confirmed }, abort.signal))
+      const res = await withSafeModeRetry(
+        (confirmed) =>
+          serial(() => api.cli.run({ connectionId, input, confirmed, database: tab?.database }, abort.signal)),
+        connectionId
       );
-      next =
-        res === undefined
-          ? { text: locales.cli_not_run, error: false }
-          : { text: JSON.stringify(res.output ?? null, null, 2), error: false, docs: asDocs(res.output), input };
-      // The assistant sees what this run returned, like it does for a SQL result.
-      if (res !== undefined) {
-        const ai = useAiStore.getState();
-        ai.updateContext({ ...ai.context, queryResultSummary: summarizeDocuments(res.output) });
-      }
+      if (res === undefined) return;
+
+      const next = { text: JSON.stringify(res.output ?? null, null, 2), error: false, docs: asDocs(res.output), input };
+      outcomes.set(tabId, next);
+      setOutcome(next);
+
+      const ai = useAiStore.getState();
+      ai.updateContext({ ...ai.context, queryResultSummary: summarizeDocuments(res.output) });
     } catch (e) {
-      next = abort.signal.aborted
+      const next = abort.signal.aborted
         ? { text: locales.query_cancelled, error: true }
         : { text: errorText(e), error: true, input };
+      outcomes.set(tabId, next);
+      setOutcome(next);
+    } finally {
+      controllerRef.current = null;
+      setRunning(false);
     }
-    controllerRef.current = null;
-    outcomes.set(tabId, next);
-    setOutcome(next);
-    setRunning(false);
   };
 
   // Statements opened from the tree (a template, or one that runs right away).

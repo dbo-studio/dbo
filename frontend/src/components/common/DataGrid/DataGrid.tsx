@@ -37,7 +37,8 @@ export default function DataGrid({
   columns,
   loading,
   editable = true,
-  standalone = false
+  standalone = false,
+  renderCell
 }: DataGridProps): JSX.Element {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<GridContextMenuState | null>(null);
@@ -120,7 +121,7 @@ export default function DataGrid({
 
   return (
     <DataGridRootStyled>
-      <QuickViewDialog editable={editable} />
+      {!standalone && <QuickViewDialog editable={editable} />}
       <SearchDialog open={isSearchDialogOpen} onClose={() => setIsSearchDialogOpen(false)} search={search} />
       <TableContainer
         ref={tableContainerRef}
@@ -152,6 +153,8 @@ export default function DataGrid({
               columnWindow={columnWindow}
             />
             <DataGridTableBodyRows
+              renderCell={renderCell}
+              standalone={standalone}
               editable={editable}
               rows={rows}
               columns={tableColumns}

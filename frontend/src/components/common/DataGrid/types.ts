@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import type { ColumnType, RowType } from '@/types';
 import type { ColumnWindow } from './hooks/useDataGridColumnWindow';
 import type { UseDataGridSearchReturn } from './hooks/useDataGridSearch';
 
 export type DataGridProps = {
+  renderCell?: (row: RowType, column: string) => ReactNode;
   rows: RowType[];
   columns: ColumnType[];
   loading: boolean;
@@ -27,6 +29,8 @@ export type DataGridTableCellProps = {
 };
 
 export type DataGridTableRowProps = {
+  standalone: boolean;
+  renderCell?: (row: RowType, column: string) => ReactNode;
   row: RowType;
   rowIndex: number;
   columns: ColumnType[];
@@ -64,6 +68,7 @@ export interface RowSelectionReturn {
 }
 
 export type DataGridTableBodyRowsProps = {
+  renderCell?: (row: RowType, column: string) => ReactNode;
   rows: RowType[];
   columns: ColumnType[];
   context: (event: React.MouseEvent, columnName: string) => void;

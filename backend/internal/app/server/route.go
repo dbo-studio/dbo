@@ -45,6 +45,10 @@ func (r *Server) routing() {
 	schema := api.Group("schema")
 	schema.Get("/diagram", r.handlers.Schema.Diagram)
 
+	api.Get("/server/capabilities", r.handlers.TreeHandler.ServerCapabilities)
+	api.Get("/server/panels/:panel", r.handlers.TreeHandler.ServerPanel)
+	api.Post("/server/activity/end", clearBody, r.handlers.TreeHandler.EndServerActivity)
+
 	tree := api.Group("tree")
 	tree.Get("/", r.handlers.TreeHandler.TreeHandler)
 	tree.Get("/search", r.handlers.TreeHandler.Search)
@@ -108,6 +112,7 @@ func (r *Server) routing() {
 	query := api.Group("query")
 	query.Post("/run", clearBody, r.handlers.QueryHandler.Run)
 	query.Post("/raw", clearBody, r.handlers.QueryHandler.Raw)
+	query.Post("/explain", clearBody, r.handlers.QueryHandler.Explain)
 	query.Post("/update", clearBody, r.handlers.QueryHandler.Update)
 	query.Post("/transaction/begin", clearBody, r.handlers.QueryHandler.TransactionBegin)
 	query.Post("/transaction/commit", clearBody, r.handlers.QueryHandler.TransactionCommit)

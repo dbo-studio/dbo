@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
+import { ObjectTreePage, SafeModePage } from "../../pages";
 import { db, useMongo } from "./_case";
 
 const mongoContainer = process.env.MONGO_TEST_CONTAINER ?? "dbo-studio-sample-mongo";
@@ -54,8 +55,16 @@ test.describe("MongoDB import, export and collection admin", () => {
   test("renames and drops a collection, and never overwrites an existing one", async ({ page }) => {
     await m.add(page, '{"k":1}');
     const target = `${m.s.coll}_renamed`;
+    const occupied = `${m.s.coll}_occupied`;
 
     try {
+      const created = await m.api(page).cli(`use ${db}; db.getCollection(${JSON.stringify(occupied)}).insertMany([{a:1},{a:2}])`);
+      expect(created.ok(), await created.text()).toBeTruthy();
+      const collision = await post(page, "collection/rename", { newName: occupied });
+      expect(collision.ok()).toBeFalsy();
+      expect(await count(page, m.s.container)).toBe(1);
+      expect(await count(page, `${db}/${occupied}`)).toBe(2);
+
       const res = await post(page, "collection/rename", { newName: target });
       expect(((await j(res)) as { containerId: string }).containerId).toBe(`${db}/${target}`);
       expect(await count(page, `${db}/${target}`)).toBe(1);
@@ -64,38 +73,141 @@ test.describe("MongoDB import, export and collection admin", () => {
       expect((await post(page, "collection/rename", { newName: "x" })).ok()).toBeFalsy();
       expect((await post(page, "collection/rename", { containerId: `${db}/${target}`, newName: "system.nope" })).ok()).toBeFalsy();
 
-      expect((await post(page, "collection/drop", { containerId: `${db}/${target}` })).ok()).toBeTruthy();
+      expect((await post(page, "collection/drop", { containerId: `${db}/${target}`, confirmed: false })).ok()).toBeTruthy();
       expect(await count(page, `${db}/${target}`)).toBe(0);
     } finally {
-      try {
-        execFileSync("docker", ["exec", mongoContainer, "mongosh", "--quiet", db, "--eval", `db.getCollection(${JSON.stringify(target)}).drop()`], { stdio: "ignore" });
-      } catch {
-        /* docker is optional for cleanup */
+      for (const name of [target, occupied]) {
+        try {
+          execFileSync("docker", ["exec", mongoContainer, "mongosh", "--quiet", db, "--eval", `db.getCollection(${JSON.stringify(name)}).drop()`], { stdio: "ignore" });
+        } catch {
+          /* docker is optional for cleanup */
+        }
       }
     }
   });
 
+  test("the explorer drops a dotted collection directly after confirmation", async ({ page }) => {
+    await m.add(page, '{"keep":1}');
+    const dotted = `${m.s.coll}.dots`;
+    const command = (source: string) => m.api(page).cli(`use ${db}; ${source}`);
+    const tree = new ObjectTreePage(page);
+    const safeMode = new SafeModePage(page);
+    const node = tree.getTreeNode(dotted);
+    const title = page.getByRole("heading", { name: "Drop collection" });
+    const queryRun = page.getByTestId("run-query");
+    const describe = () => page.request.get(`${apiUrl()}/nosql/server/collections`, {
+      params: { connectionId: m.s.id, database: db },
+      headers,
+    });
+    const names = async () => ((await j(await describe())) as { name: string }[]).map(({ name }) => name);
+
+    try {
+      const created = await command(`db.createCollection(${JSON.stringify(dotted)})`);
+      expect(created.ok(), await created.text()).toBeTruthy();
+      await page.reload();
+      await tree.expandNode(db);
+      await expect(node).toBeVisible();
+
+      await test.step("Cancel the drop and keep the collection", async () => {
+        await tree.runTreeAction(dotted, "Drop collection");
+        await expect(title).toBeVisible();
+        await safeMode.cancelButton.click();
+        await expect(title).toHaveCount(0);
+        await expect(node).toBeVisible();
+        expect(await names()).toContain(dotted);
+        await expect(queryRun).toHaveCount(0);
+      });
+
+      await test.step("Confirm the drop and refresh the explorer in place", async () => {
+        await node.dblclick();
+        await expect(page.getByTestId("browse-tab")).toBeVisible();
+        await tree.runTreeAction(dotted, "Drop collection");
+        await page.getByRole("button", { name: "Delete", exact: true }).click();
+        await expect(node).toHaveCount(0);
+        await expect(page.getByTestId("browse-tab")).toHaveCount(0);
+        await expect(safeMode.confirmTitle).toHaveCount(0);
+        await expect(queryRun).toHaveCount(0);
+        const remaining = await names();
+        expect(remaining).not.toContain(dotted);
+        expect(remaining).toContain(m.s.coll);
+      });
+    } finally {
+      await command(`db.getCollection(${JSON.stringify(dotted)}).drop()`);
+    }
+  });
+
+  test("the explorer copies database and dotted collection names", async ({ page, context }) => {
+    const dotted = `${m.s.coll}.copy`;
+    const command = (source: string) => m.api(page).cli(`use ${db}; ${source}`);
+    const tree = new ObjectTreePage(page);
+    try {
+      const created = await command(`db.createCollection(${JSON.stringify(dotted)})`);
+      expect(created.ok(), await created.text()).toBeTruthy();
+      await page.reload();
+      await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(page.url()).origin });
+      await tree.expandNode(db);
+      for (const name of [db, dotted]) {
+        await test.step(`Copy the displayed name of ${name}`, async () => {
+          await tree.runTreeAction(name, "Copy name");
+          await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(name);
+        });
+      }
+    } finally {
+      await command(`db.getCollection(${JSON.stringify(dotted)}).drop()`);
+    }
+  });
+
   test("the UI imports a file and renames the collection", async ({ page }) => {
+    const tree = new ObjectTreePage(page);
+    const safeMode = new SafeModePage(page);
     await m.add(page, '{"seed":1}');
     await page.reload();
-    await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
-    const dbNode = page.getByTestId(`tree-node-${db}`);
-    if (!(await dbNode.isVisible().catch(() => false))) await page.getByTestId(`tree-node-${m.s.name.toLowerCase()}`).click();
-    await dbNode.click();
-    await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
+    await tree.expandNode(db);
+    const original = await tree.expectNodeVisible(m.s.coll);
+    await original.dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
     await page.getByTestId("import-file").setInputFiles({ name: "docs.ndjson", mimeType: "application/x-ndjson", buffer: Buffer.from('{"a":1}\n{"a":2}\n') });
     await expect(page.getByTestId("browse-footer")).toContainText("3 loaded", { timeout: 15000 });
 
     const target = `${m.s.coll}_ui`;
+    const editor = page.getByTestId("tree-rename-input");
     try {
-      await page.getByTestId(`tree-node-${m.s.coll}`).click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Rename collection" }).click();
-      await page.getByRole("textbox", { name: "new-collection-name" }).fill(target);
-      await page.getByRole("button", { name: "Save", exact: true }).click();
-      await expect(page.getByTestId("browse-tab")).toHaveCount(0, { timeout: 15000 });
-      expect(await count(page, `${db}/${target}`)).toBe(3);
+      await test.step("F2 opens the inline editor and Escape keeps the original name", async () => {
+        await original.press("F2");
+        await expect(editor).toHaveValue(m.s.coll);
+        await editor.fill(target);
+        await editor.press("Escape");
+        await expect(editor).toHaveCount(0);
+        await expect(original).toBeVisible();
+      });
+
+      await test.step("Cancel the safe-mode confirmation and keep the collection and Browse tab", async () => {
+        await safeMode.selectMode("alert");
+        await tree.runTreeAction(m.s.coll, "Rename");
+        await editor.fill(target);
+        await editor.press("Enter");
+        await expect(safeMode.confirmTitle).toBeVisible();
+        await safeMode.cancelButton.click();
+        await expect(safeMode.confirmTitle).toHaveCount(0);
+        await expect(original).toBeVisible();
+        await expect(page.getByTestId("browse-tab")).toBeVisible();
+        expect(await count(page, m.s.container)).toBe(3);
+      });
+
+      await test.step("Rename from the menu and refresh the tree, pin and Browse tab", async () => {
+        await tree.runTreeAction(m.s.coll, "Pin to top");
+        await tree.runTreeAction(m.s.coll, "Rename");
+        await editor.fill(target);
+        await editor.press("Enter");
+        await safeMode.runAnywayButton.click();
+        await expect(page.getByTestId("browse-tab")).toHaveCount(0, { timeout: 15000 });
+        await tree.clearTreeFilter();
+        await tree.expectNodeVisible(target);
+        await expect(original).toHaveCount(0);
+        await expect(page.getByTestId(`tree-pinned-${target}`)).toBeVisible();
+        expect(await count(page, `${db}/${target}`)).toBe(3);
+      });
     } finally {
       try {
         execFileSync("docker", ["exec", mongoContainer, "mongosh", "--quiet", db, "--eval", `db.getCollection(${JSON.stringify(target)}).drop()`], { stdio: "ignore" });

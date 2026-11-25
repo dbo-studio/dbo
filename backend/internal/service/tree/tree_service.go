@@ -23,6 +23,9 @@ import (
 )
 
 type ITreeService interface {
+	ServerCapabilities(ctx context.Context, id int32) (database.ServerCapabilities, error)
+	ServerPanel(ctx context.Context, id int32, panel string) (*database.ServerPanel, error)
+	EndServerActivity(ctx context.Context, id int32, idTarget, token string, confirmed bool) error
 	Tree(ctx context.Context, req *dto.TreeListRequest) (*contract.TreeNode, error)
 	Search(ctx context.Context, req *dto.TreeSearchRequest) (*TreeSearchResponse, error)
 	Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error)

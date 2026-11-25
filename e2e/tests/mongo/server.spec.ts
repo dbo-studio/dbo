@@ -151,8 +151,8 @@ test.describe("MongoDB server tools", () => {
 
   test("the Server tool shows status and operations", async ({ page }) => {
     await openServerTool(page);
-    await expect(page.getByTestId("server-fact-Version")).toContainText(/^\d+\.\d+/, { timeout: 15000 });
-    await expect(page.getByTestId("server-fact-Replica set")).toContainText("Standalone");
+    await expect(page.getByRole("row").filter({ has: page.getByText("Version", { exact: true }) })).toContainText(/\d+\.\d+/, { timeout: 15000 });
+    await expect(page.getByRole("row").filter({ has: page.getByText("Replica set", { exact: true }) })).toContainText("Standalone");
     await page.getByTestId("server-tabs-operations").click();
     await expect(page.getByTestId("server-tool")).toContainText(/Nothing is running|Operation/, { timeout: 15000 });
   });
@@ -165,22 +165,25 @@ test.describe("MongoDB server tools", () => {
       await page.getByRole("textbox", { name: "new-database-name" }).fill(name);
       await page.getByRole("textbox", { name: "new-database-collection" }).fill("base");
       await page.getByRole("button", { name: "Create database", exact: true }).click();
-      await expect(page.getByTestId("server-database").filter({ hasText: name })).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) })).toBeVisible({ timeout: 15000 });
 
-      await page.getByTestId("server-database").filter({ hasText: name }).click();
+      const databaseRow = page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) });
+      await databaseRow.getByRole("button", { name: "More actions" }).click();
+      await page.getByRole("menuitem", { name: "Collections", exact: true }).click();
       await page.getByRole("textbox", { name: "new-collection-name" }).fill("metrics");
       await page.getByTestId("new-collection-kind").click();
       await page.getByRole("option", { name: "Time series" }).click();
       await page.getByRole("textbox", { name: "time-field" }).fill("ts");
       await page.getByRole("button", { name: "Create collection", exact: true }).click();
-      await expect(page.getByTestId("server-collection").filter({ hasText: "metrics" })).toContainText("timeseries", { timeout: 15000 });
+      await expect(page.getByTestId("server-collections").getByRole("row").filter({ has: page.getByText("metrics", { exact: true }) })).toContainText("timeseries", { timeout: 15000 });
 
-      await page.getByRole("button", { name: `drop-${name}` }).click();
+      await databaseRow.getByRole("button", { name: "More actions" }).click();
+      await page.getByRole("menuitem", { name: "Drop database", exact: true }).click();
       const confirm = page.getByTestId("drop-database-dialog");
       await expect(confirm.getByRole("button", { name: "Drop database" })).toBeDisabled();
       await confirm.getByRole("textbox", { name: "confirm-database-name" }).fill(name);
       await confirm.getByRole("button", { name: "Drop database" }).click();
-      await expect(page.getByTestId("server-database").filter({ hasText: name })).toHaveCount(0, { timeout: 15000 });
+      await expect(page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) })).toHaveCount(0, { timeout: 15000 });
     } finally {
       dropDb(name);
     }

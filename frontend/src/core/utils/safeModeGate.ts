@@ -78,11 +78,14 @@ export async function resolveSafeModeGate(error: unknown, connectionId?: number)
 }
 
 /** Use for grid/raw/update/tree execute — do not call those APIs directly without it. */
-export async function withSafeModeRetry<T>(run: (confirmed?: boolean) => Promise<T>): Promise<T | undefined> {
+export async function withSafeModeRetry<T>(
+  run: (confirmed?: boolean) => Promise<T>,
+  connectionId?: number
+): Promise<T | undefined> {
   try {
     return await run(false);
   } catch (error) {
-    const shouldRetry = await resolveSafeModeGate(error);
+    const shouldRetry = await resolveSafeModeGate(error, connectionId);
     if (!shouldRetry) {
       return undefined;
     }

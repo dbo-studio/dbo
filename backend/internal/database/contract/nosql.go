@@ -397,6 +397,11 @@ type CommandRunner interface {
 	RunCommand(ctx context.Context, input string) (*CommandResult, error)
 }
 
+// DatabaseCommandRunner runs a command with a database selected for this request.
+type DatabaseCommandRunner interface {
+	RunCommandInDatabase(ctx context.Context, input, database string) (*CommandResult, error)
+}
+
 type FilterKind string
 
 const (

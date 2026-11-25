@@ -94,7 +94,12 @@ func (s *Service) Run(ctx context.Context, req *dto.CliRunRequest) (*dto.CliResu
 	s.audit(ctx, connection.ID, connection.ConnectionType, req.Input, nosql)
 
 	if nosql {
-		res, err := s.nosql.RunCommand(ctx, &dto.NoSQLCommandRequest{ConnectionID: req.ConnectionID, Input: req.Input, Confirmed: req.Confirmed})
+		res, err := s.nosql.RunCommand(ctx, &dto.NoSQLCommandRequest{
+			ConnectionID: req.ConnectionID,
+			Input:        req.Input,
+			Confirmed:    req.Confirmed,
+			Database:     req.Database,
+		})
 		if err != nil {
 			return nil, err
 		}

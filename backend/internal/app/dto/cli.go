@@ -13,6 +13,7 @@ type CliRunRequest struct {
 	ConnectionID int32  `json:"connectionId"`
 	Input        string `json:"input"`
 	Confirmed    bool   `json:"confirmed"`
+	Database     string `json:"database,omitempty"`
 }
 
 func (req CliRunRequest) Validate() error {

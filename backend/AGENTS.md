@@ -1,6 +1,6 @@
 # Backend — Agent Guide
 
-Go API server for DBO Studio. Module: `github.com/dbo-studio/dbo`. See also root [`AGENTS.md`](../AGENTS.md) and [`.cursor/rules/`](../.cursor/rules/) for Cursor rules.
+Go API server for DBO Studio. Module: `github.com/dbo-studio/dbo`. Read the root [`AGENTS.md`](../AGENTS.md) and the shared rules on [Go idioms](../.agents/rules/go-core.md), [architecture](../.agents/rules/go-dbo-architecture.md), [concurrency](../.agents/rules/go-concurrency.md), and [tooling](../.agents/rules/go-tooling.md) before working on backend Go files.
 
 ## Project Structure
 
@@ -127,7 +127,7 @@ func (r *CreateSavedQueryRequest) Validate() error {
 
 ## Testing
 
-**Do not add new `*_test.go` files.** Product behavior is covered by Playwright in [`../e2e/`](../e2e/) — see [`.cursor/rules/e2e-qa.mdc`](../.cursor/rules/e2e-qa.mdc) and [`.cursor/rules/go-testing.mdc`](../.cursor/rules/go-testing.mdc).
+**Do not add new `*_test.go` files.** Product behavior is covered by Playwright in [`../e2e/`](../e2e/) — see [`.agents/rules/e2e-qa.md`](../.agents/rules/e2e-qa.md) and [`.agents/rules/go-testing.md`](../.agents/rules/go-testing.md).
 
 Before PR: `go fmt ./...` + `golangci-lint run`, plus e2e for user-visible API/UI flows.
 

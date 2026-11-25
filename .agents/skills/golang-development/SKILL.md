@@ -77,11 +77,12 @@ func NewSavedQueryService(repo repository.ISavedQueryRepo) ISavedQueryService
 - DB factory: `backend/internal/database/repository.go`
 - Contract: `backend/internal/database/contract/contract.go`
 
-## Codex Rules
+## Shared Rules
 
-Auto-applied when editing `backend/**/*.go`:
-- `go-core.mdc` — idiomatic Go
-- `go-dbo-architecture.mdc` — layer patterns
-- `go-concurrency.mdc` — context/goroutines
-- `go-testing.mdc` — e2e-only testing policy
-- `go-tooling.mdc` — lint/format
+Read the applicable shared rules when working in `backend/`.
+
+- [Go idioms](../../rules/go-core.md)
+- [Backend architecture](../../rules/go-dbo-architecture.md)
+- [Concurrency](../../rules/go-concurrency.md)
+- [Testing policy](../../rules/go-testing.md)
+- [Tooling](../../rules/go-tooling.md)

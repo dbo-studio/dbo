@@ -32,6 +32,7 @@ const (
 	DropDatabaseAction   TreeNodeActionName = "dropDatabase"
 	EditTableAction      TreeNodeActionName = "editTable"
 	DropTableAction      TreeNodeActionName = "dropTable"
+	DropCollectionAction TreeNodeActionName = "dropCollection"
 	EditViewAction       TreeNodeActionName = "editView"
 	DropViewAction       TreeNodeActionName = "dropView"
 	// RenameAction renames a table or view; params are {"name": "<new name>"}.

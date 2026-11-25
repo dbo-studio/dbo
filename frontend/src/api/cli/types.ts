@@ -1,4 +1,4 @@
-export type CliRunRequest = { connectionId: number; input: string; confirmed?: boolean };
+export type CliRunRequest = { connectionId: number; input: string; confirmed?: boolean; database?: string };
 
 export type CliResult = {
   kind: 'table' | 'value';

@@ -138,3 +138,21 @@ func (h QueryHandler) transaction(c fiber.Ctx, active bool, run func(req *dto.Tr
 
 	return response.SuccessBuilder().WithData(map[string]any{"active": active}).Send(c)
 }
+
+func (h QueryHandler) Explain(c fiber.Ctx) error {
+	req := new(dto.RawQueryRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.ErrorBuilder().FromError(apperror.BadRequest(err)).Send(c)
+	}
+
+	if err := req.Validate(); err != nil {
+		return response.ErrorBuilder().FromError(apperror.Validation(err)).Send(c)
+	}
+
+	result, err := h.queryService.Explain(c, req)
+	if err != nil {
+		return response.ErrorBuilder().FromError(err).Send(c)
+	}
+
+	return response.SuccessBuilder().WithData(result).Send(c)
+}

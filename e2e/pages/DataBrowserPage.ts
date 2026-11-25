@@ -27,7 +27,7 @@ export class DataBrowserPage extends BasePage {
   }
 
   get sortsButton(): Locator {
-    return this.page.getByRole("button", { name: "sort", exact: true });
+    return this.page.getByRole("button", { name: "Sorts", exact: true });
   }
 
   get columnsButton(): Locator {

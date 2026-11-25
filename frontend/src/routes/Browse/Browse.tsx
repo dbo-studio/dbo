@@ -4,7 +4,8 @@ import { useSettingStore } from '@/store/settingStore/setting.store';
 import { isMongoDriver } from '@/core/db/connectionAliases';
 import { buildMongoFilter, buildMongoSort } from '@/core/db/mongoQuery';
 import { MongoFilterConditions } from '@/core/constants';
-import Segmented from '@/components/base/Segmented/Segmented';
+import BrowseActionBar from '@/components/common/BrowseActionBar/BrowseActionBar';
+import BrowsePanelButton from '@/components/common/BrowseActionBar/BrowsePanelButton/BrowsePanelButton';
 import { useContextMenu, useCurrentConnection } from '@/hooks';
 import ContextMenu from '@/components/base/ContextMenu/ContextMenu';
 import type { MenuType } from '@/components/base/ContextMenu/types';
@@ -50,7 +51,6 @@ import IndexesDialog from './IndexesDialog';
 import ExplainDialog from './ExplainDialog';
 import AggregateDialog from './AggregateDialog';
 import SchemaDialog from './SchemaDialog';
-import RenameCollectionDialog from './RenameCollectionDialog';
 import { tools } from '@/core/utils/tools';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
@@ -59,6 +59,7 @@ import { useBrowseActionStore } from '@/store/browseAction/browseAction.store';
 import { useTransferStore } from '@/store/transfer/transfer.store';
 import RecycleDialog from './RecycleDialog';
 import MemberWindowView from './MemberWindowView';
+import MongoQuickFilter from './MongoQuickFilter/MongoQuickFilter';
 import ItemView from './ItemView';
 import { StatusBarStyled } from '@/components/common/DataGridStatusBar/StatusBar.styled';
 import { StatusBarActionsStackStyled } from '@/components/common/DataGridStatusBar/StatusBarActions.styled';
@@ -155,7 +156,6 @@ export default function Browse(): JSX.Element {
   const [explainOpen, setExplainOpen] = useState(false);
   const [aggOpen, setAggOpen] = useState(false);
   const [schemaOpen, setSchemaOpen] = useState(false);
-  const [renameOpen, setRenameOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const featurePerms = useFeaturePermissions();
   const aiAllowed = featurePerms.ai;
@@ -168,9 +168,7 @@ export default function Browse(): JSX.Element {
   useEffect(() => {
     if (!request || request.containerId !== containerId) return;
     clearRequest();
-    const open = { stats: setStatsOpen, schema: setSchemaOpen, aggregate: setAggOpen, rename: setRenameOpen }[
-      request.action
-    ];
+    const open = { stats: setStatsOpen, schema: setSchemaOpen, aggregate: setAggOpen }[request.action];
     open(true);
   }, [request, containerId, clearRequest]);
   const { prefillChat } = useAiBridge();
@@ -180,8 +178,8 @@ export default function Browse(): JSX.Element {
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
   const [statusSlot, setStatusSlot] = useState<HTMLElement | null>(null);
   const newButtonRef = useRef<HTMLButtonElement>(null);
-  // MongoDB: the filter and sort are typed as JSON, or assembled from rows like the SQL grid's.
-  const [queryMode, setQueryMode] = useState<'query' | 'builder'>('query');
+  const [advancedQuery, setAdvancedQuery] = useState(false);
+  const [browsePanel, setBrowsePanel] = useState<'filter' | 'sort' | null>(null);
   const [listMenu, setListMenu] = useState<MenuType[]>([]);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
 
@@ -346,8 +344,12 @@ export default function Browse(): JSX.Element {
         void withSafeModeRetry(async (confirmed) => {
           await api.nosql.dropCollection(connectionId, containerId, confirmed);
           return true;
-        })
-          .then((done) => (done ? closeAfterStructureChange() : undefined))
+        }, connectionId)
+          .then((done) => {
+            if (!done) return;
+            useTreeStore.getState().unpinNodes([containerId], connectionId);
+            return closeAfterStructureChange();
+          })
           .catch(() => toast.error(locales.action_failed));
       }
     );
@@ -400,10 +402,7 @@ export default function Browse(): JSX.Element {
         ]
       : []),
     ...(has(spec, 'collection-admin')
-      ? [
-          { id: 'rename', label: locales.nosql_rename_collection, run: (): void => setRenameOpen(true) },
-          { id: 'drop', label: locales.nosql_drop_collection, danger: true, run: dropCollection }
-        ]
+      ? [{ id: 'drop', label: locales.nosql_drop_collection, danger: true, run: dropCollection }]
       : []),
     ...(has(spec, 'schema')
       ? [{ id: 'schema', label: locales.nosql_schema, run: (): void => setSchemaOpen(true) }]
@@ -595,110 +594,111 @@ export default function Browse(): JSX.Element {
 
   if (!tab) return <></>;
 
-  const applyText = (text: string): void => {
+  const applyText = (text: string, sort = sortText, projection = projectText): void => {
     if (spec?.filter !== 'query') return setApplied({ ...NO_FILTER, filter: text });
     try {
-      setApplied({ ...NO_FILTER, filter: text, sorts: parseSort(sortText), projection: projectText.trim() });
+      setApplied({ ...NO_FILTER, filter: text, sorts: parseSort(sort), projection: projection.trim() });
     } catch {
       toast.error(locales.nosql_sort_invalid);
     }
   };
 
-  /** Builds the filter and sort documents from the builder's rows, shows them in the JSON boxes, and runs them. */
-  const applyBuilder = (): void => {
-    const current = useTabStore.getState().selectedTab<BrowseTabType>() ?? tab;
-    const filterText = buildMongoFilter(current.filters ?? []);
-    const sortJson = buildMongoSort(current.sorts ?? []);
-    setQuery(filterText);
-    setSortText(sortJson);
-    setApplied({ ...NO_FILTER, filter: filterText, sorts: parseSort(sortJson), projection: projectText.trim() });
+  const applyQuickFilter = (filter: string): void => {
+    setQuery(filter);
+    setApplied((previous) => ({ ...previous, filter }));
   };
 
   const applyFields = (): void => setApplied(toApplied(useTabStore.getState().selectedTab<BrowseTabType>() ?? tab));
 
+  const applyBuilder = (kind: 'filter' | 'sort'): void => {
+    const current = useTabStore.getState().selectedTab<BrowseTabType>() ?? tab;
+    if (kind === 'filter') {
+      const filter = buildMongoFilter(current.filters ?? []);
+      applyQuickFilter(filter);
+      setAdvancedQuery(true);
+    } else {
+      const sort = buildMongoSort(current.sorts ?? []);
+      setSortText(sort);
+      setApplied((previous) => ({ ...previous, sorts: parseSort(sort) }));
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid='browse-tab'>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', p: 1, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-        <Box sx={{ flex: 1 }}>
-          {spec?.filter === 'query' && (
-            <Box sx={{ mb: 0.75 }}>
-              <Segmented
-                value={queryMode}
-                onChange={setQueryMode}
-                testId='browse-query-mode'
-                options={[
-                  { value: 'query', label: locales.nosql_mode_query },
-                  { value: 'builder', label: locales.nosql_mode_builder }
-                ]}
-              />
-            </Box>
-          )}
-          {spec?.filter === 'query' && queryMode === 'builder' && (
-            <Box data-testid='browse-query-builder'>
-              <Filters columns={columns} operators={MongoFilterConditions} onApply={applyBuilder} />
-              <Sorts columns={columns} onApply={applyBuilder} />
-              {applied.filter && (
-                <Typography variant='caption' color='text.secondary' data-testid='browse-generated-query'>
-                  {locales.nosql_generated_query}: <code>{applied.filter}</code>
-                </Typography>
-              )}
-            </Box>
-          )}
-          {(spec?.filter === 'pattern' || (spec?.filter === 'query' && queryMode === 'query')) && (
-            <InlineQueryStackStyled direction='row' data-testid='browse-filter-bar'>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <InlineSqlEditor
-                  language={spec.filter === 'query' ? 'json' : 'plaintext'}
-                  placeholder={spec.filter === 'query' ? locales.nosql_filter_query : locales.nosql_filter_pattern}
-                  value={spec.filter === 'query' ? query : pattern}
-                  onChange={spec.filter === 'query' ? setQuery : setPattern}
-                  onEnter={applyText}
-                />
-              </Box>
-              {spec.filter === 'query' && (
-                <>
-                  <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-sort-bar'>
-                    <InlineSqlEditor
-                      language='json'
-                      placeholder={locales.nosql_sort_query}
-                      value={sortText}
-                      onChange={setSortText}
-                      onEnter={(): void => applyText(query)}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-project-bar'>
-                    <InlineSqlEditor
-                      language='json'
-                      placeholder={locales.nosql_project_query}
-                      value={projectText}
-                      onChange={setProjectText}
-                      onEnter={(): void => applyText(query)}
-                    />
-                  </Box>
-                </>
-              )}
-              <SubmitButtonStyled
-                variant='contained'
-                aria-label={locales.nosql_run}
-                data-testid='browse-filter-run'
-                onClick={(): void => applyText(spec.filter === 'query' ? query : pattern)}
-              >
-                <CustomIcon type='check' size='s' />
-              </SubmitButtonStyled>
-            </InlineQueryStackStyled>
-          )}
-          {spec?.filter === 'fields' && (
-            <Box data-testid='browse-fields-filter'>
-              <Filters columns={columns} onApply={applyFields} />
-              <Sorts columns={columns} onApply={applyFields} />
-              {applied.filter && (
-                <Typography variant='caption' color='text.secondary' data-testid='browse-generated-query'>
-                  {locales.nosql_generated_query}: <code>{applied.filter}</code>
-                </Typography>
-              )}
-            </Box>
-          )}
-        </Box>
+      <BrowseActionBar
+        input={
+          <>
+            {spec?.filter === 'query' && <MongoQuickFilter hidden={advancedQuery} onApply={applyQuickFilter} />}
+            {(spec?.filter === 'pattern' || (spec?.filter === 'query' && advancedQuery)) && (
+              <InlineQueryStackStyled direction='row' data-testid='browse-filter-bar'>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <InlineSqlEditor
+                    language={spec.filter === 'query' ? 'json' : 'plaintext'}
+                    placeholder={spec.filter === 'query' ? locales.nosql_filter_query : locales.nosql_filter_pattern}
+                    value={spec.filter === 'query' ? query : pattern}
+                    onChange={spec.filter === 'query' ? setQuery : setPattern}
+                    onEnter={applyText}
+                  />
+                </Box>
+                {spec.filter === 'query' && (
+                  <>
+                    <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-sort-bar'>
+                      <InlineSqlEditor
+                        language='json'
+                        placeholder={locales.nosql_sort_query}
+                        value={sortText}
+                        onChange={setSortText}
+                        onEnter={(sort) => applyText(query, sort)}
+                      />
+                    </Box>
+                    <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-project-bar'>
+                      <InlineSqlEditor
+                        language='json'
+                        placeholder={locales.nosql_project_query}
+                        value={projectText}
+                        onChange={setProjectText}
+                        onEnter={(projection) => applyText(query, sortText, projection)}
+                      />
+                    </Box>
+                  </>
+                )}
+                <SubmitButtonStyled
+                  variant='contained'
+                  aria-label={locales.nosql_run}
+                  data-testid='browse-filter-run'
+                  onClick={(): void => applyText(spec.filter === 'query' ? query : pattern)}
+                >
+                  <CustomIcon type='check' size='s' />
+                </SubmitButtonStyled>
+              </InlineQueryStackStyled>
+            )}
+          </>
+        }
+      >
+        {spec?.filter === 'query' && (
+          <>
+            <Button
+              aria-expanded={advancedQuery}
+              data-testid='mongo-advanced-filter'
+              onClick={() => setAdvancedQuery((open) => !open)}
+              className={advancedQuery ? 'active' : ''}
+            >
+              {advancedQuery ? locales.nosql_quick_simple : locales.nosql_quick_advanced}
+            </Button>
+            <BrowsePanelButton
+              kind='filter'
+              open={browsePanel === 'filter'}
+              count={Number(!!applied.filter)}
+              onClick={() => setBrowsePanel(browsePanel === 'filter' ? null : 'filter')}
+            />
+            <BrowsePanelButton
+              kind='sort'
+              open={browsePanel === 'sort'}
+              count={applied.sorts.length}
+              onClick={() => setBrowsePanel(browsePanel === 'sort' ? null : 'sort')}
+            />
+          </>
+        )}
         {mongoToolbar.map((t) => (
           <Tooltip key={t.id} title={t.label}>
             <IconButton aria-label={t.label} data-testid={`browse-action-${t.id}`} onClick={t.run}>
@@ -727,54 +727,72 @@ export default function Browse(): JSX.Element {
             </MenuItem>
           ))}
         </Menu>
-        <Popover
-          open={!!createAnchor}
-          anchorEl={createAnchor}
-          onClose={(): void => setCreateAnchor(null)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-          transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        >
-          <Box
-            sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }}
-            data-testid='create-popover'
-          >
-            <Typography variant='subtitle2' color='textTitle'>
-              {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
+      </BrowseActionBar>
+      {spec?.filter === 'fields' && (
+        <Box data-testid='browse-fields-filter'>
+          <Filters columns={columns} onApply={applyFields} />
+          <Sorts columns={columns} onApply={applyFields} />
+          {applied.filter && (
+            <Typography variant='caption' color='text.secondary' data-testid='browse-generated-query'>
+              {locales.nosql_generated_query}: <code>{applied.filter}</code>
             </Typography>
-            {(spec?.createKinds?.length ?? 0) > 0 && (
-              <SelectInput
-                label={locales.nosql_key_type}
-                testId='new-item-kind'
-                value={newKind || spec?.createKinds?.[0]?.id}
-                options={(spec?.createKinds ?? []).map((k) => ({ value: k.id, label: k.label }))}
-                onChange={(o): void => setNewKind(String((o as { value: unknown }).value))}
-              />
-            )}
-            <FieldInput
-              autoFocus
-              fullWidth
-              label={locales.nosql_item_id}
-              placeholder={locales.nosql_key_placeholder}
-              value={newId}
-              onChange={(e): void => setNewId(e.target.value)}
-              onKeyDown={(e): void => {
-                if (e.key === 'Enter' && (newId || idOptional)) void insert().then(() => setCreateAnchor(null));
-              }}
-              inputProps={{ 'aria-label': 'new-item-id' }}
+          )}
+        </Box>
+      )}
+      {browsePanel === 'filter' && (
+        <Box data-testid='browse-filter-panel'>
+          <Filters columns={columns} operators={MongoFilterConditions} onApply={() => applyBuilder('filter')} />
+        </Box>
+      )}
+      {browsePanel === 'sort' && (
+        <Box data-testid='browse-sort-panel'>
+          <Sorts columns={columns} onApply={() => applyBuilder('sort')} />
+        </Box>
+      )}
+      <Popover
+        open={!!createAnchor}
+        anchorEl={createAnchor}
+        onClose={(): void => setCreateAnchor(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Box sx={{ p: 2, width: 340, display: 'flex', flexDirection: 'column', gap: 1.5 }} data-testid='create-popover'>
+          <Typography variant='subtitle2' color='textTitle'>
+            {isMongo ? locales.nosql_new_document : locales.nosql_new_key}
+          </Typography>
+          {(spec?.createKinds?.length ?? 0) > 0 && (
+            <SelectInput
+              label={locales.nosql_key_type}
+              testId='new-item-kind'
+              value={newKind || spec?.createKinds?.[0]?.id}
+              options={(spec?.createKinds ?? []).map((k) => ({ value: k.id, label: k.label }))}
+              onChange={(o): void => setNewKind(String((o as { value: unknown }).value))}
             />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 0.5 }}>
-              <Button onClick={(): void => setCreateAnchor(null)}>{locales.cancel}</Button>
-              <Button
-                variant='contained'
-                disabled={!newId && !idOptional}
-                onClick={(): void => void insert().then(() => setCreateAnchor(null))}
-              >
-                {locales.nosql_create}
-              </Button>
-            </Box>
+          )}
+          <FieldInput
+            autoFocus
+            fullWidth
+            label={locales.nosql_item_id}
+            placeholder={locales.nosql_key_placeholder}
+            value={newId}
+            onChange={(e): void => setNewId(e.target.value)}
+            onKeyDown={(e): void => {
+              if (e.key === 'Enter' && (newId || idOptional)) void insert().then(() => setCreateAnchor(null));
+            }}
+            inputProps={{ 'aria-label': 'new-item-id' }}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 0.5 }}>
+            <Button onClick={(): void => setCreateAnchor(null)}>{locales.cancel}</Button>
+            <Button
+              variant='contained'
+              disabled={!newId && !idOptional}
+              onClick={(): void => void insert().then(() => setCreateAnchor(null))}
+            >
+              {locales.nosql_create}
+            </Button>
           </Box>
-        </Popover>
-      </Box>
+        </Box>
+      </Popover>
 
       {statsOpen && (
         <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />
@@ -799,18 +817,6 @@ export default function Browse(): JSX.Element {
           if (file) void importFile(file);
         }}
       />
-      {renameOpen && (
-        <RenameCollectionDialog
-          connectionId={connectionId}
-          containerId={containerId}
-          name={collectionName}
-          onClose={(): void => setRenameOpen(false)}
-          onRenamed={(): void => {
-            setRenameOpen(false);
-            void closeAfterStructureChange();
-          }}
-        />
-      )}
       {schemaOpen && (
         <SchemaDialog
           connectionId={connectionId}

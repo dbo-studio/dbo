@@ -12,10 +12,10 @@ description: >-
 
 ## Quick Start
 
-1. Read [`e2e/README.md`](../../../e2e/README.md) and follow `.cursor/rules/e2e-qa.mdc`
+1. Read [`e2e/README.md`](../../../e2e/README.md) and follow the [E2E QA rules](../../rules/e2e-qa.md).
 2. Mirror an existing similar spec (connections vs object-form lifecycle)
 3. Implement: fixture names → POM methods → helper flow → `test.step` spec → cleanup
-4. Run on the **host OS** (Shell `required_permissions: ["all"]`, never sandbox): `cd e2e && npm test -- tests/<file>.spec.ts`
+4. Run on the **host OS** using the [host execution rules](../../rules/e2e-host-os.md) and `cd e2e && npm test -- tests/<file>.spec.ts`.
 5. On failure: open HTML report / Trace Viewer under `e2e/test-results/`
 
 ## Stack (always)
@@ -91,7 +91,7 @@ await withConnectionCleanup(page, names.connectionName, async () => {
 
 ## Do NOT
 
-- Run Playwright in the Codex sandbox — always Shell `required_permissions: ["all"]` (see `.cursor/rules/e2e-host-os.mdc`)
+- Run Playwright in a command sandbox. Follow the [host execution rules](../../rules/e2e-host-os.md).
 - Run Playwright without `run-e2e` / `npm test`
 - Truncate or reset the developer's daily DBO instance
 - Add `waitForTimeout` or raise retries to hide flakes

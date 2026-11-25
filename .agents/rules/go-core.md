@@ -1,9 +1,3 @@
----
-description: Idiomatic Go — error handling, interfaces, context, packages, naming
-globs: backend/**/*.go
-alwaysApply: false
----
-
 # Go Core Idioms
 
 Based on community best practices (Effective Go, Go Proverbs, golangci-lint revive rules).

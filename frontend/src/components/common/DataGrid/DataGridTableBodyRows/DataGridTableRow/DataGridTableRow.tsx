@@ -37,7 +37,9 @@ const DataGridTableRow = memo(
     editable,
     searchTerm,
     currentMatch,
-    columnWindow
+    columnWindow,
+    renderCell,
+    standalone
   }: DataGridTableRowProps): JSX.Element {
     const updateSelectedRows = useDataStore((state) => state.updateSelectedRows);
     const dataStoreApi = useDataStoreApi();
@@ -104,6 +106,7 @@ const DataGridTableRow = memo(
           const columnId = column.name;
           const cellEditable = editable && column.editable !== false;
           const value = row[columnId];
+          const customCell = renderCell?.(row, columnId);
           const displayForSearch = cellSearchText(value, column);
           const isSearchMatch = searchTerm ? displayForSearch.toLowerCase().includes(searchTerm.toLowerCase()) : false;
 
@@ -130,6 +133,7 @@ const DataGridTableRow = memo(
                 rangeEdges
               )}
               onContextMenu={(e): void => {
+                if (standalone) return;
                 e.stopPropagation();
                 context(e, columnId);
                 // Keep a multi-row / multi-cell selection when right-clicking inside it.
@@ -138,17 +142,19 @@ const DataGridTableRow = memo(
                 if (!inRange && !(isSelected && state.selectedRows.length > 1)) handleSelect(columnId);
               }}
             >
-              <DataGridTableCell
-                row={row}
-                rowIndex={rowIndex}
-                columnId={columnId}
-                column={column}
-                value={value}
-                editable={cellEditable}
-                searchTerm={searchTerm}
-                isSearchMatch={isSearchMatch}
-                isCurrentMatch={isCurrentMatch}
-              />
+              {customCell ?? (
+                <DataGridTableCell
+                  row={row}
+                  rowIndex={rowIndex}
+                  columnId={columnId}
+                  column={column}
+                  value={value}
+                  editable={cellEditable}
+                  searchTerm={searchTerm}
+                  isSearchMatch={isSearchMatch}
+                  isCurrentMatch={isCurrentMatch}
+                />
+              )}
             </TableCell>
           );
         })}

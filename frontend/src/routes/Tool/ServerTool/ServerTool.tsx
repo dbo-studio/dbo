@@ -1,3 +1,6 @@
+import { isMongoDriver } from '@/core/db/connectionAliases';
+import { useConnectionStore } from '@/store/connectionStore/connection.store';
+import DriverServer from './DriverServer/DriverServer';
 import Segmented from '@/components/base/Segmented/Segmented';
 import locales from '@/locales';
 import { Box } from '@mui/material';
@@ -10,7 +13,7 @@ import ServerStatus from './Status/Status';
 import Users from './Users/Users';
 import { type ServerToolProps, type ServerToolTab } from './serverToolShared';
 
-export default function ServerTool({ connectionId }: ServerToolProps): JSX.Element {
+function MongoServerTool({ connectionId }: ServerToolProps): JSX.Element {
   const [tab, setTab] = useState<ServerToolTab>('status');
   const panel = {
     status: ServerStatus,
@@ -44,4 +47,11 @@ export default function ServerTool({ connectionId }: ServerToolProps): JSX.Eleme
       <Panel connectionId={connectionId} />
     </Box>
   );
+}
+
+export default function ServerTool(props: ServerToolProps): JSX.Element {
+  const type = useConnectionStore(
+    (store) => store.connections?.find((connection) => connection.id === props.connectionId)?.type
+  );
+  return isMongoDriver(type) ? <MongoServerTool {...props} /> : <DriverServer {...props} />;
 }

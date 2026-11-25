@@ -36,8 +36,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           });
         },
 
-        unpinNodes: (nodeIds: string[]): void => {
-          const connection = getCurrentConnectionId();
+        unpinNodes: (nodeIds: string[], connectionId?: number): void => {
+          const connection = connectionId ?? getCurrentConnectionId();
           if (!connection) return;
           set((state) => ({
             pinnedNodes: {
@@ -48,9 +48,8 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
         },
 
         // Node ids end with the object name, so a rename keeps the pin by rewriting that suffix.
-        renamePinned: (nodeId: string, oldName: string, newName: string): void => {
-          const connection = getCurrentConnectionId();
-          if (!connection || !nodeId.endsWith(oldName)) return;
+        renamePinned: (nodeId: string, oldName: string, newName: string, connection: number): void => {
+          if (!nodeId.endsWith(oldName) || !get().pinnedNodes[connection]?.some((node) => node.id === nodeId)) return;
           const newId = nodeId.slice(0, -oldName.length) + newName;
           set((state) => ({
             pinnedNodes: {
@@ -196,11 +195,18 @@ export const useTreeStore: UseBoundStore<StoreApi<TreeStore>> = create<TreeStore
           };
 
           set(
-            {
-              tree: {
-                ...get().tree,
-                [currentConnection]: updateNodeChildren(currentTree)
-              }
+            (state) => {
+              const pins = state.pinnedNodes[currentConnection];
+              const refreshedPins = pins?.map((pin) => {
+                const node = children.find((child) => child.id === pin.id);
+                return node ? { ...node, children: [] } : pin;
+              });
+              return {
+                tree: { ...state.tree, [currentConnection]: updateNodeChildren(currentTree) },
+                ...(refreshedPins?.some((node, i) => node !== pins?.[i])
+                  ? { pinnedNodes: { ...state.pinnedNodes, [currentConnection]: refreshedPins } }
+                  : {})
+              };
             },
             undefined,
             'setNodeChildren'

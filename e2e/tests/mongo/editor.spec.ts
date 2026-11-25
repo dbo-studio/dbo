@@ -1,6 +1,6 @@
 // @tool: CLI
 import { expect, test, type Page } from "@playwright/test";
-import { ObjectTreePage, SqlEditorPage } from "../../pages";
+import { ObjectTreePage, SafeModePage, SqlEditorPage } from "../../pages";
 import locales from "../../../frontend/src/locales/en.json";
 import { db, useMongo } from "./_case";
 
@@ -60,9 +60,8 @@ test.describe("MongoDB editor tab", () => {
     const editor = await openEditor(page);
     await editor.typeQuery(find("{$where: 'sleep(1000)'}"));
     await editor.clickRun();
-    // Safe Mode refuses it with a message toast; the result area says it did not run.
-    await expect(result(page)).toContainText(locales.cli_not_run, { timeout: 20000 });
     await expect(page.getByText(/not allowed|blocked/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(result(page)).toContainText(locales.query_empty_results_title);
   });
 
   test("export downloads the shown result as JSON, and as CSV when it is a grid", async ({ page }) => {
@@ -97,7 +96,7 @@ test.describe("MongoDB editor tab", () => {
     await expect(result(page)).toContainText("3", { timeout: 20000 });
   });
 
-  test("tree actions open the editor: Indexes runs, Create collection and Drop collection are templates", async ({ page }) => {
+  test("Indexes runs in the editor and Create collection opens a template", async ({ page }) => {
     await seed(page);
     const tree = new ObjectTreePage(page);
     const editor = new SqlEditorPage(page);
@@ -116,16 +115,60 @@ test.describe("MongoDB editor tab", () => {
       expect(await editor.getMonacoValue()).toBe(`use ${db};\ndb.${m.s.coll}.getIndexes()`);
     });
 
-    await test.step("Drop collection only fills the editor", async () => {
-      await tree.runTreeAction(m.s.coll, "Drop collection");
-      await expect.poll(() => editor.getMonacoValue()).toBe(`use ${db};\ndb.${m.s.coll}.drop()`);
-      const shown = await result(page).textContent();
-      expect(shown ?? "").not.toMatch(/"ok"/);
-    });
-
     await test.step("Create collection on the database fills a template", async () => {
       await tree.runTreeAction(db, "Create collection");
       await expect.poll(() => editor.getMonacoValue()).toContain(`createCollection("new_collection")`);
+    });
+  });
+
+  test("a manual collection drop runs in Silent Mode", async ({ page }) => {
+    await seed(page);
+    const editor = await openEditor(page);
+    const safeMode = new SafeModePage(page);
+
+    await test.step("Run the drop on the selected database", async () => {
+      await editor.selectContext(db);
+      await editor.typeQuery(`db.${m.s.coll}.drop()`);
+      await editor.clickRun();
+      await expect(result(page)).toContainText('"ok": 1');
+      await expect(safeMode.confirmTitle).toHaveCount(0);
+    });
+  });
+
+  test("canceling Alert Mode keeps the empty state and the previous MongoDB result", async ({ page }) => {
+    await seed(page);
+    const editor = await openEditor(page);
+    const safeMode = new SafeModePage(page);
+    const drop = `db.${m.s.coll}.drop()`;
+    await editor.selectContext(db);
+    await safeMode.selectMode("alert");
+
+    await test.step("Cancel before any command has returned a result", async () => {
+      await editor.typeQuery(drop);
+      await editor.clickRun();
+      await expect(safeMode.confirmTitle).toBeVisible();
+      await safeMode.cancelButton.click();
+      await expect(result(page)).toContainText(locales.query_empty_results_title);
+      await expect(page.getByTestId("run-query")).toBeVisible();
+    });
+
+    await test.step("Run a read through one Alert Mode confirmation", async () => {
+      await editor.typeQuery(find());
+      await editor.clickRun();
+      await expect(safeMode.confirmTitle).toBeVisible();
+      await safeMode.runAnywayButton.click();
+      await expect(result(page).getByText("alice")).toBeVisible();
+    });
+
+    await test.step("Cancel the drop and keep the previous documents visible", async () => {
+      await editor.typeQuery(drop);
+      await editor.clickRun();
+      await expect(safeMode.confirmTitle).toBeVisible();
+      await safeMode.cancelButton.click();
+      await expect(page.getByTestId("run-query")).toBeVisible();
+      await expect(result(page).getByText("alice")).toBeVisible();
+      await expect(result(page)).not.toContainText(locales.cli_not_run);
+      expect((await m.api(page).browse()).ok()).toBeTruthy();
     });
   });
 

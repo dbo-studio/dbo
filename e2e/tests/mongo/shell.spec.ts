@@ -55,13 +55,15 @@ test.describe("MongoDB shell", () => {
       expect((await res.json()).message).toContain(`${ref()}.insertOne({"_id": "dup"})`);
       expect(await out(page, `${ref()}.countDocuments({})`)).toBe(3);
     });
+  });
 
-    await test.step("the strictest statement decides the safety class", async () => {
-      const res = await run(page, `${ref()}.countDocuments({}); ${ref()}.deleteMany({})`, false);
-      expect(res.status()).toBe(403);
-      expect((await res.json()).message).toBe("safe_mode_confirm_required");
-      expect(await out(page, `${ref()}.countDocuments({})`)).toBe(3);
-    });
+  test("Alert Mode checks the strictest statement before running a script", async ({ page }) => {
+    await m.add(page, '{"k":1}');
+    await m.setMode(page, "alert_write");
+    const res = await run(page, `use ${db}; ${ref()}.countDocuments({}); ${ref()}.deleteMany({})`, false);
+    expect(res.status()).toBe(403);
+    expect((await res.json()).message).toBe("safe_mode_confirm_required");
+    expect(await out(page, `use ${db}; ${ref()}.countDocuments({})`)).toMatchObject([{ output: `switched to db ${db}` }, { output: 1 }]);
   });
 
   test("collection names with dots through getCollection, and createCollection", async ({ page }) => {
@@ -131,9 +133,8 @@ test.describe("MongoDB shell", () => {
     expect(indexes.some((i) => i.partialFilterExpression)).toBe(true);
 
     expect((await run(page, `${ref()}.createIndex({x: 1}, {mystery: true})`)).status()).toBeGreaterThanOrEqual(400);
-    expect((await run(page, `${ref()}.dropIndex('email_uq')`, false)).status()).toBe(403);
-
-    await out(page, `${ref()}.dropIndex('email_uq')`);
+    const dropped = await run(page, `${ref()}.dropIndex('email_uq')`, false);
+    expect(dropped.ok(), await dropped.text()).toBeTruthy();
     await out(page, `${ref()}.dropIndex({at: 1})`);
     expect(((await out(page, `${ref()}.getIndexes()`)) as { name: string }[]).map((i) => i.name).sort()).toEqual(["_id_", "email_1_at_-1"]);
     expect((await run(page, `${ref()}.dropIndex('_id_')`)).status()).toBeGreaterThanOrEqual(400);

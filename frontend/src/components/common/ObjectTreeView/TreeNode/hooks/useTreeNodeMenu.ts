@@ -104,6 +104,27 @@ function nosqlAiMenu(
 const isDrop = (action: TreeNodeActionType): boolean => action.name.startsWith('drop');
 const isUtility = (action: TreeNodeActionType): boolean => action.name === 'copyName' || action.name === 'refresh';
 
+// A saved collection pin can have older actions until its database is refreshed.
+function withCollectionActions(node: TreeNodeType): TreeNodeType {
+  if (node.type !== 'table') return node;
+  const actions = node.contextMenu ?? [];
+  const oldDrop = actions.find((action) => action.name === 'openQuery' && action.title === 'Drop collection');
+  const hasRename = actions.some((action) => action.name === 'rename');
+  const hasCopy = actions.some((action) => action.name === 'copyName');
+  if (!oldDrop && hasRename && hasCopy) return node;
+
+  return {
+    ...node,
+    contextMenu: [
+      ...actions.map((action) =>
+        action === oldDrop ? { title: action.title, name: 'dropCollection', type: 'action' as const, params: {} } : action
+      ),
+      ...(hasRename ? [] : [{ title: locales.rename, name: 'rename', type: 'action' as const, params: {} }]),
+      ...(hasCopy ? [] : [{ title: 'Copy name', name: 'copyName', type: 'command' as const, params: {} }])
+    ]
+  };
+}
+
 /** Joins non-empty groups with a separator, like the data grid menu. */
 const grouped = (...groups: MenuType[][]): MenuType[] =>
   groups
@@ -111,7 +132,7 @@ const grouped = (...groups: MenuType[][]): MenuType[] =>
     .flatMap((group, index) => (index === 0 ? group : [{ name: `separator-${index}`, separator: true }, ...group]));
 
 export type TreeMenuHandlers = {
-  onRename: (node: TreeNodeType) => void;
+  onRename: (node: TreeNodeType, fromPin?: boolean) => void;
   onDropMany: (nodes: TreeNodeType[]) => void;
 };
 
@@ -119,7 +140,7 @@ export type TreeMenuHandlers = {
 export function useTreeNodeMenuBuilder(
   actionDetection: (event: React.MouseEvent, node: TreeNodeType) => Promise<void>,
   { onRename, onDropMany }: TreeMenuHandlers
-): (node: TreeNodeType, selection: TreeNodeType[]) => MenuType[] {
+): (node: TreeNodeType, selection: TreeNodeType[], fromPin?: boolean) => MenuType[] {
   const { prefillChat } = useAiBridge();
   const currentConnection = useCurrentConnection();
   const addDiagramTab = useTabStore((state) => state.addDiagramTab);
@@ -209,15 +230,19 @@ export function useTreeNodeMenuBuilder(
     );
   };
 
-  return (node: TreeNodeType, selection: TreeNodeType[]): MenuType[] => {
-    if (selection.length > 1 && selection.some((n) => n.id === node.id)) return multiMenu(selection);
+  return (selectedNode: TreeNodeType, selection: TreeNodeType[], fromPin?: boolean): MenuType[] => {
+    const isMongo = isMongoDriver(currentConnection?.type);
+    if (selection.length > 1 && selection.some((n) => n.id === selectedNode.id)) {
+      return multiMenu(isMongo ? selection.map(withCollectionActions) : selection);
+    }
+    const node = isMongo ? withCollectionActions(selectedNode) : selectedNode;
 
     const actions = node?.contextMenu ?? [];
     const open: MenuType[] = actions
       .filter((a) => !isDrop(a) && !isUtility(a) && a.name !== 'rename')
       .map((a) => run(node, a));
     if (actions.some((a) => a.name === 'rename')) {
-      open.push({ name: locales.rename, action: () => onRename(node), closeAfterAction: true });
+      open.push({ name: locales.rename, action: () => onRename(node, fromPin), closeAfterAction: true });
     }
 
     const scope = diagramScopeFromTreeNode(node, currentConnection?.type);
@@ -281,8 +306,7 @@ export function useTreeNodeMenuBuilder(
       view.push(
         page(locales.nosql_stats_title, 'stats'),
         page(locales.nosql_schema, 'schema'),
-        page(locales.nosql_aggregate, 'aggregate'),
-        page(locales.nosql_rename_collection, 'rename')
+        page(locales.nosql_aggregate, 'aggregate')
       );
     }
 

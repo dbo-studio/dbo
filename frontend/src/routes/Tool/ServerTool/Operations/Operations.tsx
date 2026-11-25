@@ -1,16 +1,19 @@
 import api from '@/api';
+import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import { toast } from 'sonner';
-import { SERVER_TOOL_MONO, type ServerToolProps } from '../serverToolShared';
+import ServerGrid from '../ServerGrid/ServerGrid';
+import ServerRowActions from '../ServerGrid/ServerRowActions';
+import { type ServerToolProps } from '../serverToolShared';
 
 export default function Operations({ connectionId }: ServerToolProps): JSX.Element {
   const confirmDanger = useConfirmModalStore((s) => s.danger);
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ['server', 'operations', connectionId],
     queryFn: () => api.nosql.serverOperations(connectionId),
     refetchInterval: 3000
@@ -18,46 +21,50 @@ export default function Operations({ connectionId }: ServerToolProps): JSX.Eleme
 
   const kill = (id: string): void =>
     confirmDanger(locales.server_kill, locales.server_kill_confirm.replace('{id}', id), () => {
-      // The dialog above is the confirmation; a locked connection still refuses.
-      void api.nosql
-        .serverKill(connectionId, id, true)
-        .then(() => qc.invalidateQueries({ queryKey: ['server', 'operations', connectionId] }))
+      void withSafeModeRetry(async () => {
+        await api.nosql.serverKill(connectionId, id, true);
+        return true;
+      }, connectionId)
+        .then((done) => {
+          if (done) void qc.invalidateQueries({ queryKey: ['server', 'operations', connectionId] });
+        })
         .catch(() => toast.error(locales.action_failed));
     });
 
-  if (!data) return <Typography color='text.secondary'>{locales.loading}</Typography>;
-  if (data.length === 0) return <Typography color='text.secondary'>{locales.server_no_operations}</Typography>;
+  if (isError)
+    return (
+      <Typography color='error' role='alert'>
+        {locales.action_failed}
+      </Typography>
+    );
 
   return (
-    <Table size='small'>
-      <TableHead>
-        <TableRow>
-          <TableCell>{locales.server_op}</TableCell>
-          <TableCell>{locales.server_namespace}</TableCell>
-          <TableCell>{locales.server_running_for}</TableCell>
-          <TableCell>{locales.server_client}</TableCell>
-          <TableCell>{locales.server_command}</TableCell>
-          <TableCell />
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {data.map((op) => (
-          <TableRow key={op.id} data-testid='server-operation'>
-            <TableCell>{op.op}</TableCell>
-            <TableCell>{op.namespace}</TableCell>
-            <TableCell>{op.secs}</TableCell>
-            <TableCell>{op.client}</TableCell>
-            <TableCell sx={{ fontFamily: SERVER_TOOL_MONO, maxWidth: 360, wordBreak: 'break-all' }}>
-              {op.command}
-            </TableCell>
-            <TableCell align='right'>
-              <Button color='error' onClick={(): void => kill(op.id)}>
-                {locales.server_kill}
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <ServerGrid
+      headers={[
+        locales.server_op,
+        locales.server_namespace,
+        locales.server_running_for,
+        locales.server_client,
+        locales.server_command
+      ]}
+      values={(data ?? []).map((op) => [op.op, op.namespace, op.secs, op.client, op.command])}
+      loading={!data}
+      empty={locales.server_no_operations}
+      action={(_row, index) => (
+        <ServerRowActions
+          key={data?.[index]?.id}
+          actions={[
+            {
+              label: locales.server_kill,
+              run: () => {
+                const op = data?.[index];
+                if (op) kill(op.id);
+              },
+              danger: true
+            }
+          ]}
+        />
+      )}
+    />
   );
 }

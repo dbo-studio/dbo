@@ -1,9 +1,3 @@
----
-description: Frontend component structure — one component per file and folder, styles and logic split out, render subscriptions kept at the leaf
-globs: frontend/src/**/*.{tsx,ts}
-alwaysApply: false
----
-
 # Frontend components
 
 Match the folder that is already there. Do not invent a second pattern.
@@ -14,4 +8,4 @@ Match the folder that is already there. Do not invent a second pattern.
 - **Logic leaves the component** when it is state, effects, or store selection beyond a couple of lines. The component file should read as the render.
 - **Renders:** subscribe to fast-changing state (stream tokens, keystrokes, scroll position) in the leaf that draws it. A parent that selects the whole session re-renders every row. Memoize a row only when its parent still re-renders for another reason.
 - **Stop early.** Do not extract a component that is used once and has no state and no styles of its own. Do not copy a helper that already exists. A smaller file that adds a folder nobody imports is extra work.
-- **E2E scenario per feature.** Anything the user can see or do needs a named Playwright scenario (`e2e/tests/…/*.spec.ts`), not a frontend unit test. One meaningful outcome per `test()`; steps via `test.step`. New or changed UI → extend an existing spec or add one, and add a row to the matrix in `e2e/README.md`. See `.cursor/rules/go-testing.mdc` and `.cursor/rules/e2e-qa.mdc`. Exceptions (real LLM, native desktop dialogs) stay documented in that matrix — do not use them to skip scenarios you can run without secrets.
+- **E2E scenario per feature.** Anything the user can see or do needs a named Playwright scenario (`e2e/tests/…/*.spec.ts`), not a frontend unit test. One meaningful outcome per `test()`; steps via `test.step`. New or changed UI → extend an existing spec or add one, and add a row to the matrix in `e2e/README.md`. See `.agents/rules/go-testing.md` and `.agents/rules/e2e-qa.md`. Exceptions (real LLM, native desktop dialogs) stay documented in that matrix — do not use them to skip scenarios you can run without secrets.

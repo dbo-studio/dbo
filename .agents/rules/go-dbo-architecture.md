@@ -1,9 +1,3 @@
----
-description: DBO backend architecture — handler/service/repository layers, apperror, database drivers
-globs: backend/**/*.go
-alwaysApply: false
----
-
 # DBO Backend Architecture
 
 ## Layer Responsibilities
