@@ -1,6 +1,6 @@
-# graphify reference: commit hook and native CLAUDE.md integration
+# graphify reference: commit hooks and agent integration
 
-Load this when the user asked to install the post-commit hook or wire graphify into a project's CLAUDE.md.
+Load this when the user asks to install the post-commit hook or add graphify to a project's agent instructions.
 
 ## For git commit hook
 
@@ -31,3 +31,7 @@ This writes a `## graphify` section to the local `CLAUDE.md` that instructs Clau
 ```bash
 graphify claude uninstall  # remove the section
 ```
+
+## For native AGENTS.md integration
+
+Use `graphify codex install` to add the graphify section to `AGENTS.md`, and `graphify codex uninstall` to remove it. In a project that already routes its agent guide to shared graphify rules, use those existing instructions.
