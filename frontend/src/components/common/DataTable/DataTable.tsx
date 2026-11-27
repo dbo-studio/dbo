@@ -32,11 +32,7 @@ export default function DataTable({ rows, columns, loading = false, renderCell }
                 const value = row[column.name];
                 const text = formatCellDisplayValue(value, column);
                 return (
-                  <TableCell
-                    key={column.name}
-                    title={custom === undefined ? text : undefined}
-                    sx={{ maxWidth: 400 }}
-                  >
+                  <TableCell key={column.name} title={custom === undefined ? text : undefined} sx={{ maxWidth: 400 }}>
                     {custom !== undefined ? (
                       custom
                     ) : value === null || value === undefined ? (

@@ -117,7 +117,9 @@ function withCollectionActions(node: TreeNodeType): TreeNodeType {
     ...node,
     contextMenu: [
       ...actions.map((action) =>
-        action === oldDrop ? { title: action.title, name: 'dropCollection', type: 'action' as const, params: {} } : action
+        action === oldDrop
+          ? { title: action.title, name: 'dropCollection', type: 'action' as const, params: {} }
+          : action
       ),
       ...(hasRename ? [] : [{ title: locales.rename, name: 'rename', type: 'action' as const, params: {} }]),
       ...(hasCopy ? [] : [{ title: 'Copy name', name: 'copyName', type: 'command' as const, params: {} }])

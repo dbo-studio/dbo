@@ -2,15 +2,7 @@ import api from '@/api';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import FieldInput from '@/components/base/FieldInput/FieldInput';
 import locales from '@/locales';
-import {
-  Box,
-  Button,
-  Checkbox,
-  IconButton,
-  Menu,
-  MenuItem,
-  Typography
-} from '@mui/material';
+import { Box, Button, Checkbox, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -95,94 +87,94 @@ export default function AggregatePanel({ connectionId, containerId }: Props): JS
 
   return (
     <Box sx={{ display: 'flex', gap: 2, height: '100%' }} data-testid='aggregate-panel'>
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {stages.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_empty}</Typography>}
-          {stages.map((s, i) => (
-            <Box
-              key={s.id}
-              data-testid='agg-stage'
-              sx={{ border: 1, borderColor: previewAt === i ? 'primary.main' : 'divider', borderRadius: 1, p: 1 }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                <Checkbox
-                  checked={s.enabled}
-                  onChange={(e): void => update(s.id, { enabled: e.target.checked })}
-                  aria-label={`stage-${i + 1}-enabled`}
-                />
-                <Typography variant='subtitle2'>{i + 1}</Typography>
-                <Button
-                  sx={{ ml: 'auto' }}
-                  data-testid={`agg-preview-${i + 1}`}
-                  onClick={(): void => void preview(stages, i)}
-                >
-                  {locales.nosql_agg_preview}
-                </Button>
-                <IconButton
-                  aria-label={`remove-stage-${i + 1}`}
-                  onClick={(): void => setStages((l) => l.filter((x) => x.id !== s.id))}
-                >
-                  <CustomIcon type='delete' size='s' />
-                </IconButton>
-              </Box>
-              <FieldInput
-                fullWidth
-                multiline
-                minRows={2}
-                value={s.text}
-                onChange={(e): void => update(s.id, { text: e.target.value })}
-                inputProps={{ 'aria-label': `stage-${i + 1}-text`, style: { fontFamily: 'monospace' } }}
+      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {stages.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_empty}</Typography>}
+        {stages.map((s, i) => (
+          <Box
+            key={s.id}
+            data-testid='agg-stage'
+            sx={{ border: 1, borderColor: previewAt === i ? 'primary.main' : 'divider', borderRadius: 1, p: 1 }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+              <Checkbox
+                checked={s.enabled}
+                onChange={(e): void => update(s.id, { enabled: e.target.checked })}
+                aria-label={`stage-${i + 1}-enabled`}
               />
+              <Typography variant='subtitle2'>{i + 1}</Typography>
+              <Button
+                sx={{ ml: 'auto' }}
+                data-testid={`agg-preview-${i + 1}`}
+                onClick={(): void => void preview(stages, i)}
+              >
+                {locales.nosql_agg_preview}
+              </Button>
+              <IconButton
+                aria-label={`remove-stage-${i + 1}`}
+                onClick={(): void => setStages((l) => l.filter((x) => x.id !== s.id))}
+              >
+                <CustomIcon type='delete' size='s' />
+              </IconButton>
             </Box>
-          ))}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant='outlined' data-testid='agg-add' onClick={(e): void => setAddAnchor(e.currentTarget)}>
-              {locales.nosql_agg_add_stage}
-            </Button>
-            <Button disabled={stages.length === 0} onClick={(): void => void copy()}>
-              {locales.nosql_agg_copy}
-            </Button>
+            <FieldInput
+              fullWidth
+              multiline
+              minRows={2}
+              value={s.text}
+              onChange={(e): void => update(s.id, { text: e.target.value })}
+              inputProps={{ 'aria-label': `stage-${i + 1}-text`, style: { fontFamily: 'monospace' } }}
+            />
           </Box>
-          <Menu anchorEl={addAnchor} open={!!addAnchor} onClose={(): void => setAddAnchor(null)}>
-            {Object.keys(TEMPLATES).map((op) => (
-              <MenuItem key={op} onClick={(): void => add(op)}>
-                {op}
-              </MenuItem>
-            ))}
-          </Menu>
+        ))}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant='outlined' data-testid='agg-add' onClick={(e): void => setAddAnchor(e.currentTarget)}>
+            {locales.nosql_agg_add_stage}
+          </Button>
+          <Button disabled={stages.length === 0} onClick={(): void => void copy()}>
+            {locales.nosql_agg_copy}
+          </Button>
         </Box>
-        <Box
-          sx={{ flex: 1, minWidth: 0, borderLeft: 1, borderColor: 'divider', pl: 2, overflow: 'auto' }}
-          data-testid='agg-output'
-        >
-          {loading && <Typography color='text.secondary'>{locales.loading}</Typography>}
-          {error && <Typography color='error'>{error}</Typography>}
-          {docs?.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_no_docs}</Typography>}
-          {docs?.map((d) => (
-            // Output rows have no identity of their own; the list is replaced whole on every preview.
-            <Box
-              component='pre'
-              key={`${d.length}:${d.slice(0, 64)}`}
-              data-testid='agg-doc'
-              sx={{
-                m: 0,
-                mb: 1,
-                p: 1,
-                typography: 'caption',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-all',
-                bgcolor: 'action.hover',
-                borderRadius: 1
-              }}
-            >
-              {d.length > 2000 ? `${d.slice(0, 2000)}…` : d}
-            </Box>
+        <Menu anchorEl={addAnchor} open={!!addAnchor} onClose={(): void => setAddAnchor(null)}>
+          {Object.keys(TEMPLATES).map((op) => (
+            <MenuItem key={op} onClick={(): void => add(op)}>
+              {op}
+            </MenuItem>
           ))}
-          {truncated && (
-            <Typography variant='caption' color='text.secondary'>
-              {locales.nosql_agg_more}
-            </Typography>
-          )}
-        </Box>
+        </Menu>
+      </Box>
+      <Box
+        sx={{ flex: 1, minWidth: 0, borderLeft: 1, borderColor: 'divider', pl: 2, overflow: 'auto' }}
+        data-testid='agg-output'
+      >
+        {loading && <Typography color='text.secondary'>{locales.loading}</Typography>}
+        {error && <Typography color='error'>{error}</Typography>}
+        {docs?.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_no_docs}</Typography>}
+        {docs?.map((d) => (
+          // Output rows have no identity of their own; the list is replaced whole on every preview.
+          <Box
+            component='pre'
+            key={`${d.length}:${d.slice(0, 64)}`}
+            data-testid='agg-doc'
+            sx={{
+              m: 0,
+              mb: 1,
+              p: 1,
+              typography: 'caption',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              bgcolor: 'action.hover',
+              borderRadius: 1
+            }}
+          >
+            {d.length > 2000 ? `${d.slice(0, 2000)}…` : d}
+          </Box>
+        ))}
+        {truncated && (
+          <Typography variant='caption' color='text.secondary'>
+            {locales.nosql_agg_more}
+          </Typography>
+        )}
+      </Box>
     </Box>
   );
 }

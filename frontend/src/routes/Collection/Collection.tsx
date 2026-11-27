@@ -27,9 +27,7 @@ export default function Collection(): JSX.Element {
         </Typography>
       </Box>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
-        {tab.panel === 'schema' && (
-          <SchemaPanel key={tab.id} connectionId={connectionId} containerId={containerId} />
-        )}
+        {tab.panel === 'schema' && <SchemaPanel key={tab.id} connectionId={connectionId} containerId={containerId} />}
         {tab.panel === 'aggregate' && (
           <AggregatePanel key={tab.id} connectionId={connectionId} containerId={containerId} />
         )}

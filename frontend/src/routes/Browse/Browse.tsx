@@ -394,7 +394,9 @@ export default function Browse(): JSX.Element {
     ...(has(spec, 'collection-admin')
       ? [{ id: 'drop', label: locales.nosql_drop_collection, danger: true, run: dropCollection }]
       : []),
-    ...(has(spec, 'indexes') ? [{ id: 'explain', label: locales.nosql_explain, run: (): void => setExplainOpen(true) }] : []),
+    ...(has(spec, 'indexes')
+      ? [{ id: 'explain', label: locales.nosql_explain, run: (): void => setExplainOpen(true) }]
+      : []),
     ...(has(spec, 'recycle')
       ? [{ id: 'recycle', label: locales.nosql_recycle_title, run: (): void => setRecycleOpen(true) }]
       : []),
