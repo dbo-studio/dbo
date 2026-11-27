@@ -23,4 +23,9 @@ const (
 	SequenceNodeType                  TreeNodeType = "sequence"
 	TypeNodeType                      TreeNodeType = "type"
 	EventNodeType                     TreeNodeType = "event"
+	CollectionPanelNodeType           TreeNodeType = "collectionPanel"
+	ServerContainerNodeType           TreeNodeType = "serverContainer"
+	ServerPanelNodeType               TreeNodeType = "serverPanel"
+	UserContainerNodeType             TreeNodeType = "userContainer"
+	UserNodeType                      TreeNodeType = "user"
 )

@@ -89,6 +89,7 @@ Each row is a **product area**. Specs live under `tests/<engine>/`; see [`SPEC-C
 | Settings / MCP | `settings-theme`, `mcp-panel`, `account-settings`, `notification-*` | Theme, MCP, notifications |
 | Redis / Mongo | `tests/redis/*`, `tests/mongo/*` | NoSQL capabilities (tagged `@cap` / `@tool`) |
 | Browse and Server tools | `tests/mongo/mongo.spec.ts`, `tests/{mongo,pg,redis}/server.spec.ts` | Typed MongoDB inline filters, toolbar Filters and Sorts, shared Server grids, native activity controls, and SQL Explain |
+| MongoDB object forms and Server group | `mongo/{object-form,indexes,schema,server}.spec.ts`, `pg/server.spec.ts` | Create and drop database, create collection, create and drop user through the shared object tab; Edit collection indexes and validation; read-only Server pages from the tree; status card from the status bar |
 | MongoDB collection drop and Safe Mode | `mongo/{transfer,editor,safe-mode}.spec.ts` | Direct explorer drop with confirmation and refresh, Silent Mode execution, Alert cancellation preserving results, password and production gates |
 | MongoDB document text and explorer menus | `mongo/{doc-tree,transfer}.spec.ts` | Bundled Arabic and Persian font, mixed-direction edits, copy database and collection names, and inline rename with cancellation and collision checks |
 | Redis destructive command cancellation | `redis/redis.spec.ts` | Terminal confirmation preserves the key and prior output when canceled |

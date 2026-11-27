@@ -4,7 +4,8 @@ import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import type { JSX } from 'react';
 import Facts from '../Facts/Facts';
-import { formatServerUptime, type ServerToolProps } from '../serverToolShared';
+import { formatServerUptime } from '@/core/utils/serverStatus';
+import type { ServerToolProps } from '../serverToolShared';
 
 export default function Status({ connectionId }: ServerToolProps): JSX.Element {
   const { data, isError } = useQuery({

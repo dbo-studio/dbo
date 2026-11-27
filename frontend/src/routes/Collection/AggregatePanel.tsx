@@ -6,10 +6,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Menu,
   MenuItem,
@@ -18,7 +14,7 @@ import {
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 
-type Props = { connectionId: number; containerId: string; onClose: () => void };
+type Props = { connectionId: number; containerId: string };
 type Stage = { id: number; text: string; enabled: boolean };
 
 const TEMPLATES: Record<string, string> = {
@@ -53,7 +49,7 @@ function pipelineText(stages: Stage[], upTo: number): string {
 }
 
 /** Stage-by-stage aggregation builder: every stage can be previewed on its own output. */
-export default function AggregateDialog({ connectionId, containerId, onClose }: Props): JSX.Element {
+export default function AggregatePanel({ connectionId, containerId }: Props): JSX.Element {
   const [stages, setStages] = useState<Stage[]>([]);
   const [addAnchor, setAddAnchor] = useState<HTMLElement | null>(null);
   const [docs, setDocs] = useState<string[] | null>(null);
@@ -98,9 +94,7 @@ export default function AggregateDialog({ connectionId, containerId, onClose }: 
   };
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth='lg' data-testid='aggregate-dialog'>
-      <DialogTitle>{`${locales.nosql_aggregate}: ${containerId}`}</DialogTitle>
-      <DialogContent sx={{ display: 'flex', gap: 2, minHeight: 420 }}>
+    <Box sx={{ display: 'flex', gap: 2, height: '100%' }} data-testid='aggregate-panel'>
         <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
           {stages.length === 0 && <Typography color='text.secondary'>{locales.nosql_agg_empty}</Typography>}
           {stages.map((s, i) => (
@@ -189,10 +183,6 @@ export default function AggregateDialog({ connectionId, containerId, onClose }: 
             </Typography>
           )}
         </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{locales.close}</Button>
-      </DialogActions>
-    </Dialog>
+    </Box>
   );
 }

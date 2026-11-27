@@ -63,7 +63,7 @@ func (r *Repository) Analyze(ctx context.Context, containerID string, sample int
 	out := &contract.SchemaAnalysis{Sampled: len(docs), Fields: make([]contract.SchemaField, 0, len(acc))}
 
 	for path, a := range acc {
-		f := contract.SchemaField{Path: path, Count: a.count}
+		f := contract.SchemaField{Path: path, Count: a.count, Types: []contract.SchemaType{}, Top: []contract.SchemaValue{}}
 
 		for t, n := range a.types {
 			f.Types = append(f.Types, contract.SchemaType{Type: t, Count: n})

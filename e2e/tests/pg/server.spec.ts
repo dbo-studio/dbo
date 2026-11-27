@@ -26,6 +26,15 @@ test("PostgreSQL Server opens from the connection menu and shows engine metadata
   });
 });
 
+test("PostgreSQL status bar connection opens the small server status card", async ({ page }, testInfo) => {
+  const name = `pg-status-${uniqueTestSuffix(testInfo)}`;
+  await withConnectionCleanup(page, name, async () => {
+    await setupPostgresConnection(page, name);
+    await page.getByTestId("status-connection").click();
+    await expect(page.getByTestId("server-status-popover")).toContainText(/Version[\s\S]*\d+\.\d+/, { timeout: 15000 });
+  });
+});
+
 test("PostgreSQL cancels the selected query after confirmation", async ({ page }, testInfo) => {
   const suffix = uniqueTestSuffix(testInfo);
   const name = `pg-cancel-${suffix}`;

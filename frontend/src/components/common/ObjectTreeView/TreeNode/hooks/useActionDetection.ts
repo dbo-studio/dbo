@@ -13,6 +13,7 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { matchConnectionId } from '@/store/tabStore/connectionId';
 import { useTreeStore } from '@/store/treeStore/tree.store';
+import type { CollectionPanel } from '@/types/Tab';
 import { TreeNodeType } from '@/types/Tree';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
@@ -51,6 +52,7 @@ export const useActionDetection = (
   const addDataTab = useTabStore((state) => state.addDataTab);
   const addObjectTab = useTabStore((state) => state.addObjectTab);
   const addBrowseTab = useTabStore((state) => state.addBrowseTab);
+  const addCollectionTab = useTabStore((state) => state.addCollectionTab);
   const addToolTab = useTabStore((state) => state.addToolTab);
   const reloadTree = useTreeStore((state) => state.reloadTree);
   const setFocusedNodeId = useTreeStore((state) => state.setFocusedNodeId);
@@ -214,7 +216,18 @@ export const useActionDetection = (
               break;
             }
             case 'browse': {
-              addBrowseTab(node.name, node.id);
+              const { panel, containerId } = node.action.params as {
+                panel?: CollectionPanel | 'documents';
+                containerId?: string;
+              };
+              if (panel && containerId) {
+                // A collection's sub-pages: Documents is its browse tab, the rest are tabs of their own.
+                const collection = containerId.slice(containerId.indexOf('/') + 1);
+                if (panel === 'documents') addBrowseTab(collection, containerId);
+                else addCollectionTab(containerId, panel, `${node.name} · ${collection}`);
+              } else {
+                addBrowseTab(node.name, node.id);
+              }
               break;
             }
             case 'query': {
@@ -276,6 +289,7 @@ export const useActionDetection = (
       expandNode,
       addObjectTab,
       addBrowseTab,
+      addCollectionTab,
       addToolTab,
       addDataTab,
       closeLeftSidebar,

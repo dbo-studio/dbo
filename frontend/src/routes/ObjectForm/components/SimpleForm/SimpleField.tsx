@@ -42,6 +42,7 @@ export default function SimpleField({
 
   switch (field.type) {
     case 'text':
+    case 'password':
       return (
         <Stack
           direction={'row'}
@@ -55,6 +56,7 @@ export default function SimpleField({
             onChange={(e): void => setLocalValue(e.target.value)}
             onBlur={(): void => onChange(localValue)}
             fullWidth
+            type={field.type === 'password' ? 'password' : undefined}
             required={field.required}
             margin={'none'}
             label={isArrayForm ? undefined : field.name}

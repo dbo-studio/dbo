@@ -1,6 +1,7 @@
 // @cap: Indexes
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
+import { ObjectFormPage, ObjectTreePage } from "../../pages";
 import { useMongo } from "./_case";
 
 type Index = { name: string; keys: string; unique: boolean; ttlSecs: number | null; ops: number };
@@ -50,5 +51,44 @@ test.describe("MongoDB indexes and explain", () => {
     const after = await explain();
     expect(after.index).toBe("k_1");
     expect(after.docsExamined).toBe(1);
+  });
+
+  test("Edit collection adds and drops an index through the object form", async ({ page }) => {
+    await m.add(page, '{"email":"a@x.io"}');
+    await page.reload();
+    await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
+    const dbNode = page.getByTestId(`tree-node-${m.s.container.split("/")[0].toLowerCase()}`);
+    if (!(await dbNode.isVisible().catch(() => false))) await page.getByTestId(`tree-node-${m.s.name.toLowerCase()}`).click();
+    await dbNode.click();
+    const tree = new ObjectTreePage(page);
+    const form = new ObjectFormPage(page);
+    const indexes = async () => ((await j(await page.request.get(`${apiUrl()}/nosql/indexes`, { params: { connectionId: m.s.id, containerId: m.s.container }, headers }))) as { name: string }[]).map((i) => i.name);
+
+    await tree.runTreeAction(m.s.coll, "Edit collection");
+    await form.waitForReady();
+    const openIndexes = async (): Promise<void> => {
+      await form.getTab("collection_indexes").click();
+      await expect(form.addRowButton).toBeVisible({ timeout: 15000 });
+    };
+    await openIndexes();
+
+    await test.step("Add an index", async () => {
+      const row = await form.addArrayRow("keys");
+      await form.fillArrayCell(row, "keys", '{"email":1}');
+      await form.save();
+      await form.assertPreviewContains("createIndex");
+      await form.confirmExecute();
+      await expect.poll(indexes, { timeout: 15000 }).toContain("email_1");
+    });
+
+    await test.step("Drop it again", async () => {
+      await openIndexes();
+      const rows = await form.arrayRowCount("keys");
+      await form.deleteArrayRow(rows - 1);
+      await form.save();
+      await form.assertPreviewContains("dropIndex");
+      await form.confirmExecute();
+      await expect.poll(indexes, { timeout: 15000 }).not.toContain("email_1");
+    });
   });
 });

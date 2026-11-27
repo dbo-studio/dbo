@@ -151,6 +151,9 @@ const resolveGeneralSaveKey = (tabId: string, action: string): string | null => 
 
   if (
     tabId === 'database' ||
+    tabId === 'collection' ||
+    tabId === 'collection_validation' ||
+    tabId === 'user' ||
     tabId === 'schema' ||
     tabId === 'view' ||
     tabId === 'materialized_view' ||

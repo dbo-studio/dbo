@@ -96,10 +96,9 @@ test.describe("MongoDB editor tab", () => {
     await expect(result(page)).toContainText("3", { timeout: 20000 });
   });
 
-  test("Indexes runs in the editor and Create collection opens a template", async ({ page }) => {
+  test("Create collection opens its object form", async ({ page }) => {
     await seed(page);
     const tree = new ObjectTreePage(page);
-    const editor = new SqlEditorPage(page);
 
     await page.reload();
     await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
@@ -108,16 +107,9 @@ test.describe("MongoDB editor tab", () => {
     await dbNode.click();
     await expect(page.getByTestId(`tree-node-${m.s.coll}`)).toBeVisible({ timeout: 15000 });
 
-    await test.step("Indexes runs getIndexes", async () => {
-      await tree.runTreeAction(m.s.coll, "Indexes");
-      await expect(editor.editor).toBeVisible({ timeout: 15000 });
-      await expect(result(page)).toContainText("_id_", { timeout: 20000 });
-      expect(await editor.getMonacoValue()).toBe(`use ${db};\ndb.${m.s.coll}.getIndexes()`);
-    });
-
-    await test.step("Create collection on the database fills a template", async () => {
+    await test.step("Create collection on the database opens the object form", async () => {
       await tree.runTreeAction(db, "Create collection");
-      await expect.poll(() => editor.getMonacoValue()).toContain(`createCollection("new_collection")`);
+      await expect(page.getByTestId("object-form")).toBeVisible({ timeout: 15000 });
     });
   });
 

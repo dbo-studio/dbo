@@ -318,6 +318,10 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 	}
 	defer r.release(ctx, c)
 
+	if parentID == usersNodeID {
+		return r.usersNode(ctx)
+	}
+
 	if parentID != "" {
 		return r.collectionsNode(ctx, c, parentID)
 	}
@@ -341,11 +345,13 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 		HasChildren: true,
 		Children:    make([]contract.TreeNode, 0, len(names)),
 		ContextMenu: []contract.TreeNodeAction{
+			{Title: "Create database", Name: contract.CreateDatabaseAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object"}},
 			refreshAction,
 			{Title: "CLI", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolCLI)}},
-			{Title: "Server", Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "tool", "tool": string(contract.ToolServer)}},
 		},
 	}
+
+	root.Children = append(root.Children, serverNode(), usersContainerNode())
 
 	for _, name := range names {
 		if slices.Contains(systemDBs, name) {
@@ -354,7 +360,7 @@ func (r *Repository) Tree(ctx context.Context, parentID string) (*contract.TreeN
 
 		root.Children = append(root.Children, contract.TreeNode{
 			ID: name, Name: name, Type: contract.DatabaseNodeType, HasChildren: true,
-			Children: []contract.TreeNode{}, ContextMenu: databaseMenu(name),
+			Children: []contract.TreeNode{}, ContextMenu: databaseMenu(),
 		})
 	}
 
@@ -371,7 +377,7 @@ func (r *Repository) collectionsNode(ctx context.Context, c *mongo.Client, db st
 
 	node := &contract.TreeNode{
 		ID: db, Name: db, Type: contract.DatabaseNodeType, HasChildren: true,
-		Children: make([]contract.TreeNode, 0, len(names)), ContextMenu: databaseMenu(db),
+		Children: make([]contract.TreeNode, 0, len(names)), ContextMenu: databaseMenu(),
 	}
 
 	for _, name := range names {
@@ -379,8 +385,9 @@ func (r *Repository) collectionsNode(ctx context.Context, c *mongo.Client, db st
 			continue
 		}
 
+		id := db + "/" + name
 		node.Children = append(node.Children, contract.TreeNode{
-			ID: db + "/" + name, Name: name, Type: contract.TableNodeType,
+			ID: id, Name: name, Type: contract.TableNodeType, Children: []contract.TreeNode{},
 			Action: &contract.TreeNodeAction{
 				Title: "Browse", Name: contract.BrowseContainerAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "browse"},
 			},
@@ -389,6 +396,74 @@ func (r *Repository) collectionsNode(ctx context.Context, c *mongo.Client, db st
 	}
 
 	return node, nil
+}
+
+const usersNodeID = "@users"
+
+// serverNode groups the read-only server pages; each opens as a tab of its own.
+func serverNode() contract.TreeNode {
+	page := func(key, title, icon string) contract.TreeNode {
+		return contract.TreeNode{
+			ID: "@server:" + key, Name: title, Icon: &icon, Type: contract.ServerPanelNodeType,
+			Children: []contract.TreeNode{}, ContextMenu: []contract.TreeNodeAction{},
+			Action: &contract.TreeNodeAction{
+				Title: title, Name: contract.OpenToolAction, Type: contract.TreeNodeActionTypeTab,
+				Params: map[string]any{"path": "tool", "tool": "server-" + key},
+			},
+		}
+	}
+
+	icon := "hardDrive"
+
+	return contract.TreeNode{
+		ID: "@server", Name: "Server", Icon: &icon, Type: contract.ServerContainerNodeType, HasChildren: true,
+		ContextMenu: []contract.TreeNodeAction{},
+		Children: []contract.TreeNode{
+			page("status", "Status", "chart"),
+			page("operations", "Operations", "wrench"),
+			page("gridfs", "GridFS", "folder"),
+			page("changes", "Changes", "history"),
+		},
+	}
+}
+
+func usersContainerNode() contract.TreeNode {
+	icon := "key"
+
+	return contract.TreeNode{
+		ID: usersNodeID, Name: "Users", Icon: &icon, Type: contract.UserContainerNodeType, HasChildren: true, Children: []contract.TreeNode{},
+		ContextMenu: []contract.TreeNodeAction{
+			{Title: "Create user", Name: contract.CreateUserAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object"}},
+			refreshAction,
+		},
+	}
+}
+
+func (r *Repository) usersNode(ctx context.Context) (*contract.TreeNode, error) {
+	users, err := r.Users(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	node := usersContainerNode()
+	node.Children = make([]contract.TreeNode, 0, len(users))
+
+	icon := "user"
+
+	for _, u := range users {
+		id := userNodePrefix + u.DB + ":" + u.User
+		node.Children = append(node.Children, contract.TreeNode{
+			ID: id, Name: u.User + "@" + u.DB, Icon: &icon, Type: contract.UserNodeType, Children: []contract.TreeNode{},
+			Action: &contract.TreeNodeAction{Title: "Edit user", Name: contract.EditUserAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object-detail"}},
+			ContextMenu: []contract.TreeNodeAction{
+				{Title: "Edit user", Name: contract.EditUserAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object-detail"}},
+				{Title: "Drop user", Name: contract.DropUserAction, Type: contract.TreeNodeActionTypeAction},
+				refreshAction,
+			},
+		})
+	}
+
+	return &node, nil
 }
 
 var plainName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
@@ -402,18 +477,10 @@ func collRef(name string) string {
 	return "db.getCollection(" + strconv.Quote(name) + ")"
 }
 
-// openQuery opens the editor with a statement. Scripts name their database first, because the shell runs in
-// the one last selected. run is false for templates the user must finish.
-func openQuery(title, db, statement string, run bool) contract.TreeNodeAction {
-	return contract.TreeNodeAction{
-		Title: title, Name: contract.OpenQueryAction, Type: contract.TreeNodeActionTypeTab,
-		Params: map[string]any{"path": "query", "query": "use " + db + ";\n" + statement, "run": run},
-	}
-}
-
-func databaseMenu(db string) []contract.TreeNodeAction {
+func databaseMenu() []contract.TreeNodeAction {
 	return []contract.TreeNodeAction{
-		openQuery("Create collection", db, `db.createCollection("new_collection")`, false),
+		{Title: "Create collection", Name: contract.CreateCollectionAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object"}},
+		{Title: "Drop database", Name: contract.DropDatabaseAction, Type: contract.TreeNodeActionTypeAction},
 		copyNameAction,
 		refreshAction,
 	}
@@ -422,11 +489,18 @@ func databaseMenu(db string) []contract.TreeNodeAction {
 var copyNameAction = contract.TreeNodeAction{Title: "Copy name", Name: contract.CopyNameAction, Type: contract.TreeNodeActionTypeCommand}
 
 func collectionMenu(db, coll string) []contract.TreeNodeAction {
-	ref := collRef(coll)
+	containerID := db + "/" + coll
+	panel := func(key, title string) contract.TreeNodeAction {
+		return contract.TreeNodeAction{
+			Title: title, Name: contract.BrowseContainerAction, Type: contract.TreeNodeActionTypeTab,
+			Params: map[string]any{"path": "browse", "panel": key, "containerId": containerID},
+		}
+	}
 
 	return []contract.TreeNodeAction{
-		openQuery("Indexes", db, ref+".getIndexes()", true),
-		openQuery("Create index", db, ref+`.createIndex({ field: 1 }, { name: "field_1" })`, false),
+		{Title: "Edit collection", Name: contract.EditCollectionAction, Type: contract.TreeNodeActionTypeTab, Params: map[string]any{"path": "object-detail"}},
+		panel("schema", "Schema"),
+		panel("aggregate", "Aggregate"),
 		{Title: "Rename", Name: contract.RenameAction, Type: contract.TreeNodeActionTypeAction},
 		{Title: "Drop collection", Name: contract.DropCollectionAction, Type: contract.TreeNodeActionTypeAction},
 		copyNameAction,
@@ -521,7 +595,7 @@ func (r *Repository) Describe(ctx context.Context, containerID string) (*contrac
 		Capabilities: []contract.Capability{
 			contract.CapInsert, contract.CapEdit, contract.CapDelete, contract.CapBulkDelete, contract.CapBulkDeletePattern, contract.CapRecycle, contract.CapStats, contract.CapDocTree, contract.CapIndexes, contract.CapAggregate, contract.CapSchema, contract.CapTransfer, contract.CapCollectionAdmin,
 		},
-		Tools:       []contract.ToolID{contract.ToolCLI, contract.ToolServer},
+		Tools:       []contract.ToolID{contract.ToolCLI},
 		CreateKinds: []contract.CreateKind{{ID: "document", Label: "Document", View: contract.ViewDocument}},
 	}, nil
 }

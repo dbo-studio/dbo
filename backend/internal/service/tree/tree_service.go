@@ -13,6 +13,7 @@ import (
 	databaseConnection "github.com/dbo-studio/dbo/internal/database/connection"
 	contract "github.com/dbo-studio/dbo/internal/database/contract"
 	databaseCore "github.com/dbo-studio/dbo/internal/database/core"
+	"github.com/dbo-studio/dbo/internal/model"
 	"github.com/dbo-studio/dbo/internal/repository"
 	serviceSafemode "github.com/dbo-studio/dbo/internal/service/safemode"
 	"github.com/dbo-studio/dbo/pkg/apperror"
@@ -98,13 +99,32 @@ func (i ITreeServiceImpl) Tree(ctx context.Context, req *dto.TreeListRequest) (*
 	return tree, nil
 }
 
+// objectForms returns the driver behind the object-form routes: SQL drivers, or a NoSQL driver that offers forms.
+func (i ITreeServiceImpl) objectForms(ctx context.Context, connection *model.Connection) (contract.ObjectFormProvider, error) {
+	if contract.IsNoSQL(connection.ConnectionType) {
+		repo, err := database.NewNoSQLRepository(ctx, connection, i.cm)
+		if err != nil {
+			return nil, err
+		}
+
+		forms, ok := repo.(contract.ObjectFormProvider)
+		if !ok {
+			return nil, apperror.BadRequest(errors.New("this connection has no object forms"))
+		}
+
+		return forms, nil
+	}
+
+	return database.NewDatabaseRepository(ctx, connection, i.cm)
+}
+
 func (i ITreeServiceImpl) Tabs(ctx context.Context, req *dto.ObjectTabsRequest) ([]contract.FormTab, error) {
 	connection, err := i.connectionRepo.Find(ctx, req.ConnectionID)
 	if err != nil {
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := i.objectForms(ctx, connection)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +138,7 @@ func (i ITreeServiceImpl) ObjectDetail(ctx context.Context, req *dto.ObjectDetai
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := i.objectForms(ctx, connection)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +167,7 @@ func (i ITreeServiceImpl) ObjectExecute(ctx context.Context, req *dto.ObjectExec
 
 	i.unlockStore.ConsumeGate(ctx, helper.CtxOwnerID(ctx), connection.ID, policy.Unlocked)
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := i.objectForms(ctx, connection)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +194,7 @@ func (i ITreeServiceImpl) ObjectPreviewExecute(ctx context.Context, req *dto.Obj
 		return nil, apperror.NotFound(apperror.ErrConnectionNotFound)
 	}
 
-	repo, err := database.NewDatabaseRepository(ctx, connection, i.cm)
+	repo, err := i.objectForms(ctx, connection)
 	if err != nil {
 		return nil, err
 	}

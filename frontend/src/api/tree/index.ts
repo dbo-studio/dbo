@@ -15,15 +15,18 @@ import type {
 } from '@/api/tree/types';
 import { api } from '@/core/api';
 
+/** A node id can hold a slash (a collection is db/name); keep it one path segment. */
+const seg = (nodeId: string): string => nodeId.replaceAll('/', '%2F');
+
 const endpoints = {
   getTree: (): string => '/tree',
   search: (): string => '/tree/search',
-  getTabs: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}`,
+  getTabs: (nodeId: string, action: string): string => `/tree/${seg(nodeId)}/tabs/${action}`,
   getObject: (nodeId: string, action: string, tabId: string): string =>
-    `/tree/${nodeId}/tabs/${action}/fields/${tabId}/object`,
-  executeAction: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object`,
-  previewExecute: (nodeId: string, action: string): string => `/tree/${nodeId}/tabs/${action}/fields/object/preview`,
-  getDynamicFieldOptions: (nodeId: string): string => `/tree/${nodeId}/dynamic`
+    `/tree/${seg(nodeId)}/tabs/${action}/fields/${tabId}/object`,
+  executeAction: (nodeId: string, action: string): string => `/tree/${seg(nodeId)}/tabs/${action}/fields/object`,
+  previewExecute: (nodeId: string, action: string): string => `/tree/${seg(nodeId)}/tabs/${action}/fields/object/preview`,
+  getDynamicFieldOptions: (nodeId: string): string => `/tree/${seg(nodeId)}/dynamic`
 };
 
 export const getTree = async (params: TreeRequestType): Promise<TreeResponseType> => {

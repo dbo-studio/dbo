@@ -3,7 +3,7 @@ import { registerMongoCompletions, setMongoContext } from '@/components/base/Mon
 import { setupLanguage } from '@/components/base/InlineSqlEditor/helpers/languageSetup';
 import { editorConfig } from '@/components/base/SqlEditor/helpers/editorConfig';
 import ResizableYBox from '@/components/base/ResizableBox/ResizableYBox';
-import DataGrid from '@/components/common/DataGrid/DataGrid';
+import DataTable from '@/components/common/DataTable/DataTable';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { summarizeDocuments } from '@/core/utils/queryResultSummary';
@@ -338,7 +338,7 @@ export default function MongoQuery(): JSX.Element {
                 description={locales.query_empty_results_description}
               />
             ) : table ? (
-              <DataGrid standalone editable={false} rows={table.rows} columns={table.columns} loading={running} />
+              <DataTable rows={table.rows} columns={table.columns} loading={running} />
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
                 {outcome.error && outcome.input && (

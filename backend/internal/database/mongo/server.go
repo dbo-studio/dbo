@@ -568,3 +568,97 @@ func (r *Repository) WatchChanges(ctx context.Context, containerID string, emit 
 
 	return cs.Err()
 }
+
+// ---- Users ----------------------------------------------------------------------------------------------------
+
+// parseRoles reads "role@database, role@database"; a role with no database applies to db.
+func parseRoles(raw, db string) (bson.A, error) {
+	roles := bson.A{}
+
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		role, roleDB, _ := strings.Cut(part, "@")
+		if strings.TrimSpace(roleDB) == "" {
+			roleDB = db
+		}
+
+		roles = append(roles, bson.D{{Key: "role", Value: strings.TrimSpace(role)}, {Key: "db", Value: strings.TrimSpace(roleDB)}})
+	}
+
+	return roles, nil
+}
+
+func checkUser(db, name string) error {
+	if checkName("database", db) != nil || strings.Contains(db, ".") {
+		return contract.Invalid("the authentication database is not valid")
+	}
+
+	if name == "" || strings.ContainsAny(name, "/:\x00") {
+		return contract.Invalid("a user name cannot be empty or contain / or :")
+	}
+
+	return nil
+}
+
+// userCommand runs createUser, updateUser or dropUser against the user's authentication database.
+func (r *Repository) userCommand(ctx context.Context, db string, cmd bson.D) error {
+	c, err := r.client(ctx)
+	if err != nil {
+		return err
+	}
+	defer r.release(ctx, c)
+
+	if err := c.Database(db).RunCommand(ctx, cmd).Err(); err != nil {
+		return contract.Invalid("%v", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) CreateUser(ctx context.Context, db, name, password, roles string) error {
+	if err := checkUser(db, name); err != nil {
+		return err
+	}
+
+	if password == "" {
+		return contract.Invalid("a new user needs a password")
+	}
+
+	rs, err := parseRoles(roles, db)
+	if err != nil {
+		return err
+	}
+
+	return r.userCommand(ctx, db, bson.D{{Key: "createUser", Value: name}, {Key: "pwd", Value: password}, {Key: "roles", Value: rs}})
+}
+
+// UpdateUser changes the roles and, when password is not empty, the password.
+func (r *Repository) UpdateUser(ctx context.Context, db, name, password, roles string) error {
+	if err := checkUser(db, name); err != nil {
+		return err
+	}
+
+	rs, err := parseRoles(roles, db)
+	if err != nil {
+		return err
+	}
+
+	cmd := bson.D{{Key: "updateUser", Value: name}, {Key: "roles", Value: rs}}
+	if password != "" {
+		cmd = append(cmd, bson.E{Key: "pwd", Value: password})
+	}
+
+	return r.userCommand(ctx, db, cmd)
+}
+
+func (r *Repository) DropUser(ctx context.Context, db, name string) error {
+	if err := checkUser(db, name); err != nil {
+		return err
+	}
+
+	return r.userCommand(ctx, db, bson.D{{Key: "dropUser", Value: name}})
+}

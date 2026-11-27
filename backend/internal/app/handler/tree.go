@@ -7,6 +7,7 @@ import (
 	"github.com/dbo-studio/dbo/pkg/logger"
 	"github.com/dbo-studio/dbo/pkg/response"
 	"github.com/gofiber/fiber/v3"
+	"net/url"
 )
 
 type TreeHandler struct {
@@ -63,7 +64,7 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 	req := &dto.ObjectTabsRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
 		Action:       fiber.Params[string](c, "action"),
-		NodeID:       fiber.Params[string](c, "nodeId"),
+		NodeID:       nodeParam(c),
 	}
 
 	result, err := h.treeService.Tabs(c, req)
@@ -78,7 +79,7 @@ func (h *TreeHandler) Tabs(c fiber.Ctx) error {
 func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 	req := &dto.ObjectDetailRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
-		NodeID:       fiber.Params[string](c, "nodeId"),
+		NodeID:       nodeParam(c),
 		TabID:        fiber.Params[string](c, "tabId"),
 		Action:       fiber.Params[string](c, "action"),
 	}
@@ -95,7 +96,7 @@ func (h *TreeHandler) ObjectDetail(c fiber.Ctx) error {
 func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 	req := &dto.ObjectExecuteRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
-		NodeID:       fiber.Params[string](c, "nodeId"),
+		NodeID:       nodeParam(c),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
 		Confirmed:    fiber.Query[bool](c, "confirmed"),
@@ -113,7 +114,7 @@ func (h *TreeHandler) ExecuteHandler(c fiber.Ctx) error {
 func (h *TreeHandler) PreviewExecuteHandler(c fiber.Ctx) error {
 	req := &dto.ObjectExecuteRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
-		NodeID:       fiber.Params[string](c, "nodeId"),
+		NodeID:       nodeParam(c),
 		Action:       fiber.Params[string](c, "action"),
 		Params:       c.Body(),
 	}
@@ -130,7 +131,7 @@ func (h *TreeHandler) PreviewExecuteHandler(c fiber.Ctx) error {
 func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 	req := &dto.DynamicFieldOptionsRequest{
 		ConnectionID: fiber.Query[int32](c, "connectionId"),
-		NodeID:       c.Params("nodeId"),
+		NodeID:       nodeParam(c),
 		Parameters:   c.Queries(),
 	}
 
@@ -145,4 +146,15 @@ func (h *TreeHandler) GetDynamicFieldOptions(c fiber.Ctx) error {
 	}
 
 	return response.SuccessBuilder().WithData(result).Send(c)
+}
+
+// nodeParam reads the node id from the path. A NoSQL node id can hold a slash (db/collection), which the
+// client sends as %2F so it stays one path segment.
+func nodeParam(c fiber.Ctx) string {
+	raw := fiber.Params[string](c, "nodeId")
+	if id, err := url.PathUnescape(raw); err == nil {
+		return id
+	}
+
+	return raw
 }

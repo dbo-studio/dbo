@@ -6,6 +6,8 @@ export type QueryEditorLeadingProps = {
 };
 
 export type QueryEditorActionsProps = {
+  /** Folds the secondary actions into a three-dot menu when the bar is narrow. */
+  collapsed?: boolean;
   onFormat: () => void;
   onRunQuery: (query?: string) => void;
   onAiExplain: () => void;

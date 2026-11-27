@@ -30,11 +30,17 @@ const (
 	ExecuteSQLAction     TreeNodeActionName = "executeSql"
 	CreateSequenceAction TreeNodeActionName = "createSequence"
 	DropDatabaseAction   TreeNodeActionName = "dropDatabase"
-	EditTableAction      TreeNodeActionName = "editTable"
-	DropTableAction      TreeNodeActionName = "dropTable"
-	DropCollectionAction TreeNodeActionName = "dropCollection"
-	EditViewAction       TreeNodeActionName = "editView"
-	DropViewAction       TreeNodeActionName = "dropView"
+	// CreateCollectionAction and EditCollectionAction are the NoSQL object form for a collection.
+	CreateCollectionAction TreeNodeActionName = "createCollection"
+	EditCollectionAction   TreeNodeActionName = "editCollection"
+	CreateUserAction       TreeNodeActionName = "createUser"
+	EditUserAction         TreeNodeActionName = "editUser"
+	DropUserAction         TreeNodeActionName = "dropUser"
+	EditTableAction        TreeNodeActionName = "editTable"
+	DropTableAction        TreeNodeActionName = "dropTable"
+	DropCollectionAction   TreeNodeActionName = "dropCollection"
+	EditViewAction         TreeNodeActionName = "editView"
+	DropViewAction         TreeNodeActionName = "dropView"
 	// RenameAction renames a table or view; params are {"name": "<new name>"}.
 	RenameAction               TreeNodeActionName = "rename"
 	EditMaterializedViewAction TreeNodeActionName = "editMaterializedView"
@@ -55,6 +61,10 @@ func NextActionAfterCreate(action TreeNodeActionName) TreeNodeActionName {
 	switch action {
 	case CreateDatabaseAction:
 		return EditDatabaseAction
+	case CreateCollectionAction:
+		return EditCollectionAction
+	case CreateUserAction:
+		return EditUserAction
 	case CreateSchemaAction:
 		return EditSchemaAction
 	case CreateTableAction:

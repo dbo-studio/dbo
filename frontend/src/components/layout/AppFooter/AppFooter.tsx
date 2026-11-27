@@ -17,13 +17,8 @@ import { useNotificationPanelStore } from '@/store/notificationPanel/notificatio
 import { Popover, Tooltip, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
-import {
-  AppFooterStyled,
-  StatusDotStyled,
-  StatusItemStyled,
-  StatusSpacerStyled,
-  StatusTextStyled
-} from './AppFooter.styled';
+import { AppFooterStyled, StatusDotStyled, StatusItemStyled, StatusSpacerStyled } from './AppFooter.styled';
+import ServerStatusPopover from './ServerStatusPopover/ServerStatusPopover';
 import TabInfo from './TabInfo/TabInfo';
 
 const AI_SETTINGS_TAB = 3;
@@ -52,6 +47,7 @@ export default function AppFooter(): JSX.Element {
   const running = useRunningJobs();
   const setPanelOpen = useNotificationPanelStore((s) => s.setOpen);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [statusAnchor, setStatusAnchor] = useState<HTMLElement | null>(null);
 
   const { data: mcp } = useQuery({
     queryKey: ['mcp-status'],
@@ -77,7 +73,12 @@ export default function AppFooter(): JSX.Element {
 
   return (
     <AppFooterStyled data-testid='app-footer'>
-      <StatusTextStyled data-testid='status-connection'>
+      <StatusItemStyled
+        disabled={!connection || locked || !cliAllowed}
+        onClick={(event) => setStatusAnchor(event.currentTarget)}
+        data-testid='status-connection'
+        aria-label={locales.server_database_info}
+      >
         <StatusDotStyled tone={connectionTone} />
         <span>
           {locked
@@ -88,7 +89,10 @@ export default function AppFooter(): JSX.Element {
                 ? connection.info
                 : locales.not_connected}
         </span>
-      </StatusTextStyled>
+      </StatusItemStyled>
+      {connection && (
+        <ServerStatusPopover connection={connection} anchor={statusAnchor} onClose={() => setStatusAnchor(null)} />
+      )}
 
       <StatusSpacerStyled />
       <TabInfo />

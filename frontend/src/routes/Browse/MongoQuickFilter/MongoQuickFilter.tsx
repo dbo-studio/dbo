@@ -20,7 +20,7 @@ const labels: Record<MongoQuickFilterType, string> = {
   uuid: locales.nosql_quick_uuid
 };
 
-export default function MongoQuickFilter({ onApply, hidden }: { onApply: (query: string) => void; hidden: boolean }) {
+export default function MongoQuickFilter({ onApply }: { onApply: (query: string) => void }) {
   const [field, setField] = useState('');
   const [value, setValue] = useState('');
   const [type, setType] = useState<MongoQuickFilterType>('string');
@@ -28,8 +28,7 @@ export default function MongoQuickFilter({ onApply, hidden }: { onApply: (query:
   return (
     <Box
       component='form'
-      hidden={hidden}
-      sx={{ display: hidden ? 'none' : 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}
+      sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}
       data-testid='mongo-quick-filter'
       onSubmit={(event) => {
         event.preventDefault();

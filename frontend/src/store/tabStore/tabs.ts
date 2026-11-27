@@ -20,6 +20,7 @@ const knownModes = new Set<string>([
   TabMode.Settings,
   TabMode.Backup,
   TabMode.Browse,
+  TabMode.Collection,
   TabMode.Tool
 ]);
 

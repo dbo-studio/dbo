@@ -1,29 +1,27 @@
 import { Box, Stack, styled } from '@mui/material';
 
+// Wraps by container width (not viewport), so a narrow editor panel stacks actions under the context selects.
 export const QueryEditorActionBarStackStyled = styled(Stack)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   padding: theme.spacing(1),
+  flexDirection: 'row',
+  flexWrap: 'wrap',
   justifyContent: 'space-between',
   alignItems: 'center',
+  gap: theme.spacing(1),
   flexShrink: 0
 }));
 
-export const QueryEditorActionBarBoxStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'isCompact'
-})(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarBoxStyled = styled(Box)({
   display: 'flex',
   justifyContent: 'flex-start',
   minWidth: 0,
-  width: isCompact ? '100%' : 'auto',
-  flex: isCompact ? undefined : 1
-}));
+  flex: '1 1 auto'
+});
 
-export const QueryEditorActionBarActionsBoxStyled = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'isCompact'
-})(({ isCompact }: { isCompact: boolean }) => ({
+export const QueryEditorActionBarActionsBoxStyled = styled(Box)({
   display: 'flex',
   justifyContent: 'flex-end',
-  overflowX: 'auto',
-  width: isCompact ? '100%' : 'auto',
+  marginLeft: 'auto',
   flexShrink: 0
-}));
+});

@@ -167,7 +167,9 @@ export function useCommands(query: string): Command[] {
       hint: r.path.map((p) => p.name).join(' › '),
       icon: 'sheet',
       run: () => {
-        if (r.node.type === 'table' || r.node.type === 'view')
+        // Same dispatch as the sidebar: NoSQL collections are table nodes whose action is browse, not a SQL data tab.
+        if (r.node.action?.name === 'browse') useTabStore.getState().addBrowseTab(r.node.name, r.node.id);
+        else if (r.node.type === 'table' || r.node.type === 'view')
           useTabStore.getState().addDataTab(r.node.name, r.node.id, r.node.type === 'table');
       }
     }));

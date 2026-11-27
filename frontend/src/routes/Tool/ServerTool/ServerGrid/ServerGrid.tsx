@@ -1,4 +1,4 @@
-import DataGrid from '@/components/common/DataGrid/DataGrid';
+import DataTable from '@/components/common/DataTable/DataTable';
 import type { ColumnType, RowType } from '@/types';
 import { Box, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
@@ -40,12 +40,10 @@ export default function ServerGrid({
 
   return (
     <Box sx={{ height: Math.min(Math.max(rows.length + 1, 3) * 41, 450), minWidth: 0 }} data-testid='server-grid'>
-      <DataGrid
+      <DataTable
         rows={rows}
         columns={columns}
         loading={loading}
-        editable={false}
-        standalone
         renderCell={
           action
             ? (row, column) => (column === actionColumn ? action(values[row.dbo_index], row.dbo_index) : undefined)

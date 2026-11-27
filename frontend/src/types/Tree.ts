@@ -1,5 +1,5 @@
 export type TreeNodeActionTypesType = 'form' | 'command' | 'action' | 'route' | 'tab';
-export type FormFieldTypesType = 'text' | 'select' | 'multi-select' | 'checkbox' | 'query';
+export type FormFieldTypesType = 'text' | 'password' | 'select' | 'multi-select' | 'checkbox' | 'query';
 
 export type FormValue = string | number | boolean | string[] | null | undefined;
 

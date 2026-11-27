@@ -1,4 +1,4 @@
-import DataGrid from '@/components/common/DataGrid/DataGrid';
+import DataTable from '@/components/common/DataTable/DataTable';
 import Modal from '@/components/base/Modal/Modal';
 import locales from '@/locales';
 import type { RunQueryResponseType } from '@/api/query/types';
@@ -14,13 +14,7 @@ export default function SqlExplainDialog({ plan, onClose }: { plan: RunQueryResp
       footer={<Button onClick={onClose}>{locales.close}</Button>}
     >
       <Box sx={{ height: 380 }} data-testid='sql-explain'>
-        <DataGrid
-          rows={plan.data.map((row, index) => ({ ...row, dbo_index: index }))}
-          columns={plan.columns}
-          loading={false}
-          editable={false}
-          standalone
-        />
+        <DataTable rows={plan.data.map((row, index) => ({ ...row, dbo_index: index }))} columns={plan.columns} />
       </Box>
     </Modal>
   );

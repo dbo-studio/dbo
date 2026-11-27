@@ -4,6 +4,8 @@ import type {
   BackupSection,
   BackupTabType,
   BrowseTabType,
+  CollectionPanel,
+  CollectionTabType,
   ToolTabType,
   QuestionTabType,
   DashboardTabType,
@@ -60,6 +62,7 @@ export type TabSettingSlice = {
   addDataTab: (table: string, id: string, editable?: boolean) => TabType;
   addObjectTab: (title: string, nodeId: string, action: string, mode: TabMode) => TabType;
   addBrowseTab: (name: string, containerId: string) => BrowseTabType;
+  addCollectionTab: (containerId: string, panel: CollectionPanel, name: string) => CollectionTabType;
   addToolTab: (toolId: string, name: string) => ToolTabType;
   addEditorTab: (query?: string, options?: { forceNew?: boolean }) => TabType;
   addDiagramTab: (args: { database: string; schema: string; focusTables?: string[] }) => DiagramTabType;

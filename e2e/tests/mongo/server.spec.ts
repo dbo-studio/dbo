@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { expect, test, type Page } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
+import { ObjectTreePage } from "../../pages";
 import { useMongo } from "./_case";
 
 const mongoContainer = process.env.MONGO_TEST_CONTAINER ?? "dbo-studio-sample-mongo";
@@ -26,7 +27,7 @@ test.describe("MongoDB server tools", () => {
   test("the server tool is advertised and reports status", async ({ page }) => {
     await m.add(page, '{"a":1}');
     const spec = await j(await page.request.get(`${apiUrl()}/nosql/describe`, { params: { connectionId: m.s.id, containerId: m.s.container }, headers }));
-    expect(spec.tools).toEqual(expect.arrayContaining(["cli", "server"]));
+    expect(spec.tools).toEqual(expect.arrayContaining(["cli"]));
 
     const status = (await j(await get(page, "status"))) as { version: string; uptimeSecs: number; connections: Record<string, number>; opCounters: Record<string, number> };
     expect(status.version).toMatch(/^\d+\.\d+/);
@@ -139,59 +140,37 @@ test.describe("MongoDB server tools", () => {
     expect(first.message).toContain("replica set");
   });
 
-  /** Opens the Server tool from the collection menu (the tool the tree and the Browse menu both offer). */
-  async function openServerTool(page: Page): Promise<void> {
+  /** Opens one of the Server pages (Status, Operations, GridFS, Changes) from the tree's Server group. */
+  async function openServerPage(page: Page, title: string): Promise<void> {
     await m.add(page, '{"a":1}');
     await page.reload();
     await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
-    await page.getByTestId(`tree-node-${m.s.name.toLowerCase()}`).click({ button: "right" });
-    await page.getByRole("menuitem", { name: "Server", exact: true }).click();
+    const tree = new ObjectTreePage(page);
+    await tree.expandPath([m.s.name, "Server"]);
+    await tree.getTreeNode(title).dblclick();
     await expect(page.getByTestId("server-tool")).toBeVisible({ timeout: 15000 });
   }
 
-  test("the Server tool shows status and operations", async ({ page }) => {
-    await openServerTool(page);
+  test("the Server pages show status and operations", async ({ page }) => {
+    await openServerPage(page, "Status");
     await expect(page.getByRole("row").filter({ has: page.getByText("Version", { exact: true }) })).toContainText(/\d+\.\d+/, { timeout: 15000 });
     await expect(page.getByRole("row").filter({ has: page.getByText("Replica set", { exact: true }) })).toContainText("Standalone");
-    await page.getByTestId("server-tabs-operations").click();
+    await new ObjectTreePage(page).getTreeNode("Operations").dblclick();
     await expect(page.getByTestId("server-tool")).toContainText(/Nothing is running|Operation/, { timeout: 15000 });
   });
 
-  test("the Server tool creates a time series collection and drops a database with a typed name", async ({ page }) => {
-    const name = dbName();
-    try {
-      await openServerTool(page);
-      await page.getByTestId("server-tabs-databases").click();
-      await page.getByRole("textbox", { name: "new-database-name" }).fill(name);
-      await page.getByRole("textbox", { name: "new-database-collection" }).fill("base");
-      await page.getByRole("button", { name: "Create database", exact: true }).click();
-      await expect(page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) })).toBeVisible({ timeout: 15000 });
-
-      const databaseRow = page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) });
-      await databaseRow.getByRole("button", { name: "More actions" }).click();
-      await page.getByRole("menuitem", { name: "Collections", exact: true }).click();
-      await page.getByRole("textbox", { name: "new-collection-name" }).fill("metrics");
-      await page.getByTestId("new-collection-kind").click();
-      await page.getByRole("option", { name: "Time series" }).click();
-      await page.getByRole("textbox", { name: "time-field" }).fill("ts");
-      await page.getByRole("button", { name: "Create collection", exact: true }).click();
-      await expect(page.getByTestId("server-collections").getByRole("row").filter({ has: page.getByText("metrics", { exact: true }) })).toContainText("timeseries", { timeout: 15000 });
-
-      await databaseRow.getByRole("button", { name: "More actions" }).click();
-      await page.getByRole("menuitem", { name: "Drop database", exact: true }).click();
-      const confirm = page.getByTestId("drop-database-dialog");
-      await expect(confirm.getByRole("button", { name: "Drop database" })).toBeDisabled();
-      await confirm.getByRole("textbox", { name: "confirm-database-name" }).fill(name);
-      await confirm.getByRole("button", { name: "Drop database" }).click();
-      await expect(page.getByRole("row").filter({ has: page.getByText(name, { exact: true }) })).toHaveCount(0, { timeout: 15000 });
-    } finally {
-      dropDb(name);
-    }
+  test("clicking the connection in the status bar opens a small server status card", async ({ page }) => {
+    await openServerPage(page, "Status");
+    await page.getByTestId("status-connection").click();
+    const card = page.getByTestId("server-status-popover");
+    await expect(card).toContainText("Version", { timeout: 15000 });
+    await expect(card).toContainText("Replica set");
+    await page.keyboard.press("Escape");
+    await expect(card).toBeHidden();
   });
 
   test("the Changes tab reports a standalone server in words", async ({ page }) => {
-    await openServerTool(page);
-    await page.getByTestId("server-tabs-changes").click();
+    await openServerPage(page, "Changes");
     await page.getByRole("textbox", { name: "changes-container" }).fill(m.s.container);
     await page.getByTestId("changes-watch").click();
     await expect(page.getByTestId("change-error")).toContainText("replica set", { timeout: 15000 });

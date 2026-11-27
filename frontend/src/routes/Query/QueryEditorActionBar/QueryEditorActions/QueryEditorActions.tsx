@@ -8,13 +8,15 @@ import { useDataStore } from '@/store/dataStore/data.store';
 import { useTabStore } from '@/store/tabStore/tab.store';
 import { useLayoutMode } from '@/hooks/useLayoutMode';
 import { useTabTransaction } from '@/hooks/useTabTransaction';
-import { Box, Button, IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, Button, IconButton, ListItemIcon, Menu, MenuItem, Stack, Tooltip } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
+import type { IconProps } from '@/components/base/CustomIcon/types';
 import type { QueryEditorActionsProps } from '../../types';
 
 export default function QueryEditorActions({
+  collapsed = false,
   onFormat,
   onRunQuery,
   onAiExplain,
@@ -23,6 +25,7 @@ export default function QueryEditorActions({
   onExport,
   onStop
 }: QueryEditorActionsProps): JSX.Element {
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const queryClient = useQueryClient();
   const perms = useFeaturePermissions();
   const { isMobile } = useLayoutMode();
@@ -103,68 +106,120 @@ export default function QueryEditorActions({
     onRunQuery();
   };
 
-  return (
-    <Stack spacing={2} direction={'row'}>
-      <Tooltip title={locales.save}>
-        <IconButton aria-label={locales.save} color='default' onClick={() => void saveQuery()}>
-          <CustomIcon type='save' />
+  type Action = {
+    key: string;
+    label: string;
+    tooltip?: string;
+    icon: IconProps['type'];
+    testId?: string;
+    onClick: (anchor: HTMLElement) => void;
+  };
+  const actions: Action[] = [
+    { key: 'save', label: locales.save, icon: 'save', onClick: () => void saveQuery() },
+    ...(perms.export || onExport
+      ? [
+          {
+            key: 'export',
+            label: locales.export,
+            icon: 'export' as const,
+            onClick: (anchor: HTMLElement) => (onExport ? onExport(anchor) : handleExport())
+          }
+        ]
+      : []),
+    ...(!formatQuery
+      ? [{ key: 'minify', label: locales.minify, icon: 'pickaxe' as const, onClick: handleMinifySql }]
+      : []),
+    {
+      key: 'format',
+      label: locales.beatify,
+      tooltip: `${locales.beatify} (${shortcuts.formatSql.command.join('+')})`,
+      icon: 'wand_sparkles',
+      onClick: handleFormatSql
+    },
+    { key: 'ai', label: locales.ai_explain, icon: 'sparkles', onClick: onAiExplain },
+    // While a transaction is open, commit/rollback stay visible below instead.
+    ...(!formatQuery && !transaction.active
+      ? [
+          {
+            key: 'transaction',
+            label: locales.start_transaction,
+            tooltip: locales.transaction_begin,
+            icon: 'databaseZap' as const,
+            testId: 'transaction-begin',
+            onClick: () => void transaction.begin()
+          }
+        ]
+      : [])
+  ];
+
+  const transactionButtons =
+    !formatQuery && transaction.active ? (
+      <>
+        <Tooltip title={locales.transaction_active}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CustomIcon type='databaseZap' color='currentColor' />
+          </Box>
+        </Tooltip>
+        <Button color='success' data-testid='transaction-commit' onClick={() => void transaction.end(true)}>
+          {locales.transaction_commit}
+        </Button>
+        <Button color='error' data-testid='transaction-rollback' onClick={() => void transaction.end(false)}>
+          {locales.transaction_rollback}
+        </Button>
+      </>
+    ) : null;
+
+  const actionButtons = collapsed ? (
+    <>
+      <Tooltip title={locales.more_actions}>
+        <IconButton
+          aria-label={locales.more_actions}
+          data-testid='editor-more-actions'
+          color='default'
+          onClick={(e): void => setMenuAnchor(e.currentTarget)}
+        >
+          <CustomIcon type='ellipsisVertical' />
         </IconButton>
       </Tooltip>
-      {(perms.export || onExport) && (
-        <Tooltip title={locales.export}>
-          <IconButton
-            aria-label={locales.export}
-            color='default'
-            onClick={(e): void => (onExport ? onExport(e.currentTarget) : handleExport())}
+      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+        {actions.map((action) => (
+          <MenuItem
+            key={action.key}
+            data-testid={action.testId}
+            onClick={(): void => {
+              // Keep the three-dot button as anchor: the menu item unmounts on close.
+              const anchor = menuAnchor as HTMLElement;
+              setMenuAnchor(null);
+              action.onClick(anchor);
+            }}
           >
-            <CustomIcon type='export' />
-          </IconButton>
-        </Tooltip>
-      )}
-      {!formatQuery && (
-        <Tooltip title={locales.minify}>
-          <IconButton aria-label={locales.minify} color='default' onClick={handleMinifySql}>
-            <CustomIcon type='pickaxe' />
-          </IconButton>
-        </Tooltip>
-      )}
-      <Tooltip title={`${locales.beatify} (${shortcuts.formatSql.command.join('+')})`}>
-        <IconButton aria-label={locales.beatify} color='default' onClick={handleFormatSql}>
-          <CustomIcon type='wand_sparkles' />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={locales.ai_explain}>
-        <IconButton aria-label={locales.ai_explain} color='default' onClick={onAiExplain}>
-          <CustomIcon type='sparkles' />
-        </IconButton>
-      </Tooltip>
-      {!formatQuery &&
-        (transaction.active ? (
-          <>
-            <Tooltip title={locales.transaction_active}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <CustomIcon type='databaseZap' color='currentColor' />
-              </Box>
-            </Tooltip>
-            <Button color='success' data-testid='transaction-commit' onClick={() => void transaction.end(true)}>
-              {locales.transaction_commit}
-            </Button>
-            <Button color='error' data-testid='transaction-rollback' onClick={() => void transaction.end(false)}>
-              {locales.transaction_rollback}
-            </Button>
-          </>
-        ) : (
-          <Tooltip title={locales.transaction_begin}>
-            <IconButton
-              aria-label={locales.transaction_begin}
-              data-testid='transaction-begin'
-              color='default'
-              onClick={() => void transaction.begin()}
-            >
-              <CustomIcon type='databaseZap' />
-            </IconButton>
-          </Tooltip>
+            <ListItemIcon>
+              <CustomIcon type={action.icon} />
+            </ListItemIcon>
+            {action.label}
+          </MenuItem>
         ))}
+      </Menu>
+    </>
+  ) : (
+    actions.map((action) => (
+      <Tooltip key={action.key} title={action.tooltip ?? action.label}>
+        <IconButton
+          aria-label={action.label}
+          data-testid={action.testId}
+          color='default'
+          onClick={(e): void => action.onClick(e.currentTarget)}
+        >
+          <CustomIcon type={action.icon} />
+        </IconButton>
+      </Tooltip>
+    ))
+  );
+
+  return (
+    <Stack direction={'row'} sx={{ flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'flex-end' }}>
+      {actionButtons}
+      {transactionButtons}
       <Box
         sx={{
           padding: '3px !important'

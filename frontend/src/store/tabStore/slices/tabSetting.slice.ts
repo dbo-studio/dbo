@@ -26,6 +26,8 @@ import type {
   SettingsTabType,
   BackupTabType,
   BrowseTabType,
+  CollectionPanel,
+  CollectionTabType,
   ToolTabType,
   TabType
 } from '@/types/Tab';
@@ -310,6 +312,38 @@ export const createTabSettingSlice: StateCreator<
     };
 
     return get().handleAddNewTab(tabs, newTab) as BrowseTabType;
+  },
+  addCollectionTab: (containerId: string, panel: CollectionPanel, name: string): CollectionTabType => {
+    const currentConnectionId = useConnectionStore.getState().currentConnectionId;
+    if (!currentConnectionId) {
+      throw new Error('No current connection id');
+    }
+
+    const nodeId = `${containerId}#${panel}`;
+    const tabs = selectTabs(get());
+    const findTab = tabs.find(
+      (tab): tab is CollectionTabType =>
+        tab.mode === TabMode.Collection &&
+        tab.nodeId === nodeId &&
+        matchConnectionId(tab.connectionId, currentConnectionId)
+    );
+
+    if (findTab) {
+      get().switchTab(findTab.id);
+      return findTab;
+    }
+
+    const newTab: CollectionTabType = {
+      id: tools.uuid(),
+      connectionId: currentConnectionId,
+      name,
+      nodeId,
+      mode: TabMode.Collection,
+      containerId,
+      panel
+    };
+
+    return get().handleAddNewTab(tabs, newTab) as CollectionTabType;
   },
   addToolTab: (toolId: string, name: string): ToolTabType => {
     const currentConnectionId = useConnectionStore.getState().currentConnectionId;

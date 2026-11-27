@@ -12,6 +12,7 @@ import locales from '@/locales';
 import Question from '@/routes/Question/Question';
 import Dashboard from '@/routes/Dashboard/Dashboard';
 import Browse from '@/routes/Browse/Browse';
+import Collection from '@/routes/Collection/Collection';
 import Tool from '@/routes/Tool/Tool';
 import Data from '@/routes/Data/Data';
 import ObjectForm from '@/routes/ObjectForm/ObjectForm';
@@ -65,6 +66,7 @@ export default function PanelItem(): JSX.Element {
           (selectedTab.mode === TabMode.Settings && <Settings />) ||
           (selectedTab.mode === TabMode.Backup && <Backup />) ||
           (selectedTab.mode === TabMode.Browse && <Browse key={selectedTab.id} />) ||
+          (selectedTab.mode === TabMode.Collection && <Collection key={selectedTab.id} />) ||
           (selectedTab.mode === TabMode.Tool && <Tool />)
         : null}
     </PanelItemStyled>

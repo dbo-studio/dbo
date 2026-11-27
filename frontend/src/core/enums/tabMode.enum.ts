@@ -9,5 +9,6 @@ export enum TabMode {
   Settings = 'settings',
   Backup = 'backup',
   Browse = 'browse',
+  Collection = 'collection',
   Tool = 'tool'
 }

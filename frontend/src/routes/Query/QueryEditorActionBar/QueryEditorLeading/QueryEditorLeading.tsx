@@ -83,7 +83,7 @@ export default function QueryEditorLeading({ databases, schemas }: QueryEditorLe
   };
 
   return (
-    <Stack spacing={2} direction={'row'}>
+    <Stack direction={'row'} sx={{ flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
       {capabilities.hasDatabase && (
         <Stack
           direction={'row'}

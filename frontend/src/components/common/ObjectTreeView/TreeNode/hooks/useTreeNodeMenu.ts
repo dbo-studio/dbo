@@ -292,7 +292,7 @@ export function useTreeNodeMenuBuilder(
       }
     }
 
-    // The collection page's other dialogs: the page opens (or comes forward) and shows the one asked for.
+    // The collection's stats dialog: the page opens (or comes forward) and shows it. Indexes, Schema and Aggregate are tree nodes.
     if (isMongoDriver(currentConnection?.type) && node.type === 'table' && node.action) {
       const page = (name: string, action: BrowseAction): MenuType => ({
         name,
@@ -303,11 +303,7 @@ export function useTreeNodeMenuBuilder(
         closeAfterAction: true
       });
 
-      view.push(
-        page(locales.nosql_stats_title, 'stats'),
-        page(locales.nosql_schema, 'schema'),
-        page(locales.nosql_aggregate, 'aggregate')
-      );
+      view.push(page(locales.nosql_stats_title, 'stats'));
     }
 
     if (perms.import && !isNoSQL && node.type === 'table' && scope?.focusTables?.[0] && currentConnection) {

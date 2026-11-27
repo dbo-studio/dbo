@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
-/** A dialog of the collection page that something outside it (the tree's context menu) wants opened. */
-export type BrowseAction = 'stats' | 'schema' | 'aggregate';
+/** A dialog of the collection page that something outside it (the tree) wants opened. */
+export type BrowseAction = 'stats';
 
 type BrowseActionState = {
   request: { containerId: string; action: BrowseAction } | null;

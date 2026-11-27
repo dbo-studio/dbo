@@ -5,9 +5,7 @@ type MonacoEditor = { setValue: (v: string) => void; getValue: () => string; get
 /** Sets the Browse tab's Monaco filter bar through the Monaco API (typing races with suggestions) and applies it. */
 export async function applyBrowseFilter(page: Page, text: string): Promise<void> {
   const bar = page.getByTestId("browse-filter-bar");
-  const advanced = page.getByRole("button", { name: "Advanced", exact: true });
-  await expect(bar.or(advanced)).toBeVisible({ timeout: 15000 });
-  if (await advanced.count()) await advanced.click();
+  await expect(bar).toBeVisible({ timeout: 15000 });
   await expect(bar.locator(".monaco-editor").first()).toBeVisible({ timeout: 15000 });
 
   const applied = await page.evaluate((value) => {

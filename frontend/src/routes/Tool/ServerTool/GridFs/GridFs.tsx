@@ -11,6 +11,7 @@ import { type JSX, useState } from 'react';
 import { toast } from 'sonner';
 import ServerGrid from '../ServerGrid/ServerGrid';
 import ServerRowActions from '../ServerGrid/ServerRowActions';
+import { ServerFormStyled } from '../ServerTool.styled';
 import { pickServerOption, type ServerToolProps } from '../serverToolShared';
 
 export default function GridFs({ connectionId }: ServerToolProps): JSX.Element {
@@ -62,29 +63,25 @@ export default function GridFs({ connectionId }: ServerToolProps): JSX.Element {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, maxWidth: 560 }}>
-        <Box sx={{ flex: 1 }}>
-          <SelectInput
-            label={locales.server_database}
-            testId='gridfs-database'
-            value={db}
-            options={(dbs.data ?? []).map((d) => ({ value: d.name, label: d.name }))}
-            onChange={(o): void => {
-              setDb(pickServerOption(o));
-              setBucket('');
-            }}
-          />
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <SelectInput
-            label={locales.server_bucket}
-            testId='gridfs-bucket'
-            value={bucketName}
-            options={(buckets.data ?? []).map((b) => ({ value: b, label: b }))}
-            onChange={(o): void => setBucket(pickServerOption(o))}
-          />
-        </Box>
-      </Box>
+      <ServerFormStyled sx={{ mb: 2, maxWidth: 560 }}>
+        <SelectInput
+          label={locales.server_database}
+          testId='gridfs-database'
+          value={db}
+          options={(dbs.data ?? []).map((d) => ({ value: d.name, label: d.name }))}
+          onChange={(o): void => {
+            setDb(pickServerOption(o));
+            setBucket('');
+          }}
+        />
+        <SelectInput
+          label={locales.server_bucket}
+          testId='gridfs-bucket'
+          value={bucketName}
+          options={(buckets.data ?? []).map((b) => ({ value: b, label: b }))}
+          onChange={(o): void => setBucket(pickServerOption(o))}
+        />
+      </ServerFormStyled>
       {db && buckets.data?.length === 0 && <Typography color='text.secondary'>{locales.server_no_buckets}</Typography>}
       {db &&
         bucketName &&

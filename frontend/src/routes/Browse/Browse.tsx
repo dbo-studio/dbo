@@ -47,10 +47,7 @@ import SelectInput from '@/components/base/SelectInput/SelectInput';
 import KeyList from './KeyList';
 import { buildKeyRows } from './keyTree';
 import StatsDialog from './StatsDialog';
-import IndexesDialog from './IndexesDialog';
 import ExplainDialog from './ExplainDialog';
-import AggregateDialog from './AggregateDialog';
-import SchemaDialog from './SchemaDialog';
 import { tools } from '@/core/utils/tools';
 import { useAiBridge } from '@/hooks/useAiBridge';
 import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
@@ -142,9 +139,6 @@ export default function Browse(): JSX.Element {
 
   const [applied, setApplied] = useState<Applied>(NO_FILTER);
   const [pattern, setPattern] = useState('');
-  const [query, setQuery] = useState('');
-  const [sortText, setSortText] = useState('');
-  const [projectText, setProjectText] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [newId, setNewId] = useState('');
@@ -152,10 +146,7 @@ export default function Browse(): JSX.Element {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
-  const [indexesOpen, setIndexesOpen] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
-  const [aggOpen, setAggOpen] = useState(false);
-  const [schemaOpen, setSchemaOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const featurePerms = useFeaturePermissions();
   const aiAllowed = featurePerms.ai;
@@ -168,7 +159,7 @@ export default function Browse(): JSX.Element {
   useEffect(() => {
     if (!request || request.containerId !== containerId) return;
     clearRequest();
-    const open = { stats: setStatsOpen, schema: setSchemaOpen, aggregate: setAggOpen }[request.action];
+    const open = { stats: setStatsOpen }[request.action];
     open(true);
   }, [request, containerId, clearRequest]);
   const { prefillChat } = useAiBridge();
@@ -178,7 +169,6 @@ export default function Browse(): JSX.Element {
   const [createAnchor, setCreateAnchor] = useState<HTMLElement | null>(null);
   const [statusSlot, setStatusSlot] = useState<HTMLElement | null>(null);
   const newButtonRef = useRef<HTMLButtonElement>(null);
-  const [advancedQuery, setAdvancedQuery] = useState(false);
   const [browsePanel, setBrowsePanel] = useState<'filter' | 'sort' | null>(null);
   const [listMenu, setListMenu] = useState<MenuType[]>([]);
   const { contextMenuPosition, handleContextMenu, handleCloseContextMenu } = useContextMenu();
@@ -404,18 +394,7 @@ export default function Browse(): JSX.Element {
     ...(has(spec, 'collection-admin')
       ? [{ id: 'drop', label: locales.nosql_drop_collection, danger: true, run: dropCollection }]
       : []),
-    ...(has(spec, 'schema')
-      ? [{ id: 'schema', label: locales.nosql_schema, run: (): void => setSchemaOpen(true) }]
-      : []),
-    ...(has(spec, 'aggregate')
-      ? [{ id: 'aggregate', label: locales.nosql_aggregate, run: (): void => setAggOpen(true) }]
-      : []),
-    ...(has(spec, 'indexes')
-      ? [
-          { id: 'indexes', label: locales.nosql_indexes_title, run: (): void => setIndexesOpen(true) },
-          { id: 'explain', label: locales.nosql_explain, run: (): void => setExplainOpen(true) }
-        ]
-      : []),
+    ...(has(spec, 'indexes') ? [{ id: 'explain', label: locales.nosql_explain, run: (): void => setExplainOpen(true) }] : []),
     ...(has(spec, 'recycle')
       ? [{ id: 'recycle', label: locales.nosql_recycle_title, run: (): void => setRecycleOpen(true) }]
       : []),
@@ -424,7 +403,7 @@ export default function Browse(): JSX.Element {
       : [])
   ];
 
-  // MongoDB: the everyday tools of a collection are icons here and entries of its context menu in the tree; the
+  // MongoDB: the everyday tools of a collection are icons here; Schema, Indexes and Aggregate are nodes under it in the tree; the
   // menu keeps what belongs to the connection (terminal, server, recently deleted), the assistant and bulk delete.
   const mongoToolbar: { id: string; label: string; icon: keyof typeof IconTypes; run: () => void }[] = isMongo
     ? [
@@ -448,34 +427,8 @@ export default function Browse(): JSX.Element {
               }
             ]
           : []),
-        ...(has(spec, 'schema')
-          ? [
-              {
-                id: 'schema',
-                label: locales.nosql_schema,
-                icon: 'structure' as const,
-                run: (): void => setSchemaOpen(true)
-              }
-            ]
-          : []),
-        ...(has(spec, 'aggregate')
-          ? [
-              {
-                id: 'aggregate',
-                label: locales.nosql_aggregate,
-                icon: 'chart' as const,
-                run: (): void => setAggOpen(true)
-              }
-            ]
-          : []),
         ...(has(spec, 'indexes')
           ? [
-              {
-                id: 'indexes',
-                label: locales.nosql_indexes_title,
-                icon: 'key' as const,
-                run: (): void => setIndexesOpen(true)
-              },
               {
                 id: 'explain',
                 label: locales.nosql_explain,
@@ -594,17 +547,9 @@ export default function Browse(): JSX.Element {
 
   if (!tab) return <></>;
 
-  const applyText = (text: string, sort = sortText, projection = projectText): void => {
-    if (spec?.filter !== 'query') return setApplied({ ...NO_FILTER, filter: text });
-    try {
-      setApplied({ ...NO_FILTER, filter: text, sorts: parseSort(sort), projection: projection.trim() });
-    } catch {
-      toast.error(locales.nosql_sort_invalid);
-    }
-  };
+  const applyText = (text: string): void => setApplied({ ...NO_FILTER, filter: text });
 
   const applyQuickFilter = (filter: string): void => {
-    setQuery(filter);
     setApplied((previous) => ({ ...previous, filter }));
   };
 
@@ -615,10 +560,8 @@ export default function Browse(): JSX.Element {
     if (kind === 'filter') {
       const filter = buildMongoFilter(current.filters ?? []);
       applyQuickFilter(filter);
-      setAdvancedQuery(true);
     } else {
       const sort = buildMongoSort(current.sorts ?? []);
-      setSortText(sort);
       setApplied((previous) => ({ ...previous, sorts: parseSort(sort) }));
     }
   };
@@ -628,45 +571,23 @@ export default function Browse(): JSX.Element {
       <BrowseActionBar
         input={
           <>
-            {spec?.filter === 'query' && <MongoQuickFilter hidden={advancedQuery} onApply={applyQuickFilter} />}
-            {(spec?.filter === 'pattern' || (spec?.filter === 'query' && advancedQuery)) && (
+            {spec?.filter === 'query' && <MongoQuickFilter onApply={applyQuickFilter} />}
+            {spec?.filter === 'pattern' && (
               <InlineQueryStackStyled direction='row' data-testid='browse-filter-bar'>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <InlineSqlEditor
-                    language={spec.filter === 'query' ? 'json' : 'plaintext'}
-                    placeholder={spec.filter === 'query' ? locales.nosql_filter_query : locales.nosql_filter_pattern}
-                    value={spec.filter === 'query' ? query : pattern}
-                    onChange={spec.filter === 'query' ? setQuery : setPattern}
+                    language='plaintext'
+                    placeholder={locales.nosql_filter_pattern}
+                    value={pattern}
+                    onChange={setPattern}
                     onEnter={applyText}
                   />
                 </Box>
-                {spec.filter === 'query' && (
-                  <>
-                    <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-sort-bar'>
-                      <InlineSqlEditor
-                        language='json'
-                        placeholder={locales.nosql_sort_query}
-                        value={sortText}
-                        onChange={setSortText}
-                        onEnter={(sort) => applyText(query, sort)}
-                      />
-                    </Box>
-                    <Box sx={{ flex: 0.6, minWidth: 0, ml: 1 }} data-testid='browse-project-bar'>
-                      <InlineSqlEditor
-                        language='json'
-                        placeholder={locales.nosql_project_query}
-                        value={projectText}
-                        onChange={setProjectText}
-                        onEnter={(projection) => applyText(query, sortText, projection)}
-                      />
-                    </Box>
-                  </>
-                )}
                 <SubmitButtonStyled
                   variant='contained'
                   aria-label={locales.nosql_run}
                   data-testid='browse-filter-run'
-                  onClick={(): void => applyText(spec.filter === 'query' ? query : pattern)}
+                  onClick={(): void => applyText(pattern)}
                 >
                   <CustomIcon type='check' size='s' />
                 </SubmitButtonStyled>
@@ -677,14 +598,6 @@ export default function Browse(): JSX.Element {
       >
         {spec?.filter === 'query' && (
           <>
-            <Button
-              aria-expanded={advancedQuery}
-              data-testid='mongo-advanced-filter'
-              onClick={() => setAdvancedQuery((open) => !open)}
-              className={advancedQuery ? 'active' : ''}
-            >
-              {advancedQuery ? locales.nosql_quick_simple : locales.nosql_quick_advanced}
-            </Button>
             <BrowsePanelButton
               kind='filter'
               open={browsePanel === 'filter'}
@@ -797,14 +710,6 @@ export default function Browse(): JSX.Element {
       {statsOpen && (
         <StatsDialog connectionId={connectionId} containerId={containerId} onClose={(): void => setStatsOpen(false)} />
       )}
-      {indexesOpen && (
-        <IndexesDialog
-          connectionId={connectionId}
-          containerId={containerId}
-          canEdit={has(spec, 'edit')}
-          onClose={(): void => setIndexesOpen(false)}
-        />
-      )}
       <input
         ref={importRef}
         type='file'
@@ -817,21 +722,6 @@ export default function Browse(): JSX.Element {
           if (file) void importFile(file);
         }}
       />
-      {schemaOpen && (
-        <SchemaDialog
-          connectionId={connectionId}
-          containerId={containerId}
-          canEdit={has(spec, 'edit')}
-          onClose={(): void => setSchemaOpen(false)}
-        />
-      )}
-      {aggOpen && (
-        <AggregateDialog
-          connectionId={connectionId}
-          containerId={containerId}
-          onClose={(): void => setAggOpen(false)}
-        />
-      )}
       {explainOpen && (
         <ExplainDialog
           connectionId={connectionId}

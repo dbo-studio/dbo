@@ -34,6 +34,7 @@ const TAB_MODE_ICON: Record<TabMode, keyof typeof IconTypes> = {
   [TabMode.Settings]: 'settings',
   [TabMode.Backup]: 'backup',
   [TabMode.Browse]: 'key',
+  [TabMode.Collection]: 'structure',
   [TabMode.Tool]: 'terminal'
 };
 

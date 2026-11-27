@@ -19,7 +19,12 @@ import {
   readObjectNameFromForm
 } from './utils/buildObjectDefinitionSummary';
 import { prefetchObjectFormTabs } from './utils/prefetchObjectFormTabs';
-import { ObjectFormContentStyled, ObjectFormLoadingStyled, ObjectFormStyled } from './ObjectForm.styled';
+import {
+  ObjectFormContentStyled,
+  ObjectFormFillerStyled,
+  ObjectFormLoadingStyled,
+  ObjectFormStyled
+} from './ObjectForm.styled';
 
 export default function ObjectForm(): React.JSX.Element {
   const { tabs, selectedTabId, isLoading: isLoadingTabs, handleTabChange } = useTabs();
@@ -92,6 +97,7 @@ export default function ObjectForm(): React.JSX.Element {
               <ArrayForm objectTabId={objectTabId} />
             </Stack>
           )}
+          {!showArrayForm && <ObjectFormFillerStyled data-form-filler />}
 
           <FormStatusBar
             onSave={() => void handleSave()}

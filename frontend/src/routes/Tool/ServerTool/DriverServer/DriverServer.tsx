@@ -5,16 +5,18 @@ import { useTreeStore } from '@/store/treeStore/tree.store';
 import DropDatabaseDialog from '../DropDatabaseDialog/DropDatabaseDialog';
 import * as server from '@/api/server';
 import Segmented from '@/components/base/Segmented/Segmented';
+import { ToolbarSpacerStyled, ToolbarStyled } from '@/components/base/Toolbar/Toolbar.styled';
 import { withSafeModeRetry } from '@/core/utils/safeModeGate';
 import locales from '@/locales';
 import { useConfirmModalStore } from '@/store/confirmModal/confirmModal.store';
-import { Box, Button, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ServerGrid from '../ServerGrid/ServerGrid';
 import ServerRowActions from '../ServerGrid/ServerRowActions';
-import { formatServerUptime } from '../serverToolShared';
+import { ServerToolBodyStyled, ServerToolStyled } from '../ServerTool.styled';
+import { formatServerUptime, serverMetricLabels } from '@/core/utils/serverStatus';
 
 const tabs = {
   status: locales.server_tab_status,
@@ -27,17 +29,6 @@ const activityLabels: Record<server.ActivityAction, { title: string; prompt: str
   'cancel-query': { title: locales.server_cancel_query, prompt: locales.server_cancel_query_confirm },
   'end-session': { title: locales.server_end_session, prompt: locales.server_end_session_confirm },
   'disconnect-client': { title: locales.server_disconnect_client, prompt: locales.server_disconnect_client_confirm }
-};
-
-const metricLabels: Record<string, string> = {
-  version: locales.server_version,
-  host: locales.server_host,
-  uptime: locales.server_uptime,
-  connections: locales.server_connections,
-  maxConnections: locales.server_max_connections,
-  edition: locales.server_edition,
-  memory: locales.server_memory_usage,
-  role: locales.server_role
 };
 
 export default function DriverServer({ connectionId }: { connectionId: number }) {
@@ -112,7 +103,7 @@ export default function DriverServer({ connectionId }: { connectionId: number })
   const displayRows =
     tab === 'status'
       ? rows.map(([metric, value]) => [
-          metricLabels[String(metric)] ?? metric,
+          serverMetricLabels[String(metric)] ?? metric,
           metric === 'uptime' ? formatServerUptime(Number(value)) : value
         ])
       : hasTargets
@@ -159,54 +150,60 @@ export default function DriverServer({ connectionId }: { connectionId: number })
   };
 
   return (
-    <Box sx={{ p: 2, height: '100%', overflow: 'auto' }} data-testid='server-tool'>
+    <ServerToolStyled data-testid='server-tool'>
       {capabilities.data && (
-        <Box sx={{ mb: 2 }}>
+        <ToolbarStyled>
           <Segmented
             value={tab}
             onChange={setTab}
             testId='server-tabs'
             options={capabilities.data.panels.map((value) => ({ value, label: tabs[value] }))}
           />
-        </Box>
+          {tab === 'databases' && tree && create && (
+            <>
+              <ToolbarSpacerStyled />
+              <Button
+                variant='contained'
+                onClick={() => useTabStore.getState().addObjectTab(create.title, tree.id, create.name, TabMode.Object)}
+              >
+                {locales.server_create_database}
+              </Button>
+            </>
+          )}
+        </ToolbarStyled>
       )}
-      {tab === 'databases' && tree && create && (
-        <Box sx={{ mb: 1 }}>
-          <Button
-            onClick={() => useTabStore.getState().addObjectTab(create.title, tree.id, create.name, TabMode.Object)}
-          >
-            {locales.server_create_database}
-          </Button>
-        </Box>
-      )}
-      {dropping && (
-        <DropDatabaseDialog
-          name={dropping}
-          onClose={() => setDropping(undefined)}
-          onConfirm={() => void drop(dropping)}
-        />
-      )}
-      {capabilities.isError || panel.isError ? (
-        <Typography color='error' role='alert'>
-          {locales.action_failed}
-        </Typography>
-      ) : capabilities.data && !capabilities.data.panels.length ? (
-        <Typography color='text.secondary'>{locales.nosql_tool_unknown}</Typography>
-      ) : (
-        <ServerGrid
-          headers={
-            tab === 'status'
-              ? [locales.server_metric, locales.server_value]
-              : hasTargets
-                ? headers.slice(0, -1)
-                : headers
-          }
-          values={displayRows}
-          loading={capabilities.isPending || panel.isPending}
-          empty={tab === 'operations' ? locales.server_no_operations : undefined}
-          action={hasTargets && action ? activityActions : tab === 'databases' && create ? databaseActions : undefined}
-        />
-      )}
-    </Box>
+      <ServerToolBodyStyled>
+        {dropping && (
+          <DropDatabaseDialog
+            name={dropping}
+            onClose={() => setDropping(undefined)}
+            onConfirm={() => void drop(dropping)}
+          />
+        )}
+        {capabilities.isError || panel.isError ? (
+          <Typography color='error' role='alert'>
+            {locales.action_failed}
+          </Typography>
+        ) : capabilities.data && !capabilities.data.panels.length ? (
+          <Typography color='text.secondary'>{locales.nosql_tool_unknown}</Typography>
+        ) : (
+          <ServerGrid
+            headers={
+              tab === 'status'
+                ? [locales.server_metric, locales.server_value]
+                : hasTargets
+                  ? headers.slice(0, -1)
+                  : headers
+            }
+            values={displayRows}
+            loading={capabilities.isPending || panel.isPending}
+            empty={tab === 'operations' ? locales.server_no_operations : undefined}
+            action={
+              hasTargets && action ? activityActions : tab === 'databases' && create ? databaseActions : undefined
+            }
+          />
+        )}
+      </ServerToolBodyStyled>
+    </ServerToolStyled>
   );
 }

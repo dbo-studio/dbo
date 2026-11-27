@@ -28,6 +28,7 @@ export type TabType =
   | SettingsTabType
   | BackupTabType
   | BrowseTabType
+  | CollectionTabType
   | ToolTabType;
 
 type BaseTab = {
@@ -117,6 +118,16 @@ export type BrowseTabType = BaseTab & {
   mode: TabMode.Browse;
   filters?: FilterType[];
   sorts?: SortType[];
+};
+
+export type CollectionPanel = 'schema' | 'aggregate';
+
+/** A page of one NoSQL collection (indexes, schema, aggregate); `nodeId` is `<containerId>#<panel>`, the tree node. */
+export type CollectionTabType = BaseTab & {
+  name: string;
+  mode: TabMode.Collection;
+  containerId: string;
+  panel: CollectionPanel;
 };
 
 /** NoSQL tool (pubsub, cli, ...) opened from a Browse tab or the tree. */

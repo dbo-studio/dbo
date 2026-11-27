@@ -1,6 +1,7 @@
 // @cap: Schema
 import { expect, test } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
+import { ObjectFormPage, ObjectTreePage } from "../../pages";
 import { db, useMongo } from "./_case";
 
 type Field = { path: string; count: number; types: { type: string; count: number }[]; top: { value: string; count: number }[] };
@@ -59,7 +60,7 @@ test.describe("MongoDB schema analysis and validation", () => {
     }
   });
 
-  test("the Schema dialog shows the analysis and saves a rule", async ({ page }) => {
+  test("the Schema page shows the analysis and Edit collection saves a rule", async ({ page }) => {
     await m.add(page, '{"name":"a"}');
     await page.reload();
     await expect(page.getByRole("treeitem").first()).toBeVisible({ timeout: 30000 });
@@ -69,13 +70,21 @@ test.describe("MongoDB schema analysis and validation", () => {
     await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
-    await page.getByTestId("browse-action-schema").click();
+    const tree = new ObjectTreePage(page);
+    await tree.runTreeAction(m.s.coll, "Schema");
+    await expect(page.getByTestId("collection-tab")).toBeVisible();
     await expect(page.getByTestId("schema-sampled")).toContainText("1 documents sampled", { timeout: 15000 });
     await expect(page.getByTestId("schema-row").filter({ hasText: "name" })).toBeVisible();
 
-    await page.getByTestId("schema-tab-validation").click();
-    await page.getByTestId("validator-level-moderate").click();
-    await page.getByTestId("validator-save").click();
+    const form = new ObjectFormPage(page);
+    await tree.runTreeAction(m.s.coll, "Edit collection");
+    await form.waitForReady();
+    await form.getTab("collection_validation").click();
+    await expect(form.getGeneralField("level")).toBeVisible({ timeout: 15000 });
+    await form.selectGeneralOption("level", "Moderate");
+    await form.save();
+    await form.assertPreviewContains("validationLevel");
+    await form.confirmExecute();
     await expect.poll(async () => ((await j(await page.request.get(`${apiUrl()}/nosql/validator`, { params: q(), headers }))) as Validator).level, { timeout: 15000 }).toBe("moderate");
   });
 });

@@ -1,6 +1,7 @@
 // @cap: Aggregate
 import { expect, test, type Page } from "@playwright/test";
 import { apiUrl, headers, j } from "../../helpers/nosql";
+import { ObjectFormPage, ObjectTreePage } from "../../pages";
 import { db, useMongo } from "./_case";
 
 type Result = { docs: string[]; truncated: boolean };
@@ -40,7 +41,8 @@ test.describe("MongoDB aggregation", () => {
     await page.getByTestId(`tree-node-${m.s.coll}`).dblclick();
     await expect(page.getByTestId("browse-tab")).toBeVisible({ timeout: 15000 });
 
-    await page.getByTestId("browse-action-aggregate").click();
+    await new ObjectTreePage(page).runTreeAction(m.s.coll, "Aggregate");
+    await expect(page.getByTestId("collection-tab")).toBeVisible();
     await page.getByTestId("agg-add").click();
     await page.getByRole("menuitem", { name: "$match" }).click();
     await page.getByRole("textbox", { name: "stage-1-text" }).fill('{"$match":{"tag":"a"}}');

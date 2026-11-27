@@ -7,6 +7,11 @@ const (
 
 	DatabaseTab TreeTab = "database"
 
+	CollectionTab           TreeTab = "collection"
+	CollectionIndexesTab    TreeTab = "collection_indexes"
+	CollectionValidationTab TreeTab = "collection_validation"
+	UserTab                 TreeTab = "user"
+
 	SchemaTab TreeTab = "schema"
 
 	ViewTab TreeTab = "view"

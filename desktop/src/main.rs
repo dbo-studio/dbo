@@ -303,6 +303,12 @@ async fn run_sidecar(app: AppHandle) {
         }
     };
 
+    // Backend writes backups/exports relative to cwd; the bundle's cwd is read-only.
+    let sidecar_command = match app.path().app_data_dir() {
+        Ok(dir) if fs::create_dir_all(&dir).is_ok() => sidecar_command.current_dir(dir),
+        _ => sidecar_command,
+    };
+
     let (mut rx, child) = match sidecar_command.spawn() {
         Ok(result) => result,
         Err(e) => {

@@ -1,4 +1,3 @@
-import { applyBrowseFilter } from "../../helpers/browseFilter";
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { uniqueTestSuffix } from "../../fixtures/uniqueSuffix";
@@ -63,6 +62,13 @@ test.describe("MongoDB driver", () => {
     }
   });
 
+  async function applyQuickFilter(page: Page, field: string, value: string): Promise<void> {
+    const inline = page.getByTestId("mongo-quick-filter");
+    await inline.getByRole("textbox", { name: "Field" }).fill(field);
+    await inline.getByRole("textbox", { name: "Value" }).fill(value);
+    await inline.getByRole("button", { name: "Run", exact: true }).click();
+  }
+
   async function seed(page: Page): Promise<string[]> {
     const ids: string[] = [];
     for (const d of [
@@ -98,9 +104,9 @@ test.describe("MongoDB driver", () => {
     await openUsers(page);
     await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
 
-    await test.step("a JSON filter narrows the list", async () => {
-      await applyBrowseFilter(page, '{"age":{"$gt":35}}');
-      await expect(page.getByTestId("browse-footer")).toContainText("2 loaded");
+    await test.step("a quick filter narrows the list", async () => {
+      await applyQuickFilter(page, "name", "bob");
+      await expect(page.getByTestId("browse-footer")).toContainText("1 loaded");
     });
 
     await test.step("a filter with $where is refused", async () => {
@@ -164,7 +170,7 @@ test.describe("MongoDB driver", () => {
     await page.request.post(`${apiUrl()}/nosql/item`, doc(connectionId, users, '{"kind":"keep"}'));
     await openUsers(page);
 
-    await applyBrowseFilter(page, '{"kind":"junk"}');
+    await applyQuickFilter(page, "kind", "junk");
     await page.getByLabel("More actions").click();
     await page.getByRole("menuitem", { name: "Delete matching…" }).click();
 
@@ -312,15 +318,12 @@ test.describe("MongoDB driver", () => {
     });
 
     await test.step("Inspect the applied JSON and return to the same simple draft", async () => {
-      await page.getByRole("button", { name: "Advanced", exact: true }).click();
-      await expect(page.getByTestId("browse-filter-bar")).toContainText('{"age":41}');
-      await page.getByRole("button", { name: "Simple", exact: true }).click();
       await expect(inline.getByRole("textbox", { name: "Value" })).toHaveValue("41");
       await expect(inline.getByRole("combobox", { name: "Value type" })).toContainText("Number");
     });
   });
 
-  test("the query builder turns rows into a MongoDB filter and sort, and the JSON box shows them", async ({ page }) => {
+  test("the query builder turns rows into a MongoDB filter and sort", async ({ page }) => {
     await seed(page);
     await openUsers(page);
     await expect(page.getByTestId("browse-footer")).toContainText("3 loaded");
@@ -343,14 +346,12 @@ test.describe("MongoDB driver", () => {
       await value.blur();
       await builder.getByRole("button", { name: "Apply" }).first().click();
       await expect(page.getByTestId("browse-footer")).toContainText("1 loaded", { timeout: 15000 });
-      await expect(page.getByTestId("browse-filter-bar")).toContainText("regularExpression");
     });
 
-    await test.step("the same filter is in the Query box as JSON", async () => {
+    await test.step("the sort panel replaces the filter panel", async () => {
       await page.getByTestId("browse-panel-sort").click();
       await expect(builder).toBeHidden();
       await expect(page.getByTestId("browse-sort-panel")).toBeVisible();
-      await expect(page.getByTestId("browse-filter-bar")).toContainText("regularExpression");
     });
   });
 });
