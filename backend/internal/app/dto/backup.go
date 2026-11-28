@@ -22,6 +22,9 @@ type (
 		Passphrase string `json:"passphrase"`
 		// DestinationID also copies the finished backup to that destination.
 		DestinationID uint `json:"destinationId"`
+		// SavePath is a folder the finished backup is also copied to. Desktop only;
+		// it comes from the native folder dialog.
+		SavePath string `json:"savePath"`
 	}
 
 	BackupResponse struct {

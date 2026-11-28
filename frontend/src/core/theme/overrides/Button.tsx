@@ -11,7 +11,7 @@ export default function Button(theme: Theme): Components {
           fontWeight: 500,
           height: variables.control,
           fontSize: theme.typography.caption.fontSize,
-          lineHeight: theme.typography.caption.lineHeight,
+          lineHeight: 1,
           borderRadius: variables.radius.medium,
           padding: '0 8px',
           '&.MuiButton-textPrimary, &.MuiButton-outlinedPrimary': {

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dbo-studio/dbo/config"
 	"github.com/dbo-studio/dbo/internal/app/dto"
 	databaseContract "github.com/dbo-studio/dbo/internal/database/contract"
 	"github.com/dbo-studio/dbo/internal/model"
@@ -53,10 +54,11 @@ type IBackupServiceImpl struct {
 	artifactRepo   repository.IBackupArtifactRepo
 	connectorRepo  repository.IBackupConnectorRepo
 	remote         Remote
+	cfg            *config.Config
 	unlockStore    *serviceSafemode.UnlockStore
 }
 
-func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, artifactRepo repository.IBackupArtifactRepo, connectorRepo repository.IBackupConnectorRepo, remote Remote, appCache cache.Cache) IBackupService {
+func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo repository.IConnectionRepo, shareRepo repository.IConnectionShareRepo, artifactRepo repository.IBackupArtifactRepo, connectorRepo repository.IBackupConnectorRepo, remote Remote, cfg *config.Config, appCache cache.Cache) IBackupService {
 	return &IBackupServiceImpl{
 		jobManager:     jobManager,
 		connectionRepo: connectionRepo,
@@ -64,6 +66,7 @@ func NewBackupService(jobManager serviceJob.IJobManager, connectionRepo reposito
 		artifactRepo:   artifactRepo,
 		connectorRepo:  connectorRepo,
 		remote:         remote,
+		cfg:            cfg,
 		unlockStore:    serviceSafemode.NewUnlockStore(appCache),
 	}
 }
@@ -84,6 +87,14 @@ func (s IBackupServiceImpl) Create(ctx context.Context, req *dto.BackupRequest) 
 	if req.DestinationID != 0 {
 		if c, err := s.connectorRepo.FindByOwner(ctx, req.DestinationID, ownerID); err != nil || c.Kind != model.ConnectorKindDestination {
 			return nil, apperror.Validation(errors.New("destinationId: unknown destination"))
+		}
+	}
+
+	// A web client must never choose where the server writes; desktop gets the path from the native dialog.
+	if req.SavePath != "" {
+		if s.cfg == nil || s.cfg.App.Client != config.ClientDesktop || !filepath.IsAbs(req.SavePath) ||
+			helper.ValidateExportSavePath(req.SavePath, true) != nil {
+			return nil, apperror.BadRequest(apperror.ErrInvalidSavePath)
 		}
 	}
 

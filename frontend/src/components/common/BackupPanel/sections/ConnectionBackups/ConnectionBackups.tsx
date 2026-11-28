@@ -1,5 +1,6 @@
 import api from '@/api';
 import type { BackupArtifactType } from '@/api/backup/types';
+import FieldInput from '@/components/base/FieldInput/FieldInput';
 import CustomIcon from '@/components/base/CustomIcon/CustomIcon';
 import EmptyState from '@/components/base/EmptyState/EmptyState';
 import SelectInput from '@/components/base/SelectInput/SelectInput';
@@ -11,7 +12,8 @@ import locales from '@/locales';
 import type { ConnectionType } from '@/types';
 import { Box, Button, Chip, IconButton, InputBase, Switch, Tooltip, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ChangeEvent, type JSX, useRef, useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
+import { type ChangeEvent, type JSX, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { JobProgressModal } from '../../../JobProgressModal/JobProgressModal';
 import { CardRowMainStyled, CardRowStyled, CardStyled, SectionActionsStyled } from '../../BackupPanel.styled';
@@ -54,6 +56,8 @@ export default function ConnectionBackups({
   const [compress, setCompress] = useState(false);
   const [passphrase, setPassphrase] = useState('');
   const [destinationId, setDestinationId] = useState(0);
+  const [isTauri, setIsTauri] = useState(false);
+  const [savePath, setSavePath] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<BackupArtifactType | null>(null);
 
@@ -61,10 +65,25 @@ export default function ConnectionBackups({
     queryKey: ['backup-connectors', 'destination'],
     queryFn: () => api.backup.connectors('destination')
   });
+  useEffect(() => {
+    tools
+      .isTauri()
+      .then(setIsTauri)
+      .catch(() => undefined);
+  }, []);
   const historyKey = ['backups', connection.id];
   const { data: history = [] } = useQuery({ queryKey: historyKey, queryFn: () => api.backup.history(connection.id) });
   const refresh = (): void => void queryClient.invalidateQueries({ queryKey: historyKey });
   const track = (jobId: number, title: string): void => setProgress({ jobId: String(jobId), title });
+
+  const handleSelectFolder = async (): Promise<void> => {
+    try {
+      const folder = await open({ directory: true, multiple: false });
+      if (typeof folder === 'string') setSavePath(folder);
+    } catch (error) {
+      console.error('Error selecting folder:', error);
+    }
+  };
 
   const handleBackup = async (): Promise<void> => {
     try {
@@ -75,7 +94,8 @@ export default function ConnectionBackups({
         note: note.trim() || undefined,
         compress,
         passphrase: passphrase || undefined,
-        destinationId: destinationId || undefined
+        destinationId: destinationId || undefined,
+        savePath: isTauri && savePath ? savePath : undefined
       });
       setNote('');
       setPassphrase('');
@@ -148,6 +168,18 @@ export default function ConnectionBackups({
             </Tooltip>
           </Box>
         </FormRow>
+        {isTauri && (
+          <FormRow label={locales.backup_save_folder}>
+            <FieldInput
+              fullWidth
+              value={savePath}
+              onClick={() => void handleSelectFolder()}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSavePath(e.target.value)}
+              placeholder={locales.backup_save_folder_placeholder}
+              endAdornment={<CustomIcon type='ellipsisVertical' onClick={() => void handleSelectFolder()} />}
+            />
+          </FormRow>
+        )}
         <FormRow label={locales.backup_compress}>
           <Switch checked={compress} onChange={(e: ChangeEvent<HTMLInputElement>) => setCompress(e.target.checked)} />
         </FormRow>

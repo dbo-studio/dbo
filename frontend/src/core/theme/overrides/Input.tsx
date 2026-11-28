@@ -37,6 +37,9 @@ export default function Input(theme: Theme): Components {
           },
           input: {
             padding: 0,
+            height: '100%',
+            boxSizing: 'border-box',
+            lineHeight: 1,
             '&::placeholder': {
               color: theme.palette.text.placeholder,
               opacity: 1

@@ -141,10 +141,13 @@ func (p *BackupProcessor) Process(ctx context.Context, job *model.Job) error {
 		"checksum":     artifact.Checksum,
 	})
 
-	// The local file is the backup; a failed upload is reported but never fails the job.
+	// The local file is the backup; a failed copy or upload is reported but never fails the job.
 	uploadErr := p.upload(ctx, job, &jobData, artifact)
+	if copyErr := copyToFolder(artifact, jobData.SavePath); copyErr != nil && uploadErr == nil {
+		uploadErr = copyErr
+	}
 	if uploadErr != nil {
-		msg := "Saved locally, but the upload failed: " + uploadErr.Error()
+		msg := "Saved locally, but copying it out failed: " + uploadErr.Error()
 		p.recordSchedule(ctx, &jobData, "failed", msg, artifact.Size)
 		p.notify(ctx, &jobData, connection, artifact, msg)
 	} else {
@@ -564,4 +567,44 @@ func (p *BackupProcessor) notify(ctx context.Context, jobData *dto.BackupJob, co
 		Error:      failure,
 		At:         time.Now(),
 	})
+}
+
+// copyToFolder also writes the finished backup into the folder the user chose in
+// the desktop app. The managed copy stays, so history, restore and verify still work.
+func copyToFolder(artifact *model.BackupArtifact, dir string) error {
+	if dir == "" {
+		return nil
+	}
+
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+
+	src, err := os.Open(artifact.FilePath)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = src.Close() }()
+
+	target := filepath.Join(dir, artifact.FileName)
+
+	dst, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(dst, src); err != nil {
+		_ = dst.Close()
+		_ = os.Remove(target)
+
+		return err
+	}
+
+	if err := dst.Close(); err != nil {
+		return err
+	}
+
+	logLine(artifact, "Copied to %s", target)
+	return nil
 }

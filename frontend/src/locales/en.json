@@ -1548,6 +1548,8 @@
   "connector_empty_channels": "No notification channels yet",
   "connector_empty_channels_hint": "Add email, Slack, Discord, Telegram or a webhook to hear about backups.",
   "backup_destination_local": "This machine only",
+  "backup_save_folder": "Save to folder",
+  "backup_save_folder_placeholder": "Click to choose a folder",
   "backup_notify_failure": "A run fails",
   "backup_notify_always": "Every run",
   "backup_notify_never": "Never",

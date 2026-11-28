@@ -21,7 +21,6 @@ export const BackupContentPaneStyled = styled(Box)(({ theme }) => ({
 }));
 
 export const BackupContentInnerStyled = styled(Box)(({ theme }) => ({
-  maxWidth: 880,
   width: '100%',
   display: 'flex',
   flexDirection: 'column',

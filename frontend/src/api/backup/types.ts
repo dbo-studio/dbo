@@ -8,6 +8,8 @@ export type BackupRequestType = {
   passphrase?: string;
   /** Also copy the finished backup to this destination. */
   destinationId?: number;
+  /** Desktop only: also copy the finished backup into this folder. */
+  savePath?: string;
 };
 
 export type RestoreRequestType = {

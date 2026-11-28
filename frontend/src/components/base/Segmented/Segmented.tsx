@@ -35,6 +35,8 @@ export default function Segmented<T extends string | number>({
         position: 'relative',
         isolation: 'isolate',
         display: 'inline-flex',
+        // Hug the options even inside a column flex parent, which would otherwise stretch the bar.
+        alignSelf: 'flex-start',
         maxWidth: '100%',
         overflowX: 'auto',
         padding: '2px',
